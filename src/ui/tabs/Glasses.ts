@@ -16,7 +16,7 @@ export function GlassesTab(data: TabRenderInit) {
       entries: {
         glassesType: {
           label: "Type",
-          items: ArrayNum(8).map((k) => ({
+          items: ArrayNum(9).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.glasses[k],
@@ -42,8 +42,8 @@ export function GlassesTab(data: TabRenderInit) {
               iconEnd: EditorIcons.positionMoveDown,
               soundStart: "position_down",
               soundEnd: "position_up",
-              min: 3,
-              max: 18,
+              min: 0,
+              max: 7,
               part: RenderPart.Head,
             },
             {
@@ -54,7 +54,7 @@ export function GlassesTab(data: TabRenderInit) {
               soundStart: "scale_down",
               soundEnd: "scale_up",
               min: 0,
-              max: 8,
+              max: 7,
               part: RenderPart.Head,
             },
           ],

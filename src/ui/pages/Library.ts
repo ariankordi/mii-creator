@@ -7,7 +7,11 @@ import Mii from "../../external/mii-js/mii";
 import { Buffer } from "../../../node_modules/buffer/index";
 import Loader from "../components/Loader";
 import { AddButtonSounds } from "../../util/AddButtonSounds";
-import { getMiiRender, QRCodeCanvas } from "../../util/miiImageUtils";
+import {
+  getMiiRender,
+  MiiCustomRenderType,
+  QRCodeCanvas,
+} from "../../util/miiImageUtils";
 import { Link } from "../components/Link";
 import { Config } from "../../config";
 import EditorIcons from "../../constants/EditorIcons";
@@ -485,9 +489,52 @@ const miiExportRender = async (miiData: Mii) => {
     "Choose a way to render this Mii",
     "body",
     {
-      text: "Default render",
+      text: "Focus on head",
       async callback() {
-        const renderImage = await getMiiRender(miiData);
+        const renderImage = await getMiiRender(
+          miiData,
+          MiiCustomRenderType.Head
+        );
+        renderImage.style.width = "100%";
+        renderImage.style.height = "100%";
+        renderImage.style.objectFit = "contain";
+        const m = Modal.modal(`Render: ${miiData.miiName}`, "", "body", {
+          text: "Cancel",
+          callback() {},
+        });
+        m.qs(".modal-body")!
+          .clear()
+          .style({ padding: "0" })
+          .prepend(renderImage);
+      },
+    },
+    {
+      text: "Focus on full body",
+      async callback() {
+        const renderImage = await getMiiRender(
+          miiData,
+          MiiCustomRenderType.Body
+        );
+        renderImage.style.width = "100%";
+        renderImage.style.height = "100%";
+        renderImage.style.objectFit = "contain";
+        const m = Modal.modal(`Render: ${miiData.miiName}`, "", "body", {
+          text: "Cancel",
+          callback() {},
+        });
+        m.qs(".modal-body")!
+          .clear()
+          .style({ padding: "0" })
+          .prepend(renderImage);
+      },
+    },
+    {
+      text: "Head only",
+      async callback() {
+        const renderImage = await getMiiRender(
+          miiData,
+          MiiCustomRenderType.HeadOnly
+        );
         renderImage.style.width = "100%";
         renderImage.style.height = "100%";
         renderImage.style.objectFit = "contain";
@@ -547,7 +594,7 @@ const miiExportRender = async (miiData: Mii) => {
                   property: "fov",
                   iconStart: "FOV",
                   iconEnd: "",
-                  min: 20,
+                  min: 5,
                   max: 70,
                   part: RenderPart.Face,
                 },
@@ -595,8 +642,8 @@ const miiExportRender = async (miiData: Mii) => {
         );
 
         function updateConfiguration() {
-          scene.getCamera().fov = configuration.fov;
-          scene.getCamera().updateProjectionMatrix();
+          scene.getCamera()!.fov = configuration.fov;
+          scene.getCamera()!.updateProjectionMatrix();
         }
 
         //@ts-expect-error

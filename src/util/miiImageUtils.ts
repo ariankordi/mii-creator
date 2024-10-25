@@ -41,7 +41,16 @@ const makeQrCodeImage = async (mii: string): Promise<HTMLImageElement> => {
   });
 };
 
-export const getMiiRender = async (mii: Mii): Promise<HTMLImageElement> => {
+export enum MiiCustomRenderType {
+  Head,
+  HeadOnly,
+  Body,
+}
+
+export const getMiiRender = async (
+  mii: Mii,
+  type: MiiCustomRenderType
+): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     let parent = new Html("div")
       .style({ width: "720px", height: "720px", opacity: "0.1" })
@@ -51,21 +60,54 @@ export const getMiiRender = async (mii: Mii): Promise<HTMLImageElement> => {
       parent.elm,
       SetupType.Screenshot,
       (renderer) => {
-        requestAnimationFrame(() => {
-          const imgUrl = renderer.domElement.toBlob((blob) => {
-            const image = new Image(
-              renderer.domElement.width,
-              renderer.domElement.height
-            );
-            image.src = URL.createObjectURL(blob!);
-            console.log("Temporary render URL:", image.src);
-            image.onload = () => {
-              resolve(image);
-              scene.shutdown();
-              parent.cleanup();
-            };
+        let scn = scene.getScene()!,
+          cam = scene.getCamera()!,
+          ctl = scene.getControls()!;
+        switch (type) {
+          case MiiCustomRenderType.Head:
+            // zoom in on head
+            ctl.moveTo(0, 3.5, 0);
+            ctl.dollyTo(25);
+            cam.fov = 30;
+            cam.updateProjectionMatrix();
+            break;
+          case MiiCustomRenderType.HeadOnly:
+            // hide body from view
+            scn.getObjectByName("body_m")!.visible = false;
+            scn.getObjectByName("legs_m")!.visible = false;
+            scn.getObjectByName("body_f")!.visible = false;
+            scn.getObjectByName("legs_f")!.visible = false;
+            // zoom in on head
+            ctl.moveTo(0, 3.5, 0);
+            ctl.dollyTo(10);
+            cam.fov = 30;
+            cam.updateProjectionMatrix();
+            break;
+          case MiiCustomRenderType.Body:
+            // default screenshot camera position
+            ctl.moveTo(0, 1.5, 0);
+            ctl.dollyTo(40);
+            cam.fov = 30;
+            cam.updateProjectionMatrix();
+            break;
+        }
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            renderer.domElement.toBlob((blob) => {
+              const image = new Image(
+                renderer.domElement.width,
+                renderer.domElement.height
+              );
+              image.src = URL.createObjectURL(blob!);
+              console.log("Temporary render URL:", image.src);
+              image.onload = () => {
+                resolve(image);
+                scene.shutdown();
+                parent.cleanup();
+              };
+            });
           });
-        });
+        }, 50);
       }
     );
     scene.init().then(() => {
@@ -73,20 +115,6 @@ export const getMiiRender = async (mii: Mii): Promise<HTMLImageElement> => {
       parent.append(scene.getRendererElement());
     });
   });
-  // const blob = await (
-  //   await fetch(
-  //     `${Config.renderer.renderHeadshotURLNoParams}?data=${encodeURIComponent(
-  //       mii
-  //     )}&shaderType=0&type=face&width=720&verifyCharInfo=0`
-  //   )
-  // ).blob();
-  // const img = new Image(720, 720);
-  // img.src = URL.createObjectURL(blob);
-  // return new Promise((resolve) => {
-  //   img.onload = () => {
-  //     return resolve(img);
-  //   };
-  // });
 };
 
 export const getBackground = async (): Promise<HTMLImageElement> => {
@@ -102,7 +130,7 @@ export const getBackground = async (): Promise<HTMLImageElement> => {
 
 export const QRCodeCanvas = async (mii: string) => {
   const miiData = new Mii(Buf.from(mii, "base64"));
-  const render = await getMiiRender(miiData);
+  const render = await getMiiRender(miiData, MiiCustomRenderType.Body);
   const qrCodeSource = await makeQrCodeImage(mii);
   const background = await getBackground();
 

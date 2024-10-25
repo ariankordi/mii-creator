@@ -19,6 +19,12 @@ export function MainMenu() {
       async callback() {
         SaveDataManager();
       },
+    },
+    {
+      text: "Settings",
+      async callback() {
+        Settings();
+      },
     }
   );
 }

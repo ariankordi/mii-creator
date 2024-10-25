@@ -769,8 +769,15 @@ export class Mii3DScene {
   }
 
   // screenshot mode helper utils
+  // also used for debugging
   getCamera() {
     return this.#camera;
+  }
+  getControls() {
+    return this.#controls;
+  }
+  getScene() {
+    return this.#scene;
   }
 
   shutdown() {

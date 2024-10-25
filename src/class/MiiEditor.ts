@@ -32,6 +32,7 @@ import { EyebrowTab } from "../ui/tabs/Eyebrow";
 import { GlassesTab } from "../ui/tabs/Glasses";
 import localforage from "localforage";
 import { Config } from "../config";
+import { OptionsTab } from "../ui/tabs/Options";
 
 export enum MiiGender {
   Male,
@@ -142,7 +143,9 @@ export class MiiEditor {
   }
 
   async #setupUi() {
-    this.icons = await fetch("./dist/icons.json").then((j) => j.json());
+    this.icons = await fetch("./dist/icons.json?t=" + Date.now()).then((j) =>
+      j.json()
+    );
     this.ui = {} as unknown as any;
     this.#setupBase();
     this.#updateCssVars();
@@ -242,6 +245,8 @@ export class MiiEditor {
           container: content,
           callback: (mii, forceRender, renderPart) => {
             this.mii = mii;
+            if (this.mii.normalMii === false) this.mii.disableSharing = true;
+            else this.mii.disableSharing = false;
             activeMii = mii;
             // use of forceRender forces reload of the head in 3D mode
             this.render(forceRender, renderPart);
@@ -300,6 +305,10 @@ export class MiiEditor {
       {
         icon: EditorIcons.favoriteColor,
         select: TabInit(FavoriteColorTab, CameraPosition.MiiFullBody),
+      },
+      {
+        icon: EditorIcons.gender,
+        select: TabInit(OptionsTab, CameraPosition.MiiFullBody),
       },
       {
         icon: EditorIcons.details,

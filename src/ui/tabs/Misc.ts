@@ -100,63 +100,6 @@ export function MiscTab(data: TabRenderInit) {
           (creator) => Buf.from(creator, "utf16le").length <= 0x14,
           data.editor
         ),
-        new Html("div")
-          .class("input-group")
-          .style({
-            height: "max-content",
-            margin: "0 -16px 0 -16px",
-            width: "calc(100% + 32px)",
-          })
-          .appendMany(
-            MiiPagedFeatureSet({
-              mii: data.mii,
-              onChange: data.callback,
-              entries: {
-                gender: {
-                  label: "Gender",
-                  items: [
-                    {
-                      type: FeatureSetType.Switch,
-                      iconOff: EditorIcons.genderMale,
-                      iconOn: EditorIcons.genderFemale,
-                      property: "gender",
-                      isNumber: true,
-                      forceRender: false,
-                      part: RenderPart.Face,
-                    },
-                  ],
-                },
-                favorite: {
-                  label: "Favorite",
-                  items: [
-                    {
-                      type: FeatureSetType.Switch,
-                      iconOff: "No",
-                      iconOn: "Yes",
-                      property: "favorite",
-                      isNumber: false,
-                      forceRender: false,
-                      part: RenderPart.Face,
-                    },
-                  ],
-                },
-                isSpecial: {
-                  label: "Type",
-                  items: [
-                    {
-                      type: FeatureSetType.Switch,
-                      iconOff: "Special",
-                      iconOn: "Normal",
-                      property: "normalMii",
-                      isNumber: false,
-                      forceRender: false,
-                      part: RenderPart.Face,
-                    },
-                  ],
-                },
-              },
-            }).style({ width: "100%" })
-          )
       )
   );
 }
