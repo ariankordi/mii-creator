@@ -516,6 +516,7 @@ input[type=range] {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  width: 100%;
 }
 .tab-content .feature-set-group .feature-switch {
   display: flex;
@@ -531,7 +532,7 @@ input[type=range] {
   padding: 2.5px 14px;
   flex: 1;
   display: flex;
-  width: 64px;
+  min-width: 64px;
   height: max-content;
   justify-content: center;
   align-items: center;

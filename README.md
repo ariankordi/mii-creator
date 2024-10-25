@@ -1,10 +1,8 @@
-# Mii Maker app in TypeScript
+# Mii Creator App
 
 ![Preview image](public/assets/img/preview.png)
 
-Create and share Miis online with just a few clicks!
-
-**(Note: Some of the icons in the app are currently placeholders until I can get the Mii Studio icons used)**
+Create and share Mii characters online with just a few clicks!
 
 ## Credits
 
@@ -20,6 +18,7 @@ This uses the FFSD (3DS/Wii U) data type, so the extra colors and parts from the
 - [x] Change parts and colors of the Mii
 - [x] Save and load Miis in your library
 - [x] Export Mii to QR code/FFSD format
+- [x] Render to PNG file
 
 ## Contributing
 

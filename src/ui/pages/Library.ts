@@ -431,14 +431,7 @@ const miiExport = (mii: MiiLocalforage, miiData: Mii) => {
       text: "Generate QR code",
       async callback() {
         const qrCodeImage = await QRCodeCanvas(mii.mii);
-        const m = Modal.modal(`QR Code: ${miiData.miiName}`, "", "body", {
-          text: "Cancel",
-          callback() {},
-        });
-        m.qs(".modal-body")!
-          .clear()
-          .style({ padding: "0" })
-          .prepend(new Html("img").attr({ src: qrCodeImage }));
+        downloadLink(qrCodeImage, `${miiData.miiName}_QR.png`);
       },
     },
     {
@@ -495,17 +488,7 @@ const miiExportRender = async (miiData: Mii) => {
           miiData,
           MiiCustomRenderType.Head
         );
-        renderImage.style.width = "100%";
-        renderImage.style.height = "100%";
-        renderImage.style.objectFit = "contain";
-        const m = Modal.modal(`Render: ${miiData.miiName}`, "", "body", {
-          text: "Cancel",
-          callback() {},
-        });
-        m.qs(".modal-body")!
-          .clear()
-          .style({ padding: "0" })
-          .prepend(renderImage);
+        downloadLink(renderImage.src, `${miiData.miiName}_render_headshot.png`);
       },
     },
     {
@@ -515,17 +498,7 @@ const miiExportRender = async (miiData: Mii) => {
           miiData,
           MiiCustomRenderType.Body
         );
-        renderImage.style.width = "100%";
-        renderImage.style.height = "100%";
-        renderImage.style.objectFit = "contain";
-        const m = Modal.modal(`Render: ${miiData.miiName}`, "", "body", {
-          text: "Cancel",
-          callback() {},
-        });
-        m.qs(".modal-body")!
-          .clear()
-          .style({ padding: "0" })
-          .prepend(renderImage);
+        downloadLink(renderImage.src, `${miiData.miiName}_render_body.png`);
       },
     },
     {
@@ -535,17 +508,10 @@ const miiExportRender = async (miiData: Mii) => {
           miiData,
           MiiCustomRenderType.HeadOnly
         );
-        renderImage.style.width = "100%";
-        renderImage.style.height = "100%";
-        renderImage.style.objectFit = "contain";
-        const m = Modal.modal(`Render: ${miiData.miiName}`, "", "body", {
-          text: "Cancel",
-          callback() {},
-        });
-        m.qs(".modal-body")!
-          .clear()
-          .style({ padding: "0" })
-          .prepend(renderImage);
+        downloadLink(
+          renderImage.src,
+          `${miiData.miiName}_render_head_only.png`
+        );
       },
     },
     {
@@ -579,7 +545,12 @@ const miiExportRender = async (miiData: Mii) => {
           .appendTo(body);
         let tabsContent = new Html("div").classOn("tab-content").appendTo(body);
 
-        let configuration = { fov: 30, renderWidth: 720, renderHeight: 720 };
+        let configuration = {
+          fov: 30,
+          renderWidth: 720,
+          renderHeight: 720,
+          cameraPosition: 0,
+        };
 
         // very hacky way to use feature set to create tabs
         MiiPagedFeatureSet({
@@ -596,6 +567,14 @@ const miiExportRender = async (miiData: Mii) => {
                   iconEnd: "",
                   min: 5,
                   max: 70,
+                  part: RenderPart.Face,
+                },
+                {
+                  type: FeatureSetType.Switch,
+                  property: "cameraPosition",
+                  isNumber: true,
+                  iconOff: "Head",
+                  iconOn: "Full Body",
                   part: RenderPart.Face,
                 },
               ],
@@ -644,6 +623,14 @@ const miiExportRender = async (miiData: Mii) => {
         function updateConfiguration() {
           scene.getCamera()!.fov = configuration.fov;
           scene.getCamera()!.updateProjectionMatrix();
+          switch (configuration.cameraPosition) {
+            case 0:
+              scene.getControls().moveTo(0, 3.5, 0, true);
+              break;
+            case 1:
+              scene.getControls().moveTo(0, 0, 0, true);
+              break;
+          }
         }
 
         //@ts-expect-error
