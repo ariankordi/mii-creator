@@ -55,7 +55,7 @@ export async function setupUi() {
         },
         searchParams.get("data")!
       );
-    }
+    } else Library();
   } else Library();
 
   getSoundManager().setVolume(0.35);
