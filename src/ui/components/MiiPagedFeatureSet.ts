@@ -74,6 +74,7 @@ export type FeatureSetItem =
   | FeatureSetSliderItem;
 export interface FeatureSetEntry {
   label: string;
+  header?: string;
   items: FeatureSetItem[];
 }
 
@@ -109,6 +110,10 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
           .class("feature-set-group")
           .appendTo(content);
 
+        if (entry.header) {
+          setList.append(new Html("div").class("feature-set-header").text(entry.header));
+        }
+
         if ("items" in entry) {
           for (const item of entry.items) {
             const id = md5(String(Math.random() * 21412855));
@@ -129,6 +134,9 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   .class("feature-item")
                   .on("pointerenter", playHoverSound)
                   .on("click", () => {
+                    // PREVENT DUPLICATE UPDATES
+                    if ((tmpMii as Record<string, any>)[key] === item.value)
+                      return;
                     (tmpMii as Record<string, any>)[key] = item.value;
                     update();
                     if (item.sound) playSound(item.sound);
@@ -326,6 +334,8 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
             }
           }
         }
+
+        window.LazyLoad.update();
       },
     });
   }

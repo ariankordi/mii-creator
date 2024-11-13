@@ -435,19 +435,19 @@ export default class Mii {
     );
     assert.ok(
       Util.inRange(this.glassesType, Util.range(9)),
-      `Invalid Mii glassess type. Got ${this.glassesType}, expected 0-8`
+      `Invalid Mii glasses type. Got ${this.glassesType}, expected 0-8`
     );
     assert.ok(
       Util.inRange(this.glassesColor, Util.range(6)),
-      `Invalid Mii glassess type. Got ${this.glassesColor}, expected 0-5`
+      `Invalid Mii glasses type. Got ${this.glassesColor}, expected 0-5`
     );
     assert.ok(
       Util.inRange(this.glassesScale, Util.range(8)),
-      `Invalid Mii glassess type. Got ${this.glassesScale}, expected 0-7`
+      `Invalid Mii glasses type. Got ${this.glassesScale}, expected 0-7`
     );
     assert.ok(
       Util.inRange(this.glassesYPosition, Util.range(21)),
-      `Invalid Mii glassess Y position. Got ${this.glassesYPosition}, expected 0-20`
+      `Invalid Mii glasses Y position. Got ${this.glassesYPosition}, expected 0-20`
     );
     assert.strictEqual(
       typeof this.moleEnabled,

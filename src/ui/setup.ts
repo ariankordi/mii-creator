@@ -41,8 +41,17 @@ export async function setupUi() {
     if (searchParams.has("data")) {
       new MiiEditor(
         0,
-        () => {
-          Library();
+        (data, shutdownProperly) => {
+          if (window.parent !== window) {
+            // In iframe (UNTESTED)
+            window.postMessage({
+              type: "data-finalize",
+              properSave: shutdownProperly,
+              data,
+            });
+          } else {
+            Library();
+          }
         },
         searchParams.get("data")!
       );

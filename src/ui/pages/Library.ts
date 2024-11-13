@@ -1,5 +1,5 @@
 import Html from "@datkat21/html";
-import localforage from "localforage";
+import localforage, { config } from "localforage";
 import { MiiEditor, MiiGender, RenderPart } from "../../class/MiiEditor";
 import { MainMenu } from "./MainMenu";
 import Modal from "../components/Modal";
@@ -21,6 +21,8 @@ import {
   MiiPagedFeatureSet,
 } from "../components/MiiPagedFeatureSet";
 import { downloadLink } from "../../util/downloadLink";
+import { ArrayNum } from "../../util/NumberArray";
+import type { Mesh } from "three";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
@@ -84,8 +86,8 @@ export async function Library(highlightMiiId?: string) {
 
       console.log(miiData.miiName + "'s birthPlatform:", miiData.deviceOrigin);
 
-      let miiImage = new Html("img").attr({
-        src: miiIconUrl(mii.mii),
+      let miiImage = new Html("img").class("lazy").attr({
+        "data-src": miiIconUrl(mii.mii),
       });
       let miiName = new Html("span").text(miiData.miiName);
 
@@ -145,6 +147,7 @@ export async function Library(highlightMiiId?: string) {
       console.log("Oops", e);
     }
   }
+  window.LazyLoad.update();
 
   sidebar.appendMany(
     new Html("div").class("sidebar-buttons").appendMany(
@@ -441,6 +444,12 @@ const miiExport = (mii: MiiLocalforage, miiData: Mii) => {
       },
     },
     {
+      text: "Make your own render",
+      async callback() {
+        customRender(miiData);
+      },
+    },
+    {
       text: "Get FFSD (text)",
       async callback() {
         return Modal.alert("FFSD code", mii.mii, "body", true);
@@ -515,155 +524,215 @@ const miiExportRender = async (miiData: Mii) => {
       },
     },
     {
-      text: "Custom render",
-      async callback() {
-        const modal = Modal.modal("Prepare Render", "", "body", {
-          callback: () => {},
-          text: "Cancel",
-        });
-        const body = modal
-          .qs(".modal-body")!
-          .classOn("responsive-row-lg")
-          .clear();
-        modal.qs(".modal-content")!.styleJs({
-          width: "100%",
-          height: "100%",
-          maxWidth: "100%",
-          maxHeight: "100%",
-        });
-        let parent = new Html("div")
-          .style({
-            display: "flex",
-            flex: "1",
-            background: "var(--container)",
-            "border-radius": "12px",
-            "flex-shrink": "1",
-            height: "100%",
-            overflow: "hidden",
-            "align-items": "center",
-          })
-          .appendTo(body);
-        let tabsContent = new Html("div").classOn("tab-content").appendTo(body);
-
-        let configuration = {
-          fov: 30,
-          renderWidth: 720,
-          renderHeight: 720,
-          cameraPosition: 0,
-        };
-
-        // very hacky way to use feature set to create tabs
-        MiiPagedFeatureSet({
-          mii: configuration,
-          miiIsNotMii: true,
-          entries: {
-            page1: {
-              label: "Camera",
-              items: [
-                {
-                  type: FeatureSetType.Slider,
-                  property: "fov",
-                  iconStart: "FOV",
-                  iconEnd: "",
-                  min: 5,
-                  max: 70,
-                  part: RenderPart.Face,
-                },
-                {
-                  type: FeatureSetType.Switch,
-                  property: "cameraPosition",
-                  isNumber: true,
-                  iconOff: "Head",
-                  iconOn: "Full Body",
-                  part: RenderPart.Face,
-                },
-              ],
-            },
-            // WIP page 2
-            // page2: {
-            //   label: "Render",
-            //   items: [
-            //     {
-            //       type: FeatureSetType.Text,
-            //       property: "renderWidth",
-            //       part: RenderPart.Face,
-            //       label: "Width",
-            //     },
-            //     {
-            //       type: FeatureSetType.Text,
-            //       property: "renderHeight",
-            //       part: RenderPart.Face,
-            //       label: "Height",
-            //     },
-            //   ],
-            // },
-          },
-          onChange(mii, forceRender, part) {
-            configuration = mii as any;
-            updateConfiguration();
-          },
-        }).appendTo(tabsContent);
-
-        new Html("button")
-          .text("Download")
-          .on("click", finalizeRender)
-          .appendTo(tabsContent);
-
-        window.addEventListener("resize", () => {
-          scene.resize();
-        });
-
-        const scene = new Mii3DScene(
-          miiData,
-          parent.elm,
-          SetupType.Screenshot,
-          (renderer) => {}
-        );
-
-        function updateConfiguration() {
-          scene.getCamera()!.fov = configuration.fov;
-          scene.getCamera()!.updateProjectionMatrix();
-          switch (configuration.cameraPosition) {
-            case 0:
-              scene.getControls().moveTo(0, 3.5, 0, true);
-              break;
-            case 1:
-              scene.getControls().moveTo(0, 0, 0, true);
-              break;
-          }
-        }
-
-        //@ts-expect-error
-        window.scene = scene;
-
-        scene.init().then(() => {
-          scene.updateBody();
-          parent.append(scene.getRendererElement());
-        });
-
-        const rendererElm = scene.getRendererElement();
-
-        function finalizeRender() {
-          rendererElm.toBlob((blob) => {
-            const image = new Image(rendererElm.width, rendererElm.height);
-            image.src = URL.createObjectURL(blob!);
-            console.log("Temporary render URL:", image.src);
-            image.onload = () => {
-              downloadLink(
-                image.src,
-                `${miiData.miiName}_${new Date().toJSON()}`
-              );
-              scene.shutdown();
-              parent.cleanup();
-              modal.qs("button")?.elm.click();
-            };
-          });
-        }
-      },
-    },
-    {
       text: "Cancel",
       callback() {},
     }
   );
 };
+
+export function customRender(miiData: Mii) {
+  const modal = Modal.modal("Prepare Render", "", "body", {
+    callback: () => {},
+    text: "Cancel",
+  });
+  const body = modal.qs(".modal-body")!.classOn("responsive-row-lg").clear();
+  modal.qs(".modal-content")!.styleJs({
+    width: "100%",
+    height: "100%",
+    maxWidth: "100%",
+    maxHeight: "100%",
+  });
+  let parent = new Html("div")
+    .style({
+      display: "flex",
+      flex: "1",
+      background: "var(--container)",
+      "border-radius": "12px",
+      "flex-shrink": "0",
+      height: "100%",
+      overflow: "hidden",
+      "justify-content": "center",
+      "align-items": "center",
+    })
+    .appendTo(body);
+  let parentBox = new Html("div")
+    .style({ "aspect-ratio": "1 / 1", height: "100%" })
+    .appendTo(parent);
+  let tabsContent = new Html("div")
+    .classOn("tab-content")
+    .style({ flex: "1", height: "100%", overflow: "auto" })
+    .appendTo(body);
+
+  let configuration = {
+    fov: 30,
+    pose: 0,
+    expression: 0,
+    renderWidth: 720,
+    renderHeight: 720,
+    cameraPosition: 1,
+  };
+
+  const base64Data = miiData.encode().toString("base64");
+
+  const expressionDuplicateList = [42, 44, 46, 48, 50, 52, 54, 61, 62];
+
+  // very hacky way to use feature set to create tabs
+  MiiPagedFeatureSet({
+    mii: configuration,
+    miiIsNotMii: true,
+    entries: {
+      page1: {
+        label: "Camera",
+        items: [
+          {
+            type: FeatureSetType.Slider,
+            property: "fov",
+            iconStart: "FOV",
+            iconEnd: "",
+            min: 5,
+            max: 70,
+            part: RenderPart.Face,
+          },
+          {
+            type: FeatureSetType.Switch,
+            property: "cameraPosition",
+            isNumber: true,
+            iconOff: "Head",
+            iconOn: "Full Body",
+            part: RenderPart.Face,
+          },
+        ],
+      },
+      pose: {
+        label: "Pose",
+        header:
+          "This section is a bit unfinished, the poses are custom-made recreations so they are not fully accurate. Pose 3 also has a rotation issue with the head since it has been changed to be pretending to be attached to the body to prevent weird scaling issues. There is also nothing done after pose 4 currently. I'm working on a way to add the Wii U poses directly.",
+        items: ArrayNum(15).map((k) => ({
+          type: FeatureSetType.Icon,
+          value: k,
+          icon: String(k),
+          part: RenderPart.Head,
+        })),
+      },
+      expression: {
+        label: "Expression",
+        items: ArrayNum(70)
+          .filter((n) => !expressionDuplicateList.includes(n))
+          .map((k) => ({
+            type: FeatureSetType.Icon,
+            value: k,
+            icon: `<img class="lazy" width=128 height=128 data-src="https://mii-renderer.nxw.pw/miis/image.png?width=128&scale=1&data=${encodeURIComponent(
+              base64Data
+            )}&expression=${k}&type=fflmakeicon&verifyCharInfo=0">`,
+            part: RenderPart.Head,
+          })),
+      },
+      page2: {
+        label: "Render",
+        header:
+          "Render resolution options will be here when the feature is ready.",
+        items: [
+          {
+            type: FeatureSetType.Text,
+            property: "renderWidth",
+            part: RenderPart.Face,
+            label: "Width",
+          },
+          {
+            type: FeatureSetType.Text,
+            property: "renderHeight",
+            part: RenderPart.Face,
+            label: "Height",
+          },
+        ],
+      },
+    },
+    onChange(mii, forceRender, part) {
+      configuration = mii as any;
+      updateConfiguration();
+      console.log("updated", configuration);
+    },
+  })
+    .style({ height: "auto" })
+    .appendTo(tabsContent);
+
+  new Html("button")
+    .text("Download")
+    .on("click", finalizeRender)
+    .appendTo(tabsContent);
+
+  window.addEventListener("resize", () => {
+    scene.resize();
+  });
+
+  const scene = new Mii3DScene(
+    miiData,
+    parentBox.elm,
+    SetupType.Screenshot,
+    (renderer) => {}
+  );
+
+  //@ts-expect-error testing
+  window.scene = scene;
+
+  let oldConfiguration: any = {
+    fov: 30,
+    pose: 0,
+    expression: 0,
+    renderWidth: 720,
+    renderHeight: 720,
+    cameraPosition: 1,
+  };
+
+  function updateConfiguration() {
+    scene.getCamera()!.fov = configuration.fov;
+    scene.getCamera()!.updateProjectionMatrix();
+    switch (configuration.cameraPosition) {
+      case 0:
+        scene.getControls().moveTo(0, 3.5, 0, true);
+        break;
+      case 1:
+        scene.getControls().moveTo(0, 0, 0, true);
+        break;
+    }
+
+    scene.traverseAddFaceMaterial(
+      scene.getHead() as Mesh,
+      `&data=${encodeURIComponent(base64Data)}&expression=${
+        configuration.expression
+      }&width=896&verifyCharInfo=0`
+    );
+
+    if (scene.animations.get(`${scene.type}-Pose.${configuration.pose}`)) {
+      scene.swapAnimation("Pose." + configuration.pose);
+    } else {
+      scene.swapAnimation("Stand");
+    }
+
+    oldConfiguration = configuration;
+  }
+
+  //@ts-expect-error
+  window.scene = scene;
+
+  scene.init().then(() => {
+    scene.updateBody();
+    parentBox.append(scene.getRendererElement());
+  });
+
+  const rendererElm = scene.getRendererElement();
+
+  function finalizeRender() {
+    rendererElm.toBlob((blob) => {
+      const image = new Image(rendererElm.width, rendererElm.height);
+      image.src = URL.createObjectURL(blob!);
+      console.log("Temporary render URL:", image.src);
+      image.onload = () => {
+        downloadLink(image.src, `${miiData.miiName}_${new Date().toJSON()}`);
+        scene.shutdown();
+        parent.cleanup();
+        modal.qs("button")?.elm.click();
+      };
+    });
+  }
+}

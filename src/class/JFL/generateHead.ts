@@ -95,7 +95,7 @@ export async function generateHeadModel(mii: Mii) {
       MiiSkinColorTable[mii.skinColor],
       cMaterialName.FFL_MODULATE_TYPE_SHAPE_NOSE
     );
-    noseModel.position.set(0, 2, 2.7);
+    noseModel.position.set(0, 2, 2.6);
   }
 
   let foreheadModel = await loadMeshToGroup(

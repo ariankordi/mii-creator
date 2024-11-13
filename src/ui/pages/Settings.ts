@@ -18,43 +18,4 @@ export function Settings() {
       MainMenu();
     },
   });
-
-  modal
-    .qs(".modal-body")!
-    .style({ padding: "0" })
-    .classOn("ui-base", "not-fixed")
-    .clear()
-    .append(
-      MiiPagedFeatureSet({
-        entries: {
-          1: {
-            label: "Use experimental FFL shader",
-            items: [
-              {
-                type: FeatureSetType.Switch,
-                iconOff: "No",
-                iconOn: "Yes",
-                property: "useFFLShader",
-                part: RenderPart.Head,
-              },
-            ],
-          },
-          2: {
-            label: "Theme",
-            items: [
-              {
-                type: FeatureSetType.Switch,
-                iconOff: "Light",
-                iconOn: "Dark",
-                property: "darkTheme",
-                part: RenderPart.Head,
-              },
-            ],
-          },
-        },
-        onChange(mii, forceRender) {
-          console.log("changed:", mii);
-        },
-      })
-    );
 }

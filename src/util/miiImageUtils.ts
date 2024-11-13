@@ -67,8 +67,8 @@ export const getMiiRender = async (
           case MiiCustomRenderType.Head:
             // zoom in on head
             ctl.moveTo(0, 3.5, 0);
-            ctl.dollyTo(25);
-            cam.fov = 30;
+            ctl.dollyTo(50);
+            cam.fov = 15;
             cam.updateProjectionMatrix();
             break;
           case MiiCustomRenderType.HeadOnly:
@@ -79,15 +79,15 @@ export const getMiiRender = async (
             scn.getObjectByName("legs_f")!.visible = false;
             // zoom in on head
             ctl.moveTo(0, 3.5, 0);
-            ctl.dollyTo(10);
-            cam.fov = 30;
+            ctl.dollyTo(20);
+            cam.fov = 15;
             cam.updateProjectionMatrix();
             break;
           case MiiCustomRenderType.Body:
             // default screenshot camera position
             ctl.moveTo(0, 1.5, 0);
-            ctl.dollyTo(40);
-            cam.fov = 30;
+            ctl.dollyTo(80);
+            cam.fov = 15;
             cam.updateProjectionMatrix();
             break;
         }

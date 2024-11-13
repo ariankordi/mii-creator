@@ -18,7 +18,7 @@ export function FavoriteColorTab(data: TabRenderInit) {
           label: "Color",
           items: ArrayNum(12).map((k) => ({
             type: FeatureSetType.Icon,
-            forceRender: false,
+            forceRender: true,
             value: k,
             color: numToHex(MiiFavoriteColorLookupTable[k]),
             part: RenderPart.Head,

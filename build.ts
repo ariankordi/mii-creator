@@ -40,6 +40,7 @@ async function build() {
   try {
     await compile("./src/main.ts", "./public/dist/");
     await compile("./src/jfl-demo.ts", "./public/dist/");
+    await compile("./src/api.ts", "./public/dist/");
   } catch (e) {
     console.log(e);
   }

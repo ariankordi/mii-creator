@@ -7,10 +7,19 @@ export function SaveDataManager() {
     "Save Data",
     "Choose an option",
     "body",
-    // TODO implement this
+    // TODO implement this, nearly finished
     // {
     //   text: "Import Save Data",
     //   async callback(e) {
+    //     if (
+    //       (await Modal.prompt(
+    //         "WARNING",
+    //         "This will overwrite ALL of your currently saved Miis and delete them forever! Please back up your save data before using this option.\n\nAre you certain that you understand the risk?",
+    //         "body"
+    //       )) === false
+    //     )
+    //       return;
+
     //     const input = document.createElement("input");
     //     input.type = "file";
     //     input.accept = "application/json";
@@ -19,10 +28,14 @@ export function SaveDataManager() {
     //     requestAnimationFrame(() => {
     //       document.body.removeChild(input);
     //     });
-    //     input.addEventListener("change", (e) => {
+    //     input.addEventListener("change", async (e) => {
+    //       if (input.files === null) return;
+    //       if (input.files[0] === undefined) return;
     //       console.log(input.files);
+    //       const json = await input.files![0].json();
+    //       console.log("THE JSON!!", json);
+    //       MainMenu();
     //     });
-    //     MainMenu();
     //   },
     // },
     {

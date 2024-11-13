@@ -199,7 +199,7 @@ $desktopWidth: 1280px;
     border-radius: 8px;
     min-width: 200px;
     min-height: 140px;
-    max-width: 480px;
+    // max-width: 480px;
     max-height: 440px;
     overflow: clip;
     animation: shortSlideUp $animation-duration $easing-function;
@@ -529,6 +529,15 @@ input {
     flex-wrap: wrap;
     gap: 6px;
     width: 100%;
+    .feature-set-header {
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--hover);
+      color: var(--text);
+      border: 1px solid var(--stroke);
+      border-radius: 6px;
+      margin: 4px;
+    }
     .feature-switch {
       display: flex;
       .feature-switch-left {

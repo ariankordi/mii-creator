@@ -19,6 +19,7 @@ This uses the FFSD (3DS/Wii U) data type, so the extra colors and parts from the
 - [x] Save and load Miis in your library
 - [x] Export Mii to QR code/FFSD format
 - [x] Render to PNG file
+- [x] Create your own renders
 
 ## Contributing
 
@@ -28,5 +29,5 @@ I'm open to contributions if you want to help on the project!
 
 1. Make sure you have [Bun](https://bun.sh/) installed on your device. This is used for compiling all of the TypeScript code into JavaScript for the client.
 2. Clone this repository, and run the `bun i` command to install dependencies.
-3. In one terminal, run `bun build-ts`, and in another, run `bun serve`. If `bun serve` doesn't work, try `bunx serve`. 
+3. In one terminal, run `bun build-ts`, and in another, run `bun serve`. If `bun serve` doesn't work, try `bunx serve`.  (There is also an optional Go server if you want to use that over the bun server. Both seem to have a strange issue on Windows where you have to wait 5 seconds before you are allowed to refresh the page..)
 4. Any changes you make should log in the build-ts terminal, and check the server on the second terminal to find the port. Live server is not advised when using my build script because it sometimes can refresh too much.

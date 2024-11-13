@@ -23,6 +23,7 @@ import { RenderPart } from "./MiiEditor";
 import { Config } from "../config";
 import { Buffer } from "../../node_modules/buffer";
 import { getSoundManager } from "./audio/SoundManager";
+import { SparkleParticle } from "./3d/effect/SparkleParticle";
 
 export enum CameraPosition {
   MiiHead,
@@ -44,11 +45,12 @@ export class Mii3DScene {
   mii: Mii;
   ready: boolean;
   headReady: boolean;
-  mixer!: THREE.AnimationMixer;
+  mixers: Map<"m" | "f", THREE.AnimationMixer>;
   animators: Map<string, (n: number, f: number) => any>;
   animations: Map<string, THREE.AnimationClip>;
   setupType: SetupType;
   #initCallback?: (renderer: THREE.WebGLRenderer) => any;
+  type: "m" | "f";
   constructor(
     mii: Mii,
     parent: HTMLElement,
@@ -57,6 +59,7 @@ export class Mii3DScene {
   ) {
     this.animations = new Map();
     this.animators = new Map();
+    this.anim = new Map();
     this.#parent = parent;
     this.#scene = new THREE.Scene();
     this.#camera = new THREE.PerspectiveCamera(
@@ -69,6 +72,7 @@ export class Mii3DScene {
     // this.#camera.rotation.set(0, Math.PI, 0);
     this.ready = false;
     this.headReady = false;
+    this.mixers = new Map();
     if (initCallback) this.#initCallback = initCallback;
 
     const cubeTextureLoader = new THREE.CubeTextureLoader();
@@ -128,11 +132,15 @@ export class Mii3DScene {
       this.#renderer.domElement
     );
     if (setupType === SetupType.Normal) {
+      // this.#camera.fov = 15;
+      // this.#camera.updateProjectionMatrix();
       this.#controls.mouseButtons.left = CameraControls.ACTION.ROTATE;
       this.#controls.mouseButtons.right = CameraControls.ACTION.NONE;
       this.#controls.mouseButtons.wheel = CameraControls.ACTION.DOLLY;
       this.#controls.minDistance = 8;
       this.#controls.maxDistance = 35;
+      // this.#controls.minDistance = 60;
+      // this.#controls.maxDistance = 100;
       this.#controls.minAzimuthAngle = -Math.PI;
       this.#controls.maxAzimuthAngle = Math.PI;
     }
@@ -156,6 +164,8 @@ export class Mii3DScene {
     this.#gltfLoader = new GLTFLoader();
 
     this.mii = mii;
+
+    this.type = this.mii.gender === 0 ? "m" : "f";
 
     const clock = new THREE.Clock();
 
@@ -196,32 +206,32 @@ export class Mii3DScene {
     this.focusCamera(CameraPosition.MiiFullBody, true);
     let heads = this.#scene.getObjectsByProperty("name", "MiiHead");
     for (const head of heads) {
-      this.#traverseAddFaceMaterial(
+      this.traverseAddFaceMaterial(
         head as THREE.Mesh,
         `&data=${encodeURIComponent(
           Buffer.from(this.mii.encode()).toString("base64")
-        )}&expression=1`
+        )}&expression=1&width=512`
       );
     }
     const type = this.mii.gender == 0 ? "m" : "f";
     this.animators.delete(`animation-${type}`);
-    this.#playAnimation(
-      this.#scene.getObjectByName(type)!,
-      `animation-${type}`,
-      this.animations.get(`${type}-body-wave`)!
-    );
+    this.swapAnimation("Wave");
     getSoundManager().playSound("finish");
   }
-  resize() {
-    this.#camera.aspect = this.#parent.offsetWidth / this.#parent.offsetHeight;
+  resize(
+    width: number = this.#parent.offsetWidth,
+    height: number = this.#parent.offsetHeight
+  ) {
+    this.#camera.aspect = width / height;
     this.#camera.updateProjectionMatrix();
-    this.#renderer.setSize(this.#parent.offsetWidth, this.#parent.offsetHeight);
+    this.#renderer.setSize(width, height);
   }
   async init() {
     if (this.ready) return;
     this.ready = false;
     this.getRendererElement().style.opacity = "0";
     await this.#addBody();
+    this.swapAnimation("Stand", true);
     await this.updateMiiHead();
     this.ready = true;
     if (this.setupType === SetupType.Screenshot) {
@@ -231,45 +241,78 @@ export class Mii3DScene {
   getRendererElement() {
     return this.#renderer.domElement;
   }
-  #playAnimation(mesh: THREE.Object3D, id: string, clip: THREE.AnimationClip) {
-    // Create an AnimationMixer, and get the list of AnimationClip instances
-    const mixer = new THREE.AnimationMixer(mesh);
+  anim!: Map<"m" | "f", THREE.AnimationAction>;
+  currentAnim!: string;
+  initAnimation(mesh: THREE.Object3D, id: string) {
+    console.debug("playAnimation() called:", mesh, id);
 
-    this.animators.set(id, (time, delta) => {
-      mixer.update(delta);
+    // weird hack to prevent random crash
+    if (!this.mixers.has("m"))
+      this.mixers.set(
+        "m",
+        new THREE.AnimationMixer(this.#scene.getObjectByName("m")!)
+      );
+    if (!this.mixers.has("f"))
+      this.mixers.set(
+        "f",
+        new THREE.AnimationMixer(this.#scene.getObjectByName("f")!)
+      );
+
+    this.animators.set(id, (_time, delta) => {
+      try {
+        this.mixers.get(this.type)!.update(delta);
+      } catch (e) {
+        console.warn(e);
+      }
     });
-
-    const action = mixer.clipAction(clip);
-    action.play();
+  }
+  swapAnimation(newAnim: string, force: boolean = false) {
+    console.debug("swapAnimation() called:", newAnim);
+    if (newAnim === this.currentAnim) return;
+    if (force !== true) {
+      for (const [_, anim] of this.anim) {
+        anim.fadeOut(0.2);
+      }
+    }
+    this.currentAnim = newAnim;
+    for (const [key] of this.mixers) {
+      this.anim.set(
+        key,
+        this.mixers
+          .get(key)!
+          .clipAction(this.animations.get(`${key}-${newAnim}`)!)
+      );
+      this.anim
+        .get(key)!
+        .reset()
+        .setEffectiveTimeScale(1)
+        .setEffectiveWeight(1)
+        .fadeIn(0.2)
+        .play();
+      this.anim.get(key)!.timeScale = 1;
+    }
   }
   async #addBody() {
-    const setupMiiHeadAnim = async () => {
-      const glb = await this.#gltfLoader.loadAsync("./miiHeadAnim.glb");
-      this.animations.set("HeadBob", glb.animations[0]);
-    };
     const setupMiiBody = async (path: string, type: "m" | "f") => {
       const glb = await this.#gltfLoader.loadAsync(path);
 
-      console.log(glb);
-
       const clips = glb.animations;
-      const idleClip = clips.find((c) => c.name === "Stand")!;
-      const waveClip = clips.find((c) => c.name === "Wave")!;
-      this.animations.set(`${type}-body-stand`, idleClip);
-      this.animations.set(`${type}-body-wave`, waveClip);
-      console.log("clip:", idleClip);
 
-      this.#playAnimation(
-        glb.scene.getObjectByName(type)!,
-        `animation-${type}`,
-        idleClip
+      this.mixers.set(
+        type,
+        new THREE.AnimationMixer(glb.scene.getObjectByName(type)!)
       );
+      for (const anim of clips) {
+        this.animations.set(`${type}-${anim.name}`, anim);
+      }
 
       glb.scene.name = `${type}-body-root`;
 
-      requestAnimationFrame(() => {
-        this.#scene.add(glb.scene);
-      });
+      // RAF WAS HERE
+      this.#scene.add(glb.scene);
+
+      // attempt to solve weird animations not working issue
+      this.initAnimation(glb.scene.getObjectByName(type)!, `animation-${type}`);
 
       // Add materials to body and legs
       const gBodyMesh = glb.scene.getObjectByName(
@@ -282,7 +325,7 @@ export class Mii3DScene {
         modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY,
       };
       // adds shader material
-      this.#traverseMesh(gBodyMesh);
+      this.traverseMesh(gBodyMesh);
 
       const gLegsMesh = glb.scene.getObjectByName(
         `legs_${type}`
@@ -295,7 +338,7 @@ export class Mii3DScene {
         modulateSkinning: 1,
       };
       // adds shader material
-      this.#traverseMesh(gLegsMesh);
+      this.traverseMesh(gLegsMesh);
 
       if (this.#scene.getObjectByName("m"))
         this.#scene.getObjectByName("m")!.visible = false;
@@ -310,7 +353,6 @@ export class Mii3DScene {
     const loaders = [
       setupMiiBody("./miiBodyM.glb", "m"),
       setupMiiBody("./miiBodyF.glb", "f"),
-      setupMiiHeadAnim(),
     ];
 
     await Promise.all(loaders);
@@ -329,6 +371,8 @@ export class Mii3DScene {
   async updateBody() {
     if (!this.ready) return;
 
+    this.type = this.mii.gender === 0 ? "m" : "f";
+
     const bodyM = this.#scene.getObjectByName("m-body-root");
     const bodyF = this.#scene.getObjectByName("f-body-root");
     if (!bodyM) return;
@@ -340,28 +384,54 @@ export class Mii3DScene {
     // Ported from FFL-Testing
     let scaleFactors = { x: 0, y: 0, z: 0 };
 
-    scaleFactors.y = height / 128.0;
-    scaleFactors.x = scaleFactors.y * 0.3 + 0.6;
-    scaleFactors.x =
-      ((scaleFactors.y * 0.6 + 0.8 - scaleFactors.x) * build) / 128.0 +
-      scaleFactors.x;
+    switch (Config.mii.scalingMode) {
+      case "old":
+        scaleFactors.y = height / 128.0;
+        scaleFactors.x = scaleFactors.y * 0.3 + 0.6;
+        scaleFactors.x =
+          ((scaleFactors.y * 0.6 + 0.8 - scaleFactors.x) * build) / 128.0 +
+          scaleFactors.x;
 
-    scaleFactors.y = scaleFactors.y * 0.55 + 0.6;
+        scaleFactors.y = scaleFactors.y * 0.55 + 0.6;
 
-    // the below are applied for both sets of factors
+        // Ensure scaleFactors.y is clamped to a maximum of 1.0
+        scaleFactors.y = Math.min(scaleFactors.y, 1.0);
+        break;
+      case "new":
+        // NOTE: even in wii u mii maker this still shows a few
+        // pixels of the pants, but here without proper body scaling
+        // this won't actually let you get away w/o pants
+        let heightFactor = height / 128.0;
+        scaleFactors.y = heightFactor * 0.55 + 0.6;
+        scaleFactors.x = heightFactor * 0.3 + 0.6;
+        scaleFactors.x =
+          (heightFactor * 0.6 + 0.8 - scaleFactors.x) * (build / 128.0) +
+          scaleFactors.x;
+        break;
+      case "newest":
+        // 0.47 / 128.0 = 0.003671875
+        scaleFactors.x =
+          (build * (height * 0.003671875 + 0.4)) / 128.0 +
+          // 0.23 / 128.0 = 0.001796875
+          height * 0.001796875 +
+          0.4;
+        // 0.77 / 128.0 = 0.006015625
+        scaleFactors.y = height * 0.006015625 + 0.5;
+        break;
+    }
+
     scaleFactors.z = scaleFactors.x;
-    // Ensure scaleFactors.y is clamped to a maximum of 1.0
-    scaleFactors.y = Math.min(scaleFactors.y, 1.0);
 
     const traverseBones = (object: THREE.Object3D) => {
       object.scale.set(scaleFactors.x, scaleFactors.y, scaleFactors.z);
-      this.#scene
-        .getObjectByName("MiiHead")!
-        .scale.set(
-          0.12 / scaleFactors.x,
-          0.12 / scaleFactors.y,
-          0.12 / scaleFactors.z
-        );
+      // this.#scene
+      //   .getObjectByName("MiiHead")!
+      //   .scale.set(
+      //     0.12 / scaleFactors.x,
+      //     0.12 / scaleFactors.y,
+      //     0.12 / scaleFactors.z
+      //   );
+
       // object.traverse((o: THREE.Object3D) => {
       //   if ((o as THREE.Bone).isBone) {
       //     // attempt at porting some bone scaling code.. disabled for now
@@ -415,16 +485,35 @@ export class Mii3DScene {
       // });
     };
 
+    const makeHeadBoneUpdate = (body: THREE.Object3D) => {
+      const quaternion = new THREE.Quaternion();
+      const scale = new THREE.Vector3();
+      return () => {
+        const headBone = body.getObjectByName("head") as THREE.Bone;
+        // Get the world matrix of the head bone
+        headBone.updateMatrixWorld(true);
+        const headBoneWorldMatrix = headBone.matrixWorld;
+
+        // Extract the position and rotation from the matrix
+        const position = new THREE.Vector3();
+        headBoneWorldMatrix.decompose(position, quaternion, scale);
+        // Set the head model's position and rotation
+        this.#scene.getObjectByName("MiiHead")!.position.copy(position);
+        this.#scene
+          .getObjectByName("MiiHead")!
+          .setRotationFromQuaternion(quaternion);
+        this.#scene.getObjectByName("MiiHead")!.rotation.x -= Math.PI / 2;
+      };
+    };
+
     switch (this.mii.gender) {
       // m
       case 0:
         bodyM.getObjectByName("m")!.visible = true;
         bodyF.getObjectByName("f")!.visible = false;
 
-        // Attach head to head bone of body
-        (bodyM.getObjectByName("head") as THREE.Bone).add(
-          this.#scene.getObjectByName("MiiHead")!
-        );
+        // Attach head to head bone of body (not physically this time)
+        this.animators.set("head_bone", makeHeadBoneUpdate(bodyM));
 
         // Scale each bone except for body
         traverseBones(bodyM);
@@ -448,10 +537,8 @@ export class Mii3DScene {
         bodyM.getObjectByName("m")!.visible = false;
         bodyF.getObjectByName("f")!.visible = true;
 
-        // Attach head to head bone of body
-        (bodyF.getObjectByName("head") as THREE.Bone).add(
-          this.#scene.getObjectByName("MiiHead")!
-        );
+        // Attach head to head bone of body (not physically this time)
+        this.animators.set("head_bone", makeHeadBoneUpdate(bodyF));
 
         // Scale each bone except for body
         traverseBones(bodyF);
@@ -534,8 +621,8 @@ export class Mii3DScene {
           );
 
           GLB.scene.name = "MiiHead";
-          GLB.scene.rotation.set(-Math.PI / 2, 0, 0);
-          // GLB.scene.rotation.set(Math.PI / 2, 0, 0);
+          // head is no longer attached to head bone physically, no more need to offset rotation
+          // GLB.scene.rotation.set(-Math.PI / 2, 0, 0);
           GLB.scene.scale.set(0.12, 0.12, 0.12);
 
           // enable shader on head
@@ -544,7 +631,7 @@ export class Mii3DScene {
           this.#scene.getObjectsByProperty("name", "MiiHead").forEach((obj) => {
             obj.parent!.remove(obj);
           });
-          this.#traverseFFLShaderTest(GLB.scene);
+          this.traverseAddFFLShader(GLB.scene);
           this.#scene.add(GLB.scene);
         } catch (e) {
           console.error(e);
@@ -553,32 +640,54 @@ export class Mii3DScene {
       case RenderPart.Face:
         if (head.length > 0) {
           head.forEach((h) => {
-            this.#traverseAddFaceMaterial(
+            this.traverseAddFaceMaterial(
               h as THREE.Mesh,
-              "&data=" +
-                encodeURIComponent(
-                  Buffer.from(this.mii.encode()).toString("base64")
-                )
+              `&data=${encodeURIComponent(
+                Buffer.from(this.mii.encode()).toString("base64")
+              )}&width=512`
             );
           });
         }
         break;
     }
 
+    // // Load the sparkle texture
+    // const loader = new THREE.TextureLoader();
+    // loader.load("https://i.imgur.com/6jAaK2u.png", (texture) => {
+    //   // Create a sparkle effect at the center of the scene
+    //   let particle = new SparkleParticle(
+    //     this.#scene,
+    //     new THREE.Vector3(0, 0, 0),
+    //     texture
+    //   );
+    //   this.animators.set("particle_" + performance.now(), (_t, delta) =>
+    //     particle.update(delta)
+    //   );
+    //   setTimeout(() => {
+    //     this.animations
+    //       .keys()
+    //       .filter((p) => p.startsWith("particle_"))
+    //       .forEach((key) => this.animations.delete(key));
+    //   }, 1000);
+    // });
+
     if (this.headReady === false) this.fadeIn();
     this.headReady = true;
     await this.updateBody();
   }
-  #traverseFFLShaderTest(model: THREE.Group<THREE.Object3DEventMap>) {
+  getHead() {
+    return this.#scene.getObjectByName("MiiHead");
+  }
+  traverseAddFFLShader(model: THREE.Group<THREE.Object3DEventMap>) {
     // Traverse the model to access its meshes
     model.traverse((n) => {
       const node = n as THREE.Mesh;
       if (node.isMesh) {
-        this.#traverseMesh(node);
+        this.traverseMesh(node);
       }
     });
   }
-  #traverseMesh(node: THREE.Mesh) {
+  traverseMesh(node: THREE.Mesh) {
     const originalMaterial = node.material as THREE.MeshBasicMaterial;
 
     // Access userData from geometry
@@ -714,11 +823,10 @@ export class Mii3DScene {
       // (node.material as THREE.ShaderMaterial).skinning
     }
 
-    console.log(node.material);
     // Assign the custom material to the mesh
     node.material = shaderMaterial;
   }
-  #traverseAddFaceMaterial(node: THREE.Mesh, urlParams: string) {
+  traverseAddFaceMaterial(node: THREE.Mesh, urlParams: string) {
     // Dispose of old head materials
     node.traverse((c) => {
       let child = c as THREE.Mesh;
@@ -756,7 +864,7 @@ export class Mii3DScene {
                   });
 
                   // Now... Replace it with FFL shader material
-                  this.#traverseMesh(child);
+                  this.traverseMesh(child);
 
                   oldMat.dispose();
                 }

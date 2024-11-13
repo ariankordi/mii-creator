@@ -6,8 +6,11 @@ export const Config = {
     renderHeadshotURL: `${baseURL}.png?shaderType=0&type=face&width=260&verifyCharInfo=0`,
     renderHeadshotURLNoParams: `${baseURL}.png`,
     render3DHeadURL: `${baseURL}.glb?shaderType=0&type=face&width=260&verifyCharInfo=0`,
-    renderFaceURL: `${baseURL}.png?width=312&scale=1&drawStageMode=mask_only`,
+    renderFaceURL: `${baseURL}.png?scale=1&drawStageMode=mask_only`,
     randomUserURL: "???",
+  },
+  mii: {
+    scalingMode: "newest",
   },
   version: {
     string: "v0.5",

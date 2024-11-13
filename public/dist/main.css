@@ -192,7 +192,6 @@ h6 {
   border-radius: 8px;
   min-width: 200px;
   min-height: 140px;
-  max-width: 480px;
   max-height: 440px;
   overflow: clip;
   animation: shortSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
@@ -517,6 +516,15 @@ input[type=range] {
   flex-wrap: wrap;
   gap: 6px;
   width: 100%;
+}
+.tab-content .feature-set-group .feature-set-header {
+  width: 100%;
+  padding: 14px 18px;
+  background: var(--hover);
+  color: var(--text);
+  border: 1px solid var(--stroke);
+  border-radius: 6px;
+  margin: 4px;
 }
 .tab-content .feature-set-group .feature-switch {
   display: flex;
