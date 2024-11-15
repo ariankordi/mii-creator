@@ -15,12 +15,19 @@ import {
   MiiSwitchColorTable,
   rearrangeArray,
 } from "../../constants/MiiFeatureTable";
+import type Mii from "../../external/mii-js/mii";
 
 export function MouthTab(data: TabRenderInit) {
+  let mii: Mii = data.mii;
+
   data.container.append(
     MiiPagedFeatureSet({
       mii: data.mii,
-      onChange: data.callback,
+      // hacky workaround for color palette
+      onChange: (newMii, forceRender, renderPart) => {
+        data.callback(newMii, forceRender, renderPart);
+        mii = newMii;
+      },
       entries: {
         mouthType: {
           label: "Type",
@@ -34,6 +41,12 @@ export function MouthTab(data: TabRenderInit) {
         mouthColor: {
           label: "Color",
           validationProperty: "trueMouthColor",
+          // EXTREMELY HACKY but works..
+          validationFunction() {
+            if (mii.trueEyeColor > 4) {
+              return mii.extEyeColor + 5;
+            } else return mii.trueEyeColor;
+          },
           items: [
             ...ArrayNum(5).map((k) => ({
               type: FeatureSetType.Icon,
