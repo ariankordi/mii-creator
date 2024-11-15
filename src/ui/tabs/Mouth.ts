@@ -5,8 +5,16 @@ import {
 import { ArrayNum } from "../../util/NumberArray";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
-import { MiiMouthColorTable } from "../../constants/ColorTables";
+import {
+  MiiMouthColorTable,
+  SwitchMiiColorTable,
+} from "../../constants/ColorTables";
 import { RenderPart } from "../../class/MiiEditor";
+import {
+  makeSeparatorFSI,
+  MiiSwitchColorTable,
+  rearrangeArray,
+} from "../../constants/MiiFeatureTable";
 
 export function MouthTab(data: TabRenderInit) {
   data.container.append(
@@ -25,12 +33,28 @@ export function MouthTab(data: TabRenderInit) {
         },
         mouthColor: {
           label: "Color",
-          items: ArrayNum(5).map((k) => ({
-            type: FeatureSetType.Icon,
-            value: k,
-            color: MiiMouthColorTable[k],
-            part: RenderPart.Face,
-          })),
+          validationProperty: "trueMouthColor",
+          items: [
+            ...ArrayNum(5).map((k) => ({
+              type: FeatureSetType.Icon,
+              value: k,
+              color: MiiMouthColorTable[k],
+              part: RenderPart.Face,
+              property: "fflMouthColor",
+            })),
+            makeSeparatorFSI(),
+            ...rearrangeArray(
+              ArrayNum(100).map((k) => ({
+                type: FeatureSetType.Icon,
+                value: k + 5,
+                color: SwitchMiiColorTable[k],
+                // icon: `<span style="display:flex;justify-content:center;align-items:center;position:relative;z-index:1;">${k}</span>`,
+                part: RenderPart.Face,
+                property: "extMouthColor",
+              })),
+              MiiSwitchColorTable
+            ),
+          ],
         },
         mouthPosition: {
           label: "Position",

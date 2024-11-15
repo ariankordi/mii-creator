@@ -2,17 +2,31 @@ import {
   FeatureSetType,
   MiiPagedFeatureSet,
 } from "../components/MiiPagedFeatureSet";
-import { MiiEyeColorTable } from "../../constants/ColorTables";
+import {
+  MiiEyeColorTable,
+  SwitchMiiColorTable,
+} from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/NumberArray";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
+import {
+  makeSeparatorFSI,
+  MiiSwitchColorTable,
+  rearrangeArray,
+} from "../../constants/MiiFeatureTable";
+import type Mii from "../../external/mii-js/mii";
 
 export function EyeTab(data: TabRenderInit) {
+  let mii: Mii = data.mii;
   data.container.append(
     MiiPagedFeatureSet({
       mii: data.mii,
-      onChange: data.callback,
+      // hacky workaround for color palette
+      onChange: (newMii, forceRender, renderPart) => {
+        data.callback(newMii, forceRender, renderPart);
+        mii = newMii;
+      },
       entries: {
         eyeType: {
           label: "Type",
@@ -28,12 +42,34 @@ export function EyeTab(data: TabRenderInit) {
         },
         eyeColor: {
           label: "Color",
-          items: ArrayNum(6).map((k) => ({
-            type: FeatureSetType.Icon,
-            value: k,
-            color: MiiEyeColorTable[k],
-            part: RenderPart.Face,
-          })),
+          validationProperty: "trueEyeColor",
+          // EXTREMELY HACKY but works..
+          validationFunction() {
+            if (mii.trueEyeColor > 5) {
+              return mii.extEyeColor + 6;
+            } else return mii.trueEyeColor;
+          },
+          items: [
+            ...ArrayNum(6).map((k) => ({
+              type: FeatureSetType.Icon,
+              value: k,
+              color: MiiEyeColorTable[k],
+              part: RenderPart.Face,
+              property: "fflEyeColor",
+            })),
+            makeSeparatorFSI(),
+            // ...rearrangeArray(
+            ...ArrayNum(100).map((k) => ({
+              type: FeatureSetType.Icon,
+              value: k + 6,
+              // icon: `<span style="display:flex;justify-content:center;align-items:center;position:relative;z-index:1;">${k}</span>`,
+              color: SwitchMiiColorTable[k],
+              part: RenderPart.Face,
+              property: "extEyeColor",
+            })),
+            //   MiiSwitchColorTable
+            // ),
+          ],
         },
         eyePosition: {
           label: "Position",

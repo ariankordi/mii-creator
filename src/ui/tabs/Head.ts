@@ -3,10 +3,19 @@ import {
   MiiPagedFeatureSet,
 } from "../components/MiiPagedFeatureSet";
 import EditorIcons from "../../constants/EditorIcons";
-import { MiiSkinColorTable } from "../../constants/ColorTables";
+import {
+  MiiSkinColorTable,
+  MiiSwitchSkinColorList,
+} from "../../constants/ColorTables";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import { ArrayNum } from "../../util/NumberArray";
 import { RenderPart } from "../../class/MiiEditor";
+import {
+  makeSeparatorFSI,
+  MiiSwitchColorTable,
+  MiiSwitchSkinColorTable,
+  rearrangeArray,
+} from "../../constants/MiiFeatureTable";
 
 export function HeadTab(data: TabRenderInit) {
   data.container.append(
@@ -43,12 +52,24 @@ export function HeadTab(data: TabRenderInit) {
         },
         skinColor: {
           label: "Color",
-          items: ArrayNum(6).map((k) => ({
-            type: FeatureSetType.Icon,
-            value: k,
-            color: MiiSkinColorTable[k],
-            part: RenderPart.Head,
-          })),
+          items: [
+            ...ArrayNum(6).map((k) => ({
+              type: FeatureSetType.Icon,
+              value: k,
+              color: MiiSkinColorTable[k],
+              part: RenderPart.Head,
+            })),
+            makeSeparatorFSI(),
+            ...rearrangeArray(
+              ArrayNum(10).map((k) => ({
+                type: FeatureSetType.Icon,
+                value: k,
+                color: MiiSwitchSkinColorList[k],
+                part: RenderPart.Head,
+              })),
+              MiiSwitchSkinColorTable
+            ),
+          ],
         },
       },
     })

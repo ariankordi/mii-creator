@@ -21,16 +21,18 @@ export async function setupUi() {
 
   mm.loadSong("./assets/aud/miimakermusic.mp3", "mii_maker_music").then(() => {
     playMusic();
-    if (mm.audioContext.state === "suspended") {
-      Modal.alert(
-        "Audio needs action",
-        "Music will start playing on first click. You can press V to change sound volume (default is 0.35)"
-      );
-      document.onclick = () => {
-        document.onclick = null;
-        playMusic();
-      };
-    }
+    setTimeout(() => {
+      if (mm.audioContext.state === "suspended") {
+        Modal.alert(
+          "Audio needs action",
+          "Music will start playing on first click. You can press V to change sound volume (default is 0.35)"
+        );
+        document.onclick = () => {
+          document.onclick = null;
+          playMusic();
+        };
+      }
+    }, 100);
   });
 
   await initSoundManager();

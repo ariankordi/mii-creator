@@ -21,6 +21,8 @@ import {
   MiiHairColorTable,
   MiiMouthColorLipTable,
   MiiMouthColorTable,
+  SwitchMiiColorTable,
+  SwitchMiiColorTableLip,
 } from "../constants/ColorTables";
 import { ScaleTab } from "../ui/tabs/Scale";
 import Modal from "../ui/components/Modal";
@@ -215,26 +217,43 @@ export class MiiEditor {
     this.ui.mii.qs(".loader")!.classOff("active");
   }
   #updateCssVars() {
+    let glassesColor: string;
+    if (this.mii.trueGlassesColor > 5)
+      glassesColor = SwitchMiiColorTable[this.mii.trueGlassesColor];
+    else glassesColor = MiiGlassesColorIconTable[this.mii.trueGlassesColor].top;
+    let eyeColor: string;
+    if (this.mii.trueEyeColor > 6) {
+      eyeColor = SwitchMiiColorTable[this.mii.trueEyeColor - 6];
+    } else eyeColor = MiiEyeColorTable[this.mii.fflEyeColor];
+    let mouthColor: { top: string; bottom: string };
+    if (this.mii.trueMouthColor > 6) {
+      mouthColor = {
+        top: SwitchMiiColorTableLip[this.mii.trueMouthColor - 5],
+        bottom: SwitchMiiColorTable[this.mii.trueMouthColor - 5],
+      };
+    } else
+      mouthColor = {
+        top: SwitchMiiColorTableLip[this.mii.fflMouthColor + 19],
+        bottom: SwitchMiiColorTable[this.mii.fflMouthColor + 19],
+      };
+
     this.ui.base.style({
-      "--eye-color": MiiEyeColorTable[this.mii.eyeColor],
-      "--icon-lip-color-top": MiiMouthColorLipTable[this.mii.mouthColor].top,
-      "--icon-lip-color-bottom":
-        MiiMouthColorLipTable[this.mii.mouthColor].bottom,
+      "--eye-color": eyeColor,
+      "--icon-lip-color-top": mouthColor.top,
+      "--icon-lip-color-bottom": mouthColor.bottom,
       "--icon-hair-tie":
         "#" +
         MiiFavoriteColorLookupTable[this.mii.favoriteColor]
           .toString(16)
           .padStart(6, "0"),
-      "--icon-eyebrow-fill": MiiHairColorTable[this.mii.eyebrowColor],
-      "--icon-hair-fill": MiiHairColorTable[this.mii.hairColor],
-      "--icon-facial-hair-fill": MiiHairColorTable[this.mii.facialHairColor],
+      "--icon-eyebrow-fill": SwitchMiiColorTable[this.mii.eyebrowColor],
+      "--icon-hair-fill": SwitchMiiColorTable[this.mii.hairColor],
+      "--icon-facial-hair-fill": SwitchMiiColorTable[this.mii.facialHairColor],
       "--icon-hat-fill": MiiFavoriteColorIconTable[this.mii.favoriteColor].top,
       "--icon-hat-stroke":
         MiiFavoriteColorIconTable[this.mii.favoriteColor].bottom,
-      "--icon-glasses-fill":
-        MiiGlassesColorIconTable[this.mii.glassesColor].top,
-      "--icon-glasses-shade":
-        MiiGlassesColorIconTable[this.mii.glassesColor].bottom,
+      "--icon-glasses-fill": glassesColor,
+      "--icon-glasses-shade": glassesColor + "77",
     });
   }
   #setupTabs() {
@@ -339,7 +358,7 @@ export class MiiEditor {
             src: `${
               Config.renderer.renderHeadshotURL
             }&data=${encodeURIComponent(
-              Buffer.from(this.mii.encode()).toString("base64")
+              this.mii.encodeStudio().toString("hex")
             )}`,
           });
         break;

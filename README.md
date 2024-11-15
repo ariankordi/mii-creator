@@ -13,13 +13,15 @@ Create and share Mii characters online with just a few clicks!
 
 ## Features
 
-This uses the FFSD (3DS/Wii U) data type, so the extra colors and parts from the Nintendo Switch aren't available.
+This app uses a custom version of the FFSD data type that I call the MiiCreator format (.miic), allowing for custom colors and types from the Switch, while still allowing you to convert back to 3DS/Wii U.
 
+- [x] Real 3D rendering unlike Mii Studio
 - [x] Change parts and colors of the Mii
 - [x] Save and load Miis in your library
-- [x] Export Mii to QR code/FFSD format
+- [x] Save a Mii QR code
 - [x] Render to PNG file
 - [x] Create your own renders
+- [x] Save/load .FFSD/.miic
 
 ## Contributing
 

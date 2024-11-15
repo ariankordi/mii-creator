@@ -133,6 +133,11 @@ export const cPantsColorBlue: FFLColor = [0.15686, 0.25098, 0.47059, 1.0];
 // special mii created by N
 export const cPantsColorGold: FFLColor = [0.75294, 0.62745, 0.18824, 1.0];
 
+export const cPantsColorGrayHex = "#40464e";
+export const cPantsColorRedHex = "#902010";
+export const cPantsColorBlueHex = "#284078";
+export const cPantsColorGoldHex = "#c0a030";
+
 // Favorite colors (from color table) converted to FFL Shader colors:
 export const MiiFavoriteFFLColorLookupTable: Record<number, FFLColor> = {
   0: [0.824, 0.118, 0.078, 1.0],

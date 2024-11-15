@@ -2,17 +2,31 @@ import {
   FeatureSetType,
   MiiPagedFeatureSet,
 } from "../components/MiiPagedFeatureSet";
-import { MiiHairColorTable } from "../../constants/ColorTables";
+import {
+  MiiHairColorTable,
+  SwitchMiiColorTable,
+} from "../../constants/ColorTables";
 import { ArrayNum } from "../../util/NumberArray";
 import type { TabRenderInit } from "../../constants/TabRenderType";
 import EditorIcons from "../../constants/EditorIcons";
 import { RenderPart } from "../../class/MiiEditor";
+import {
+  makeSeparatorFSI,
+  MiiSwitchColorTable,
+  rearrangeArray,
+} from "../../constants/MiiFeatureTable";
+import type Mii from "../../external/mii-js/mii";
 
 export function EyebrowTab(data: TabRenderInit) {
+  let mii: Mii = data.mii;
   data.container.append(
     MiiPagedFeatureSet({
       mii: data.mii,
-      onChange: data.callback,
+      // hacky workaround for color palette
+      onChange: (newMii, forceRender, renderPart) => {
+        data.callback(newMii, forceRender, renderPart);
+        mii = newMii;
+      },
       entries: {
         eyebrowType: {
           label: "Type",
@@ -25,12 +39,33 @@ export function EyebrowTab(data: TabRenderInit) {
         },
         eyebrowColor: {
           label: "Color",
-          items: ArrayNum(8).map((k) => ({
-            type: FeatureSetType.Icon,
-            value: k,
-            color: MiiHairColorTable[k],
-            part: RenderPart.Face,
-          })),
+          validationProperty: "trueEyebrowColor",
+          // EXTREMELY HACKY but works..
+          validationFunction() {
+            if (mii.trueEyebrowColor > 7) {
+              return mii.trueEyebrowColor + 8;
+            } else return mii.trueEyebrowColor;
+          },
+          items: [
+            ...ArrayNum(8).map((k) => ({
+              type: FeatureSetType.Icon,
+              value: k,
+              color: MiiHairColorTable[k],
+              part: RenderPart.Head,
+              property: "fflEyebrowColor",
+            })),
+            makeSeparatorFSI(),
+            ...rearrangeArray(
+              ArrayNum(100).map((k) => ({
+                type: FeatureSetType.Icon,
+                value: k + 8,
+                color: SwitchMiiColorTable[k],
+                part: RenderPart.Head,
+                property: "extEyebrowColor",
+              })),
+              MiiSwitchColorTable
+            ),
+          ],
         },
         eyePosition: {
           label: "Position",

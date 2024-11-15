@@ -209,7 +209,7 @@ export class Mii3DScene {
       this.traverseAddFaceMaterial(
         head as THREE.Mesh,
         `&data=${encodeURIComponent(
-          Buffer.from(this.mii.encode()).toString("base64")
+          this.mii.encodeStudio().toString("hex")
         )}&expression=1&width=512`
       );
     }
@@ -273,6 +273,10 @@ export class Mii3DScene {
       for (const [_, anim] of this.anim) {
         anim.fadeOut(0.2);
       }
+    } else {
+      for (const [_, anim] of this.anim) {
+        anim.fadeOut(0).reset().stop();
+      }
     }
     this.currentAnim = newAnim;
     for (const [key] of this.mixers) {
@@ -286,9 +290,14 @@ export class Mii3DScene {
         .get(key)!
         .reset()
         .setEffectiveTimeScale(1)
-        .setEffectiveWeight(1)
-        .fadeIn(0.2)
-        .play();
+        .setEffectiveWeight(1);
+
+      if (force === false) {
+        this.anim.get(key)!.fadeIn(0.2).play();
+      } else {
+        this.anim.get(key)!.play();
+      }
+
       this.anim.get(key)!.timeScale = 1;
     }
   }
@@ -497,12 +506,14 @@ export class Mii3DScene {
         // Extract the position and rotation from the matrix
         const position = new THREE.Vector3();
         headBoneWorldMatrix.decompose(position, quaternion, scale);
-        // Set the head model's position and rotation
-        this.#scene.getObjectByName("MiiHead")!.position.copy(position);
-        this.#scene
-          .getObjectByName("MiiHead")!
-          .setRotationFromQuaternion(quaternion);
-        this.#scene.getObjectByName("MiiHead")!.rotation.x -= Math.PI / 2;
+        if (this.#scene.getObjectByName("MiiHead")!) {
+          // Set the head model's position and rotation
+          this.#scene.getObjectByName("MiiHead")!.position.copy(position);
+          this.#scene
+            .getObjectByName("MiiHead")!
+            .setRotationFromQuaternion(quaternion);
+          this.#scene.getObjectByName("MiiHead")!.rotation.x -= Math.PI / 2;
+        }
       };
     };
 
@@ -614,11 +625,25 @@ export class Mii3DScene {
           });
         }
         try {
+          // CUSTOM APP-SPECIFIC DATA
+          let favoriteColor: number = this.mii.favoriteColor;
+          // console.log("fav color:", favoriteColor);
+
+          const tmpMii = new Mii(this.mii.encode());
+          if (this.mii.extHatColor !== 0) {
+            tmpMii.favoriteColor = this.mii.extHatColor - 1;
+            // console.log(
+            //   "overwriting fav color with hat color:",
+            //   this.mii.favoriteColor
+            // );
+          }
           const GLB = await this.#gltfLoader.loadAsync(
-            this.mii.studioUrl({
+            tmpMii.studioUrl({
               ext: "glb",
             } as unknown as any)
           );
+          this.mii.favoriteColor = favoriteColor;
+          // console.log("reverting fav color:", favoriteColor);
 
           GLB.scene.name = "MiiHead";
           // head is no longer attached to head bone physically, no more need to offset rotation
@@ -643,7 +668,7 @@ export class Mii3DScene {
             this.traverseAddFaceMaterial(
               h as THREE.Mesh,
               `&data=${encodeURIComponent(
-                Buffer.from(this.mii.encode()).toString("base64")
+                this.mii.encodeStudio().toString("hex")
               )}&width=512`
             );
           });
@@ -726,7 +751,7 @@ export class Mii3DScene {
         `Mesh "${node.name}" is missing "modulateColor" in userData.`
       );
       // Default to red if missing
-      modulateColor = new THREE.Vector4(...[1, 0, 0], 1);
+      modulateColor = new THREE.Vector4(1, 0, 0, 1);
     } else {
       modulateColor = new THREE.Vector4(...userData.modulateColor, 1);
     }
@@ -754,6 +779,15 @@ export class Mii3DScene {
       }
     }
 
+    // const shaderMaterial = new THREE.MeshPhongMaterial({
+    //   color: new THREE.Color(modulateColor.x, modulateColor.y, modulateColor.z),
+    //   side: side,
+    //   map: originalMaterial.map,
+    //   blending: THREE.CustomBlending,
+    //   blendDstAlpha: THREE.OneFactor,
+    //   transparent: originalMaterial.transparent,
+    //   alphaTest: originalMaterial.alphaTest,
+    // });
     let shaderMaterial: THREE.ShaderMaterial;
     if (
       modulateType === cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY ||
@@ -819,9 +853,6 @@ export class Mii3DScene {
         transparent: originalMaterial.transparent, // Handle transparency
         alphaTest: originalMaterial.alphaTest, // Handle alpha testing
       });
-    if (modulateSkinning === 1) {
-      // (node.material as THREE.ShaderMaterial).skinning
-    }
 
     // Assign the custom material to the mesh
     node.material = shaderMaterial;

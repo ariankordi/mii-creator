@@ -24,6 +24,8 @@ let json: { [key: string]: string[] } = {};
 function parseSvg(svg: string): string {
   svg = svg
     .replace(/fill="#6C7070"/g, 'fill="var(--eye-color)"')
+        .replace(/stroke="#0010BF"/g, 'stroke="black"')
+    .replace(/fill="#0010BF"/g, 'fill="black"')
     .replace(
       /fill="white" stroke="#6F6F6F"/g,
       'fill="var(--icon-face-fill)" stroke="var(--icon-face-stroke)"'

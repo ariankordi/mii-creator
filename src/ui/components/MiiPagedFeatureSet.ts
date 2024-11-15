@@ -3,7 +3,7 @@ import Mii from "../../external/mii-js/mii";
 import { TabList, TabListType, type Tab } from "./TabList";
 import md5 from "md5";
 import { playSound } from "../../class/audio/SoundManager";
-import type { RenderPart } from "../../class/MiiEditor";
+import { RenderPart } from "../../class/MiiEditor";
 import { Input } from "./Input";
 
 export enum FeatureSetType {
@@ -12,6 +12,7 @@ export enum FeatureSetType {
   Range,
   Slider,
   Switch,
+  Misc,
 }
 export interface FeatureSetIconItem {
   type: FeatureSetType.Icon;
@@ -20,6 +21,7 @@ export interface FeatureSetIconItem {
   icon?: string;
   color?: string;
   value: number;
+  property?: string;
   forceRender?: boolean;
 }
 export interface FeatureSetTextItem {
@@ -65,16 +67,28 @@ export interface FeatureSetSwitchItem {
   forceRender?: boolean;
   isNumber?: boolean;
 }
+export interface FeatureSetMiscItem {
+  type: FeatureSetType.Misc;
+  html: Html;
+  select(): any | Promise<any>;
+  // added to prevent error because lazy
+  forceRender?: boolean;
+  part?: RenderPart;
+}
 
 export type FeatureSetItem =
   | FeatureSetIconItem
   | FeatureSetTextItem
   | FeatureSetRangeItem
+  | FeatureSetSliderItem
   | FeatureSetSwitchItem
-  | FeatureSetSliderItem;
+  | FeatureSetMiscItem;
 export interface FeatureSetEntry {
   label: string;
   header?: string;
+  validationProperty?: string;
+  // value
+  validationFunction?: Function;
   items: FeatureSetItem[];
 }
 
@@ -83,7 +97,6 @@ export interface FeatureSet {
   miiIsNotMii?: boolean;
   onChange: (mii: Mii, forceRender: boolean, part: RenderPart) => void;
   entries: Record<string, FeatureSetEntry>;
-  // pages: FeatureSetPage[];
 }
 
 export const playHoverSound = () => playSound("hover");
@@ -103,15 +116,20 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
   for (const key in set.entries) {
     const entry = set.entries[key];
 
+    let property = key;
+    if (entry.validationProperty) property = entry.validationProperty;
+
     tabListInit.push({
       icon: entry.label,
-      select(content) {
+      async select(content) {
         let setList = new Html("div")
           .class("feature-set-group")
           .appendTo(content);
 
         if (entry.header) {
-          setList.append(new Html("div").class("feature-set-header").text(entry.header));
+          setList.append(
+            new Html("div").class("feature-set-header").text(entry.header)
+          );
         }
 
         if ("items" in entry) {
@@ -126,17 +144,38 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
               }
             }
 
-            const update = () => set.onChange(tmpMii, forceRender, item.part);
+            const update = () =>
+              set.onChange(tmpMii, forceRender, item.part || RenderPart.Head);
+
+            // Used for true values (Switch colors usually use this to save time)
+            let value;
+            if (entry.validationFunction !== undefined) {
+              value = await entry.validationFunction();
+            } else {
+              value = (tmpMii as Record<string, any>)[property];
+            }
 
             switch (item.type) {
               case FeatureSetType.Icon:
+                let validationProperty = property;
+                if (item.property) validationProperty = item.property;
                 let featureItem = new Html("div")
                   .class("feature-item")
                   .on("pointerenter", playHoverSound)
-                  .on("click", () => {
+                  .on("click", async () => {
+                    let value;
+                    if (entry.validationFunction) {
+                      value = await entry.validationFunction(
+                        item.property,
+                        item.value
+                      );
+                    } else {
+                      value = (tmpMii as Record<string, any>)[
+                        validationProperty
+                      ];
+                    }
                     // PREVENT DUPLICATE UPDATES
-                    if ((tmpMii as Record<string, any>)[key] === item.value)
-                      return;
+                    if (value === item.value) return;
                     (tmpMii as Record<string, any>)[key] = item.value;
                     update();
                     if (item.sound) playSound(item.sound);
@@ -156,7 +195,7 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                     .classOn("is-color")
                     .style({ "--color": item.color });
                 }
-                if ((tmpMii as Record<string, any>)[key] === item.value) {
+                if (value === item.value) {
                   featureItem.classOn("active");
                 }
                 break;
@@ -330,6 +369,10 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                   buttonLeft.classOn("active");
                   buttonRight.classOff("active");
                 }
+                break;
+              case FeatureSetType.Misc:
+                let featureMiscItem = item.html.appendTo(setList);
+                featureMiscItem.on("click", item.select);
                 break;
             }
           }

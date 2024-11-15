@@ -1,4 +1,11 @@
 // These convert the actual indices into the positions used on the UI
+
+import Html from "@datkat21/html";
+import {
+  FeatureSetType,
+  type FeatureSetMiscItem,
+} from "../ui/components/MiiPagedFeatureSet";
+
 // for example to be used with the CSS order property.
 export const MiiEyeTable: Record<number, number> = {
   // RealValue: DisplayedPosition
@@ -149,6 +156,28 @@ export const MiiHairTable: Record<number, number> = {
   111: 131,
 };
 
+export const MiiSwitchColorTable = [
+  91, 80, 0, 81, 95, 60, 72, 74, 90, 93, 2, 61, 33, 44, 70, 4, 31, 73, 94, 83,
+  5, 6, 86, 3, 1, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+  23, 24, 25, 26, 27, 28, 29, 30, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+  45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 62, 63, 64, 65,
+  66, 67, 68, 69, 71, 75, 76, 77, 78, 79, 82, 84, 85, 87, 88, 89, 92, 96, 97,
+  98, 99,
+];
+
+export const MiiSwitchSkinColorTable: Record<number, number> = {
+  0: 0,
+  1: 7,
+  2: 1,
+  3: 4,
+  4: 5,
+  5: 6,
+  6: 3,
+  7: 2,
+  8: 8,
+  9: 9,
+};
+
 export function rearrangeArray(
   array: any[],
   lookupTable: Record<number, number>
@@ -166,3 +195,15 @@ export function rearrangeArray(
 
   return rearrangedArray;
 }
+
+export const makeSeparator = () => new Html("div").class("separator");
+export const makeSeparatorFSI: () => any = () => ({
+  type: FeatureSetType.Misc,
+  html: new Html("div").class("separator"),
+  select() {},
+});
+export const makeHeaderFSI = (text: string) => ({
+  type: FeatureSetType.Misc,
+  html: new Html("div").text(text),
+  select() {},
+});

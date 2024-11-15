@@ -3,9 +3,17 @@ import MD5 from "md5";
 // import assert from "assert";
 import ExtendedBitStream from "./extendedBitStream";
 import Util from "./util";
-import { Buffer } from "../../../node_modules/buffer/index";
+import { Buffer } from "../../../node_modules/buffer";
 import assert from "../assert/assert";
 import { Config } from "../../config";
+import {
+  ToVer3EyeColorTable,
+  ToVer3FacelineColorTable,
+  ToVer3GlassColorTable,
+  ToVer3GlassTypeTable,
+  ToVer3HairColorTable,
+  ToVer3MouthColorTable,
+} from "../../constants/ColorTables";
 
 const STUDIO_RENDER_URL_BASE = Config.renderer.baseURL;
 const STUDIO_ASSET_URL_BASE = "https://mii-studio.akamaized.net/editor/1";
@@ -126,21 +134,92 @@ export default class Mii {
   public build!: number;
   public disableSharing!: boolean;
   public faceType!: number;
-  public skinColor!: number;
+  // public skinColor!: number;
+  fflSkinColor!: number;
+  trueSkinColor!: number;
+  get skinColor() {
+    return this.trueSkinColor;
+  }
+  set skinColor(num) {
+    if (num > 5) {
+      this.fflSkinColor = ToVer3FacelineColorTable[num];
+      this.extFacelineColor = num;
+      this.trueSkinColor = num;
+    } else {
+      this.fflSkinColor = num;
+      this.extFacelineColor = 0;
+      this.trueSkinColor = num;
+    }
+  }
   public wrinklesType!: number;
   public makeupType!: number;
   public hairType!: number;
-  public hairColor!: number;
+  // public hairColor!: number;
+  fflHairColor!: number;
+  trueHairColor!: number;
+  get hairColor() {
+    return this.trueHairColor;
+  }
+  set hairColor(num) {
+    if (num > 7) {
+      console.log("hair color:", num, num - 8);
+      this.fflHairColor = ToVer3HairColorTable[num - 8];
+      this.extHairColor = num - 8;
+      this.trueHairColor = num - 8;
+    } else {
+      this.fflHairColor = num;
+      this.extHairColor = 0;
+      this.trueHairColor = num;
+    }
+  }
   public flipHair!: boolean;
   public eyeType!: number;
-  public eyeColor!: number;
+  // public eyeColor!: number;
+  fflEyeColor!: number;
+  trueEyeColor!: number;
+  get eyeColor() {
+    return this.trueEyeColor;
+  }
+  set eyeColor(num) {
+    if (num > 5) {
+      this.fflEyeColor = ToVer3EyeColorTable[num - 6];
+      this.extEyeColor = num - 6;
+      this.trueEyeColor = num;
+    } else {
+      this.fflEyeColor = num;
+      if (num === 0) {
+        // FFL black is pure black
+        this.extEyeColor = 8;
+        this.trueEyeColor = 0;
+      } else {
+        this.extEyeColor = num + 8;
+        this.trueEyeColor = num;
+      }
+    }
+  }
   public eyeScale!: number;
   public eyeVerticalStretch!: number;
   public eyeRotation!: number;
   public eyeSpacing!: number;
   public eyeYPosition!: number;
   public eyebrowType!: number;
-  public eyebrowColor!: number;
+  // public eyebrowColor!: number;
+  fflEyebrowColor!: number;
+  trueEyebrowColor!: number;
+  get eyebrowColor() {
+    return this.trueEyebrowColor;
+  }
+  set eyebrowColor(num) {
+    if (num > 7) {
+      this.fflEyebrowColor = ToVer3HairColorTable[num - 8];
+      this.extEyebrowColor = num - 8;
+      this.trueEyebrowColor = num - 8;
+    } else {
+      this.fflEyebrowColor = num;
+      this.extEyebrowColor = 0;
+      this.trueEyebrowColor = num;
+    }
+  }
   public eyebrowScale!: number;
   public eyebrowVerticalStretch!: number;
   public eyebrowRotation!: number;
@@ -150,18 +229,93 @@ export default class Mii {
   public noseScale!: number;
   public noseYPosition!: number;
   public mouthType!: number;
-  public mouthColor!: number;
+  // public mouthColor!: number;
+  fflMouthColor!: number;
+  trueMouthColor!: number;
+  get mouthColor() {
+    return this.trueMouthColor;
+  }
+  set mouthColor(num) {
+    if (num > 4) {
+      this.fflMouthColor = ToVer3EyeColorTable[num - 5];
+      this.extMouthColor = num - 5;
+      this.trueMouthColor = num;
+      // prevent Bug
+      if (this.fflMouthColor > 4) this.fflMouthColor = 4;
+    } else {
+      this.fflMouthColor = num;
+      this.extMouthColor = num + 19;
+      this.trueMouthColor = num;
+    }
+    // if (num > 4) {
+    //   this.fflMouthColor = ToVer3MouthColorTable[num - 5];
+    //   this.extMouthColor = num - 5;
+    //   this.trueMouthColor = num - 5;
+    // } else {
+    //   this.fflMouthColor = num;
+    //   this.extMouthColor = 0;
+    //   this.trueMouthColor = num;
+    // }
+  }
   public mouthScale!: number;
   public mouthHorizontalStretch!: number;
   public mouthYPosition!: number;
   public mustacheType!: number;
   public unknown2!: number;
   public beardType!: number;
-  public facialHairColor!: number;
+  // public facialHairColor!: number;
+  fflFacialHairColor!: number;
+  trueFacialHairColor!: number;
+  get facialHairColor() {
+    return this.trueFacialHairColor;
+  }
+  set facialHairColor(num) {
+    if (num > 7) {
+      this.fflFacialHairColor = ToVer3HairColorTable[num - 8];
+      this.extBeardColor = num - 8;
+      this.trueFacialHairColor = num - 8;
+    } else {
+      this.fflFacialHairColor = num;
+      this.extBeardColor = 0;
+      this.trueFacialHairColor = num;
+    }
+  }
   public mustacheScale!: number;
   public mustacheYPosition!: number;
-  public glassesType!: number;
-  public glassesColor!: number;
+  // public glassesType!: number;
+  fflGlassesType!: number;
+  trueGlassesType!: number;
+  get glassesType() {
+    return this.trueGlassesType;
+  }
+  set glassesType(num) {
+    if (num > 8) {
+      this.fflGlassesType = ToVer3GlassTypeTable[num - 9];
+      this.extGlassType = num;
+      this.trueGlassesType = num;
+    } else {
+      this.fflGlassesType = num;
+      this.extGlassType = 0;
+      this.trueGlassesType = num;
+    }
+  }
+  // public glassesColor!: number;
+  fflGlassesColor!: number;
+  trueGlassesColor!: number;
+  get glassesColor() {
+    return this.trueGlassesColor;
+  }
+  set glassesColor(num) {
+    if (num > 5) {
+      this.fflGlassesColor = ToVer3GlassColorTable[num - 6];
+      this.extGlassColor = num - 6;
+      this.trueGlassesColor = num - 6;
+    } else {
+      this.fflGlassesColor = num;
+      this.extGlassColor = 0;
+      this.trueGlassesColor = num;
+    }
+  }
   public glassesScale!: number;
   public glassesYPosition!: number;
   public moleEnabled!: boolean;
@@ -171,17 +325,78 @@ export default class Mii {
   public creatorName!: string;
   public checksum!: number;
 
+  // NfpStoreDataExtension extension data
+  public extFacelineColor!: number;
+  public extHairColor!: number;
+  public extEyeColor!: number;
+  public extEyebrowColor!: number;
+  public extMouthColor!: number;
+  public extBeardColor!: number;
+  public extGlassColor!: number;
+  public extGlassType!: number;
+  // Extended extension data used in this app only
+  public extHatType!: number; // Hat type is currently unused
+  public extHatColor!: number;
+
+  public initBuffer!: Buffer;
+
   constructor(buffer: Buffer) {
-    this.bitStream = new ExtendedBitStream(buffer);
+    this.isNfpStoreExtentionData = false;
+    if (buffer.byteLength === 0x60) {
+      this.bitStream = new ExtendedBitStream(
+        Buffer.concat([buffer, new Uint8Array(10)])
+      );
+    } else {
+      const bytesToAdd = 0x6a - buffer.byteLength;
+      let tmpBuf;
+      if (bytesToAdd > 0) {
+        tmpBuf = Buffer.concat([buffer, new Uint8Array(bytesToAdd)]);
+      } else {
+        tmpBuf = buffer;
+      }
+      this.bitStream = new ExtendedBitStream(tmpBuf);
+      if (buffer.byteLength > 0x60) this.isNfpStoreExtentionData = true;
+    }
+    this.initBuffer = buffer;
     this.decode();
+  }
+
+  isNfpStoreExtentionData!: boolean;
+
+  hasExtendedColors(): boolean {
+    if (
+      this.trueEyeColor > 5 ||
+      this.trueEyebrowColor > 7 ||
+      this.trueFacialHairColor > 7 ||
+      this.trueGlassesColor > 5 ||
+      this.trueGlassesType > 8 ||
+      this.trueHairColor > 7 ||
+      this.trueMouthColor > 4 ||
+      this.trueSkinColor > 5
+    )
+      return true;
+    return false;
   }
 
   public validate(): void {
     // Size check
-    assert.strictEqual(
-      this.bitStream.length / 8,
-      0x60,
-      `Invalid Mii data size. Got ${this.bitStream.length / 8}, expected 96`
+    assert.ok(
+      Util.inRange(
+        this.bitStream.length / 8,
+        [
+          // FFSD
+          0x60,
+          // FFSD + NfpStoreDataExtension
+          0x68,
+          // FFSD + NfpStoreDataExtension + MiiCreatorDataExtension (Bugged)
+          0x69,
+          // FFSD + NfpStoreDataExtension + MiiCreatorDataExtension
+          0x6a,
+        ]
+      ),
+      `Invalid Mii data size. Got ${
+        this.bitStream.length / 8
+      }, expected 96 for FFSD, 104 for NfpStoreDataExtension, or 106 for MiiCreatorDataExtension`
     );
 
     // Value range and type checks
@@ -301,8 +516,8 @@ export default class Mii {
       `Invalid Mii face type. Got ${this.faceType}, expected 0-11`
     );
     assert.ok(
-      Util.inRange(this.skinColor, Util.range(7)),
-      `Invalid Mii skin color. Got ${this.skinColor}, expected 0-6`
+      Util.inRange(this.skinColor, Util.range(10)),
+      `Invalid Mii skin color. Got ${this.skinColor}, expected 0-10`
     );
     assert.ok(
       Util.inRange(this.wrinklesType, Util.range(12)),
@@ -317,8 +532,8 @@ export default class Mii {
       `Invalid Mii hair type. Got ${this.hairType}, expected 0-131`
     );
     assert.ok(
-      Util.inRange(this.hairColor, Util.range(8)),
-      `Invalid Mii hair color. Got ${this.hairColor}, expected 0-7`
+      Util.inRange(this.fflHairColor, Util.range(100)),
+      `Invalid Mii hair color. Got ${this.fflHairColor}, expected 0-7`
     );
     assert.strictEqual(
       typeof this.flipHair,
@@ -330,8 +545,8 @@ export default class Mii {
       `Invalid Mii eye type. Got ${this.eyeType}, expected 0-59`
     );
     assert.ok(
-      Util.inRange(this.eyeColor, Util.range(6)),
-      `Invalid Mii eye color. Got ${this.eyeColor}, expected 0-5`
+      Util.inRange(this.fflEyeColor, Util.range(6)),
+      `Invalid Mii eye color. Got ${this.fflEyeColor}, expected 0-5`
     );
     assert.ok(
       Util.inRange(this.eyeScale, Util.range(8)),
@@ -358,8 +573,8 @@ export default class Mii {
       `Invalid Mii eyebrow type. Got ${this.eyebrowType}, expected 0-24`
     );
     assert.ok(
-      Util.inRange(this.eyebrowColor, Util.range(8)),
-      `Invalid Mii eyebrow color. Got ${this.eyebrowColor}, expected 0-7`
+      Util.inRange(this.fflEyebrowColor, Util.range(8)),
+      `Invalid Mii eyebrow color. Got ${this.fflEyebrowColor}, expected 0-7`
     );
     assert.ok(
       Util.inRange(this.eyebrowScale, Util.range(9)),
@@ -398,8 +613,8 @@ export default class Mii {
       `Invalid Mii mouth type. Got ${this.mouthType}, expected 0-35`
     );
     assert.ok(
-      Util.inRange(this.mouthColor, Util.range(5)),
-      `Invalid Mii mouth color. Got ${this.mouthColor}, expected 0-4`
+      Util.inRange(this.fflMouthColor, Util.range(5)),
+      `Invalid Mii mouth color. Got ${this.fflMouthColor}, expected 0-4`
     );
     assert.ok(
       Util.inRange(this.mouthScale, Util.range(9)),
@@ -422,8 +637,8 @@ export default class Mii {
       `Invalid Mii beard type. Got ${this.beardType}, expected 0-5`
     );
     assert.ok(
-      Util.inRange(this.facialHairColor, Util.range(8)),
-      `Invalid Mii beard type. Got ${this.facialHairColor}, expected 0-7`
+      Util.inRange(this.fflFacialHairColor, Util.range(8)),
+      `Invalid Mii beard type. Got ${this.fflFacialHairColor}, expected 0-7`
     );
     assert.ok(
       Util.inRange(this.mustacheScale, Util.range(9)),
@@ -434,16 +649,16 @@ export default class Mii {
       `Invalid Mii mustache Y position. Got ${this.mustacheYPosition}, expected 0-16`
     );
     assert.ok(
-      Util.inRange(this.glassesType, Util.range(9)),
-      `Invalid Mii glasses type. Got ${this.glassesType}, expected 0-8`
+      Util.inRange(this.fflGlassesType, Util.range(9)),
+      `Invalid Mii glasses type. Got ${this.fflGlassesType}, expected 0-8`
     );
     assert.ok(
-      Util.inRange(this.glassesColor, Util.range(6)),
-      `Invalid Mii glasses type. Got ${this.glassesColor}, expected 0-5`
+      Util.inRange(this.fflGlassesColor, Util.range(100)),
+      `Invalid Mii glasses color. Got ${this.fflGlassesColor}, expected 0-5`
     );
     assert.ok(
       Util.inRange(this.glassesScale, Util.range(8)),
-      `Invalid Mii glasses type. Got ${this.glassesScale}, expected 0-7`
+      `Invalid Mii glasses scale. Got ${this.glassesScale}, expected 0-7`
     );
     assert.ok(
       Util.inRange(this.glassesYPosition, Util.range(21)),
@@ -491,6 +706,8 @@ export default class Mii {
     if (!this.normalMii && !this.disableSharing) {
       assert.fail("Special Miis must have sharing disabled");
     }
+
+    // console.log(this.hairColor);
   }
 
   public decode(): void {
@@ -582,6 +799,36 @@ export default class Mii {
     this.checksum = this.bitStream.readUint16();
     this.bitStream.swapEndian(); // * Swap back to little endian
 
+    // console.log("Total:", this.bitStream.length / 8, "bytes");
+
+    if (this.bitStream.length / 8 > 0x60) {
+      // Read 8 more bytes for NfpStoreDataExtention
+      this.extFacelineColor = this.bitStream.readUint8();
+      this.extHairColor = this.bitStream.readUint8();
+      this.extEyeColor = this.bitStream.readUint8();
+      this.extEyebrowColor = this.bitStream.readUint8();
+      this.extMouthColor = this.bitStream.readUint8();
+      this.extBeardColor = this.bitStream.readUint8();
+      this.extGlassColor = this.bitStream.readUint8();
+      this.extGlassType = this.bitStream.readUint8();
+    }
+    // Custom data
+    if (this.bitStream.length / 8 > 0x68) {
+      this.extHatType = this.bitStream.readUint8();
+    }
+    if (this.bitStream.length / 8 > 0x69) {
+      this.extHatColor = this.bitStream.readUint8();
+    }
+
+    if (this.extFacelineColor) this.trueSkinColor = this.extFacelineColor;
+    if (this.extHairColor) this.trueHairColor = this.extHairColor;
+    if (this.extEyeColor) this.trueEyeColor = this.extEyeColor;
+    if (this.extEyebrowColor) this.trueEyebrowColor = this.extEyebrowColor;
+    if (this.extMouthColor) this.trueMouthColor = this.extMouthColor;
+    if (this.extBeardColor) this.trueFacialHairColor = this.extBeardColor;
+    if (this.extGlassColor) this.trueGlassesColor = this.extGlassColor;
+    if (this.extGlassType) this.trueGlassesType = this.extGlassType;
+
     this.validate();
 
     if (this.checksum !== this.calculateCRC()) {
@@ -590,6 +837,129 @@ export default class Mii {
   }
 
   public encode(): Buffer {
+    this.validate(); // * Don't write invalid Mii data
+
+    // TODO - Maybe create a new stream instead of modifying the original?
+    this.bitStream.bitSeek(0);
+
+    this.bitStream.writeUint8(this.version);
+    this.bitStream.writeBoolean(this.allowCopying);
+    this.bitStream.writeBoolean(this.profanityFlag);
+    this.bitStream.writeBits(this.regionLock, 2);
+    this.bitStream.writeBits(this.characterSet, 2);
+    this.bitStream.alignByte();
+    this.bitStream.writeBits(this.pageIndex, 4);
+    this.bitStream.writeBits(this.slotIndex, 4);
+    this.bitStream.writeBits(this.unknown1, 4);
+    this.bitStream.writeBits(this.deviceOrigin, 3);
+    this.bitStream.alignByte();
+    this.bitStream.writeBuffer(this.systemId);
+    this.bitStream.swapEndian(); // * Mii ID data is BE
+    this.bitStream.writeBoolean(this.normalMii);
+    this.bitStream.writeBoolean(this.dsMii);
+    this.bitStream.writeBoolean(this.nonUserMii);
+    this.bitStream.writeBoolean(this.isValid);
+    this.bitStream.writeBits(this.creationTime, 28); // TODO - Calculate this instead of carrying it over
+    this.bitStream.swapEndian(); // * Swap back to LE
+    this.bitStream.writeBuffer(this.consoleMAC);
+    this.bitStream.writeUint16(0x0); // * 0x0000 padding
+    this.bitStream.writeBit(this.gender);
+    this.bitStream.writeBits(this.birthMonth, 4);
+    this.bitStream.writeBits(this.birthDay, 5);
+    this.bitStream.writeBits(this.favoriteColor, 4);
+    this.bitStream.writeBoolean(this.favorite);
+    this.bitStream.alignByte();
+    this.bitStream.writeUTF16String(this.miiName);
+    this.bitStream.writeUint8(this.height);
+    this.bitStream.writeUint8(this.build);
+    this.bitStream.writeBoolean(this.disableSharing);
+    this.bitStream.writeBits(this.faceType, 4);
+    this.bitStream.writeBits(this.fflSkinColor, 3);
+    this.bitStream.writeBits(this.wrinklesType, 4);
+    this.bitStream.writeBits(this.makeupType, 4);
+    this.bitStream.writeUint8(this.hairType);
+    this.bitStream.writeBits(this.fflHairColor, 3);
+    this.bitStream.writeBoolean(this.flipHair);
+    this.bitStream.alignByte();
+    this.bitStream.writeBits(this.eyeType, 6);
+    this.bitStream.writeBits(this.fflEyeColor, 3);
+    this.bitStream.writeBits(this.eyeScale, 4);
+    this.bitStream.writeBits(this.eyeVerticalStretch, 3);
+    this.bitStream.writeBits(this.eyeRotation, 5);
+    this.bitStream.writeBits(this.eyeSpacing, 4);
+    this.bitStream.writeBits(this.eyeYPosition, 5);
+    this.bitStream.alignByte();
+    this.bitStream.writeBits(this.eyebrowType, 5);
+    this.bitStream.writeBits(this.fflEyebrowColor, 3);
+    this.bitStream.writeBits(this.eyebrowScale, 4);
+    this.bitStream.writeBits(this.eyebrowVerticalStretch, 3);
+    this.bitStream.skipBit();
+    this.bitStream.writeBits(this.eyebrowRotation, 4);
+    this.bitStream.skipBit();
+    this.bitStream.writeBits(this.eyebrowSpacing, 4);
+    this.bitStream.writeBits(this.eyebrowYPosition, 5);
+    this.bitStream.alignByte();
+    this.bitStream.writeBits(this.noseType, 5);
+    this.bitStream.writeBits(this.noseScale, 4);
+    this.bitStream.writeBits(this.noseYPosition, 5);
+    this.bitStream.alignByte();
+    this.bitStream.writeBits(this.mouthType, 6);
+    this.bitStream.writeBits(this.fflMouthColor, 3);
+    this.bitStream.writeBits(this.mouthScale, 4);
+    this.bitStream.writeBits(this.mouthHorizontalStretch, 3);
+    this.bitStream.writeBits(this.mouthYPosition, 5);
+    this.bitStream.writeBits(this.mustacheType, 3);
+    this.bitStream.writeUint8(this.unknown2);
+    this.bitStream.writeBits(this.beardType, 3);
+    this.bitStream.writeBits(this.fflFacialHairColor, 3);
+    this.bitStream.writeBits(this.mustacheScale, 4);
+    this.bitStream.writeBits(this.mustacheYPosition, 5);
+    this.bitStream.alignByte();
+    this.bitStream.writeBits(this.fflGlassesType, 4);
+    this.bitStream.writeBits(this.fflGlassesColor, 3);
+    this.bitStream.writeBits(this.glassesScale, 4);
+    this.bitStream.writeBits(this.glassesYPosition, 5);
+    this.bitStream.writeBoolean(this.moleEnabled);
+    this.bitStream.writeBits(this.moleScale, 4);
+    this.bitStream.writeBits(this.moleXPosition, 5);
+    this.bitStream.writeBits(this.moleYPosition, 5);
+    this.bitStream.alignByte();
+    this.bitStream.writeUTF16String(this.creatorName);
+    this.bitStream.writeUint16(0x0); // * 0x0000 padding
+    this.bitStream.swapEndian(); // * Swap to big endian because thats how checksum is calculated here
+    this.bitStream.writeUint16(this.calculateCRC());
+    this.bitStream.swapEndian(); // * Swap back to little endian
+
+    // Write 8 bytes for NfpStoreDataExtention
+    this.bitStream.writeUint8(this.extFacelineColor);
+    this.bitStream.writeUint8(this.extHairColor);
+    this.bitStream.writeUint8(this.extEyeColor);
+    this.bitStream.writeUint8(this.extEyebrowColor);
+    this.bitStream.writeUint8(this.extMouthColor);
+    this.bitStream.writeUint8(this.extBeardColor);
+    this.bitStream.writeUint8(this.extGlassColor);
+    this.bitStream.writeUint8(this.extGlassType);
+    // Some custom CUSTOM data
+    this.bitStream.writeUint8(this.extHatType);
+    this.bitStream.writeUint8(this.extHatColor);
+
+    // console.log(
+    //   "Wrote 8 extra bytes for NfpStoreDataExtention:",
+    //   this.extFacelineColor,
+    //   this.extHairColor,
+    //   this.extEyeColor,
+    //   this.extEyebrowColor,
+    //   this.extMouthColor,
+    //   this.extBeardColor,
+    //   this.extGlassColor,
+    //   this.extGlassType
+    // );
+
+    // // @ts-expect-error _view is private
+    return Buffer.from(this.bitStream.view._view);
+  }
+
+  public encodeFFSD(): Buffer {
     this.validate(); // * Don't write invalid Mii data
 
     // TODO - Maybe create a new stream instead of modifying the original?
@@ -684,7 +1054,7 @@ export default class Mii {
     this.bitStream.swapEndian(); // * Swap back to little endian
 
     // // @ts-expect-error _view is private
-    return Buffer.from(this.bitStream.view._view);
+    return Buffer.from(this.bitStream.view._view).slice(0, 96);
   }
 
   public calculateCRC(): number {
@@ -738,16 +1108,23 @@ export default class Mii {
 
     // miiStudioData.writeUInt8(randomized);
 
-    if (this.facialHairColor === 0) {
-      encodeMiiPart(8);
-    } else {
-      encodeMiiPart(this.facialHairColor);
-    }
+    // if (this.facialHairColor === 0) {
+    //   encodeMiiPart(8);
+    // } else {
+    encodeMiiPart(this.trueFacialHairColor);
+    // }
 
     encodeMiiPart(this.beardType);
     encodeMiiPart(this.build);
     encodeMiiPart(this.eyeVerticalStretch);
-    encodeMiiPart(this.eyeColor + 8);
+    if (this.trueEyeColor > 5) {
+      encodeMiiPart(this.extEyeColor);
+    } else encodeMiiPart(this.fflEyeColor + 8);
+    // if (this.trueEyeColor > 5) {
+    //   encodeMiiPart(this.extEyeColor);
+    // } else {
+    //   encodeMiiPart(this.fflEyeColor);
+    // }
     encodeMiiPart(this.eyeRotation);
     encodeMiiPart(this.eyeScale);
     encodeMiiPart(this.eyeType);
@@ -755,41 +1132,40 @@ export default class Mii {
     encodeMiiPart(this.eyeYPosition);
     encodeMiiPart(this.eyebrowVerticalStretch);
 
-    if (this.eyebrowColor === 0) {
-      encodeMiiPart(8);
-    } else {
-      encodeMiiPart(this.eyebrowColor);
-    }
+    // if (this.eyebrowColor === 0) {
+    //   encodeMiiPart(8);
+    // } else {
+    encodeMiiPart(this.trueEyebrowColor);
+    // }
 
     encodeMiiPart(this.eyebrowRotation);
     encodeMiiPart(this.eyebrowScale);
     encodeMiiPart(this.eyebrowType);
     encodeMiiPart(this.eyebrowSpacing);
     encodeMiiPart(this.eyebrowYPosition);
-    encodeMiiPart(this.skinColor);
+    encodeMiiPart(this.trueSkinColor);
     encodeMiiPart(this.makeupType);
     encodeMiiPart(this.faceType);
     encodeMiiPart(this.wrinklesType);
     encodeMiiPart(this.favoriteColor);
     encodeMiiPart(this.gender);
 
-    if (this.glassesColor == 0) {
-      encodeMiiPart(8);
-    } else if (this.glassesColor < 6) {
-      encodeMiiPart(this.glassesColor + 13);
+    if (this.extGlassColor > 0) {
+      encodeMiiPart(this.trueGlassesColor);
     } else {
-      encodeMiiPart(0);
+      if (this.fflGlassesColor === 0) encodeMiiPart(8);
+      else encodeMiiPart(this.fflGlassesColor + 13);
     }
 
     encodeMiiPart(this.glassesScale);
-    encodeMiiPart(this.glassesType);
+    encodeMiiPart(this.trueGlassesType);
     encodeMiiPart(this.glassesYPosition);
 
-    if (this.hairColor == 0) {
-      encodeMiiPart(8);
-    } else {
-      encodeMiiPart(this.hairColor);
-    }
+    // if (this.hairColor == 0) {
+    //   encodeMiiPart(8);
+    // } else {
+    encodeMiiPart(this.trueHairColor);
+    // }
 
     encodeMiiPart(this.flipHair ? 1 : 0);
     encodeMiiPart(this.hairType);
@@ -800,11 +1176,15 @@ export default class Mii {
     encodeMiiPart(this.moleYPosition);
     encodeMiiPart(this.mouthHorizontalStretch);
 
-    if (this.mouthColor < 4) {
-      encodeMiiPart(this.mouthColor + 19);
-    } else {
-      encodeMiiPart(0);
-    }
+    // if (this.mouthColor < 4) {
+    if (this.trueMouthColor > 5) {
+      encodeMiiPart(this.extMouthColor);
+    } else encodeMiiPart(this.fflMouthColor + 19);
+    // encodeMiiPart(this.trueMouthColor + 19);
+    // encodeMiiPart(this.mouthColor + 19);
+    // } else {
+    //   encodeMiiPart(0);
+    // }
 
     encodeMiiPart(this.mouthScale);
     encodeMiiPart(this.mouthType);

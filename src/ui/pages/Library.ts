@@ -23,16 +23,18 @@ import {
 import { downloadLink } from "../../util/downloadLink";
 import { ArrayNum } from "../../util/NumberArray";
 import type { Mesh } from "three";
+import {
+  cPantsColorGoldHex,
+  cPantsColorRedHex,
+} from "../../class/3d/shader/fflShaderConst";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
   `mii-${await savedMiiCount()}-${Date.now()}`;
-export const miiIconUrl = (data: string, expression?: number) =>
-  `${Config.renderer.renderHeadshotURLNoParams}?data=${encodeURIComponent(
-    data
-  )}&shaderType=0&type=face&width=180&verifyCharInfo=0${
-    expression ? `&expression=${expression}` : ""
-  }`;
+export const miiIconUrl = (mii: Mii) =>
+  `${Config.renderer.renderHeadshotURLNoParams}?data=${mii
+    .encodeStudio()
+    .toString("hex")}&shaderType=0&type=face&width=180&verifyCharInfo=0`;
 
 export async function Library(highlightMiiId?: string) {
   function shutdown(): Promise<void> {
@@ -84,11 +86,30 @@ export async function Library(highlightMiiId?: string) {
       miiData.unknown1 = 0;
       miiData.unknown2 = 0;
 
-      console.log(miiData.miiName + "'s birthPlatform:", miiData.deviceOrigin);
+      if (miiData)
+        console.log(
+          miiData.miiName + "'s birthPlatform:",
+          miiData.deviceOrigin
+        );
 
       let miiImage = new Html("img").class("lazy").attr({
-        "data-src": miiIconUrl(mii.mii),
+        "data-src": miiIconUrl(miiData),
       });
+
+      if (miiData.normalMii === false || miiData.favorite === true) {
+        const star = new Html("i")
+          .style({ position: "absolute", top: "0", right: "0" })
+
+          .appendTo(miiContainer);
+
+        if (miiData.normalMii === false) {
+          star.html(EditorIcons.special).style({ color: cPantsColorGoldHex });
+        }
+        if (miiData.favorite === true) {
+          star.html(EditorIcons.favorite).style({ color: cPantsColorRedHex });
+        }
+      }
+
       let miiName = new Html("span").text(miiData.miiName);
 
       let hasMiiLoaded = false;
@@ -210,11 +231,11 @@ const miiCreateDialog = () => {
       callback: miiCreateRandom,
     },
     {
-      text: "Import FFSD data",
+      text: "Import FFSD/MiiCreator data",
       callback: () => {
         let id: string;
         let modal = Modal.modal(
-          "Import FFSD data",
+          "Import FFSD/MiiCreator data",
           "",
           "body",
           {
@@ -232,9 +253,9 @@ const miiCreateDialog = () => {
           .qsa(".modal-body .flex-group,.modal-body span")!
           .forEach((q) => q!.style({ display: "none" }));
         modal.qs(".modal-body")!.appendMany(
-          new Html("span").text("Select an FFSD file to import"),
+          new Html("span").text("Select a FFSD or .miic file to import"),
           new Html("input")
-            .attr({ type: "file", accept: ".ffsd,.cfsd" })
+            .attr({ type: "file", accept: ".ffsd,.cfsd,.miic" })
             .style({ margin: "auto" })
             .on("change", (e) => {
               const target = e.target as HTMLInputElement;
@@ -399,13 +420,19 @@ const miiEdit = (mii: MiiLocalforage, shutdown: () => any, miiData: Mii) => {
             .qs(".modal-body")
             ?.prepend(
               new Html("img")
-                .attr({ src: miiIconUrl(mii.mii) })
+                .attr({ src: miiIconUrl(miiData) })
                 .style({ width: "180px", margin: "-18px auto 0 auto" })
             );
         },
       },
       {
-        text: "Export",
+        text: "Download",
+        async callback() {
+          miiExportDownload(mii, miiData);
+        },
+      },
+      {
+        text: "Render",
         async callback() {
           miiExport(mii, miiData);
         },
@@ -419,10 +446,23 @@ const miiEdit = (mii: MiiLocalforage, shutdown: () => any, miiData: Mii) => {
       .qs(".modal-body")
       ?.prepend(
         new Html("img")
-          .attr({ src: miiIconUrl(mii.mii) })
+          .attr({ src: miiIconUrl(miiData) })
           .style({ width: "180px", margin: "-18px auto 0 auto" })
       );
   };
+};
+
+const miiColorConversionWarning = async (miiData: Mii) => {
+  if (miiData.hasExtendedColors() === true) {
+    let result = await Modal.prompt(
+      "Warning",
+      "This Mii is using extended Switch colors that will be lost in the conversion to Wii U/3DS format. Are you sure you want to continue?",
+      "body",
+      false
+    );
+    if (result === false) return false;
+  }
+  return true;
 };
 
 const miiExport = (mii: MiiLocalforage, miiData: Mii) => {
@@ -433,14 +473,15 @@ const miiExport = (mii: MiiLocalforage, miiData: Mii) => {
     {
       text: "Generate QR code",
       async callback() {
-        const qrCodeImage = await QRCodeCanvas(mii.mii);
+        if (!(await miiColorConversionWarning(miiData))) return;
+        const qrCodeImage = await QRCodeCanvas(mii.mii, false);
         downloadLink(qrCodeImage, `${miiData.miiName}_QR.png`);
       },
     },
     {
       text: "Render an image",
       async callback() {
-        miiExportRender(miiData);
+        miiExportRender(mii, miiData);
       },
     },
     {
@@ -450,42 +491,13 @@ const miiExport = (mii: MiiLocalforage, miiData: Mii) => {
       },
     },
     {
-      text: "Get FFSD (text)",
-      async callback() {
-        return Modal.alert("FFSD code", mii.mii, "body", true);
-      },
-    },
-    {
-      text: "Get FFSD (file)",
-      async callback() {
-        const blob = new Blob([Buffer.from(mii.mii, "base64")]);
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.target = "_blank";
-        a.download = miiData.miiName + ".ffsd";
-        document.body.appendChild(a);
-        a.click();
-
-        requestAnimationFrame(() => {
-          a.remove();
-        });
-
-        // free URL after some time
-        setTimeout(() => {
-          URL.revokeObjectURL(url);
-        }, 2000);
-      },
-    },
-    {
       text: "Cancel",
       async callback() {},
     }
   );
 };
 
-const miiExportRender = async (miiData: Mii) => {
+const miiExportRender = async (mii: MiiLocalforage, miiData: Mii) => {
   Modal.modal(
     `Render options: ${miiData.miiName}`,
     "Choose a way to render this Mii",
@@ -526,6 +538,100 @@ const miiExportRender = async (miiData: Mii) => {
     {
       text: "Cancel",
       callback() {},
+    }
+  );
+};
+
+const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
+  Modal.modal(
+    "Mii Export",
+    "How would you like to save the Mii?",
+    "body",
+    {
+      text: "Cancel",
+      callback() {},
+    },
+    {
+      text: "Get FFSD (Hex)",
+      async callback() {
+        if (!(await miiColorConversionWarning(miiData))) return;
+        return Modal.alert(
+          "FFSD code",
+          miiData.encodeFFSD().toString("hex"),
+          "body",
+          true
+        );
+      },
+    },
+    {
+      text: "Get FFSD (Base64 text)",
+      async callback() {
+        if (!(await miiColorConversionWarning(miiData))) return;
+        return Modal.alert(
+          "FFSD code",
+          miiData.encodeFFSD().toString("base64"),
+          "body",
+          true
+        );
+      },
+    },
+    {
+      text: "Save FFSD (file)",
+      async callback() {
+        if (!(await miiColorConversionWarning(miiData))) return;
+        const blob = new Blob([miiData.encodeFFSD()]);
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.download = miiData.miiName + ".ffsd";
+        document.body.appendChild(a);
+        a.click();
+
+        requestAnimationFrame(() => {
+          a.remove();
+        });
+
+        // free URL after some time
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 2000);
+      },
+    },
+    {
+      text: "Save MiiCreator data",
+      async callback() {
+        const blob = new Blob([miiData.encode()]);
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.download = miiData.miiName + ".miic";
+        document.body.appendChild(a);
+        a.click();
+
+        requestAnimationFrame(() => {
+          a.remove();
+        });
+
+        // free URL after some time
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 2000);
+      },
+    },
+    {
+      text: "Get Mii Studio data",
+      async callback() {
+        return Modal.alert(
+          "Mii Studio data",
+          miiData.encodeStudio().toString("hex"),
+          "body",
+          true
+        );
+      },
     }
   );
 };
@@ -572,7 +678,7 @@ export function customRender(miiData: Mii) {
     cameraPosition: 1,
   };
 
-  const base64Data = miiData.encode().toString("base64");
+  const base64Data = miiData.encodeStudio().toString("hex");
 
   const expressionDuplicateList = [42, 44, 46, 48, 50, 52, 54, 61, 62];
 
@@ -583,6 +689,7 @@ export function customRender(miiData: Mii) {
     entries: {
       page1: {
         label: "Camera",
+        header: "Use mouse or touch to move the camera around.",
         items: [
           {
             type: FeatureSetType.Slider,

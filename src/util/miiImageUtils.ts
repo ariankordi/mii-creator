@@ -49,17 +49,44 @@ export enum MiiCustomRenderType {
 
 export const getMiiRender = async (
   mii: Mii,
-  type: MiiCustomRenderType
+  type: MiiCustomRenderType,
+  useExtendedColors: boolean = true
 ): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
+    let tmpMii = new Mii(mii.encode());
+
+    if (useExtendedColors === false) {
+      tmpMii.trueEyeColor = tmpMii.fflEyeColor;
+      tmpMii.trueEyebrowColor = tmpMii.fflEyebrowColor;
+      tmpMii.trueFacialHairColor = tmpMii.fflFacialHairColor;
+      tmpMii.trueGlassesColor = tmpMii.fflGlassesColor;
+      tmpMii.trueGlassesType = tmpMii.fflGlassesType;
+      tmpMii.trueHairColor = tmpMii.fflHairColor;
+      tmpMii.trueMouthColor = tmpMii.fflMouthColor;
+      tmpMii.trueSkinColor = tmpMii.fflSkinColor;
+
+      tmpMii.extEyeColor = tmpMii.fflEyeColor + 8;
+      tmpMii.extHairColor = tmpMii.fflHairColor;
+      tmpMii.extFacelineColor = tmpMii.fflSkinColor;
+      tmpMii.extBeardColor = tmpMii.fflFacialHairColor;
+      tmpMii.extEyebrowColor = tmpMii.fflEyebrowColor;
+      tmpMii.extGlassColor = 0;
+      tmpMii.extGlassType = tmpMii.fflGlassesType;
+      tmpMii.extHatColor = 0;
+      tmpMii.extHatType = 0;
+    }
+
     let parent = new Html("div")
       .style({ width: "720px", height: "720px", opacity: "0.1" })
       .appendTo("body");
     const scene = new Mii3DScene(
-      mii,
+      tmpMii,
       parent.elm,
       SetupType.Screenshot,
       (renderer) => {
+        // swap pose for render
+        scene.swapAnimation("Pose.1", true);
+
         let scn = scene.getScene()!,
           cam = scene.getCamera()!,
           ctl = scene.getControls()!;
@@ -128,9 +155,16 @@ export const getBackground = async (): Promise<HTMLImageElement> => {
   });
 };
 
-export const QRCodeCanvas = async (mii: string) => {
+export const QRCodeCanvas = async (
+  mii: string,
+  extendedColors: boolean = true
+) => {
   const miiData = new Mii(Buf.from(mii, "base64"));
-  const render = await getMiiRender(miiData, MiiCustomRenderType.Body);
+  const render = await getMiiRender(
+    miiData,
+    MiiCustomRenderType.Body,
+    extendedColors
+  );
   const qrCodeSource = await makeQrCodeImage(mii);
   const background = await getBackground();
 
