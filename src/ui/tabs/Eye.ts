@@ -58,17 +58,17 @@ export function EyeTab(data: TabRenderInit) {
               property: "fflEyeColor",
             })),
             makeSeparatorFSI(),
-            // ...rearrangeArray(
-            ...ArrayNum(100).map((k) => ({
-              type: FeatureSetType.Icon,
-              value: k + 6,
-              // icon: `<span style="display:flex;justify-content:center;align-items:center;position:relative;z-index:1;">${k}</span>`,
-              color: SwitchMiiColorTable[k],
-              part: RenderPart.Face,
-              property: "extEyeColor",
-            })),
-            //   MiiSwitchColorTable
-            // ),
+            ...rearrangeArray(
+              ArrayNum(100).map((k) => ({
+                type: FeatureSetType.Icon,
+                value: k + 6,
+                // icon: `<span style="display:flex;justify-content:center;align-items:center;position:relative;z-index:1;">${k}</span>`,
+                color: SwitchMiiColorTable[k],
+                part: RenderPart.Face,
+                property: "extEyeColor",
+              })),
+              MiiSwitchColorTable
+            ),
           ],
         },
         eyePosition: {
