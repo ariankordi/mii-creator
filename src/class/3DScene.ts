@@ -137,6 +137,9 @@ export class Mii3DScene {
       this.#controls.mouseButtons.left = CameraControls.ACTION.ROTATE;
       this.#controls.mouseButtons.right = CameraControls.ACTION.NONE;
       this.#controls.mouseButtons.wheel = CameraControls.ACTION.DOLLY;
+      this.#controls.touches.one = CameraControls.ACTION.TOUCH_ROTATE;
+      this.#controls.touches.two = CameraControls.ACTION.TOUCH_DOLLY;
+      this.#controls.touches.three = CameraControls.ACTION.NONE;
       this.#controls.minDistance = 8;
       this.#controls.maxDistance = 35;
       // this.#controls.minDistance = 60;
@@ -149,6 +152,10 @@ export class Mii3DScene {
       this.#controls.moveTo(0, 1.5, 0);
       this.#controls.dollyTo(40);
       this.#camera.fov = 30;
+
+      // prevent too much zoom lol
+      this.#controls.minDistance = 8;
+      this.#controls.maxDistance = 100;
     }
 
     // this.#controls.maxTargetRadius = 10;

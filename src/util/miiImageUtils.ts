@@ -9,6 +9,7 @@ import { Buffer as Buf } from "../../node_modules/buffer/index";
 import { Config } from "../config.js";
 import { CameraPosition, Mii3DScene, SetupType } from "../class/3DScene.js";
 import Html from "@datkat21/html";
+import { Box3, Vector3 } from "three";
 
 const ver3Format = supportedFormats.find(
   (f) => f.className === "Gen2Wiiu3dsMiitomo"
@@ -104,9 +105,17 @@ export const getMiiRender = async (
             scn.getObjectByName("legs_m")!.visible = false;
             scn.getObjectByName("body_f")!.visible = false;
             scn.getObjectByName("legs_f")!.visible = false;
-            // zoom in on head
-            ctl.moveTo(0, 3.5, 0);
-            ctl.dollyTo(20);
+            // Get the bounding box of the object
+            const box = new Box3().setFromObject(
+              scn.getObjectByName("MiiHead")!
+            );
+            const center = box.getCenter(new Vector3());
+            const objectPosition = scn
+              .getObjectByName("MiiHead")!
+              .getWorldPosition(new Vector3());
+            const cameraY = objectPosition.y + center.y;
+            ctl.moveTo(0, cameraY, 0, false);
+            ctl.dollyTo(40);
             cam.fov = 15;
             cam.updateProjectionMatrix();
             break;

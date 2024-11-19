@@ -509,7 +509,7 @@ const miiExportRender = async (mii: MiiLocalforage, miiData: Mii) => {
           miiData,
           MiiCustomRenderType.Head
         );
-        downloadLink(renderImage.src, `${miiData.miiName}_render_headshot.png`);
+        downloadLink(renderImage.src, `${miiData.miiName}_render_headshot_${Date.now()}.png`);
       },
     },
     {
@@ -519,7 +519,7 @@ const miiExportRender = async (mii: MiiLocalforage, miiData: Mii) => {
           miiData,
           MiiCustomRenderType.Body
         );
-        downloadLink(renderImage.src, `${miiData.miiName}_render_body.png`);
+        downloadLink(renderImage.src, `${miiData.miiName}_render_body_${Date.now()}.png`);
       },
     },
     {
@@ -531,7 +531,7 @@ const miiExportRender = async (mii: MiiLocalforage, miiData: Mii) => {
         );
         downloadLink(
           renderImage.src,
-          `${miiData.miiName}_render_head_only.png`
+          `${miiData.miiName}_render_head_only_${Date.now()}.png`
         );
       },
     },
@@ -835,7 +835,7 @@ export function customRender(miiData: Mii) {
       image.src = URL.createObjectURL(blob!);
       console.log("Temporary render URL:", image.src);
       image.onload = () => {
-        downloadLink(image.src, `${miiData.miiName}_${new Date().toJSON()}`);
+        downloadLink(image.src, `${miiData.miiName}_${new Date().toJSON()}.png`);
         scene.shutdown();
         parent.cleanup();
         modal.qs("button")?.elm.click();
