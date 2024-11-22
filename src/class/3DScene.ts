@@ -28,7 +28,11 @@ import { Buffer } from "../../node_modules/buffer";
 import { getSoundManager } from "./audio/SoundManager";
 import { SparkleParticle } from "./3d/effect/SparkleParticle";
 import { multiplyTexture } from "./3d/canvas/multiplyTexture";
-import { ExtHatFullHeadList } from "../constants/Extensions";
+import {
+  ExtHatFullHeadList,
+  ExtHatFullHeadRaycastList,
+} from "../constants/Extensions";
+import { getRaycastIntersection } from "./3d/util/raycast";
 
 export enum CameraPosition {
   MiiHead,
@@ -668,13 +672,17 @@ export class Mii3DScene {
           try {
             if (this.mii.extHatType !== 0) {
               let hatModel = await this.#gltfLoader.loadAsync(
-                `./assets/mod/hat_${this.mii.extHatType}.glb`
+                `./assets/mdl/hat_${this.mii.extHatType}.glb`
               );
 
+              hatModel.scene.name = "HatScene";
+              let i = 0;
               hatModel.scene.traverse((o) => {
+                // "HatRoot" would be the name of the parent object to the hat if it is an armature
+                if (o.name === "HatScene" || o.name === "HatRoot") return;
+
                 if ((o as THREE.Mesh).isMesh) {
                   let m = o as THREE.Mesh;
-                  m.name = "HAT HAT MODEL";
                   const mat = m.material as THREE.MeshStandardMaterial;
                   const tex = multiplyTexture(
                     mat.map!,
@@ -685,11 +693,11 @@ export class Mii3DScene {
                     ]
                   );
                   // VERY HACKY SET HAT TEXTURE
-                  setTimeout(() => {
-                    (
-                      m.material as THREE.ShaderMaterial
-                    ).uniforms.s_texture.value = tex;
-                  }, 16.66);
+                  // setTimeout(() => {
+                  // (
+                  //   m.material as THREE.ShaderMaterial
+                  // ).uniforms.s_texture.value = tex;
+                  // }, 16.66);
                   m.material = new THREE.MeshBasicMaterial({
                     color: 0xffffff,
                     map: tex,
@@ -707,6 +715,58 @@ export class Mii3DScene {
                     modulateMode: 0, //5,
                     modulateType: 5, //5,
                   };
+
+                  if (ExtHatFullHeadList.includes(this.mii.extHatType)) {
+                    // Hat needs to be raycasted from its origin position
+                    const raycastData =
+                      ExtHatFullHeadRaycastList[
+                        ExtHatFullHeadList.indexOf(this.mii.extHatType)
+                      ];
+
+                    if (raycastData === undefined) return;
+
+                    if (raycastData[i] !== undefined) {
+                      let raycastInt = getRaycastIntersection(
+                        this.#scene.children,
+                        raycastData[i].origin,
+                        raycastData[i].angle
+                      )!;
+
+                      // this only started happening after i commented the below code???
+                      if (raycastInt === null) return;
+
+                      // const rayLength = 3; // Adjust for desired ray length
+                      // const arrowHelper = new THREE.ArrowHelper(
+                      //   raycastData[i].angle.clone().normalize(),
+                      //   raycastData[i].origin,
+                      //   rayLength,
+                      //   0xffffff
+                      // );
+                      // this.#scene.add(arrowHelper);
+
+                      // setTimeout(() => {
+                      //   this.#scene.remove(arrowHelper);
+                      // }, 5000);
+
+                      console.log(`Hat raycast for ${o.name}:`, raycastInt);
+
+                      if (raycastInt.point === null) {
+                        return console.log(`Hat raycast for ${i} failed`);
+                      }
+                      // m.position.set(raycastInt.point.x, raycastInt.point.y, raycastInt.point.z);
+                      m.position.copy(raycastInt.point);
+                      if (raycastInt.face) {
+                        const normalVector = raycastInt.face!.normal.clone();
+                        // m.position.addScaledVector(normalVector, 0.1);
+                        m.quaternion.setFromUnitVectors(
+                          new THREE.Vector3(0, 1, 0),
+                          normalVector
+                        );
+                      }
+                    } else
+                      console.log(`Hat raycast data for ${i} does not exist`);
+                  }
+                  i++;
                 }
               });
 
@@ -844,12 +904,12 @@ export class Mii3DScene {
         case 0: // FFL_CULL_MODE_NONE
           side = THREE.DoubleSide; // No culling
           break;
-        case 1: // FFL_CULL_MODE_BACK
-          side = THREE.FrontSide; // Cull back faces, render front
-          break;
-        case 2: // FFL_CULL_MODE_FRONT
-          side = THREE.BackSide; // Cull front faces, render back
-          break;
+        // case 1: // FFL_CULL_MODE_BACK
+        //   side = THREE.FrontSide; // Cull back faces, render front
+        //   break;
+        // case 2: // FFL_CULL_MODE_FRONT
+        //   side = THREE.BackSide; // Cull front faces, render back
+        //   break;
       }
     }
 
