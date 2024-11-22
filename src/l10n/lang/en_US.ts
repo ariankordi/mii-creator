@@ -68,7 +68,7 @@ export default {
         get_ffsd_hex: "Get FFSD (Hex)",
         get_ffsd_b64: "Get FFSD (Base64)",
         save_ffsd_file: "Save FFSD (file)",
-        save_miic_file: "Save MiiCreator data",
+        save_miic_file: "Save MiiCreator data (Recommended)",
         get_mii_studio_data: "Get Mii Studio data",
         ffsd_modal: "FFSD code",
         mii_studio_data_modal: "Mii Studio data",

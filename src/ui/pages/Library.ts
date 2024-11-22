@@ -567,6 +567,29 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
       callback() {},
     },
     {
+      text: "Save MiiCreator data (Recommended)",
+      async callback() {
+        const blob = new Blob([miiData.encode()]);
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.download = miiData.miiName + ".miic";
+        document.body.appendChild(a);
+        a.click();
+
+        requestAnimationFrame(() => {
+          a.remove();
+        });
+
+        // free URL after some time
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 2000);
+      },
+    },
+    {
       text: "Get FFSD (Hex)",
       async callback() {
         if (!(await miiColorConversionWarning(miiData))) return;
@@ -601,29 +624,6 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
         a.href = url;
         a.target = "_blank";
         a.download = miiData.miiName + ".ffsd";
-        document.body.appendChild(a);
-        a.click();
-
-        requestAnimationFrame(() => {
-          a.remove();
-        });
-
-        // free URL after some time
-        setTimeout(() => {
-          URL.revokeObjectURL(url);
-        }, 2000);
-      },
-    },
-    {
-      text: "Save MiiCreator data",
-      async callback() {
-        const blob = new Blob([miiData.encode()]);
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.target = "_blank";
-        a.download = miiData.miiName + ".miic";
         document.body.appendChild(a);
         a.click();
 
