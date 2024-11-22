@@ -742,7 +742,7 @@ export class Mii3DScene {
                           ? this.mii.extHatColor - 1
                           : this.mii.favoriteColor
                       ],
-                    modulateMode: 0, //5,
+                    modulateMode: 5, //5,
                     modulateType: 5, //5,
                   };
 
