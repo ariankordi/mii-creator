@@ -217,10 +217,12 @@
     backdrop-filter: blur(8px) !important;
     border: 1px solid #a2a2a2 !important;
   }
+  .tab-content .feature-set-group .feature-switch .feature-switch-left,
   .tab-content .feature-set-group .feature-switch .feature-switch-right {
     padding: 8px 20px !important;
     border-right-width: unset !important;
   }
+  .tab-content .feature-set-group .feature-switch .feature-switch-left.active,
   .tab-content .feature-set-group .feature-switch .feature-switch-right.active {
     background: linear-gradient(#e6e600 5%, #fffb7e 100%) !important;
     box-shadow: #f1da00 0px 1px 3px 4px inset,
