@@ -934,12 +934,12 @@ export class Mii3DScene {
         case 0: // FFL_CULL_MODE_NONE
           side = THREE.DoubleSide; // No culling
           break;
-        // case 1: // FFL_CULL_MODE_BACK
-        //   side = THREE.FrontSide; // Cull back faces, render front
-        //   break;
-        // case 2: // FFL_CULL_MODE_FRONT
-        //   side = THREE.BackSide; // Cull front faces, render back
-        //   break;
+        case 1: // FFL_CULL_MODE_BACK
+          side = THREE.FrontSide; // Cull back faces, render front
+          break;
+        case 2: // FFL_CULL_MODE_FRONT
+          side = THREE.BackSide; // Cull front faces, render back
+          break;
       }
     }
 

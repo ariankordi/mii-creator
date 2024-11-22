@@ -29,6 +29,7 @@ import {
 } from "../../class/3d/shader/fflShaderConst";
 import { MiiFavoriteColorIconTable } from "../../constants/ColorTables";
 import { getString as _ } from "../../l10n/manager";
+import { FFLiDatabaseRandom_Get } from "../../util/FFLiDatabaseRandom";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
@@ -88,11 +89,11 @@ export async function Library(highlightMiiId?: string) {
       miiData.unknown1 = 0;
       miiData.unknown2 = 0;
 
-      if (miiData)
-        console.log(
-          miiData.miiName + "'s birthPlatform:",
-          miiData.deviceOrigin
-        );
+      // if (miiData)
+      //   console.log(
+      //     miiData.miiName + "'s birthPlatform:",
+      //     miiData.deviceOrigin
+      //   );
 
       let miiImage = new Html("img").class("lazy").attr({
         "data-src": miiIconUrl(miiData),
@@ -239,7 +240,11 @@ const miiCreateDialog = () => {
       callback: miiCreatePNID,
     },
     {
-      text: "Random",
+      text: "Random Mii",
+      callback: miiCreateRandomFFL,
+    },
+    {
+      text: "Random NNID",
       callback: miiCreateRandom,
     },
     {
@@ -382,6 +387,25 @@ const miiCreateRandom = async () => {
       Library();
     },
     random.data
+  );
+};
+const miiCreateRandomFFL = async () => {
+  const editMii = new Mii(
+    Buffer.from(
+      "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn",
+      "base64"
+    )
+  );
+
+  FFLiDatabaseRandom_Get(editMii);
+
+  new MiiEditor(
+    0,
+    async (m, shouldSave) => {
+      if (shouldSave === true) await localforage.setItem(await newMiiId(), m);
+      Library();
+    },
+    editMii.encode().toString("base64")
   );
 };
 const miiEdit = (mii: MiiLocalforage, shutdown: () => any, miiData: Mii) => {
@@ -730,7 +754,8 @@ export function customRender(miiData: Mii) {
       },
       pose: {
         label: "Pose",
-        header: "This section is a bit unfinished, the poses are custom-made recreations so they are not fully accurate. Pose 3 also has a rotation issue with the head since it has been changed to be pretending to be attached to the body to prevent weird scaling issues. There is also nothing done after pose 4 currently. I'm working on a way to add the Wii U poses directly.",
+        header:
+          "This section is a bit unfinished, the poses are custom-made recreations so they are not fully accurate. Pose 3 also has a rotation issue with the head since it has been changed to be pretending to be attached to the body to prevent weird scaling issues. There is also nothing done after pose 4 currently. I'm working on a way to add the Wii U poses directly.",
         items: ArrayNum(5).map((k) => ({
           type: FeatureSetType.Icon,
           value: k,
