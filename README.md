@@ -28,7 +28,7 @@ This app uses a custom version of the FFSD data type that I call the MiiCreator 
 
 I'm open to contributions if you want to help on the project!
 
-## Credits
+## Model Credits
 
 Many of the custom hat models are provided by the Models Resource:
 
