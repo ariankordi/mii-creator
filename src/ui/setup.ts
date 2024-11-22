@@ -1,6 +1,9 @@
 import localforage from "localforage";
-import { getMusicManager, MusicManager } from "../class/audio/MusicManager";
-import { getSoundManager, initSoundManager } from "../class/audio/SoundManager";
+import { getMusicManager } from "../class/audio/MusicManager";
+import {
+  getSoundManager,
+  setupSoundManager,
+} from "../class/audio/SoundManager";
 import Modal from "./components/Modal";
 import { Library } from "./pages/Library";
 import Mii from "../external/mii-js/mii";
@@ -12,36 +15,44 @@ export async function setupUi() {
 
   updateSettings();
 
-  let gn: GainNode;
-
-  function playMusic() {
-    mm.playSong("mii_maker_music", 0, 41.5, true, true, (source, gainNode) => {
-      gn = gainNode;
-      gainNode.gain.setValueAtTime(-1, mm.audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(
-        -0.6,
-        mm.audioContext.currentTime + 2
-      );
-    });
-  }
-
-  mm.loadSong("./assets/aud/miimakermusic.mp3", "mii_maker_music").then(() => {
-    playMusic();
-    setTimeout(() => {
-      if (mm.audioContext.state === "suspended") {
-        Modal.alert(
-          "Audio needs action",
-          "Music will start playing on first click. You can press V to change sound volume (default is 0.35)"
-        );
-        document.onclick = () => {
-          document.onclick = null;
-          playMusic();
-        };
-      }
-    }, 100);
+  // for U theme
+  let state: "main" | "edit" = "main";
+  document.addEventListener("editor-launch", () => {
+    state = "edit";
+    updateMusicVol();
+  });
+  document.addEventListener("editor-shutdown", () => {
+    state = "main";
+    updateMusicVol();
   });
 
-  await initSoundManager();
+  function updateMusicVol() {
+    if (mm.editGainNode === undefined) return;
+    // a bit repetitive
+    if (state === "main") {
+      mm.mainGainNode.gain.linearRampToValueAtTime(
+        -0.6,
+        getMusicManager().audioContext.currentTime + 0.5
+      );
+      mm.editGainNode.gain.linearRampToValueAtTime(
+        -1,
+        getMusicManager().audioContext.currentTime + 0.5
+      );
+    }
+    if (state === "edit") {
+      mm.mainGainNode.gain.linearRampToValueAtTime(
+        -1,
+        getMusicManager().audioContext.currentTime + 0.5
+      );
+      mm.editGainNode.gain.linearRampToValueAtTime(
+        -0.6,
+        getMusicManager().audioContext.currentTime + 0.5
+      );
+    }
+  }
+
+  mm.initMusic();
+  setupSoundManager();
 
   if (location.search !== "") {
     const searchParams = new URLSearchParams(location.search);
@@ -70,23 +81,45 @@ export async function setupUi() {
   mm.setVolume(0.28);
 
   window.addEventListener("blur", () => {
-    if (gn)
-      gn.gain.linearRampToValueAtTime(
+    if (mm.mainGainNode) {
+      mm.mainGainNode.gain.linearRampToValueAtTime(
         -1,
         getMusicManager().audioContext.currentTime + 0.5
       );
-    else getMusicManager().setVolume(0);
+      if (mm.editGainNode) {
+        mm.editGainNode.gain.linearRampToValueAtTime(
+          -1,
+          getMusicManager().audioContext.currentTime + 0.5
+        );
+      }
+    } else getMusicManager().setVolume(0);
     getSoundManager().setVolume(0);
   });
   window.addEventListener("focus", () => {
-    if (gn) {
-      gn.gain.setValueAtTime(-1, mm.audioContext.currentTime);
-      gn.gain.linearRampToValueAtTime(
-        -0.6,
-        getMusicManager().audioContext.currentTime + 0.5
-      );
+    if (mm.mainGainNode) {
+      if (state === "main") {
+        mm.mainGainNode.gain.setValueAtTime(-1, mm.audioContext.currentTime);
+        mm.mainGainNode.gain.linearRampToValueAtTime(
+          -0.6,
+          getMusicManager().audioContext.currentTime + 0.5
+        );
+      } else if (state === "edit") {
+        if (mm.editGainNode) {
+          mm.editGainNode.gain.setValueAtTime(-1, mm.audioContext.currentTime);
+          mm.editGainNode.gain.linearRampToValueAtTime(
+            -0.6,
+            getMusicManager().audioContext.currentTime + 0.5
+          );
+        } else {
+          mm.mainGainNode.gain.setValueAtTime(-1, mm.audioContext.currentTime);
+          mm.mainGainNode.gain.linearRampToValueAtTime(
+            -0.6,
+            getMusicManager().audioContext.currentTime + 0.5
+          );
+        }
+      }
     } else getMusicManager().setVolume(0);
-    getSoundManager().setVolume(0.28);
+    getSoundManager().setVolume(getSoundManager().previousVolume);
   });
 
   //@ts-expect-error

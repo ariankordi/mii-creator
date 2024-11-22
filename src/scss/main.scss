@@ -1,3 +1,5 @@
+@use "./wiiu.scss";
+
 html,
 body {
   background-color: white;
@@ -78,10 +80,6 @@ body {
     scrollbar-width: thin;
   }
 }
-
-// :root[data-theme="wiiu"] {
-//  TODO
-// }
 
 a,
 a:visited {

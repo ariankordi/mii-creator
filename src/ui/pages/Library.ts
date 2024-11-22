@@ -121,18 +121,16 @@ export async function Library(highlightMiiId?: string) {
           color:
             miiData.extHatColor !== 0
               ? MiiFavoriteColorIconTable[miiData.extHatColor - 1].top
-              : MiiFavoriteColorIconTable[miiData.favoriteColor].top
+              : MiiFavoriteColorIconTable[miiData.favoriteColor].top,
         });
       }
 
       let miiName = new Html("span").text(miiData.miiName);
 
-      let hasMiiLoaded = false;
-
       let miiEditCallback = miiEdit(mii, shutdown, miiData);
 
       miiContainer.on("click", async () => {
-        if (hasMiiLoaded === false || hasMiiErrored === true) {
+        if (hasMiiErrored === true) {
           let result = await Modal.prompt(
             "Oops",
             "This Mii hasn't loaded correctly. Do you still want to try and manage it?"
@@ -145,18 +143,14 @@ export async function Library(highlightMiiId?: string) {
 
       let hasMiiErrored = false;
 
-      miiImage
-        .on("load", () => {
-          hasMiiLoaded = true;
-        })
-        .on("error", () => {
-          // prevent looping error load
-          if (hasMiiErrored === true) return;
-          miiImage.attr({
-            src: "data:image/svg+xml," + encodeURIComponent(EditorIcons.error),
-          });
-          hasMiiErrored = true;
+      miiImage.on("error", () => {
+        // prevent looping error load
+        if (hasMiiErrored === true) return;
+        miiImage.attr({
+          src: "data:image/svg+xml," + encodeURIComponent(EditorIcons.error),
         });
+        hasMiiErrored = true;
+      });
 
       miiContainer.appendMany(miiImage, miiName).appendTo(libraryList);
 
@@ -218,6 +212,9 @@ export async function Library(highlightMiiId?: string) {
         ),
         AddButtonSounds(
           Link("Mii Maker Music by objecty", "https://x.com/objecty_twitt")
+        ),
+        AddButtonSounds(
+          Link("Wii U theme by dwyazzo90", "https://x.com/dwyazzo90")
         )
       )
   );
@@ -524,7 +521,10 @@ const miiExportRender = async (mii: MiiLocalforage, miiData: Mii) => {
           miiData,
           MiiCustomRenderType.Head
         );
-        downloadLink(renderImage.src, `${miiData.miiName}_render_headshot_${Date.now()}.png`);
+        downloadLink(
+          renderImage.src,
+          `${miiData.miiName}_render_headshot_${Date.now()}.png`
+        );
       },
     },
     {
@@ -534,7 +534,10 @@ const miiExportRender = async (mii: MiiLocalforage, miiData: Mii) => {
           miiData,
           MiiCustomRenderType.Body
         );
-        downloadLink(renderImage.src, `${miiData.miiName}_render_body_${Date.now()}.png`);
+        downloadLink(
+          renderImage.src,
+          `${miiData.miiName}_render_body_${Date.now()}.png`
+        );
       },
     },
     {
@@ -727,7 +730,7 @@ export function customRender(miiData: Mii) {
       },
       pose: {
         label: "Pose",
-        header: _("pages.library.export.custom_render.pose_unfinished_warning"),
+        header: "This section is a bit unfinished, the poses are custom-made recreations so they are not fully accurate. Pose 3 also has a rotation issue with the head since it has been changed to be pretending to be attached to the body to prevent weird scaling issues. There is also nothing done after pose 4 currently. I'm working on a way to add the Wii U poses directly.",
         items: ArrayNum(5).map((k) => ({
           type: FeatureSetType.Icon,
           value: k,
@@ -849,7 +852,10 @@ export function customRender(miiData: Mii) {
       image.src = URL.createObjectURL(blob!);
       console.log("Temporary render URL:", image.src);
       image.onload = () => {
-        downloadLink(image.src, `${miiData.miiName}_${new Date().toJSON()}.png`);
+        downloadLink(
+          image.src,
+          `${miiData.miiName}_${new Date().toJSON()}.png`
+        );
         scene.shutdown();
         parent.cleanup();
         modal.qs("button")?.elm.click();

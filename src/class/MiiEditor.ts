@@ -97,11 +97,7 @@ export class MiiEditor {
   ) {
     window.editor = this;
 
-    // localforage.keys().then((k) => {
-    //   if (k.find((key) => key.startsWith("mii")) === undefined) {
-    //     // todo
-    //   }
-    // });
+    document.dispatchEvent(new CustomEvent("editor-launch"));
 
     this.#loadSoundLoop();
     this.dirty = false;
@@ -435,6 +431,8 @@ export class MiiEditor {
           shouldSave
         );
       }
+      
+      document.dispatchEvent(new CustomEvent("editor-shutdown"));
     }, 500);
   }
 }

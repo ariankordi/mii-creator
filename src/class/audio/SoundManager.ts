@@ -18,6 +18,22 @@ export class SoundManager {
     this.gainNode.connect(this.audioContext.destination);
     this.muted = false;
     this.previousVolume = 0.28;
+
+    document.addEventListener("theme-change", () => {
+      const theme = document.documentElement.dataset.theme;
+
+      if (theme === "wiiu") {
+        loadBaseSounds("./assets/aud/miiMakerU.zip");
+        this.previousVolume = 0.75;
+        this.setVolume(0.75);
+        this.previousVolume = 0.75;
+      } else {
+        loadBaseSounds("./assets/aud/miiMakerSwitch.zip");
+        this.previousVolume = 0.28;
+        this.setVolume(0.28);
+        this.previousVolume = 0.28;
+      }
+    });
   }
 
   async loadSound(url: string, name: string) {
@@ -67,12 +83,14 @@ export class SoundManager {
 
 let sm: SoundManager;
 
-export const initSoundManager = async () => {
+export const setupSoundManager = () => {
   sm = new SoundManager();
+};
 
-  const data = await fetch("./assets/aud/miiMakerSwitch.zip").then((j) =>
-    j.blob()
-  );
+export const loadBaseSounds = async (
+  path: string = "./assets/aud/miiMakerSwitch.zip"
+) => {
+  const data = await fetch(path).then((j) => j.blob());
   const zip = await JSZip.loadAsync(data);
   let promises = [];
   const fileList = Object.keys(zip.files);

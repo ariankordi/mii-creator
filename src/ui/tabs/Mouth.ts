@@ -43,9 +43,9 @@ export function MouthTab(data: TabRenderInit) {
           validationProperty: "trueMouthColor",
           // EXTREMELY HACKY but works..
           validationFunction() {
-            if (mii.trueEyeColor > 4) {
-              return mii.extEyeColor + 5;
-            } else return mii.trueEyeColor;
+            if (mii.trueMouthColor > 4) {
+              return mii.trueMouthColor + 5;
+            } else return mii.trueMouthColor;
           },
           items: [
             ...ArrayNum(5).map((k) => ({

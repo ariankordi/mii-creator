@@ -23,6 +23,12 @@ export const updateSettings = async () => {
   let useSfx = await localforage.getItem("settings_sfx");
   if (useSfx === true) getSoundManager().unmute();
   else if (useSfx === false) getSoundManager().mute();
+  // Wii U Theme
+  document.documentElement.dataset.theme =
+    (await localforage.getItem("settings_wiiu")) === true ? "wiiu" : "normal";
+  setTimeout(() => {
+    document.dispatchEvent(new CustomEvent("theme-change"));
+  }, 33.33);
 };
 
 const settingsInfo: Record<string, any> = {
@@ -35,6 +41,16 @@ const settingsInfo: Record<string, any> = {
     type: "checkbox",
     label: "Sound Effects",
     default: true,
+  },
+  wiiu: {
+    type: "checkbox",
+    label: "Enable Wii U theme",
+    default: false,
+  },
+  cameraPan: {
+    type: "checkbox",
+    label: "Static camera in editor",
+    default: false,
   },
 };
 

@@ -33,6 +33,7 @@ import {
   ExtHatFullHeadRaycastList,
 } from "../constants/Extensions";
 import { getRaycastIntersection } from "./3d/util/raycast";
+import localforage from "localforage";
 
 export enum CameraPosition {
   MiiHead,
@@ -60,6 +61,7 @@ export class Mii3DScene {
   setupType: SetupType;
   #initCallback?: (renderer: THREE.WebGLRenderer) => any;
   type: "m" | "f";
+  cameraPan!: boolean;
   constructor(
     mii: Mii,
     parent: HTMLElement,
@@ -141,20 +143,42 @@ export class Mii3DScene {
       this.#renderer.domElement
     );
     if (setupType === SetupType.Normal) {
-      // this.#camera.fov = 15;
-      // this.#camera.updateProjectionMatrix();
-      this.#controls.mouseButtons.left = CameraControls.ACTION.ROTATE;
-      this.#controls.mouseButtons.right = CameraControls.ACTION.NONE;
-      this.#controls.mouseButtons.wheel = CameraControls.ACTION.DOLLY;
-      this.#controls.touches.one = CameraControls.ACTION.TOUCH_ROTATE;
-      this.#controls.touches.two = CameraControls.ACTION.TOUCH_DOLLY;
-      this.#controls.touches.three = CameraControls.ACTION.NONE;
-      this.#controls.minDistance = 8;
-      this.#controls.maxDistance = 35;
-      // this.#controls.minDistance = 60;
-      // this.#controls.maxDistance = 100;
-      this.#controls.minAzimuthAngle = -Math.PI;
-      this.#controls.maxAzimuthAngle = Math.PI;
+      const camSetup = async () => {
+        const canPan = await localforage.getItem("settings_cameraPan");
+
+        if (canPan !== true) {
+          console.log("canPan is not false:", canPan);
+          this.#controls.mouseButtons.left = CameraControls.ACTION.ROTATE;
+          this.#controls.mouseButtons.right = CameraControls.ACTION.NONE;
+          this.#controls.mouseButtons.wheel = CameraControls.ACTION.DOLLY;
+          this.#controls.touches.one = CameraControls.ACTION.TOUCH_ROTATE;
+          this.#controls.touches.two = CameraControls.ACTION.TOUCH_DOLLY;
+          this.#controls.touches.three = CameraControls.ACTION.NONE;
+          this.#controls.minDistance = 8;
+          this.#controls.maxDistance = 35;
+          // this.#controls.minDistance = 60;
+          // this.#controls.maxDistance = 100;
+          this.#controls.minAzimuthAngle = -Math.PI;
+          this.#controls.maxAzimuthAngle = Math.PI;
+          this.cameraPan = true;
+        } else {
+          this.#camera.fov = 15;
+          this.#camera.updateProjectionMatrix();
+          this.#controls.mouseButtons.left = CameraControls.ACTION.NONE;
+          this.#controls.mouseButtons.right = CameraControls.ACTION.NONE;
+          this.#controls.mouseButtons.wheel = CameraControls.ACTION.NONE;
+          this.#controls.touches.one = CameraControls.ACTION.NONE;
+          this.#controls.touches.two = CameraControls.ACTION.NONE;
+          this.#controls.touches.three = CameraControls.ACTION.NONE;
+          this.#controls.minDistance = 60;
+          this.#controls.maxDistance = 140;
+          this.#controls.minAzimuthAngle = -Math.PI;
+          this.#controls.maxAzimuthAngle = Math.PI;
+          this.#controls.dollyTo(100);
+          this.cameraPan = false;
+        }
+      };
+      camSetup();
     }
 
     if (setupType === SetupType.Screenshot) {
@@ -212,10 +236,16 @@ export class Mii3DScene {
       this.#controls.moveTo(0, 0, 0, true);
       this.#controls.rotateTo(0, Math.PI / 2, true);
       this.#controls.dollyTo(25, true);
+      if (this.cameraPan === false) {
+        this.#controls.dollyTo(120, true);
+      }
     } else if (part === CameraPosition.MiiHead) {
       this.#controls.moveTo(0, 3.5, 0, true);
       this.#controls.rotateTo(0, Math.PI / 2, true);
-      this.#controls.dollyTo(15, true);
+      this.#controls.dollyTo(20, true);
+      if (this.cameraPan === false) {
+        this.#controls.dollyTo(100, true);
+      }
     }
   }
   playEndingAnimation() {

@@ -73,6 +73,7 @@ export default {
       const b = AddButtonSounds(
         new Html("button").text(button.text).on("click", (e: any) => {
           x.class("closing");
+          closingCallback();
           setTimeout(() => {
             x.cleanup();
             button.callback(e);
@@ -84,6 +85,10 @@ export default {
       if (button.type && button.type === "danger") b.class("danger");
 
       b.appendTo(modalContent.elm.querySelector(".flex-group")! as HTMLElement);
+    }
+
+    function closingCallback() {
+      x.qsa("*")!.forEach((a) => a!.attr({ disabled: true, tabindex: "-1" }));
     }
 
     x.appendTo(parent);
