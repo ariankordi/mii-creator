@@ -4,6 +4,7 @@ import { setupUi } from "./ui/setup";
 import { MiiEditor } from "./class/MiiEditor";
 import { Library } from "./ui/pages/Library";
 import LazyLoad, { type ILazyLoadInstance } from "vanilla-lazyload";
+import { langManager } from "./l10n/manager";
 
 declare global {
   interface Window {
@@ -21,4 +22,5 @@ window.buffer = Buf;
 
 window.LazyLoad = new LazyLoad();
 
+langManager.getString("languages.en_US");
 setupUi();

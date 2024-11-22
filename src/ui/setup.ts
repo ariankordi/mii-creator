@@ -1,16 +1,22 @@
 import localforage from "localforage";
-import { MusicManager } from "../class/audio/MusicManager";
+import { getMusicManager, MusicManager } from "../class/audio/MusicManager";
 import { getSoundManager, initSoundManager } from "../class/audio/SoundManager";
 import Modal from "./components/Modal";
 import { Library } from "./pages/Library";
 import Mii from "../external/mii-js/mii";
 import { MiiEditor } from "../class/MiiEditor";
+import { updateSettings } from "./pages/Settings";
 
 export async function setupUi() {
-  let mm = new MusicManager();
+  let mm = getMusicManager();
+
+  updateSettings();
+
+  let gn: GainNode;
 
   function playMusic() {
     mm.playSong("mii_maker_music", 0, 41.5, true, true, (source, gainNode) => {
+      gn = gainNode;
       gainNode.gain.setValueAtTime(-1, mm.audioContext.currentTime);
       gainNode.gain.linearRampToValueAtTime(
         -0.6,
@@ -60,8 +66,33 @@ export async function setupUi() {
     } else Library();
   } else Library();
 
-  getSoundManager().setVolume(0.35);
-  mm.setVolume(0.35);
+  getSoundManager().setVolume(0.28);
+  mm.setVolume(0.28);
+
+  window.addEventListener("blur", () => {
+    if (gn)
+      gn.gain.linearRampToValueAtTime(
+        -1,
+        getMusicManager().audioContext.currentTime + 0.5
+      );
+    else getMusicManager().setVolume(0);
+    getSoundManager().setVolume(0);
+  });
+  window.addEventListener("focus", () => {
+    if (gn) {
+      gn.gain.setValueAtTime(-1, mm.audioContext.currentTime);
+      gn.gain.linearRampToValueAtTime(
+        -0.6,
+        getMusicManager().audioContext.currentTime + 0.5
+      );
+    } else getMusicManager().setVolume(0);
+    getSoundManager().setVolume(0.28);
+  });
+
+  //@ts-expect-error
+  window.MusicManager = getMusicManager();
+  //@ts-expect-error
+  window.soundManager = getSoundManager();
 
   document.addEventListener("keydown", (e) => {
     if (document.activeElement === document.body) {

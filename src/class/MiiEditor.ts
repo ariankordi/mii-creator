@@ -35,6 +35,7 @@ import { GlassesTab } from "../ui/tabs/Glasses";
 import localforage from "localforage";
 import { Config } from "../config";
 import { OptionsTab } from "../ui/tabs/Options";
+import { ExtHatTab } from "../ui/tabs/ExtHat";
 
 export enum MiiGender {
   Male,
@@ -56,6 +57,7 @@ export type IconSet = {
   goatee: string[];
   hair: string[];
   glasses: string[];
+  hat: string[];
 };
 
 export enum RenderPart {
@@ -288,6 +290,10 @@ export class MiiEditor {
       {
         icon: EditorIcons.hair,
         select: TabInit(HairTab, CameraPosition.MiiHead),
+      },
+      {
+        icon: EditorIcons.hat,
+        select: TabInit(ExtHatTab, CameraPosition.MiiHead),
       },
       {
         icon: EditorIcons.eyebrows,

@@ -1220,6 +1220,7 @@ export default class Mii {
       instanceCount?: number;
       instanceRotationMode?: string;
       data?: string;
+      modelType?: "hat";
     } = STUDIO_RENDER_DEFAULTS
   ): string {
     const params = {

@@ -27,6 +27,8 @@ import {
   cPantsColorGoldHex,
   cPantsColorRedHex,
 } from "../../class/3d/shader/fflShaderConst";
+import { MiiFavoriteColorIconTable } from "../../constants/ColorTables";
+import { getString as _ } from "../../l10n/manager";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
@@ -51,7 +53,7 @@ export async function Library(highlightMiiId?: string) {
 
   const sidebar = new Html("div").class("library-sidebar").appendTo(container);
 
-  sidebar.append(new Html("h1").text("Mii Creator"));
+  sidebar.append(new Html("h1").text(_("generic.app_title")));
 
   const libraryList = new Html("div").class("library-list").appendTo(container);
 
@@ -96,6 +98,7 @@ export async function Library(highlightMiiId?: string) {
         "data-src": miiIconUrl(miiData),
       });
 
+      // Special
       if (miiData.normalMii === false || miiData.favorite === true) {
         const star = new Html("i")
           .style({ position: "absolute", top: "0", right: "0" })
@@ -108,6 +111,18 @@ export async function Library(highlightMiiId?: string) {
         if (miiData.favorite === true) {
           star.html(EditorIcons.favorite).style({ color: cPantsColorRedHex });
         }
+      }
+      // hat
+      if (miiData.extHatType !== 0) {
+        const hat = new Html("i")
+          .style({ position: "absolute", top: "0", left: "0" })
+          .appendTo(miiContainer);
+        hat.html(EditorIcons.hat).style({
+          color:
+            miiData.extHatColor !== 0
+              ? MiiFavoriteColorIconTable[miiData.extHatColor - 1].top
+              : MiiFavoriteColorIconTable[miiData.favoriteColor].top
+        });
       }
 
       let miiName = new Html("span").text(miiData.miiName);
@@ -426,7 +441,7 @@ const miiEdit = (mii: MiiLocalforage, shutdown: () => any, miiData: Mii) => {
         },
       },
       {
-        text: "Download",
+        text: "Export/Download",
         async callback() {
           miiExportDownload(mii, miiData);
         },
@@ -712,9 +727,8 @@ export function customRender(miiData: Mii) {
       },
       pose: {
         label: "Pose",
-        header:
-          "This section is a bit unfinished, the poses are custom-made recreations so they are not fully accurate. Pose 3 also has a rotation issue with the head since it has been changed to be pretending to be attached to the body to prevent weird scaling issues. There is also nothing done after pose 4 currently. I'm working on a way to add the Wii U poses directly.",
-        items: ArrayNum(15).map((k) => ({
+        header: _("pages.library.export.custom_render.pose_unfinished_warning"),
+        items: ArrayNum(5).map((k) => ({
           type: FeatureSetType.Icon,
           value: k,
           icon: String(k),

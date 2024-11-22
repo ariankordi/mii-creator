@@ -6,6 +6,8 @@ export class SoundManager {
   soundBufs: Record<string, AudioBuffer>;
   audioContext: AudioContext;
   gainNode: GainNode;
+  muted: boolean;
+  previousVolume: number;
 
   constructor() {
     this.soundBufs = {};
@@ -14,6 +16,8 @@ export class SoundManager {
       window.webkitAudioContext)();
     this.gainNode = this.audioContext.createGain();
     this.gainNode.connect(this.audioContext.destination);
+    this.muted = false;
+    this.previousVolume = 0.28;
   }
 
   async loadSound(url: string, name: string) {
@@ -44,7 +48,20 @@ export class SoundManager {
   }
 
   setVolume(volume: number) {
+    if (this.muted) return;
     this.gainNode.gain.value = volume;
+  }
+
+  mute() {
+    if (this.muted) return;
+    this.previousVolume = this.gainNode.gain.value;
+    this.setVolume(0);
+    this.muted = true;
+  }
+  unmute() {
+    if (this.muted === false) return;
+    this.muted = false;
+    this.setVolume(this.previousVolume);
   }
 }
 

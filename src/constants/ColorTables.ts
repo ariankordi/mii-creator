@@ -1,7 +1,9 @@
+import type { FFLColor } from "../class/3d/shader/fflShaderConst";
 import type { MiiLookupTableColor } from "../class/JFL/tables/colors";
 
 export type MiiLookupTableHex = Record<number, number>;
 export type MiiLookupTableString = Record<number, string>;
+export type MiiLookupTableVec4 = Record<number, FFLColor>;
 export type MiiLookupTableSpecial = Record<
   number,
   { top: string; bottom: string }
@@ -32,6 +34,21 @@ export const MiiFavoriteColorLookupTable: MiiLookupTableHex = {
   10: 0xe0e0e0,
   /** Black */
   11: 0x181814,
+};
+
+export const MiiFavoriteColorVec4Table: MiiLookupTableVec4 = {
+  0: [0.8235294117647058, 0.11764705882352941, 0.0784313725490196, 1],
+  1: [1, 0.43137254901960786, 0.09803921568627451, 1],
+  2: [1, 0.8470588235294118, 0.12549019607843137, 1],
+  3: [0.47058823529411764, 0.8235294117647058, 0.12549019607843137, 1],
+  4: [0, 0.47058823529411764, 0.18823529411764706, 1],
+  5: [0.0392156862745098, 0.2823529411764706, 0.7372549019607844, 1],
+  6: [0.23529411764705882, 0.6666666666666666, 0.8705882352941177, 1],
+  7: [0.9607843137254902, 0.35294117647058826, 0.49019607843137253, 1],
+  8: [0.45098039215686275, 0.1568627450980392, 0.6784313725490196, 1],
+  9: [0.2823529411764706, 0.2196078431372549, 0.09411764705882353, 1],
+  10: [0.8784313725490196, 0.8784313725490196, 0.8784313725490196, 1],
+  11: [0.09411764705882353, 0.09411764705882353, 0.0784313725490196, 1],
 };
 
 export const MiiFavoriteColorIconTable: MiiLookupTableSpecial = {

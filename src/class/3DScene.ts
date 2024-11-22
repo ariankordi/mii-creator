@@ -2,7 +2,10 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import CameraControls from "camera-controls";
 import Mii from "../external/mii-js/mii";
-import { MiiFavoriteColorLookupTable } from "../constants/ColorTables";
+import {
+  MiiFavoriteColorLookupTable,
+  MiiFavoriteColorVec4Table,
+} from "../constants/ColorTables";
 import {
   cLightAmbient,
   cLightDiffuse,
@@ -24,6 +27,8 @@ import { Config } from "../config";
 import { Buffer } from "../../node_modules/buffer";
 import { getSoundManager } from "./audio/SoundManager";
 import { SparkleParticle } from "./3d/effect/SparkleParticle";
+import { multiplyTexture } from "./3d/canvas/multiplyTexture";
+import { ExtHatFullHeadList } from "../constants/Extensions";
 
 export enum CameraPosition {
   MiiHead,
@@ -639,23 +644,80 @@ export class Mii3DScene {
           const tmpMii = new Mii(this.mii.encode());
           if (this.mii.extHatColor !== 0) {
             tmpMii.favoriteColor = this.mii.extHatColor - 1;
-            // console.log(
-            //   "overwriting fav color with hat color:",
-            //   this.mii.favoriteColor
-            // );
+          }
+          let params: Record<string, string> = {};
+          if (
+            this.mii.extHatType !== 0 &&
+            !ExtHatFullHeadList.includes(this.mii.extHatType)
+          ) {
+            params["modelType"] = "hat";
           }
           const GLB = await this.#gltfLoader.loadAsync(
             tmpMii.studioUrl({
               ext: "glb",
+              ...params,
             } as unknown as any)
           );
           this.mii.favoriteColor = favoriteColor;
-          // console.log("reverting fav color:", favoriteColor);
 
           GLB.scene.name = "MiiHead";
           // head is no longer attached to head bone physically, no more need to offset rotation
           // GLB.scene.rotation.set(-Math.PI / 2, 0, 0);
           GLB.scene.scale.set(0.12, 0.12, 0.12);
+
+          try {
+            if (this.mii.extHatType !== 0) {
+              let hatModel = await this.#gltfLoader.loadAsync(
+                `./assets/mod/hat_${this.mii.extHatType}.glb`
+              );
+
+              hatModel.scene.traverse((o) => {
+                if ((o as THREE.Mesh).isMesh) {
+                  let m = o as THREE.Mesh;
+                  m.name = "HAT HAT MODEL";
+                  const mat = m.material as THREE.MeshStandardMaterial;
+                  const tex = multiplyTexture(
+                    mat.map!,
+                    MiiFavoriteColorVec4Table[
+                      this.mii.extHatColor !== 0
+                        ? this.mii.extHatColor - 1
+                        : this.mii.favoriteColor
+                    ]
+                  );
+                  // VERY HACKY SET HAT TEXTURE
+                  setTimeout(() => {
+                    (
+                      m.material as THREE.ShaderMaterial
+                    ).uniforms.s_texture.value = tex;
+                  }, 16.66);
+                  m.material = new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    map: tex,
+                  });
+                  m.material.needsUpdate = true;
+                  m.geometry.userData = {
+                    // ignore: 1,
+                    cullMode: 0,
+                    modulateColor:
+                      MiiFavoriteColorVec4Table[
+                        this.mii.extHatColor !== 0
+                          ? this.mii.extHatColor - 1
+                          : this.mii.favoriteColor
+                      ],
+                    modulateMode: 0, //5,
+                    modulateType: 5, //5,
+                  };
+                }
+              });
+
+              GLB.scene.add(hatModel.scene);
+            }
+          } catch (e) {
+            console.error(
+              "Hat type resulted in an error, but we're not going to let that stop the head from rendering!",
+              e
+            );
+          }
 
           // enable shader on head
           this.#scene.remove(...head);
@@ -725,6 +787,10 @@ export class Mii3DScene {
     // Access userData from geometry
     const userData = node.geometry.userData;
 
+    if (userData.ignore !== undefined) {
+      if (userData.ignore === 1) return;
+    }
+
     // Retrieve modulateType and map to material parameters
     const modulateType = userData.modulateType;
     if (userData.modulateType === undefined)
@@ -768,6 +834,7 @@ export class Mii3DScene {
     if (originalMaterial.map) {
       defines.USE_MAP = "";
       originalMaterial.map.colorSpace = THREE.LinearSRGBColorSpace;
+      console.log(`map found for ${node.name}!`);
     }
 
     // Function to Map FFLCullMode to three.js material side
