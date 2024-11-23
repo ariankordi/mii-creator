@@ -33,7 +33,9 @@ export function TabList(tabs: Tab[], type: TabListType = TabListType.Square) {
         .on("click", async () => {
           selectTab(tabElm, tab.select);
         })
-        .appendTo(tabList)
+        .appendTo(tabList),
+      "hover",
+      "select_tab"
     );
     switch (type) {
       case TabListType.Square:

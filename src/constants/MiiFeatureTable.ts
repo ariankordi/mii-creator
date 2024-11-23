@@ -191,7 +191,7 @@ export function rearrangeArray(
 
   rearrangedArray = rearrangedArray.filter((i) => i !== undefined);
 
-  console.log("rearranged:", rearrangedArray);
+  // console.log("rearranged:", rearrangedArray);
 
   return rearrangedArray;
 }
