@@ -87,7 +87,7 @@ function GetRandomGlassType(age: FFLAge) {
 }
 
 export function GetRandomParts(array: any[]) {
-  return array[1][Math.floor(Math.random() * array.length)];
+  return array[1][Math.floor(Math.random() * array[0])];
 }
 
 const RANDOM_GLASS_TYPE: any[] = [
