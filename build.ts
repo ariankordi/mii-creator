@@ -14,7 +14,7 @@ export async function compile(
     outdir: outputDir,
     splitting: true,
     emitDCEAnnotations: true,
-    // sourcemap: "linked",
+    sourcemap: "linked",
     minify: {
       identifiers: true,
       syntax: true,
