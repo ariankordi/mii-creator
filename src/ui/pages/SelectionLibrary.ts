@@ -60,7 +60,7 @@ export function SelectionLibrary(highlightMiiId?: string): Promise<Mii> {
           .text("You have no Miis yet. Create one to get started!"),
         AddButtonSounds(
           new Html("button")
-            .style({ top: "4rem", left: "2rem" })
+            .style({ position: "absolute", top: "4rem", left: "2rem" })
             .text("Create New")
             .on("click", async () => {
               await shutdown();
