@@ -140,70 +140,79 @@
 
   .ui-base {
     background-color: unset !important;
-  }
 
-  @media screen and (max-width: 960px) {
-    .ui-base .tab-list {
-      background: linear-gradient(#a6ff5e 5%, #02f21c 100%) !important;
+    @media screen and (max-width: 960px) {
+      .tab-list {
+        background: linear-gradient(#a6ff5e 5%, #02f21c 100%) !important;
+      }
+    }
+
+    .mii-holder {
+      background-color: rgba(255, 255, 255, 0.2) !important;
+      backdrop-filter: blur(3px) !important;
+      margin-bottom: -1rem;
+    }
+
+    .tab-list {
+      grid-area: tabList !important;
+      background: linear-gradient(
+        to right,
+        #a6ff5e 5%,
+        #02f21c 100%
+      ) !important;
+      box-shadow: #2bd500 0px 0px 4px 2px inset,
+        0px 0.5px 3px 1px rgb(133 133 133 / 42%) !important;
+
+      .tab:hover {
+        background-color: rgba(0, 0, 0, 0.15) !important;
+      }
+      .tab.tab-square > svg {
+        color: #ffffff !important;
+        filter: drop-shadow(0px -2px 0px #1e9500) !important;
+      }
+      .tab.tab-square.active {
+        background-color: #42f839 !important;
+        box-shadow: 0 0 0 0.3rem rgb(51 183 53) !important;
+      }
+      .tab.tab-square.active {
+        box-shadow: 0 0 0 0.3rem rgb(51 183 53) !important;
+      }
+    }
+
+    .tab-content {
+      .feature-set-container .tab-list {
+        position: relative !important;
+        z-index: 2 !important;
+        border-radius: 5px !important;
+        background: linear-gradient(#e6e600 5%, #fffb7e 100%) !important;
+        box-shadow: #f1da00 0px 1px 3px 4px inset,
+          0px 0.5px 3px 1px rgb(133 133 133 / 42%) !important;
+
+        &::before {
+          content: "" !important;
+          width: 98.5% !important;
+          display: block !important;
+          top: 4px !important;
+          left: 3px !important;
+          position: absolute !important;
+          height: 40% !important;
+          border-radius: 5px !important;
+          border-bottom-left-radius: 30px !important;
+          border-bottom-right-radius: 30px !important;
+          background: linear-gradient(
+            rgb(255 251 183),
+            rgb(251 255 114)
+          ) !important;
+          z-index: -1 !important;
+        }
+      }
+    }
+
+    .tab::after {
+      background-color: rgba(0, 0, 0, 0.45) !important;
     }
   }
 
-  .ui-base .tab-list .tab.tab-square.active {
-    background-color: #42f839 !important;
-    box-shadow: 0 0 0 0.3rem rgb(51 183 53) !important;
-  }
-
-  .ui-base .mii-holder {
-    background-color: rgba(255, 255, 255, 0.2) !important;
-    backdrop-filter: blur(3px) !important;
-  }
-
-  .ui-base .tab-list {
-    grid-area: tabList !important;
-    background: linear-gradient(to right, #a6ff5e 5%, #02f21c 100%) !important;
-    box-shadow: #2bd500 0px 0px 4px 2px inset,
-      0px 0.5px 3px 1px rgb(133 133 133 / 42%) !important;
-  }
-
-  .ui-base .tab-list .tab.tab-square > svg {
-    color: #ffffff !important;
-    filter: drop-shadow(0px -2px 0px #1e9500) !important;
-  }
-
-  .tab-content .feature-set-container .tab-list {
-    position: relative !important;
-    z-index: 2 !important;
-    border-radius: 5px !important;
-    background: linear-gradient(#e6e600 5%, #fffb7e 100%) !important;
-    box-shadow: #f1da00 0px 1px 3px 4px inset,
-      0px 0.5px 3px 1px rgb(133 133 133 / 42%) !important;
-  }
-  .tab-content .feature-set-container .tab-list:before {
-    content: "" !important;
-    width: 98.5% !important;
-    display: block !important;
-    top: 4px !important;
-    left: 3px !important;
-    position: absolute !important;
-    height: 40% !important;
-    border-radius: 5px !important;
-    border-bottom-left-radius: 30px !important;
-    border-bottom-right-radius: 30px !important;
-    background: linear-gradient(rgb(255 251 183), rgb(251 255 114)) !important;
-    z-index: -1 !important;
-  }
-
-  .tab-list .tab:hover {
-    background-color: rgba(0, 0, 0, 0.15) !important;
-  }
-
-  .tab-list .tab.tab-square.active {
-    box-shadow: 0 0 0 0.3rem rgb(51 183 53) !important;
-  }
-
-  .tab-list .tab::after {
-    background-color: rgba(0, 0, 0, 0.45) !important;
-  }
   .tab-content {
     background-color: transparent !important;
   }
