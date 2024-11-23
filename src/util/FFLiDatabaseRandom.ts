@@ -203,6 +203,7 @@ export function FFLiDatabaseRandom_Get(pCharInfo: Mii) {
   pCharInfo.mouthYPosition = basePositionY + 13;
   let mustacheType, beardType, mustachePositionY;
   if (
+    gender == FFLGender.FFL_GENDER_MALE &&
     (age == FFLAge.FFL_AGE_ADULT || age == FFLAge.FFL_AGE_ELDER) &&
     Math.floor(Math.random() * 10) < 2
   ) {
