@@ -67,9 +67,16 @@ export class MusicManager {
     this.playMusic();
     setTimeout(() => {
       if (this.audioContext.state === "suspended") {
-        Modal.alert(
+        // Modal.alert(
+        //   "Audio needs action",
+        //   "Mii Creator wants to play music, but your browser has blocked autoplay.\n\nYou can press V to change sound volume (default is 0.35)"
+        // );
+        Modal.modal(
           "Audio needs action",
-          "Music will start playing on first click. You can press V to change sound volume (default is 0.35)"
+          "Mii Creator wants to play music, but your browser has blocked autoplay.\nThe song will start playing after you interact with the page.\n\nYou can press V to change sound volume (default is 0.35)",
+          "body",
+          { text: "Cancel", callback() {} },
+          { text: "OK", callback() {} }
         );
         document.onclick = () => {
           document.onclick = null;

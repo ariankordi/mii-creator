@@ -81,6 +81,22 @@ body {
   }
 }
 
+.h4 {
+  font-size: 1.2rem;
+  font-weight: 550;
+  color: var(--text);
+}
+.pre-wrap {
+  overflow: auto;
+  user-select: all;
+  -webkit-user-select: all;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.mb-0 {
+  margin-bottom: 0;
+}
+
 a,
 a:visited {
   color: var(--selection-color);
@@ -173,7 +189,7 @@ $desktopWidth: 1280px;
   height: 100%;
   .modal-body {
     > span {
-      user-select: all !important;
+      user-select: auto !important;
     }
   }
 }

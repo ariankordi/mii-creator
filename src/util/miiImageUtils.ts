@@ -51,7 +51,8 @@ export enum MiiCustomRenderType {
 export const getMiiRender = async (
   mii: Mii,
   type: MiiCustomRenderType,
-  useExtendedColors: boolean = true
+  useExtendedColors: boolean = true,
+  useBlob: boolean = true
 ): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     let tmpMii = new Mii(mii.encode());
@@ -78,7 +79,7 @@ export const getMiiRender = async (
     }
 
     let parent = new Html("div")
-      .style({ width: "720px", height: "720px", opacity: "0.1" })
+      .style({ width: "720px", height: "720px", opacity: "0" })
       .appendTo("body");
     const scene = new Mii3DScene(
       tmpMii,
@@ -129,19 +130,33 @@ export const getMiiRender = async (
         }
         setTimeout(() => {
           requestAnimationFrame(() => {
-            renderer.domElement.toBlob((blob) => {
+            if (useBlob)
+              renderer.domElement.toBlob((blob) => {
+                const image = new Image(
+                  renderer.domElement.width,
+                  renderer.domElement.height
+                );
+                image.src = URL.createObjectURL(blob!);
+                console.log("Temporary render URL:", image.src);
+                image.onload = () => {
+                  resolve(image);
+                  scene.shutdown();
+                  parent.cleanup();
+                };
+              });
+            else {
+              const url = renderer.domElement.toDataURL("png", 100);
               const image = new Image(
                 renderer.domElement.width,
                 renderer.domElement.height
               );
-              image.src = URL.createObjectURL(blob!);
-              console.log("Temporary render URL:", image.src);
+              image.src = url;
               image.onload = () => {
                 resolve(image);
                 scene.shutdown();
                 parent.cleanup();
               };
-            });
+            }
           });
         }, 50);
       }

@@ -462,7 +462,7 @@ const miiEdit = (mii: MiiLocalforage, shutdown: () => any, miiData: Mii) => {
         },
       },
       {
-        text: "Export/Download",
+        text: "Export/Download Data",
         async callback() {
           miiExportDownload(mii, miiData);
         },
@@ -617,31 +617,7 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
       },
     },
     {
-      text: "Get FFSD (Hex)",
-      async callback() {
-        if (!(await miiColorConversionWarning(miiData))) return;
-        return Modal.alert(
-          "FFSD code",
-          miiData.encodeFFSD().toString("hex"),
-          "body",
-          true
-        );
-      },
-    },
-    {
-      text: "Get FFSD (Base64 text)",
-      async callback() {
-        if (!(await miiColorConversionWarning(miiData))) return;
-        return Modal.alert(
-          "FFSD code",
-          miiData.encodeFFSD().toString("base64"),
-          "body",
-          true
-        );
-      },
-    },
-    {
-      text: "Save FFSD (file)",
+      text: "Download FFSD file",
       async callback() {
         if (!(await miiColorConversionWarning(miiData))) return;
         const blob = new Blob([miiData.encodeFFSD()]);
@@ -665,14 +641,42 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
       },
     },
     {
-      text: "Get Mii Studio data",
+      text: "Show other raw data formats",
       async callback() {
-        return Modal.alert(
-          "Mii Studio data",
-          miiData.encodeStudio().toString("hex"),
+        if (!(await miiColorConversionWarning(miiData))) return;
+        const modal = Modal.modal(
+          "Miscellaneous Output Formats",
+          "Click inside a code block to select it.",
           "body",
-          true
+          { callback() {}, text: "Cancel" },
+          { callback() {}, text: "OK" }
         );
+
+        modal
+          .qs(".modal-content")!
+          .style({ "max-height": "unset", "max-width": "600px" });
+        modal
+          .qs(".modal-body")!
+          .prependMany(
+            new Html("div").appendMany(
+              new Html("span").class("h4").text("FFSD (Base64)"),
+              new Html("pre")
+                .class("pre-wrap", "mb-0")
+                .text(miiData.encodeFFSD().toString("base64"))
+            ),
+            new Html("div").appendMany(
+              new Html("span").class("h4").text("FFSD (Hex)"),
+              new Html("pre")
+                .class("pre-wrap", "mb-0")
+                .text(miiData.encodeFFSD().toString("hex"))
+            ),
+            new Html("div").appendMany(
+              new Html("span").class("h4").text("Mii Studio data"),
+              new Html("pre")
+                .class("pre-wrap", "mb-0")
+                .text(miiData.encodeStudio().toString("hex"))
+            )
+          );
       },
     }
   );
