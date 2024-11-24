@@ -1000,7 +1000,6 @@ input[type=range] {
   }
   .mii-library .library-sidebar .sidebar-buttons {
     flex: 1;
-    flex-direction: row;
   }
   .mii-library .library-sidebar .sidebar-credits {
     flex-shrink: 0;
