@@ -835,29 +835,34 @@ export class Mii3DScene {
         break;
     }
 
-    // // Load the sparkle texture
-    // const loader = new THREE.TextureLoader();
-    // loader.load("https://i.imgur.com/6jAaK2u.png", (texture) => {
-    //   // Create a sparkle effect at the center of the scene
-    //   let particle = new SparkleParticle(
-    //     this.#scene,
-    //     new THREE.Vector3(0, 0, 0),
-    //     texture
-    //   );
-    //   this.animators.set("particle_" + performance.now(), (_t, delta) =>
-    //     particle.update(delta)
-    //   );
-    //   setTimeout(() => {
-    //     this.animations
-    //       .keys()
-    //       .filter((p) => p.startsWith("particle_"))
-    //       .forEach((key) => this.animations.delete(key));
-    //   }, 1000);
-    // });
-
     if (this.headReady === false) this.fadeIn();
     this.headReady = true;
     await this.updateBody();
+  }
+  sparkle() {
+    // Load the sparkle texture
+    const loader = new THREE.TextureLoader();
+    loader.load("./assets/img/sparkle.png", (texture) => {
+      // Create a sparkle effect at the center of the scene
+      const pos = new THREE.Vector3();
+      const box = new THREE.Box3();
+      this.#scene.getObjectByName("MiiHead")!.getWorldPosition(pos);
+      box.setFromObject(this.#scene.getObjectByName("MiiHead")!);
+      let particle = new SparkleParticle(
+        this.#scene,
+        new THREE.Vector3(0, box.max.y - box.min.y, 2),
+        texture
+      );
+      this.animators.set("particle_" + performance.now(), (_t, delta) =>
+        particle.update(delta)
+      );
+      setTimeout(() => {
+        this.animations
+          .keys()
+          .filter((p) => p.startsWith("particle_"))
+          .forEach((key) => this.animations.delete(key));
+      }, 1000);
+    });
   }
   getHead() {
     return this.#scene.getObjectByName("MiiHead");

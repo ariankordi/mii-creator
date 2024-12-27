@@ -81,6 +81,14 @@ body {
   }
 }
 
+button.selected {
+  border: 0.1rem solid var(--selection-color);
+}
+button.selected-setting {
+  border: 0.1rem solid var(--selection-color);
+  background-color: var(--selection-color);
+}
+
 .h4 {
   font-size: 1.2rem;
   font-weight: 550;
@@ -95,6 +103,9 @@ body {
 }
 .mb-0 {
   margin-bottom: 0;
+}
+[disabled] {
+  opacity: 0.5 !important;
 }
 
 a,
@@ -555,6 +566,7 @@ input {
     padding: 8px;
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 6px;
     width: 100%;
     .feature-set-header {
@@ -708,11 +720,14 @@ input {
       }
       span {
         width: 100%;
-        background: var(--hover);
-        font-size: min(max(1.2rem, 5vmax), 1.5rem);
+        background: #0008;
+        color: white !important;
         text-align: center;
-        padding: 1rem;
+        font-size: 16px;
+        text-align: center;
         flex: 1;
+        padding: 8px 0;
+        border-radius: 0 0 8px 8px;
       }
     }
   }

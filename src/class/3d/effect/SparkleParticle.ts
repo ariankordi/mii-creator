@@ -10,7 +10,7 @@ export class SparkleParticle {
   geometry!: THREE.BufferGeometry<THREE.NormalBufferAttributes>;
   material!: THREE.PointsMaterial;
   particles!: THREE.Points<any, any, THREE.Object3DEventMap>;
-  constructor(scene: any, position: any, texture: any, duration = 0.2, particleCount = 12) {
+  constructor(scene: any, position: any, texture: any, duration = 0.2, particleCount = 6) {
     this.scene = scene;
     this.position = position;
     this.texture = texture;
