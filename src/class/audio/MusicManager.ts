@@ -1,5 +1,6 @@
 import localforage from "localforage";
 import Modal from "../../ui/components/Modal";
+import { getSetting } from "../../util/Settings";
 
 export const getMusicManager = () => mm;
 export class MusicManager {
@@ -21,8 +22,16 @@ export class MusicManager {
 
     // prevent duplicate music
     setTimeout(() => {
+      let theme = "";
       document.addEventListener("theme-change", () => {
-        this.initMusic();
+        let newTheme = document.documentElement.dataset.theme!;
+
+        // don't re-init music if the theme is the same
+        if (theme !== newTheme) {
+          this.initMusic();
+        }
+
+        theme = newTheme;
       });
     }, 2000);
     this.sources = [];
@@ -42,6 +51,7 @@ export class MusicManager {
         : (await localforage.getItem("settings_wiiu")) === true
         ? "wiiu"
         : "default";
+    if (this.theme === theme) return;
     this.theme = theme;
 
     console.error("initMusic()", theme, document.documentElement.dataset.theme);
@@ -65,19 +75,21 @@ export class MusicManager {
 
   initMusicReady() {
     this.playMusic();
-    setTimeout(() => {
+    setTimeout(async () => {
       if (this.audioContext.state === "suspended") {
         // Modal.alert(
         //   "Audio needs action",
         //   "Mii Creator wants to play music, but your browser has blocked autoplay.\n\nYou can press V to change sound volume (default is 0.35)"
         // );
-        Modal.modal(
-          "Audio needs action",
-          "Mii Creator wants to play music, but your browser has blocked autoplay.\nThe song will start playing after you interact with the page.\n\nYou can press V to change sound volume (default is 0.35)",
-          "body",
-          { text: "Cancel", callback() {} },
-          { text: "OK", callback() {} }
-        );
+        if (await getSetting("bgm")) {
+          Modal.modal(
+            "Audio needs action",
+            "Mii Creator wants to play music, but your browser has blocked autoplay.\nThe song will start playing after you interact with the page.\n\nYou can press V to change sound volume (default is 0.35)",
+            "body",
+            { text: "Cancel", callback() {} },
+            { text: "OK", callback() {} }
+          );
+        }
         document.onclick = () => {
           document.onclick = null;
           this.playMusic();
