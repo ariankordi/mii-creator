@@ -31,7 +31,7 @@ export const updateSettings = async () => {
   }, 33.33);
 };
 
-const settingsInfo: Record<string, any> = {
+export const settingsInfo: Record<string, any> = {
   bgm: {
     type: "checkbox",
     label: "Background Music",
