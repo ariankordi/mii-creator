@@ -55,7 +55,7 @@ export class Mii3DScene {
   mii: Mii;
   ready: boolean;
   headReady: boolean;
-  mixers: Map<"m" | "f", THREE.AnimationMixer>;
+  mixer!: THREE.AnimationMixer;
   animators: Map<string, (n: number, f: number) => any>;
   animations: Map<string, THREE.AnimationClip>;
   setupType: SetupType;
@@ -83,45 +83,7 @@ export class Mii3DScene {
     // this.#camera.rotation.set(0, Math.PI, 0);
     this.ready = false;
     this.headReady = false;
-    this.mixers = new Map();
     if (initCallback) this.#initCallback = initCallback;
-
-    const cubeTextureLoader = new THREE.CubeTextureLoader();
-    cubeTextureLoader
-      .loadAsync([
-        "./cube_map.png", // px.png
-        "./cube_map.png", // nx.png
-        "./cube_map.png", // py.png
-        "./cube_map.png", // ny.png
-        "./cube_map.png", // pz.png
-        "./cube_map.png", // nz.png
-      ])
-      .then((environmentMap) => {
-        this.#scene.environment = environmentMap;
-        this.#scene.environmentIntensity = 1;
-      });
-    // cubeTextureLoader
-    //   .loadAsync([
-    //     "./assets/img/sky_px.png", // px.png
-    //     "./assets/img/sky_nx.png", // nx.png
-    //     "./assets/img/sky_py.png", // py.png
-    //     "./assets/img/sky_ny.png", // ny.png
-    //     "./assets/img/sky_pz.png", // pz.png
-    //     "./assets/img/sky_nz.png", // nz.png
-    //   ])
-    //   .then((backgroundMap) => {
-    //     this.#scene.background = backgroundMap;
-    //     this.#scene.backgroundIntensity = 0.2;
-    //   });
-
-    const directionalLight = new THREE.DirectionalLight(0xebfeff, Math.PI);
-    directionalLight.position.set(1, 0.1, 1);
-    // directionalLight.visible = false;
-    this.#scene.add(directionalLight);
-
-    const ambientLight = new THREE.AmbientLight(0x666666, Math.PI / 16);
-    // ambientLight.visible = false;
-    this.#scene.add(ambientLight);
 
     if (setupType === SetupType.Screenshot) {
       this.#renderer = new THREE.WebGLRenderer({
@@ -293,20 +255,12 @@ export class Mii3DScene {
     console.debug("playAnimation() called:", mesh, id);
 
     // weird hack to prevent random crash
-    if (!this.mixers.has("m"))
-      this.mixers.set(
-        "m",
-        new THREE.AnimationMixer(this.#scene.getObjectByName("m")!)
-      );
-    if (!this.mixers.has("f"))
-      this.mixers.set(
-        "f",
-        new THREE.AnimationMixer(this.#scene.getObjectByName("f")!)
-      );
+    if (this.mixer === undefined)
+      this.mixer = new THREE.AnimationMixer(this.#scene.getObjectByName("m")!);
 
     this.animators.set(id, (_time, delta) => {
       try {
-        this.mixers.get(this.type)!.update(delta);
+        this.mixer.update(delta);
       } catch (e) {
         console.warn(e);
       }
@@ -325,12 +279,14 @@ export class Mii3DScene {
       }
     }
     this.currentAnim = newAnim;
-    for (const [key] of this.mixers) {
+    let x: ("m" | "f")[] = ["m", "f"];
+    for (const key of x) {
       this.anim.set(
         key,
-        this.mixers
-          .get(key)!
-          .clipAction(this.animations.get(`${key}-${newAnim}`)!)
+        this.mixer.clipAction(
+          this.animations.get(`${key}-${newAnim}`)!,
+          this.#scene.getObjectByName(key)
+        )
       );
       this.anim
         .get(key)!
@@ -353,10 +309,7 @@ export class Mii3DScene {
 
       const clips = glb.animations;
 
-      this.mixers.set(
-        type,
-        new THREE.AnimationMixer(glb.scene.getObjectByName(type)!)
-      );
+      this.mixer = new THREE.AnimationMixer(glb.scene.getObjectByName(type)!);
       for (const anim of clips) {
         this.animations.set(`${type}-${anim.name}`, anim);
       }
@@ -707,7 +660,7 @@ export class Mii3DScene {
 
               hatModel.scene.name = "HatScene";
               let i = 0;
-              hatModel.scene.traverse((o) => {
+              hatModel.scene.traverse((o: any) => {
                 // "HatRoot" would be the name of the parent object to the hat if it is an armature
                 if (o.name === "HatScene" || o.name === "HatRoot") return;
 
@@ -1086,6 +1039,9 @@ export class Mii3DScene {
   }
   getScene() {
     return this.#scene;
+  }
+  getRenderer() {
+    return this.#renderer;
   }
 
   shutdown() {
