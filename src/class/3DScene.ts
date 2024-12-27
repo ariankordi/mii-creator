@@ -223,7 +223,7 @@ export class Mii3DScene {
     }
     const type = this.mii.gender == 0 ? "m" : "f";
     this.animators.delete(`animation-${type}`);
-    this.swapAnimation("Wave");
+    this.swapAnimation("Finish");
     getSoundManager().playSound("finish");
   }
   resize(
@@ -239,7 +239,7 @@ export class Mii3DScene {
     this.ready = false;
     this.getRendererElement().style.opacity = "0";
     await this.#addBody();
-    this.swapAnimation("Stand", true);
+    this.swapAnimation("Wait", true);
     await this.updateMiiHead();
     this.ready = true;
     if (this.setupType === SetupType.Screenshot) {
@@ -293,6 +293,13 @@ export class Mii3DScene {
         .reset()
         .setEffectiveTimeScale(1)
         .setEffectiveWeight(1);
+
+      // hack to prevent anim from being sped up
+      if (newAnim === "Wait") {
+        setTimeout(() => {
+          this.anim.get(key)!.timeScale = 0.5;
+        }, 33.33);
+      }
 
       if (force === false) {
         this.anim.get(key)!.fadeIn(0.2).play();
@@ -358,9 +365,11 @@ export class Mii3DScene {
       glb.scene.rotation.set(0, 0, 0);
     };
 
+    const bodyModel = "wiiu"; // temp until more bodies are added
+
     const loaders = [
-      setupMiiBody("./miiBodyM.glb", "m"),
-      setupMiiBody("./miiBodyF.glb", "f"),
+      setupMiiBody(`./assets/mdl/miiBodyM_${bodyModel}.glb`, "m"),
+      setupMiiBody(`./assets/mdl/miiBodyF_${bodyModel}.glb`, "f"),
     ];
 
     await Promise.all(loaders);
@@ -498,20 +507,20 @@ export class Mii3DScene {
       const scale = new THREE.Vector3();
       return () => {
         const headBone = body.getObjectByName("head") as THREE.Bone;
-        // Get the world matrix of the head bone
+        if (!headBone) return;
         headBone.updateMatrixWorld(true);
-        const headBoneWorldMatrix = headBone.matrixWorld;
 
         // Extract the position and rotation from the matrix
         const position = new THREE.Vector3();
-        headBoneWorldMatrix.decompose(position, quaternion, scale);
+
+        headBone.matrixWorld.decompose(position, quaternion, scale);
         if (this.#scene.getObjectByName("MiiHead")!) {
           // Set the head model's position and rotation
           this.#scene.getObjectByName("MiiHead")!.position.copy(position);
           this.#scene
             .getObjectByName("MiiHead")!
             .setRotationFromQuaternion(quaternion);
-          this.#scene.getObjectByName("MiiHead")!.rotation.x -= Math.PI / 2;
+          // this.#scene.getObjectByName("MiiHead")!.rotation.x -= Math.PI / 2;
         }
       };
     };
@@ -769,6 +778,25 @@ export class Mii3DScene {
             obj.parent!.remove(obj);
           });
           this.traverseAddFFLShader(GLB.scene);
+          const headBone = this.#scene
+            .getObjectByName(this.type)!
+            .getObjectByName("head") as THREE.Bone;
+          if (!headBone) return;
+          headBone.updateMatrixWorld(true);
+
+          // Extract the position and rotation from the matrix
+          const position = new THREE.Vector3();
+          const quaternion = new THREE.Quaternion();
+          const scale = new THREE.Vector3();
+
+          headBone.matrixWorld.decompose(position, quaternion, scale);
+          if (GLB.scene) {
+            // Set the head model's position and rotation
+            GLB.scene.position.copy(position);
+            GLB.scene.setRotationFromQuaternion(quaternion);
+            // GLB.scene.rotation.x -= Math.PI / 2;
+          }
+
           this.#scene.add(GLB.scene);
         } catch (e) {
           console.error(e);
