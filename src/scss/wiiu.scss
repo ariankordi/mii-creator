@@ -237,6 +237,10 @@
     box-shadow: #f1da00 0px 1px 3px 4px inset,
       0px 0.5px 3px 1px rgb(133 133 133 / 42%) !important;
   }
+  button.selected {
+    background: linear-gradient(#e6e600 5%, #fffb7e 100%) !important;
+    text-shadow: 0 1px #f3ff6a !important;
+  }
   .tab-content .feature-set-group .feature-switch .feature-switch-left:before,
   .tab-content .feature-set-group .feature-switch .feature-switch-right:before {
     content: "" !important;
@@ -259,7 +263,8 @@
   .tab-content
     .feature-set-group
     .feature-switch
-    .feature-switch-right.active:before {
+    .feature-switch-right.active:before,
+  button.selected::before {
     background: linear-gradient(rgb(255 251 183), rgb(251 255 114)) !important;
   }
   .tab-content .feature-set-group .feature-switch .feature-switch-left svg,
