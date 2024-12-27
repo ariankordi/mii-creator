@@ -854,7 +854,7 @@ export class Mii3DScene {
     // those that does not happen in FFL-Testing)
     const lightEnable = modulateType > 5 ? false : true;
     // Select material parameter based on the modulate type, default to faceline
-    const materialParam =
+    let materialParam =
       modulateType !== undefined
         ? modulateType && modulateType < 9
           ? cMaterialParam[modulateType]
@@ -914,7 +914,17 @@ export class Mii3DScene {
     if (
       modulateType === cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY ||
       modulateType === cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS
-    )
+    ) {
+      switch (modulateType) {
+        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY:
+          materialParam =
+            cMaterialParam[cMaterialName.FFL_MODULATE_TYPE_SHAPE_BODY];
+          break;
+        case cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS:
+          materialParam =
+            cMaterialParam[cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS];
+          break;
+      }
       shaderMaterial = new THREE.ShaderMaterial({
         vertexShader: fflVertexShader,
         fragmentShader: fflFragmentShader,
@@ -944,6 +954,7 @@ export class Mii3DScene {
         transparent: originalMaterial.transparent, // Handle transparency
         alphaTest: originalMaterial.alphaTest, // Handle alpha testing
       });
+    }
     // Create a custom ShaderMaterial
     else
       shaderMaterial = new THREE.ShaderMaterial({
