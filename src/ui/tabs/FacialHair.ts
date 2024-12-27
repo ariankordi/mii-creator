@@ -74,7 +74,7 @@ export function FacialHairTab(data: TabRenderInit) {
           })),
         },
         facialHairColor: {
-          label: "Color",
+          label: EditorIcons.color,
           validationProperty: "trueFacialHairColor",
           // EXTREMELY HACKY but works..
           validationFunction() {

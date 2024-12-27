@@ -38,7 +38,7 @@ export function GlassesTab(data: TabRenderInit) {
           })),
         },
         glassesColor: {
-          label: "Color",
+          label: EditorIcons.color,
           validationProperty: "trueGlassesColor",
           // EXTREMELY HACKY but works..
           validationFunction() {

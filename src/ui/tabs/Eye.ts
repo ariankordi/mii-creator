@@ -41,7 +41,7 @@ export function EyeTab(data: TabRenderInit) {
           // ),
         },
         eyeColor: {
-          label: "Color",
+          label: EditorIcons.color,
           validationProperty: "trueEyeColor",
           // EXTREMELY HACKY but works..
           validationFunction() {

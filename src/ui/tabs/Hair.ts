@@ -44,7 +44,7 @@ export function HairTab(data: TabRenderInit) {
           ),
         },
         hairColor: {
-          label: "Color",
+          label: EditorIcons.color,
           validationProperty: "trueHairColor",
           // EXTREMELY HACKY but works..
           validationFunction() {

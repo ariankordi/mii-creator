@@ -569,7 +569,7 @@ export default class Mii {
       `Invalid Mii eye Y position. Got ${this.eyeYPosition}, expected 0-18`
     );
     assert.ok(
-      Util.inRange(this.eyebrowType, Util.range(25)),
+      Util.inRange(this.eyebrowType, Util.range(24)),
       `Invalid Mii eyebrow type. Got ${this.eyebrowType}, expected 0-24`
     );
     assert.ok(
