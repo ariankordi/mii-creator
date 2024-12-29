@@ -30,6 +30,7 @@ import {
 import { MiiFavoriteColorIconTable } from "../../constants/ColorTables";
 import { getString as _ } from "../../l10n/manager";
 import { FFLiDatabaseRandom_Get } from "../../util/FFLiDatabaseRandom";
+import { Settings } from "./Settings";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
@@ -183,14 +184,14 @@ export async function Library(highlightMiiId?: string) {
   sidebar.appendMany(
     new Html("div").class("sidebar-buttons").appendMany(
       AddButtonSounds(
-        new Html("button").text("Main Menu").on("click", async () => {
-          await shutdown();
-          MainMenu();
+        new Html("button").text("Create New").on("click", async () => {
+          miiCreateDialog(shutdown);
         })
       ),
       AddButtonSounds(
-        new Html("button").text("Create New").on("click", async () => {
-          miiCreateDialog(shutdown);
+        new Html("button").text("Settings").on("click", async () => {
+          // await shutdown();
+          Settings();
         })
       )
     ),
