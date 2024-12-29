@@ -190,8 +190,7 @@ export async function Library(highlightMiiId?: string) {
       ),
       AddButtonSounds(
         new Html("button").text("Create New").on("click", async () => {
-          await shutdown();
-          miiCreateDialog();
+          miiCreateDialog(shutdown);
         })
       )
     ),
@@ -216,7 +215,8 @@ export async function Library(highlightMiiId?: string) {
         ),
         AddButtonSounds(
           Link("Wii U theme by dwyazzo90", "https://x.com/dwyazzo90")
-        )
+        ),
+        new Html("strong").text("This site is not affiliated with Nintendo.")
       )
   );
 }
@@ -226,26 +226,34 @@ type MiiLocalforage = {
   mii: string;
 };
 
-const miiCreateDialog = () => {
+const miiCreateDialog = (shutdown: Function) => {
   Modal.modal(
     "Create New",
     "How would you like to create the Mii?",
     "body",
     {
       text: "From Scratch",
-      callback: miiCreateFromScratch,
+      callback: () => {
+        miiCreateFromScratch(shutdown);
+      },
     },
     {
       text: "Enter PNID",
-      callback: miiCreatePNID,
+      callback: () => {
+        miiCreatePNID(shutdown);
+      },
     },
     {
       text: "Random Mii",
-      callback: miiCreateRandomFFL,
+      callback: () => {
+        miiCreateRandomFFL(shutdown);
+      },
     },
     {
       text: "Random NNID",
-      callback: miiCreateRandom,
+      callback: () => {
+        miiCreateRandom(shutdown);
+      },
     },
     {
       text: "Import FFSD/MiiCreator data",
@@ -257,7 +265,9 @@ const miiCreateDialog = () => {
           "body",
           {
             text: "Cancel",
-            callback: miiCreateDialog,
+            callback: () => {
+              miiCreateDialog(shutdown);
+            },
           },
           {
             text: "Confirm",
@@ -306,13 +316,14 @@ const miiCreateDialog = () => {
     },
     {
       text: "Cancel",
-      callback: () => Library(),
+      callback: () => {},
     }
   );
 };
-const miiCreateFromScratch = () => {
+const miiCreateFromScratch = (shutdown: Function) => {
   function cb(gender: MiiGender) {
     return () => {
+      shutdown();
       new MiiEditor(gender, async (m, shouldSave) => {
         if (shouldSave === true) await localforage.setItem(await newMiiId(), m);
         Library();
@@ -334,11 +345,11 @@ const miiCreateFromScratch = () => {
     },
     {
       text: "Cancel",
-      callback: () => miiCreateDialog(),
+      callback: () => miiCreateDialog(shutdown),
     }
   );
 };
-const miiCreatePNID = async () => {
+const miiCreatePNID = async (shutdown: Function) => {
   const input = await Modal.input(
     "Create New",
     "Enter PNID of user..",
@@ -347,7 +358,7 @@ const miiCreatePNID = async () => {
     false
   );
   if (input === false) {
-    return miiCreateDialog();
+    return miiCreateDialog(shutdown);
   }
 
   Loader.show();
@@ -364,6 +375,7 @@ const miiCreatePNID = async () => {
     return Library();
   }
 
+  shutdown();
   new MiiEditor(
     0,
     async (m, shouldSave) => {
@@ -373,13 +385,14 @@ const miiCreatePNID = async () => {
     (await pnid.json()).data
   );
 };
-const miiCreateRandom = async () => {
+const miiCreateRandom = async (shutdown: Function) => {
   Loader.show();
   let random = await fetch(
     "https://mii-unsecure.ariankordi.net/mii_data_random"
   ).then((j) => j.json());
   Loader.hide();
 
+  shutdown();
   new MiiEditor(
     0,
     async (m, shouldSave) => {
@@ -389,7 +402,7 @@ const miiCreateRandom = async () => {
     random.data
   );
 };
-const miiCreateRandomFFL = async () => {
+const miiCreateRandomFFL = async (shutdown: Function) => {
   const editMii = new Mii(
     Buffer.from(
       "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn",
@@ -399,6 +412,7 @@ const miiCreateRandomFFL = async () => {
 
   FFLiDatabaseRandom_Get(editMii);
 
+  shutdown();
   new MiiEditor(
     0,
     async (m, shouldSave) => {

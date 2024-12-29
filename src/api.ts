@@ -31,7 +31,7 @@ export default {
       const frame = makeFrame(
         `data=${encodeURIComponent(data)}&renderTypes=${renderTypes
           .map((r) => encodeURIComponent(r))
-          .join(",")}`,
+          .join(",")}&origin=${encodeURIComponent(location.origin)}`,
         fullscreen
       );
 

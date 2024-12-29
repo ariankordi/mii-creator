@@ -16,7 +16,7 @@ import { SelectionLibrary } from "./pages/SelectionLibrary";
 export async function setupUi() {
   let mm = getMusicManager();
 
-  updateSettings();
+  updateSettings(true);
 
   // for U theme
   let state: "main" | "edit" = "main";
@@ -73,38 +73,40 @@ export async function setupUi() {
             let headOnly: string | null = null;
             let fullBody: string | null = null;
 
-            if (searchParams.has("renderTypes")) {
-              const renderTypes = searchParams.get("renderTypes")!.split(",");
+            if (shutdownProperly === true) {
+              if (searchParams.has("renderTypes")) {
+                const renderTypes = searchParams.get("renderTypes")!.split(",");
 
-              if (renderTypes.includes("headshot")) {
-                headshot = (
-                  await getMiiRender(
-                    miiData,
-                    MiiCustomRenderType.Head,
-                    true,
-                    false
-                  )
-                ).src;
-              }
-              if (renderTypes.includes("headOnly")) {
-                headOnly = (
-                  await getMiiRender(
-                    miiData,
-                    MiiCustomRenderType.HeadOnly,
-                    true,
-                    false
-                  )
-                ).src;
-              }
-              if (renderTypes.includes("fullBody")) {
-                fullBody = (
-                  await getMiiRender(
-                    miiData,
-                    MiiCustomRenderType.Body,
-                    true,
-                    false
-                  )
-                ).src;
+                if (renderTypes.includes("headshot")) {
+                  headshot = (
+                    await getMiiRender(
+                      miiData,
+                      MiiCustomRenderType.Head,
+                      true,
+                      false
+                    )
+                  ).src;
+                }
+                if (renderTypes.includes("headOnly")) {
+                  headOnly = (
+                    await getMiiRender(
+                      miiData,
+                      MiiCustomRenderType.HeadOnly,
+                      true,
+                      false
+                    )
+                  ).src;
+                }
+                if (renderTypes.includes("fullBody")) {
+                  fullBody = (
+                    await getMiiRender(
+                      miiData,
+                      MiiCustomRenderType.Body,
+                      true,
+                      false
+                    )
+                  ).src;
+                }
               }
             }
 
@@ -124,7 +126,7 @@ export async function setupUi() {
                 headOnly,
                 fullBody,
               },
-              location.origin
+              searchParams.get("origin")!
             );
           } else {
             Library();
