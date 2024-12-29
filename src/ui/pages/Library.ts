@@ -15,12 +15,12 @@ import {
 import { Link } from "../components/Link";
 import { Config } from "../../config";
 import EditorIcons from "../../constants/EditorIcons";
-import { Mii3DScene, SetupType } from "../../class/3DScene";
+import { CameraPosition, Mii3DScene, SetupType } from "../../class/3DScene";
 import {
   FeatureSetType,
   MiiPagedFeatureSet,
 } from "../components/MiiPagedFeatureSet";
-import { downloadLink } from "../../util/downloadLink";
+import { downloadLink, saveArrayBuffer } from "../../util/downloadLink";
 import { ArrayNum } from "../../util/NumberArray";
 import type { Mesh } from "three";
 import {
@@ -682,7 +682,7 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
   );
 };
 
-export function customRender(miiData: Mii) {
+export async function customRender(miiData: Mii) {
   const modal = Modal.modal("Prepare Render", "", "body", {
     callback: () => {},
     text: "Cancel",
@@ -726,7 +726,9 @@ export function customRender(miiData: Mii) {
 
   const base64Data = miiData.encodeStudio().toString("hex");
 
-  const expressionDuplicateList = [42, 44, 46, 48, 50, 52, 54, 61, 62];
+  const expressionDuplicateList = [34, 42, 44, 46, 48, 50, 52, 54, 61, 62];
+
+  const poseCount = 14;
 
   // very hacky way to use feature set to create tabs
   MiiPagedFeatureSet({
@@ -760,7 +762,7 @@ export function customRender(miiData: Mii) {
         label: "Pose",
         header:
           "This section is a bit unfinished, the poses are custom-made recreations so they are not fully accurate. Pose 3 also has a rotation issue with the head since it has been changed to be pretending to be attached to the body to prevent weird scaling issues. There is also nothing done after pose 4 currently. I'm working on a way to add the Wii U poses directly.",
-        items: ArrayNum(5).map((k) => ({
+        items: ArrayNum(poseCount).map((k) => ({
           type: FeatureSetType.Icon,
           value: k,
           icon: String(k),
@@ -842,10 +844,10 @@ export function customRender(miiData: Mii) {
     scene.getCamera()!.updateProjectionMatrix();
     switch (configuration.cameraPosition) {
       case 0:
-        scene.getControls().moveTo(0, 3.5, 0, true);
+        scene.focusCamera(CameraPosition.MiiHead);
         break;
       case 1:
-        scene.getControls().moveTo(0, 0, 0, true);
+        scene.focusCamera(CameraPosition.MiiFullBody);
         break;
     }
 
@@ -856,10 +858,12 @@ export function customRender(miiData: Mii) {
       }&width=896&verifyCharInfo=0`
     );
 
-    if (scene.animations.get(`${scene.type}-Pose.${configuration.pose}`)) {
-      scene.swapAnimation("Pose." + configuration.pose);
+    const pose = "Pose." + String(configuration.pose).padStart(2, "0");
+
+    if (scene.animations.get(`${scene.type}-${pose}`)) {
+      scene.swapAnimation(pose);
     } else {
-      scene.swapAnimation("Stand");
+      scene.swapAnimation("Wait");
     }
 
     oldConfiguration = configuration;
@@ -883,7 +887,7 @@ export function customRender(miiData: Mii) {
       image.onload = () => {
         downloadLink(
           image.src,
-          `${miiData.miiName}_${new Date().toJSON()}.png`
+          `${miiData.miiName}_all_body_${new Date().toJSON()}.png`
         );
         scene.shutdown();
         parent.cleanup();

@@ -24,7 +24,6 @@ import {
 import { fflFragmentShader, fflVertexShader } from "./3d/shader/FFLShader";
 import { RenderPart } from "./MiiEditor";
 import { Config } from "../config";
-import { Buffer } from "../../node_modules/buffer";
 import { getSoundManager } from "./audio/SoundManager";
 import { SparkleParticle } from "./3d/effect/SparkleParticle";
 import { multiplyTexture } from "./3d/canvas/multiplyTexture";
@@ -75,8 +74,7 @@ export class Mii3DScene {
       0.1,
       1000
     );
-    this.#camera.position.set(0, 0, 25);
-    // this.#camera.rotation.set(0, Math.PI, 0);
+    // this.#camera.position.set(0, 10, 25);
     this.ready = false;
     this.headReady = false;
     if (initCallback) this.#initCallback = initCallback;
@@ -139,14 +137,20 @@ export class Mii3DScene {
       camSetup();
     }
 
+    this.focusCamera(CameraPosition.MiiHead, true);
+
     if (setupType === SetupType.Screenshot) {
-      this.#controls.moveTo(0, 1.5, 0);
+      // this.#controls.moveTo(0, 1.5, 0);
       this.#controls.dollyTo(40);
       this.#camera.fov = 30;
 
       // prevent too much zoom lol
       this.#controls.minDistance = 8;
-      this.#controls.maxDistance = 100;
+      this.#controls.maxDistance = 300;
+    } else {
+      setTimeout(() => {
+        this.focusCamera(CameraPosition.MiiHead, true);
+      }, 200);
     }
 
     // this.#controls.maxTargetRadius = 10;
@@ -182,7 +186,11 @@ export class Mii3DScene {
     this.#renderer.setSize(this.#parent.offsetWidth, this.#parent.offsetHeight);
   }
   currentPosition!: CameraPosition;
-  focusCamera(part: CameraPosition, force: boolean = false) {
+  focusCamera(
+    part: CameraPosition,
+    force: boolean = false,
+    transition: boolean = true
+  ) {
     this.#controls.smoothTime = 0.2;
 
     // don't re-position the camera if it is already in the correct location
@@ -190,19 +198,31 @@ export class Mii3DScene {
 
     this.currentPosition = part;
 
+    const pos = new THREE.Vector3();
+    let body = this.#scene.getObjectByName(this.type)!,
+      head = this.#scene.getObjectByName("MiiHead");
+    // if (body !== undefined) {
+    //   head = body.getObjectByName("head")! as THREE.Bone;
+    // }
+
     if (part === CameraPosition.MiiFullBody) {
-      this.#controls.moveTo(0, 0, 0, true);
-      this.#controls.rotateTo(0, Math.PI / 2, true);
-      this.#controls.dollyTo(25, true);
+      pos.y = 10;
+      this.#controls.moveTo(pos.x, pos.y, pos.z, transition);
+      this.#controls.rotateTo(0, Math.PI / 2, transition);
+      this.#controls.dollyTo(35, transition);
       if (this.cameraPan === false) {
-        this.#controls.dollyTo(120, true);
+        this.#controls.dollyTo(120, transition);
       }
     } else if (part === CameraPosition.MiiHead) {
-      this.#controls.moveTo(0, 3.5, 0, true);
-      this.#controls.rotateTo(0, Math.PI / 2, true);
-      this.#controls.dollyTo(20, true);
+      if (body !== undefined) {
+        const box = new THREE.Box3().setFromObject(body);
+        pos.y = box.max.y - box.min.y;
+      }
+      this.#controls.moveTo(pos.x, pos.y + 2, pos.z, transition);
+      this.#controls.rotateTo(0, Math.PI / 2, transition);
+      this.#controls.dollyTo(25, transition);
       if (this.cameraPan === false) {
-        this.#controls.dollyTo(100, true);
+        this.#controls.dollyTo(100, transition);
       }
     }
   }
@@ -346,7 +366,6 @@ export class Mii3DScene {
         modulateColor: cPantsColorGray,
         modulateMode: 0,
         modulateType: cMaterialName.FFL_MODULATE_TYPE_SHAPE_PANTS,
-        modulateSkinning: 1,
       };
       // adds shader material
       this.traverseMesh(gLegsMesh);
@@ -572,22 +591,6 @@ export class Mii3DScene {
         (fLegs.material as THREE.ShaderMaterial).uniforms.u_const1.value =
           new THREE.Vector4(...this.getPantsColor());
 
-        // const fBody = bodyF
-        //   .getObjectByName("f")!
-        //   .getObjectByName("body_f")! as THREE.Mesh;
-        // (fBody.material as THREE.MeshBasicMaterial).color.set(
-        //   MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor][0],
-        //   MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor][1],
-        //   MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor][2]
-        // );
-        // const fLegs = bodyF
-        //   .getObjectByName("f")!
-        //   .getObjectByName("legs_f")! as THREE.Mesh;
-        // (fLegs.material as THREE.MeshBasicMaterial).color.set(
-        //   this.getPantsColor()[0],
-        //   this.getPantsColor()[1],
-        //   this.getPantsColor()[2]
-        // );
         break;
     }
   }
