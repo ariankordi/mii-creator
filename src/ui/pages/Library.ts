@@ -1,7 +1,6 @@
 import Html from "@datkat21/html";
 import localforage, { config } from "localforage";
 import { MiiEditor, MiiGender, RenderPart } from "../../class/MiiEditor";
-import { MainMenu } from "./MainMenu";
 import Modal from "../components/Modal";
 import Mii from "../../external/mii-js/mii";
 import { Buffer } from "../../../node_modules/buffer/index";
@@ -22,7 +21,12 @@ import {
 } from "../components/MiiPagedFeatureSet";
 import { downloadLink, saveArrayBuffer } from "../../util/downloadLink";
 import { ArrayNum } from "../../util/NumberArray";
-import type { Mesh } from "three";
+import {
+  MeshStandardMaterial,
+  type Mesh,
+  type ShaderMaterial,
+  type Texture,
+} from "three";
 import {
   cPantsColorGoldHex,
   cPantsColorRedHex,
@@ -31,6 +35,7 @@ import { MiiFavoriteColorIconTable } from "../../constants/ColorTables";
 import { getString as _ } from "../../l10n/manager";
 import { FFLiDatabaseRandom_Get } from "../../util/FFLiDatabaseRandom";
 import { Settings } from "./Settings";
+import { GLTFExporter } from "three/examples/jsm/Addons.js";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
@@ -632,6 +637,42 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
       },
     },
     {
+      text: "Download 3D head model",
+      async callback() {
+        const holder = new Html("div").style({ opacity: "0.1" });
+        const scene = new Mii3DScene(
+          miiData,
+          holder.elm,
+          SetupType.Screenshot,
+          (renderer) => {},
+          true
+        );
+        // hide body
+        scene.init().then(() => {
+          scene.getScene().getObjectByName("m")!.visible = false;
+          scene.getScene().getObjectByName("f")!.visible = false;
+
+          const exporter = new GLTFExporter();
+          exporter.parse(
+            scene.getScene(),
+            (gltf) => {
+              console.log("gltf", gltf);
+              if (gltf instanceof ArrayBuffer) {
+                saveArrayBuffer(gltf, miiData.miiName + "_head.glb");
+              }
+              scene.shutdown();
+            },
+            (error) => {
+              console.error("Oops, something went wrong:", error);
+            },
+            {
+              binary: true,
+            }
+          );
+        });
+      },
+    },
+    {
       text: "Download FFSD file",
       async callback() {
         if (!(await miiColorConversionWarning(miiData))) return;
@@ -827,8 +868,13 @@ export async function customRender(miiData: Mii) {
     .appendTo(tabsContent);
 
   new Html("button")
-    .text("Download")
+    .text("Download PNG")
     .on("click", finalizeRender)
+    .appendTo(tabsContent);
+
+  new Html("button")
+    .text("Download 3D model")
+    .on("click", save3DModel)
     .appendTo(tabsContent);
 
   window.addEventListener("resize", () => {
@@ -909,5 +955,81 @@ export async function customRender(miiData: Mii) {
         modal.qs("button")?.elm.click();
       };
     });
+  }
+
+  async function save3DModel() {
+    const shaderSetting = await getSetting("shaderType");
+    // Firstly, fix up the materials?
+    scene.getScene().traverse((o) => {
+      if ((o as Mesh).isMesh !== true) return;
+
+      const m = o as Mesh;
+
+      console.log(m.name, m.geometry.userData);
+
+      // this depends on shader setting..
+      let map: Texture | null = null;
+      const userData = m.geometry.userData;
+
+      if (
+        // Both of these internally use FFL shader
+        shaderSetting === "wiiu" ||
+        shaderSetting === "lightDisabled"
+      ) {
+        map = (m.material as ShaderMaterial).uniforms.s_texture.value;
+      } else if (shaderSetting === "switch") {
+        // Can't remember what the uniform for texture is on switch
+      } else {
+        // Prevent warning by assigning map to null if it is null
+        if ((m.material as MeshStandardMaterial).map !== null)
+          map = (m.material as MeshStandardMaterial).map;
+      }
+
+      // Just use modulateColor from the userData
+      // because i can't be asked
+      function rgbaToHex(rgba: [number, number, number]) {
+        const [r, g, b] = rgba;
+        const intR = Math.round(r * 255);
+        const intG = Math.round(g * 255);
+        const intB = Math.round(b * 255);
+        const hexR = intR.toString(16).padStart(2, "0");
+        const hexG = intG.toString(16).padStart(2, "0");
+        const hexB = intB.toString(16).padStart(2, "0");
+        return Number(`0x${hexR}${hexG}${hexB}`);
+      }
+
+      m.material = new MeshStandardMaterial({
+        color: rgbaToHex(userData.modulateColor),
+        metalness: 1,
+        roughness: 1,
+
+        // For texture
+        alphaTest: 0.5,
+        map: map,
+      });
+    });
+
+    const exporter = new GLTFExporter();
+    exporter.parse(
+      scene.getScene(),
+      (gltf) => {
+        console.log("gltf", gltf);
+        if (gltf instanceof ArrayBuffer) {
+          saveArrayBuffer(
+            gltf,
+            `${miiData.miiName}_all_body_${new Date().toJSON()}.glb`
+          );
+        }
+        scene.shutdown();
+        parent.cleanup();
+        modal.qs("button")?.elm.click();
+      },
+      (error) => {
+        console.error("Oops, something went wrong:", error);
+      },
+      {
+        binary: true,
+      }
+    );
   }
 }
