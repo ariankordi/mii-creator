@@ -59,6 +59,19 @@ export const settingsInfo: Record<string, any> = {
     label: "Static camera in editor",
     default: false,
   },
+  shaderType: {
+    type: "multi",
+    label: "Shader Type",
+    description: "Some shaders are not yet ready for use.",
+    default: "wiiu",
+    choices: [
+      { label: "No Lighting", value: "lightDisabled" },
+      { label: "Simple", value: "none" },
+      { label: "Wii U (default)", value: "wiiu" },
+      { label: "Switch (WIP)", value: "switch", disabled: true },
+      { label: "Miitomo", value: "miitomo", disabled: true },
+    ],
+  },
   saveData: {
     type: "non-settings-multi",
     label: "Save Data",
