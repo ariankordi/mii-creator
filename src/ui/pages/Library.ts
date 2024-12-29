@@ -43,7 +43,9 @@ export const newMiiId = async () =>
 export const miiIconUrl = (mii: Mii) =>
   `${Config.renderer.renderHeadshotURLNoParams}?data=${mii
     .encodeStudio()
-    .toString("hex")}&shaderType=0&type=face&width=180&verifyCharInfo=0`;
+    .toString(
+      "hex"
+    )}&shaderType=0&type=variableiconbody&width=180&verifyCharInfo=0`;
 
 export async function Library(highlightMiiId?: string) {
   function shutdown(): Promise<void> {
@@ -101,14 +103,26 @@ export async function Library(highlightMiiId?: string) {
       //     miiData.deviceOrigin
       //   );
 
+      miiContainer.style({
+        "--color": MiiFavoriteColorIconTable[miiData.favoriteColor].top,
+      });
+
+      let extraData = "";
+      // hat
+      if (miiData.extHatType !== 0) {
+        extraData += `&hatType=${encodeURIComponent(
+          miiData.extHatType
+        )}&hatColor=${encodeURIComponent(miiData.extHatColor)}`;
+      }
+
       let miiImage = new Html("img").class("lazy").attr({
-        "data-src": miiIconUrl(miiData),
+        "data-src": miiIconUrl(miiData) + extraData,
       });
 
       // Special
       if (miiData.normalMii === false || miiData.favorite === true) {
         const star = new Html("i")
-          .style({ position: "absolute", top: "0", right: "0" })
+          .style({ position: "absolute", top: "-22px", right: "-18px" })
 
           .appendTo(miiContainer);
 
@@ -118,18 +132,6 @@ export async function Library(highlightMiiId?: string) {
         if (miiData.favorite === true) {
           star.html(EditorIcons.favorite).style({ color: cPantsColorRedHex });
         }
-      }
-      // hat
-      if (miiData.extHatType !== 0) {
-        const hat = new Html("i")
-          .style({ position: "absolute", top: "0", left: "0" })
-          .appendTo(miiContainer);
-        hat.html(EditorIcons.hat).style({
-          color:
-            miiData.extHatColor !== 0
-              ? MiiFavoriteColorIconTable[miiData.extHatColor - 1].top
-              : MiiFavoriteColorIconTable[miiData.favoriteColor].top,
-        });
       }
 
       let miiName = new Html("span").text(miiData.miiName);
