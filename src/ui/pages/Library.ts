@@ -35,6 +35,7 @@ import { MiiFavoriteColorIconTable } from "../../constants/ColorTables";
 import { getString as _ } from "../../l10n/manager";
 import { FFLiDatabaseRandom_Get } from "../../util/FFLiDatabaseRandom";
 import { Settings } from "./Settings";
+import { getSetting } from "../../util/Settings";
 import { GLTFExporter } from "three/examples/jsm/Addons.js";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
@@ -786,7 +787,20 @@ export async function customRender(miiData: Mii) {
 
   const expressionDuplicateList = [34, 42, 44, 46, 48, 50, 52, 54, 61, 62];
 
-  const poseCount = 14;
+  let poseListPerBodyModel: Record<string, number> = {
+    wii: 4,
+    wiiu: 14,
+    switch: 5,
+  };
+
+  let bodyModelSetting = (await getSetting("bodyModel")) as string;
+
+  let poseCount = 0;
+  if (bodyModelSetting in poseListPerBodyModel) {
+    poseCount = poseListPerBodyModel[bodyModelSetting] + 1;
+  }
+
+  console.log(bodyModelSetting);
 
   // very hacky way to use feature set to create tabs
   MiiPagedFeatureSet({
@@ -806,20 +820,12 @@ export async function customRender(miiData: Mii) {
             max: 70,
             part: RenderPart.Face,
           },
-          {
-            type: FeatureSetType.Switch,
-            property: "cameraPosition",
-            isNumber: true,
-            iconOff: "Head",
-            iconOn: "Full Body",
-            part: RenderPart.Face,
-          },
         ],
       },
       pose: {
         label: "Pose",
         header:
-          "This section is a bit unfinished, the poses are custom-made recreations so they are not fully accurate. Pose 3 also has a rotation issue with the head since it has been changed to be pretending to be attached to the body to prevent weird scaling issues. There is also nothing done after pose 4 currently. I'm working on a way to add the Wii U poses directly.",
+          "Change the Body Model option in Settings to get many different options of poses!",
         items: ArrayNum(poseCount).map((k) => ({
           type: FeatureSetType.Icon,
           value: k,

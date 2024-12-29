@@ -72,6 +72,18 @@ export const settingsInfo: Record<string, any> = {
       { label: "Miitomo", value: "miitomo", disabled: true },
     ],
   },
+  bodyModel: {
+    type: "multi",
+    label: "Body Model",
+    description:
+      "Pose selections are different depending on the body model you use.",
+    default: "switch",
+    choices: [
+      { label: "Wii U", value: "wiiu" },
+      { label: "Switch (default)", value: "switch" },
+      { label: "Miitomo", value: "miitomo", disabled: true },
+    ],
+  },
   saveData: {
     type: "non-settings-multi",
     label: "Save Data",

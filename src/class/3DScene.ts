@@ -406,12 +406,10 @@ export class Mii3DScene {
       if (this.#scene.getObjectByName("f"))
         this.#scene.getObjectByName("f")!.visible = false;
 
-      // this fixes body rotation when pose is broken due to shader bug!!!
-      // change the position back when it works
       glb.scene.rotation.set(0, 0, 0);
     };
 
-    const bodyModel = "wiiu"; // temp until more bodies are added
+    const bodyModel = (await getSetting("bodyModel")) as string;
 
     const loaders = [
       setupMiiBody(`./assets/mdl/miiBodyM_${bodyModel}.glb`, "m"),
@@ -485,8 +483,12 @@ export class Mii3DScene {
 
     scaleFactors.z = scaleFactors.x;
 
+    // @ts-expect-error debug
+    window.scaleFactors = scaleFactors;
+
     const traverseBones = (object: THREE.Object3D) => {
       object.scale.set(scaleFactors.x, scaleFactors.y, scaleFactors.z);
+
       // this.#scene
       //   .getObjectByName("MiiHead")!
       //   .scale.set(
