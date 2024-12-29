@@ -28,11 +28,7 @@ import { Buffer } from "../../node_modules/buffer";
 import { getSoundManager } from "./audio/SoundManager";
 import { SparkleParticle } from "./3d/effect/SparkleParticle";
 import { multiplyTexture } from "./3d/canvas/multiplyTexture";
-import {
-  ExtHatFullHeadList,
-  ExtHatFullHeadRaycastList,
-} from "../constants/Extensions";
-import { getRaycastIntersection } from "./3d/util/raycast";
+import { ExtHatFullHeadList } from "../constants/Extensions";
 import localforage from "localforage";
 
 export enum CameraPosition {
@@ -708,56 +704,6 @@ export class Mii3DScene {
                     modulateType: 5, //5,
                   };
 
-                  if (ExtHatFullHeadList.includes(this.mii.extHatType)) {
-                    // Hat needs to be raycasted from its origin position
-                    const raycastData =
-                      ExtHatFullHeadRaycastList[
-                        ExtHatFullHeadList.indexOf(this.mii.extHatType)
-                      ];
-
-                    if (raycastData === undefined) return;
-
-                    if (raycastData[i] !== undefined) {
-                      let raycastInt = getRaycastIntersection(
-                        this.#scene.children,
-                        raycastData[i].origin,
-                        raycastData[i].angle
-                      )!;
-
-                      // this only started happening after i commented the below code???
-                      if (raycastInt === null) return;
-
-                      // const rayLength = 3; // Adjust for desired ray length
-                      // const arrowHelper = new THREE.ArrowHelper(
-                      //   raycastData[i].angle.clone().normalize(),
-                      //   raycastData[i].origin,
-                      //   rayLength,
-                      //   0xffffff
-                      // );
-                      // this.#scene.add(arrowHelper);
-
-                      // setTimeout(() => {
-                      //   this.#scene.remove(arrowHelper);
-                      // }, 5000);
-
-                      console.log(`Hat raycast for ${o.name}:`, raycastInt);
-
-                      if (raycastInt.point === null) {
-                        return console.log(`Hat raycast for ${i} failed`);
-                      }
-                      // m.position.set(raycastInt.point.x, raycastInt.point.y, raycastInt.point.z);
-                      m.position.copy(raycastInt.point);
-                      if (raycastInt.face) {
-                        const normalVector = raycastInt.face!.normal.clone();
-                        // m.position.addScaledVector(normalVector, 0.1);
-                        m.quaternion.setFromUnitVectors(
-                          new THREE.Vector3(0, 1, 0),
-                          normalVector
-                        );
-                      }
-                    } else
-                      console.log(`Hat raycast data for ${i} does not exist`);
-                  }
                   i++;
                 }
               });
