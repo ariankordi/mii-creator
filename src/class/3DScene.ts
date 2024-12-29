@@ -1,5 +1,8 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+// make sure types work with the patched GLTF loader
+import { type GLTFLoader as TrueGLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+// very hacky but it works to fix the shader bug...
+import { GLTFLoader } from "./3d/Custom_GLTFLoader";
 import CameraControls from "camera-controls";
 import Mii from "../external/mii-js/mii";
 import {
@@ -43,7 +46,7 @@ export class Mii3DScene {
   #camera: THREE.PerspectiveCamera;
   #controls: CameraControls;
   #textureLoader: THREE.TextureLoader;
-  #gltfLoader: GLTFLoader;
+  #gltfLoader: TrueGLTFLoader;
   #scene: THREE.Scene;
   #renderer: THREE.WebGLRenderer;
   #parent: HTMLElement;
@@ -163,7 +166,7 @@ export class Mii3DScene {
     });
 
     this.#textureLoader = new THREE.TextureLoader();
-    this.#gltfLoader = new GLTFLoader();
+    this.#gltfLoader = new GLTFLoader() as TrueGLTFLoader;
 
     this.mii = mii;
 
