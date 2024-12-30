@@ -44,23 +44,6 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
   const shaderSetting = await getSetting("shaderType");
   const originalMaterial = node.material as THREE.MeshBasicMaterial;
 
-  if (shaderSetting === "none") {
-    const nonShaderMaterial = new THREE.MeshPhysicalMaterial({
-      color: originalMaterial.color,
-      side: originalMaterial.side,
-      map: originalMaterial.map,
-      blending: THREE.CustomBlending,
-      blendDstAlpha: THREE.OneFactor,
-      transparent: originalMaterial.transparent,
-      alphaTest: originalMaterial.alphaTest,
-      metalness: 1,
-      roughness: 1,
-      reflectivity: 1,
-    });
-    node.material = nonShaderMaterial;
-    return;
-  }
-
   // Access userData from geometry
   const userData = node.geometry.userData;
 
@@ -114,6 +97,39 @@ export async function traverseMesh(node: THREE.Mesh, mpCharInfo: Mii) {
     // try to fix it some more.. lol
     originalMaterial.map.colorSpace = THREE.LinearSRGBColorSpace;
     originalMaterial.needsUpdate = true;
+  }
+
+  if (shaderSetting === "none") {
+    if (
+      modulateType === cMaterialName.FFL_MODULATE_TYPE_SHAPE_MASK ||
+      modulateType === cMaterialName.FFL_MODULATE_TYPE_SHAPE_NOSELINE
+    ) {
+      const nonShaderMaterial = new THREE.MeshBasicMaterial({
+        color: originalMaterial.color,
+        side: originalMaterial.side,
+        map: originalMaterial.map,
+        blending: THREE.CustomBlending,
+        blendDstAlpha: THREE.OneFactor,
+        transparent: originalMaterial.transparent,
+        alphaTest: originalMaterial.alphaTest,
+      });
+      node.material = nonShaderMaterial;
+    } else {
+      const nonShaderMaterial = new THREE.MeshPhysicalMaterial({
+        color: originalMaterial.color,
+        side: originalMaterial.side,
+        map: originalMaterial.map,
+        blending: THREE.CustomBlending,
+        blendDstAlpha: THREE.OneFactor,
+        transparent: originalMaterial.transparent,
+        alphaTest: originalMaterial.alphaTest,
+        metalness: 1,
+        roughness: 1,
+        reflectivity: 1,
+      });
+      node.material = nonShaderMaterial;
+    }
+    return;
   }
 
   // Function to Map FFLCullMode to three.js material side
