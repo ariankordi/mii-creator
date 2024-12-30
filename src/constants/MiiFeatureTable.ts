@@ -165,17 +165,15 @@ export const MiiSwitchColorTable = [
   98, 99,
 ];
 
-export const MiiSwitchSkinColorTable1stHalf: Record<number, number> = {
+export const MiiSwitchSkinColorTable: Record<number, number> = {
   0: 0,
-  1: 7,
-  2: 1,
-  3: 4,
-  4: 5,
-};
-export const MiiSwitchSkinColorTable2ndHalf: Record<number, number> = {
-  5: 6,
-  6: 3,
-  7: 2,
+  7: 1,
+  1: 2,
+  4: 3,
+  5: 4,
+  6: 5,
+  3: 6,
+  2: 7,
   8: 8,
   9: 9,
 };
@@ -207,6 +205,11 @@ export const makeSeparatorFSI: () => any = () => ({
 export const makeSeparatorGapFSI: () => any = () => ({
   type: FeatureSetType.Misc,
   html: new Html("div").class("separator-gap"),
+  select() {},
+});
+export const makeSeparatorGapThinFSI: () => any = () => ({
+  type: FeatureSetType.Misc,
+  html: new Html("div").class("separator-gap-thin"),
   select() {},
 });
 export const makeHeaderFSI = (text: string) => ({

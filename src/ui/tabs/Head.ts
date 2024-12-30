@@ -12,9 +12,8 @@ import { ArrayNum } from "../../util/NumberArray";
 import { RenderPart } from "../../class/MiiEditor";
 import {
   makeSeparatorFSI,
-  MiiSwitchColorTable,
-  MiiSwitchSkinColorTable1stHalf,
-  MiiSwitchSkinColorTable2ndHalf,
+  makeSeparatorGapThinFSI,
+  MiiSwitchSkinColorTable,
   rearrangeArray,
 } from "../../constants/MiiFeatureTable";
 
@@ -62,24 +61,24 @@ export function HeadTab(data: TabRenderInit) {
             })),
             makeSeparatorFSI(),
             ...rearrangeArray(
-              ArrayNum(5).map((k) => ({
+              ArrayNum(10).map((k) => ({
                 type: FeatureSetType.Icon,
                 value: k,
                 color: MiiSwitchSkinColorList[k],
                 part: RenderPart.Head,
               })),
-              MiiSwitchSkinColorTable1stHalf
-            ),
-            makeSeparatorFSI(),
+              MiiSwitchSkinColorTable
+            ).slice(0, 5),
+            makeSeparatorGapThinFSI(),
             ...rearrangeArray(
-              ArrayNum(5).map((k) => ({
+              ArrayNum(10).map((k) => ({
                 type: FeatureSetType.Icon,
-                value: k + 5,
+                value: k,
                 color: MiiSwitchSkinColorList[k],
                 part: RenderPart.Head,
               })),
-              MiiSwitchSkinColorTable2ndHalf
-            ),
+              MiiSwitchSkinColorTable
+            ).slice(5),
           ],
         },
       },
