@@ -330,9 +330,7 @@ const miiCreatePNID = async () => {
   Loader.show();
 
   let pnid = await fetch(
-    `https://mii-unsecure.ariankordi.net/mii_data/${encodeURIComponent(
-      input
-    )}?api_id=1`
+    Config.dataFetch.pnidFetchURL(encodeURIComponent(input))
   );
 
   Loader.hide();
@@ -353,7 +351,7 @@ const miiCreatePNID = async () => {
 const miiCreateRandom = async () => {
   Loader.show();
   let random = await fetch(
-    "https://mii-unsecure.ariankordi.net/mii_data_random"
+    Config.dataFetch.nnidRandomURL
   ).then((j) => j.json());
   Loader.hide();
 

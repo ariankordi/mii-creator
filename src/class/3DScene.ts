@@ -455,21 +455,11 @@ export class Mii3DScene {
 
     // Ported from FFL-Testing
     let scaleFactors = { x: 0, y: 0, z: 0 };
+    // Note that 1.0 scale roughly
+    // translates to 82 build/83 height.
 
     switch (Config.mii.scalingMode) {
-      case "old":
-        scaleFactors.y = height / 128.0;
-        scaleFactors.x = scaleFactors.y * 0.3 + 0.6;
-        scaleFactors.x =
-          ((scaleFactors.y * 0.6 + 0.8 - scaleFactors.x) * build) / 128.0 +
-          scaleFactors.x;
-
-        scaleFactors.y = scaleFactors.y * 0.55 + 0.6;
-
-        // Ensure scaleFactors.y is clamped to a maximum of 1.0
-        scaleFactors.y = Math.min(scaleFactors.y, 1.0);
-        break;
-      case "new":
+      case "scaleLimit": // Limits scale to hide pants.
         // NOTE: even in wii u mii maker this still shows a few
         // pixels of the pants, but here without proper body scaling
         // this won't actually let you get away w/o pants
@@ -480,7 +470,17 @@ export class Mii3DScene {
           (heightFactor * 0.6 + 0.8 - scaleFactors.x) * (build / 128.0) +
           scaleFactors.x;
         break;
-      case "newest":
+      case "scaleLimitClampY": // Same as above but clamps Y.
+        heightFactor = height / 128.0;
+        scaleFactors.y = heightFactor * 0.55 + 0.6;
+        scaleFactors.x = heightFactor * 0.3 + 0.6;
+        scaleFactors.x =
+          (heightFactor * 0.6 + 0.8 - scaleFactors.x) * (build / 128.0) +
+          scaleFactors.x;
+        // Limit Y scale.
+        scaleFactors.y = Math.min(scaleFactors.y, 1.0);
+        break;
+      case "scaleApply": // Scale seen on Wii U/Switch.
         // 0.47 / 128.0 = 0.003671875
         scaleFactors.x =
           (build * (height * 0.003671875 + 0.4)) / 128.0 +
