@@ -150,15 +150,16 @@ export const conversionMethods = {
     ];
     const ToVer3FacelineColorTable = [0, 1, 2, 3, 4, 5, 0, 1, 5, 5];
 
-    data.glassesType = ToVer3GlassTypeTable[data.glassesType];
+    data.faceColor = ToVer3FacelineColorTable[data.faceColor];
     data.hairColor = ToVer3HairColorTable[data.hairColor];
+    data.eyeColor = ToVer3EyeColorTable[data.eyeColor];
+    data.eyebrowColor = ToVer3HairColorTable[data.eyebrowColor];
+    data.mouthColor = ToVer3MouthColorTable[data.mouthColor];
     // NOTE: even though the rest of the beard fields are named differently
     // in Gen3Studio, this one for beard color is the same there and in all
     data.facialHairColor = ToVer3HairColorTable[data.facialHairColor];
-    data.eyeColor = ToVer3EyeColorTable[data.eyeColor];
-    data.mouthColor = ToVer3MouthColorTable[data.mouthColor];
     data.glassesColor = ToVer3GlassColorTable[data.glassesColor];
-    data.faceColor = ToVer3FacelineColorTable[data.faceColor];
+    data.glassesType = ToVer3GlassTypeTable[data.glassesType];
   },
   // apply extra "extension" fields at the end of this struct
   // back to the actual fields since the extension fields are ver4
@@ -517,7 +518,7 @@ if(!dataValue)
   const ffsdDownloadButton =
     event.target.getElementsByClassName("download-ffsd")[0];
   ffsdDownloadButton.setAttribute("data-data", ver3StoreDataB64);
-  studioDataDownloadButton.setAttribute(
+  ffsdDownloadButton.setAttribute(
     "data-filename",
     fileBaseName + ".ffsd"
   );
@@ -580,7 +581,10 @@ conversionMethods.encodeVer3StoreData = (dataStruct, forQRCode) => {
   dataStruct.unknown1 = 0x03; // ALWAYS constant 100% of the time
   // 3ds version mii, will scan as a qr code on 3ds and wii u
   // may already be set so using defineProperty on it
-  if (forQRCode)
+  if (forQRCode ||
+    // there is no birth platform corresponding to 0 (1 is wii)
+    dataStruct.version === undefined || dataStruct.version < 1
+  )
     Object.defineProperty(dataStruct, "version", {
       value: 3,
     });

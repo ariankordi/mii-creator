@@ -1,4 +1,4 @@
-// https://jsfiddle.net/arian_/8gvynrdu/6/
+// https://jsfiddle.net/arian_/8gvynrdu/7/
 import * as THREE from "three";
 // Material table for FFLDefaultShader mapping to FFLModulateType
 // Reference: https://github.com/aboood40091/FFL-Testing/blob/master/src/Shader.cpp

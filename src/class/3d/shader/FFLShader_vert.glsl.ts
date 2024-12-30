@@ -1,4 +1,4 @@
-export default /*glsl*/ `// https://jsfiddle.net/arian_/8gvynrdu/6/
+export default /*glsl*/ `// https://jsfiddle.net/arian_/8gvynrdu/7/
 // position, texCoord (uv), normal are all provided by three.js
 
 // 頂点シェーダーに入力される attribute 変数
