@@ -82,11 +82,11 @@ export class MusicManager {
         ) {
           this.playMusic();
         }
-        document.onclick = () => {
-          document.onclick = null;
-          this.playMusic();
-        };
       }
+      document.onclick = () => {
+        document.onclick = null;
+        this.playMusic();
+      };
     }, 100);
   }
 

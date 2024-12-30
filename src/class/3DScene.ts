@@ -749,6 +749,10 @@ export class Mii3DScene {
               case HatType.FACE_ONLY:
                 params["modelType"] = "face_only";
                 break;
+              case HatType.BALD:
+                // BALD HAIR!!!
+                tmpMii.hairType = 30;
+                break;
             }
           }
           const GLB = await this.#gltfLoader.loadAsync(

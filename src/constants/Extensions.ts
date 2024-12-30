@@ -16,6 +16,7 @@ export enum HatType {
   HEAD,
   HAT,
   FACE_ONLY,
+  BALD,
 }
 
 export const HatTypeList = [
@@ -27,7 +28,7 @@ export const HatTypeList = [
   HatType.HEAD, // Bow
   HatType.HEAD, // Cat Ears
   HatType.HAT, // Straw Hat
-  HatType.FACE_ONLY, // Hijab
+  HatType.BALD, // Hijab
   HatType.HAT, // Bike Helmet
 ];
 
