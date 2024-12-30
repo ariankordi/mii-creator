@@ -39,7 +39,7 @@ export function MouthTab(data: TabRenderInit) {
           })),
         },
         mouthColor: {
-          label: "Color",
+          label: EditorIcons.color,
           validationProperty: "trueMouthColor",
           // EXTREMELY HACKY but works..
           validationFunction() {

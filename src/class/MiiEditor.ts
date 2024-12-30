@@ -267,6 +267,7 @@ export class MiiEditor {
             activeMii = mii;
             // use of forceRender forces reload of the head in 3D mode
             this.render(forceRender, renderPart);
+            this.ui.scene.sparkle();
             this.#updateCssVars();
             this.dirty = true;
           },
@@ -431,7 +432,7 @@ export class MiiEditor {
           shouldSave
         );
       }
-      
+
       document.dispatchEvent(new CustomEvent("editor-shutdown"));
     }, 500);
   }

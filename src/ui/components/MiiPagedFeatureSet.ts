@@ -249,6 +249,7 @@ export function MiiPagedFeatureSet(set: FeatureSet) {
                 );
 
                 featureSlider.on("input", () => {
+                  playSound("slider_tick");
                   (tmpMii as Record<string, any>)[item.property] = Number(
                     featureSlider.getValue()
                   );

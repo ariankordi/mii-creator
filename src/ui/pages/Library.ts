@@ -1,7 +1,6 @@
 import Html from "@datkat21/html";
 import localforage, { config } from "localforage";
 import { MiiEditor, MiiGender, RenderPart } from "../../class/MiiEditor";
-import { MainMenu } from "./MainMenu";
 import Modal from "../components/Modal";
 import Mii from "../../external/mii-js/mii";
 import { Buffer } from "../../../node_modules/buffer/index";
@@ -15,14 +14,19 @@ import {
 import { Link } from "../components/Link";
 import { Config } from "../../config";
 import EditorIcons from "../../constants/EditorIcons";
-import { Mii3DScene, SetupType } from "../../class/3DScene";
+import { CameraPosition, Mii3DScene, SetupType } from "../../class/3DScene";
 import {
   FeatureSetType,
   MiiPagedFeatureSet,
 } from "../components/MiiPagedFeatureSet";
-import { downloadLink } from "../../util/downloadLink";
+import { downloadLink, saveArrayBuffer } from "../../util/downloadLink";
 import { ArrayNum } from "../../util/NumberArray";
-import type { Mesh } from "three";
+import {
+  MeshStandardMaterial,
+  type Mesh,
+  type ShaderMaterial,
+  type Texture,
+} from "three";
 import {
   cPantsColorGoldHex,
   cPantsColorRedHex,
@@ -30,6 +34,9 @@ import {
 import { MiiFavoriteColorIconTable } from "../../constants/ColorTables";
 import { getString as _ } from "../../l10n/manager";
 import { FFLiDatabaseRandom_Get } from "../../util/FFLiDatabaseRandom";
+import { Settings } from "./Settings";
+import { getSetting } from "../../util/Settings";
+import { GLTFExporter } from "three/examples/jsm/Addons.js";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
@@ -37,7 +44,9 @@ export const newMiiId = async () =>
 export const miiIconUrl = (mii: Mii) =>
   `${Config.renderer.renderHeadshotURLNoParams}?data=${mii
     .encodeStudio()
-    .toString("hex")}&shaderType=0&type=face&width=180&verifyCharInfo=0`;
+    .toString(
+      "hex"
+    )}&shaderType=0&type=variableiconbody&width=180&verifyCharInfo=0`;
 
 export async function Library(highlightMiiId?: string) {
   function shutdown(): Promise<void> {
@@ -95,14 +104,26 @@ export async function Library(highlightMiiId?: string) {
       //     miiData.deviceOrigin
       //   );
 
+      miiContainer.style({
+        "--color": MiiFavoriteColorIconTable[miiData.favoriteColor].top,
+      });
+
+      let extraData = "";
+      // hat
+      if (miiData.extHatType !== 0) {
+        extraData += `&hatType=${encodeURIComponent(
+          miiData.extHatType
+        )}&hatColor=${encodeURIComponent(miiData.extHatColor)}`;
+      }
+
       let miiImage = new Html("img").class("lazy").attr({
-        "data-src": miiIconUrl(miiData),
+        "data-src": miiIconUrl(miiData) + extraData,
       });
 
       // Special
       if (miiData.normalMii === false || miiData.favorite === true) {
         const star = new Html("i")
-          .style({ position: "absolute", top: "0", right: "0" })
+          .style({ position: "absolute", top: "-22px", right: "-18px" })
 
           .appendTo(miiContainer);
 
@@ -112,18 +133,6 @@ export async function Library(highlightMiiId?: string) {
         if (miiData.favorite === true) {
           star.html(EditorIcons.favorite).style({ color: cPantsColorRedHex });
         }
-      }
-      // hat
-      if (miiData.extHatType !== 0) {
-        const hat = new Html("i")
-          .style({ position: "absolute", top: "0", left: "0" })
-          .appendTo(miiContainer);
-        hat.html(EditorIcons.hat).style({
-          color:
-            miiData.extHatColor !== 0
-              ? MiiFavoriteColorIconTable[miiData.extHatColor - 1].top
-              : MiiFavoriteColorIconTable[miiData.favoriteColor].top,
-        });
       }
 
       let miiName = new Html("span").text(miiData.miiName);
@@ -183,15 +192,14 @@ export async function Library(highlightMiiId?: string) {
   sidebar.appendMany(
     new Html("div").class("sidebar-buttons").appendMany(
       AddButtonSounds(
-        new Html("button").text("Main Menu").on("click", async () => {
-          await shutdown();
-          MainMenu();
+        new Html("button").text("Create New").on("click", async () => {
+          miiCreateDialog(shutdown);
         })
       ),
       AddButtonSounds(
-        new Html("button").text("Create New").on("click", async () => {
-          await shutdown();
-          miiCreateDialog();
+        new Html("button").text("Settings").on("click", async () => {
+          // await shutdown();
+          Settings();
         })
       )
     ),
@@ -216,7 +224,8 @@ export async function Library(highlightMiiId?: string) {
         ),
         AddButtonSounds(
           Link("Wii U theme by dwyazzo90", "https://x.com/dwyazzo90")
-        )
+        ),
+        new Html("strong").text("This site is not affiliated with Nintendo.")
       )
   );
 }
@@ -226,26 +235,34 @@ type MiiLocalforage = {
   mii: string;
 };
 
-const miiCreateDialog = () => {
+const miiCreateDialog = (shutdown: Function) => {
   Modal.modal(
     "Create New",
     "How would you like to create the Mii?",
     "body",
     {
       text: "From Scratch",
-      callback: miiCreateFromScratch,
+      callback: () => {
+        miiCreateFromScratch(shutdown);
+      },
     },
     {
       text: "Enter PNID",
-      callback: miiCreatePNID,
+      callback: () => {
+        miiCreatePNID(shutdown);
+      },
     },
     {
       text: "Random Mii",
-      callback: miiCreateRandomFFL,
+      callback: () => {
+        miiCreateRandomFFL(shutdown);
+      },
     },
     {
       text: "Random NNID",
-      callback: miiCreateRandom,
+      callback: () => {
+        miiCreateRandom(shutdown);
+      },
     },
     {
       text: "Import FFSD/MiiCreator data",
@@ -257,7 +274,9 @@ const miiCreateDialog = () => {
           "body",
           {
             text: "Cancel",
-            callback: miiCreateDialog,
+            callback: () => {
+              miiCreateDialog(shutdown);
+            },
           },
           {
             text: "Confirm",
@@ -306,13 +325,14 @@ const miiCreateDialog = () => {
     },
     {
       text: "Cancel",
-      callback: () => Library(),
+      callback: () => {},
     }
   );
 };
-const miiCreateFromScratch = () => {
+const miiCreateFromScratch = (shutdown: Function) => {
   function cb(gender: MiiGender) {
     return () => {
+      shutdown();
       new MiiEditor(gender, async (m, shouldSave) => {
         if (shouldSave === true) await localforage.setItem(await newMiiId(), m);
         Library();
@@ -334,11 +354,11 @@ const miiCreateFromScratch = () => {
     },
     {
       text: "Cancel",
-      callback: () => miiCreateDialog(),
+      callback: () => miiCreateDialog(shutdown),
     }
   );
 };
-const miiCreatePNID = async () => {
+const miiCreatePNID = async (shutdown: Function) => {
   const input = await Modal.input(
     "Create New",
     "Enter PNID of user..",
@@ -347,7 +367,7 @@ const miiCreatePNID = async () => {
     false
   );
   if (input === false) {
-    return miiCreateDialog();
+    return miiCreateDialog(shutdown);
   }
 
   Loader.show();
@@ -364,6 +384,7 @@ const miiCreatePNID = async () => {
     return Library();
   }
 
+  shutdown();
   new MiiEditor(
     0,
     async (m, shouldSave) => {
@@ -373,13 +394,14 @@ const miiCreatePNID = async () => {
     (await pnid.json()).data
   );
 };
-const miiCreateRandom = async () => {
+const miiCreateRandom = async (shutdown: Function) => {
   Loader.show();
   let random = await fetch(
     "https://mii-unsecure.ariankordi.net/mii_data_random"
   ).then((j) => j.json());
   Loader.hide();
 
+  shutdown();
   new MiiEditor(
     0,
     async (m, shouldSave) => {
@@ -389,7 +411,7 @@ const miiCreateRandom = async () => {
     random.data
   );
 };
-const miiCreateRandomFFL = async () => {
+const miiCreateRandomFFL = async (shutdown: Function) => {
   const editMii = new Mii(
     Buffer.from(
       "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn",
@@ -399,6 +421,7 @@ const miiCreateRandomFFL = async () => {
 
   FFLiDatabaseRandom_Get(editMii);
 
+  shutdown();
   new MiiEditor(
     0,
     async (m, shouldSave) => {
@@ -617,6 +640,42 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
       },
     },
     {
+      text: "Download 3D head model",
+      async callback() {
+        const holder = new Html("div").style({ opacity: "0.1" });
+        const scene = new Mii3DScene(
+          miiData,
+          holder.elm,
+          SetupType.Screenshot,
+          (renderer) => {},
+          true
+        );
+        // hide body
+        scene.init().then(() => {
+          scene.getScene().getObjectByName("m")!.visible = false;
+          scene.getScene().getObjectByName("f")!.visible = false;
+
+          const exporter = new GLTFExporter();
+          exporter.parse(
+            scene.getScene(),
+            (gltf) => {
+              console.log("gltf", gltf);
+              if (gltf instanceof ArrayBuffer) {
+                saveArrayBuffer(gltf, miiData.miiName + "_head.glb");
+              }
+              scene.shutdown();
+            },
+            (error) => {
+              console.error("Oops, something went wrong:", error);
+            },
+            {
+              binary: true,
+            }
+          );
+        });
+      },
+    },
+    {
       text: "Download FFSD file",
       async callback() {
         if (!(await miiColorConversionWarning(miiData))) return;
@@ -682,7 +741,7 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
   );
 };
 
-export function customRender(miiData: Mii) {
+export async function customRender(miiData: Mii) {
   const modal = Modal.modal("Prepare Render", "", "body", {
     callback: () => {},
     text: "Cancel",
@@ -726,7 +785,22 @@ export function customRender(miiData: Mii) {
 
   const base64Data = miiData.encodeStudio().toString("hex");
 
-  const expressionDuplicateList = [42, 44, 46, 48, 50, 52, 54, 61, 62];
+  const expressionDuplicateList = [34, 42, 44, 46, 48, 50, 52, 54, 61, 62];
+
+  let poseListPerBodyModel: Record<string, number> = {
+    wii: 4,
+    wiiu: 14,
+    switch: 5,
+  };
+
+  let bodyModelSetting = (await getSetting("bodyModel")) as string;
+
+  let poseCount = 0;
+  if (bodyModelSetting in poseListPerBodyModel) {
+    poseCount = poseListPerBodyModel[bodyModelSetting] + 1;
+  }
+
+  console.log(bodyModelSetting);
 
   // very hacky way to use feature set to create tabs
   MiiPagedFeatureSet({
@@ -746,21 +820,13 @@ export function customRender(miiData: Mii) {
             max: 70,
             part: RenderPart.Face,
           },
-          {
-            type: FeatureSetType.Switch,
-            property: "cameraPosition",
-            isNumber: true,
-            iconOff: "Head",
-            iconOn: "Full Body",
-            part: RenderPart.Face,
-          },
         ],
       },
       pose: {
         label: "Pose",
         header:
-          "This section is a bit unfinished, the poses are custom-made recreations so they are not fully accurate. Pose 3 also has a rotation issue with the head since it has been changed to be pretending to be attached to the body to prevent weird scaling issues. There is also nothing done after pose 4 currently. I'm working on a way to add the Wii U poses directly.",
-        items: ArrayNum(5).map((k) => ({
+          "Change the Body Model option in Settings to get many different options of poses!",
+        items: ArrayNum(poseCount).map((k) => ({
           type: FeatureSetType.Icon,
           value: k,
           icon: String(k),
@@ -810,8 +876,13 @@ export function customRender(miiData: Mii) {
     .appendTo(tabsContent);
 
   new Html("button")
-    .text("Download")
+    .text("Download PNG")
     .on("click", finalizeRender)
+    .appendTo(tabsContent);
+
+  new Html("button")
+    .text("Download 3D model")
+    .on("click", save3DModel)
     .appendTo(tabsContent);
 
   window.addEventListener("resize", () => {
@@ -842,10 +913,10 @@ export function customRender(miiData: Mii) {
     scene.getCamera()!.updateProjectionMatrix();
     switch (configuration.cameraPosition) {
       case 0:
-        scene.getControls().moveTo(0, 3.5, 0, true);
+        scene.focusCamera(CameraPosition.MiiHead);
         break;
       case 1:
-        scene.getControls().moveTo(0, 0, 0, true);
+        scene.focusCamera(CameraPosition.MiiFullBody);
         break;
     }
 
@@ -856,10 +927,12 @@ export function customRender(miiData: Mii) {
       }&width=896&verifyCharInfo=0`
     );
 
-    if (scene.animations.get(`${scene.type}-Pose.${configuration.pose}`)) {
-      scene.swapAnimation("Pose." + configuration.pose);
+    const pose = "Pose." + String(configuration.pose).padStart(2, "0");
+
+    if (scene.animations.get(`${scene.type}-${pose}`)) {
+      scene.swapAnimation(pose);
     } else {
-      scene.swapAnimation("Stand");
+      scene.swapAnimation("Wait");
     }
 
     oldConfiguration = configuration;
@@ -883,12 +956,88 @@ export function customRender(miiData: Mii) {
       image.onload = () => {
         downloadLink(
           image.src,
-          `${miiData.miiName}_${new Date().toJSON()}.png`
+          `${miiData.miiName}_all_body_${new Date().toJSON()}.png`
         );
         scene.shutdown();
         parent.cleanup();
         modal.qs("button")?.elm.click();
       };
     });
+  }
+
+  async function save3DModel() {
+    const shaderSetting = await getSetting("shaderType");
+    // Firstly, fix up the materials?
+    scene.getScene().traverse((o) => {
+      if ((o as Mesh).isMesh !== true) return;
+
+      const m = o as Mesh;
+
+      console.log(m.name, m.geometry.userData);
+
+      // this depends on shader setting..
+      let map: Texture | null = null;
+      const userData = m.geometry.userData;
+
+      if (
+        // Both of these internally use FFL shader
+        shaderSetting === "wiiu" ||
+        shaderSetting === "lightDisabled"
+      ) {
+        map = (m.material as ShaderMaterial).uniforms.s_texture.value;
+      } else if (shaderSetting === "switch") {
+        // Can't remember what the uniform for texture is on switch
+      } else {
+        // Prevent warning by assigning map to null if it is null
+        if ((m.material as MeshStandardMaterial).map !== null)
+          map = (m.material as MeshStandardMaterial).map;
+      }
+
+      // Just use modulateColor from the userData
+      // because i can't be asked
+      function rgbaToHex(rgba: [number, number, number]) {
+        const [r, g, b] = rgba;
+        const intR = Math.round(r * 255);
+        const intG = Math.round(g * 255);
+        const intB = Math.round(b * 255);
+        const hexR = intR.toString(16).padStart(2, "0");
+        const hexG = intG.toString(16).padStart(2, "0");
+        const hexB = intB.toString(16).padStart(2, "0");
+        return Number(`0x${hexR}${hexG}${hexB}`);
+      }
+
+      m.material = new MeshStandardMaterial({
+        color: rgbaToHex(userData.modulateColor),
+        metalness: 1,
+        roughness: 1,
+
+        // For texture
+        alphaTest: 0.5,
+        map: map,
+      });
+    });
+
+    const exporter = new GLTFExporter();
+    exporter.parse(
+      scene.getScene(),
+      (gltf) => {
+        console.log("gltf", gltf);
+        if (gltf instanceof ArrayBuffer) {
+          saveArrayBuffer(
+            gltf,
+            `${miiData.miiName}_all_body_${new Date().toJSON()}.glb`
+          );
+        }
+        scene.shutdown();
+        parent.cleanup();
+        modal.qs("button")?.elm.click();
+      },
+      (error) => {
+        console.error("Oops, something went wrong:", error);
+      },
+      {
+        binary: true,
+      }
+    );
   }
 }

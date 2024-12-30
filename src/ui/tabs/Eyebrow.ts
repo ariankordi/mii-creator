@@ -30,7 +30,7 @@ export function EyebrowTab(data: TabRenderInit) {
       entries: {
         eyebrowType: {
           label: "Type",
-          items: ArrayNum(25).map((k) => ({
+          items: ArrayNum(24).map((k) => ({
             type: FeatureSetType.Icon,
             value: k,
             icon: data.icons.eyebrows[k],
@@ -38,7 +38,7 @@ export function EyebrowTab(data: TabRenderInit) {
           })),
         },
         eyebrowColor: {
-          label: "Color",
+          label: EditorIcons.color,
           validationProperty: "trueEyebrowColor",
           // EXTREMELY HACKY but works..
           validationFunction() {
@@ -51,7 +51,7 @@ export function EyebrowTab(data: TabRenderInit) {
               type: FeatureSetType.Icon,
               value: k,
               color: MiiHairColorTable[k],
-              part: RenderPart.Head,
+              part: RenderPart.Face,
               property: "fflEyebrowColor",
             })),
             makeSeparatorFSI(),
@@ -60,7 +60,7 @@ export function EyebrowTab(data: TabRenderInit) {
                 type: FeatureSetType.Icon,
                 value: k + 8,
                 color: SwitchMiiColorTable[k],
-                part: RenderPart.Head,
+                part: RenderPart.Face,
                 property: "extEyebrowColor",
               })),
               MiiSwitchColorTable

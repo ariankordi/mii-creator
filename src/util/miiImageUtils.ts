@@ -79,91 +79,94 @@ export const getMiiRender = async (
     }
 
     let parent = new Html("div")
-      .style({ width: "720px", height: "720px", opacity: "0" })
+      .style({
+        width: "720px",
+        height: "720px",
+        // opacity: "1",
+        // position: "fixed",
+      })
       .appendTo("body");
-    const scene = new Mii3DScene(
-      tmpMii,
-      parent.elm,
-      SetupType.Screenshot,
-      (renderer) => {
-        // swap pose for render
-        scene.swapAnimation("Pose.1", true);
+    const scene = new Mii3DScene(tmpMii, parent.elm, SetupType.Screenshot);
+    scene.init().then(async () => {
+      await scene.updateBody();
+      // swap pose for render
+      scene.anim.forEach((a) => {
+        a.timeScale = 0;
+        // a.stop();
+        // a.reset();
+      });
+      // scene.swapAnimation("Pose.01");
 
-        let scn = scene.getScene()!,
-          cam = scene.getCamera()!,
-          ctl = scene.getControls()!;
-        switch (type) {
-          case MiiCustomRenderType.Head:
-            // zoom in on head
-            ctl.moveTo(0, 3.5, 0);
-            ctl.dollyTo(50);
-            cam.fov = 15;
-            cam.updateProjectionMatrix();
-            break;
-          case MiiCustomRenderType.HeadOnly:
-            // hide body from view
-            scn.getObjectByName("body_m")!.visible = false;
-            scn.getObjectByName("legs_m")!.visible = false;
-            scn.getObjectByName("body_f")!.visible = false;
-            scn.getObjectByName("legs_f")!.visible = false;
-            // Get the bounding box of the object
-            const box = new Box3().setFromObject(
-              scn.getObjectByName("MiiHead")!
-            );
-            const center = box.getCenter(new Vector3());
-            const objectPosition = scn
-              .getObjectByName("MiiHead")!
-              .getWorldPosition(new Vector3());
-            const cameraY = objectPosition.y + center.y;
-            ctl.moveTo(0, cameraY, 0, false);
-            ctl.dollyTo(40);
-            cam.fov = 15;
-            cam.updateProjectionMatrix();
-            break;
-          case MiiCustomRenderType.Body:
-            // default screenshot camera position
-            ctl.moveTo(0, 1.5, 0);
-            ctl.dollyTo(80);
-            cam.fov = 15;
-            cam.updateProjectionMatrix();
-            break;
-        }
-        setTimeout(() => {
-          requestAnimationFrame(() => {
-            if (useBlob)
-              renderer.domElement.toBlob((blob) => {
-                const image = new Image(
-                  renderer.domElement.width,
-                  renderer.domElement.height
-                );
-                image.src = URL.createObjectURL(blob!);
-                console.log("Temporary render URL:", image.src);
-                image.onload = () => {
-                  resolve(image);
-                  scene.shutdown();
-                  parent.cleanup();
-                };
-              });
-            else {
-              const url = renderer.domElement.toDataURL("png", 100);
-              const image = new Image(
-                renderer.domElement.width,
-                renderer.domElement.height
-              );
-              image.src = url;
-              image.onload = () => {
-                resolve(image);
-                scene.shutdown();
-                parent.cleanup();
-              };
-            }
-          });
-        }, 50);
+      let scn = scene.getScene()!,
+        cam = scene.getCamera()!,
+        ctl = scene.getControls()!,
+        pos = new Vector3();
+      switch (type) {
+        case MiiCustomRenderType.Head:
+          // zoom in on head
+          setTimeout(() => {
+            scene.focusCamera(0, true, false);
+          }, 50);
+          break;
+        case MiiCustomRenderType.HeadOnly:
+          // hide body from view
+          scn.getObjectByName("body_m")!.visible = false;
+          scn.getObjectByName("legs_m")!.visible = false;
+          scn.getObjectByName("body_f")!.visible = false;
+          scn.getObjectByName("legs_f")!.visible = false;
+          // Get the bounding box of the object
+          const box = new Box3().setFromObject(scn.getObjectByName("MiiHead")!);
+          const center = box.getCenter(new Vector3());
+          const objectPosition = scn
+            .getObjectByName("MiiHead")!
+            .getWorldPosition(new Vector3());
+          const cameraY = objectPosition.y + objectPosition.y + center.y;
+          ctl.moveTo(0, cameraY, 0, false);
+          ctl.dollyTo(40);
+          cam.fov = 15;
+          cam.updateProjectionMatrix();
+          break;
+        case MiiCustomRenderType.Body:
+          // default screenshot camera position
+          ctl.moveTo(0, 1.5, 0);
+          ctl.dollyTo(80);
+          cam.fov = 15;
+          cam.updateProjectionMatrix();
+          break;
       }
-    );
-    scene.init().then(() => {
-      scene.updateBody();
+
       parent.append(scene.getRendererElement());
+
+      const renderer = scene.getRenderer();
+      setTimeout(() => {
+        if (useBlob)
+          renderer.domElement.toBlob((blob) => {
+            const image = new Image(
+              renderer.domElement.width,
+              renderer.domElement.height
+            );
+            image.src = URL.createObjectURL(blob!);
+            console.log("Temporary render URL:", image.src);
+            image.onload = () => {
+              resolve(image);
+              scene.shutdown();
+              parent.cleanup();
+            };
+          });
+        else {
+          const url = renderer.domElement.toDataURL("png", 100);
+          const image = new Image(
+            renderer.domElement.width,
+            renderer.domElement.height
+          );
+          image.src = url;
+          image.onload = () => {
+            resolve(image);
+            scene.shutdown();
+            parent.cleanup();
+          };
+        }
+      }, 700);
     });
   });
 };
