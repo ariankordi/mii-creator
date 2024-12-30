@@ -271,7 +271,8 @@ export class Mii3DScene {
     this.getRendererElement().style.opacity = "0";
     await this.#addBody();
     this.swapAnimation("Wait", true);
-    await this.updateMiiHead();
+    //await this.updateMiiHead();
+    // ^^ will happen on first render()
     this.ready = true;
     if (this.setupType === SetupType.Screenshot) {
       this.#initCallback && this.#initCallback(this.#renderer);
