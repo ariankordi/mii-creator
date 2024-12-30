@@ -78,7 +78,7 @@ export function GlassesTab(data: TabRenderInit) {
               soundStart: "position_down",
               soundEnd: "position_up",
               min: 0,
-              max: 21,
+              max: 20,
               part: RenderPart.Head,
             },
             {
