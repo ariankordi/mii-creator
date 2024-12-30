@@ -325,6 +325,7 @@ $desktopWidth: 1280px;
         grid-auto-rows: min-content;
         grid-auto-flow: row dense;
         grid-gap: 1rem;
+        place-items: center;
         button {
           padding: 0;
           img {

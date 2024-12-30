@@ -416,9 +416,7 @@ const miiCreateRandom = async (shutdown: Function) => {
 const miiCreateRandomFFL = async (shutdown: Function) => {
   var m = Modal.modal("Choose a look-alike", "", "body", {
     text: "Cancel",
-    callback(e) {
-      miiCreateDialog(shutdown);
-    },
+    callback(e) {},
   });
   m.classOn("random-mii-grid");
   const container = m.qs(".modal-body")!;

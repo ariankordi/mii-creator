@@ -615,6 +615,7 @@ h6 {
   grid-auto-rows: min-content;
   grid-auto-flow: row dense;
   grid-gap: 1rem;
+  place-items: center;
 }
 .modal.random-mii-grid .modal-content .modal-body button {
   padding: 0;
