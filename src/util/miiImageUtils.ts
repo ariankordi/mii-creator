@@ -115,7 +115,7 @@ export const getMiiRender = async (
           // zoom in on head
           setTimeout(() => {
             scene.focusCamera(0, true, false);
-            ctl.dollyTo(80);
+            ctl.dollyTo(50);
             cam.fov = 15;
             cam.updateProjectionMatrix();
           }, 300);

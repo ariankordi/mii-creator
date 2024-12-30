@@ -40,7 +40,7 @@ import { GLTFExporter } from "three/examples/jsm/Addons.js";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>
-  `mii-${await savedMiiCount()}-${Date.now()}`;
+  `mii-${Date.now()}-${await savedMiiCount()}`;
 export const miiIconUrl = (mii: Mii) =>
   `${Config.renderer.renderHeadshotURLNoParams}?data=${mii
     .encodeStudio()
