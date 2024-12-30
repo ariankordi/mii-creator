@@ -1,11 +1,21 @@
 @use "./wiiu.scss";
 
+@font-face {
+  font-family: "NTLG";
+  src: url("../assets/fnt/NTLG.woff2");
+  font-display: swap;
+}
+
 html,
 body {
   background-color: white;
   color: #000;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-family: "NTLG", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+
+  width: 100%;
+  height: 100%;
+  margin: 0;
 
   --eye-color: #6c7070;
   --selection-color: rgb(0, 145, 255);
@@ -13,16 +23,28 @@ body {
 
   font-size: 16px;
 
+  &[data-theme="normal"] {
+    &,
+    & > body {
+      background-image: url("../assets/img/main_bg.svg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+  }
+
   // UI colors
-  --root: #ffffff;
+  --root: #ffffffee;
   --text: #000000;
   --label: #666666;
   --stroke: #dddddd;
+  --stroke-dim: #e8e8e8;
   --stroke-rgb: 221, 221, 221;
-  --container: #eeeeee;
-  --sub-container: #ececec;
+  --container: #eeeeee77;
+  --sub-container: #ececec77;
   --hover: #dddddd;
-  --focus: #e7e7e7;
+  --hover-transparent: #dddddd77;
+  --focus: #e7e7e7ee;
 
   --icon-face-fill: #ffffff;
   --icon-face-stroke: #6f6f6f;
@@ -48,15 +70,17 @@ body {
     --error-color: rgb(255, 96, 87);
 
     // UI colors
-    --root: #050505;
+    --root: #000000ee;
     --text: #ffffff;
     --label: #cccccc;
-    --stroke: #666666;
+    --stroke: #484848;
+    --stroke-dim: #333333;
     --stroke-rgb: 102, 102, 102;
-    --container: #262626;
-    --sub-container: #2c2c2c;
-    --hover: #3e3e3e;
-    --focus: #373737;
+    --container: #2a2d2f77;
+    --sub-container: #1d1f2077;
+    --hover: #2d3336;
+    --hover-transparent: #2d333677;
+    --focus: #2e363aee;
 
     --icon-face-fill: #000000;
     --icon-face-stroke: #ffffff;
@@ -81,6 +105,21 @@ body {
   }
 }
 
+.modal-body small {
+  margin: -6px 0;
+}
+small {
+  color: var(--label);
+}
+
+button.danger {
+  background-color: var(--error-color);
+  border-color: var(--stroke-dim);
+  &:hover {
+    background-color: var(--error-color);
+    filter: brightness(1.3);
+  }
+}
 button.selected {
   border: 0.1rem solid var(--selection-color);
 }
@@ -255,7 +294,7 @@ $desktopWidth: 1280px;
         min-width: 0;
         position: absolute;
         top: 50%;
-        left: 0.5rem;
+        right: 0.5rem;
         transform: translateY(-50%);
       }
     }
@@ -274,6 +313,31 @@ $desktopWidth: 1280px;
         white-space: pre-wrap;
         width: 100%;
         overflow: auto;
+      }
+    }
+  }
+  &.random-mii-grid {
+    .modal-content {
+      width: 100%;
+      .modal-body {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        grid-auto-rows: min-content;
+        grid-auto-flow: row dense;
+        grid-gap: 1rem;
+        button {
+          padding: 0;
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            // fight against wii u theme adding background and border
+            background: unset !important;
+            box-shadow: unset !important;
+            border: unset !important;
+            margin: 0 !important;
+          }
+        }
       }
     }
   }
@@ -393,6 +457,11 @@ input {
   height: 0.1rem;
   margin: 8px;
 }
+.separator-gap {
+  width: 100%;
+  height: 0;
+  margin: 8px;
+}
 
 .ui-base {
   position: fixed;
@@ -403,7 +472,7 @@ input {
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-areas: "mii tabList" "mii tabContent";
+  grid-template-areas: "tabList tabList" "mii tabContent";
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto 1fr;
   animation: fadeIn $animation-duration $easing-function;
@@ -449,12 +518,14 @@ input {
     }
   }
   @media screen and (min-width: $tabletWidth) and (max-width: $desktopWidth) {
-    grid-template-areas: "tabList mii tabContent";
-    grid-template-columns: auto 1fr 1fr;
-    grid-template-rows: 1fr;
+    grid-template-areas:
+      "tabList tabList"
+      "mii tabContent";
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
     > .tab-list {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
     }
     .tab-square:last-child {
       margin-top: auto;
@@ -477,7 +548,7 @@ input {
 
   .mii-holder {
     grid-area: mii;
-    background-color: var(--hover);
+    background-color: var(--hover-transparent);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -493,14 +564,16 @@ input {
       width: 100%;
       height: 100%;
       object-fit: contain;
+      overflow: hidden;
       transition: opacity 0.5s cubic-bezier(0.215, 0.61, 0.355, 1);
     }
   }
-  .tab-list {
+  > .tab-list {
     grid-area: tabList;
   }
-  .tab-content {
+  > .tab-content {
     grid-area: tabContent;
+    border: 2px solid var(--stroke-dim);
   }
 }
 
@@ -511,6 +584,7 @@ input {
   gap: 8px;
   .tab {
     display: flex;
+    justify-content: center;
     align-items: center;
     border-radius: 12px;
     cursor: pointer;
@@ -539,7 +613,7 @@ input {
       min-width: 64px;
       padding: 14px 24px;
       &.active {
-        border-radius: 12px 12px 0 0;
+        border-radius: 12px 12px 12px 12px;
         &::after {
           height: 0.3rem;
         }
@@ -549,6 +623,12 @@ input {
 }
 .tab-content {
   background-color: var(--sub-container);
+  // backdrop-filter: blur(10px) contrast(1.3) brightness(0.9);
+  // stacking tab-content should not overlap background
+  .tab-content {
+    background-color: unset !important;
+    backdrop-filter: unset !important;
+  }
   display: flex;
   flex-direction: column;
 
@@ -557,6 +637,26 @@ input {
     flex-direction: column;
     height: 100%;
     flex: 1;
+    gap: 0.75rem;
+    .tab-list {
+      width: max-content;
+      margin: 0 auto;
+      background-color: var(--container);
+      border-radius: 0 0 8px 8px;
+      border-width: 0 2px 2px 2px;
+      border-style: solid;
+      border-color: var(--stroke-dim);
+      .tab-rectangle {
+        padding: 10px 14px;
+        &.active::after {
+          top: -8px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 1.75rem;
+          height: 0.3rem;
+        }
+      }
+    }
     .tab-content {
       overflow: auto;
       flex: 1;
@@ -633,10 +733,22 @@ input {
           position: absolute;
           top: $sp;
           left: $sp;
-          width: calc(100% - ($sp * 2));
-          height: calc(100% - ($sp * 2));
+          width: calc(100% - ($sp * 2) - 4px);
+          height: calc(100% - ($sp * 2) - 4px);
           background-color: var(--color);
+          border: 2px solid var(--hover);
           // border: 0.1rem solid rgba(var(--stroke-rgb), 0.4);
+        }
+      }
+      @media screen and (prefers-color-scheme: dark) {
+        svg {
+          $distance: 1px;
+          $blur: 0;
+          $color: #666666;
+          filter: drop-shadow($distance 0px 0px $color)
+            drop-shadow((-$distance) 0px 0px $color)
+            drop-shadow(0px $distance 0px $color)
+            drop-shadow(0px (-$distance) 0px $color);
         }
       }
     }
@@ -688,7 +800,7 @@ input {
     position: relative;
     overflow: auto;
 
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     grid-auto-rows: min-content;
     grid-auto-flow: row dense;
     grid-gap: 1rem;
@@ -696,9 +808,11 @@ input {
     .library-list-mii {
       display: flex;
       flex-direction: column;
-      background: var(--container);
+      background: var(--color);
+      background-image: linear-gradient(0deg, #fff6, #fff6);
+
       border-radius: 8px;
-      overflow: clip;
+      overflow: visible;
       position: relative;
       cursor: pointer;
 
@@ -710,7 +824,7 @@ input {
       }
 
       &:hover {
-        background: var(--focus);
+        background-image: linear-gradient(0deg, #fff8, #fff8);
       }
 
       img {
@@ -728,6 +842,20 @@ input {
         flex: 1;
         padding: 8px 0;
         border-radius: 0 0 8px 8px;
+      }
+
+      @media screen and (prefers-color-scheme: dark) {
+        // background-image: unset !important;
+        // background-image: linear-gradient(
+        //   180deg,
+        //   rgba(255, 255, 255, 0.3333333333),
+        //   rgba(82, 82, 82, 0.63)
+        // );
+        // background-image: linear-gradient(180deg, #fff5, #fff3);
+        background-image: linear-gradient(180deg, #fff5, #fff5);
+        &:hover {
+          background-image: linear-gradient(180deg, #fff7, #fff7);
+        }
       }
     }
   }

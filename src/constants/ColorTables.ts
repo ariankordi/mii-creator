@@ -1,5 +1,4 @@
 import type { FFLColor } from "../class/3d/shader/fflShaderConst";
-import type { MiiLookupTableColor } from "../class/JFL/tables/colors";
 
 export type MiiLookupTableHex = Record<number, number>;
 export type MiiLookupTableString = Record<number, string>;
@@ -8,6 +7,8 @@ export type MiiLookupTableSpecial = Record<
   number,
   { top: string; bottom: string }
 >;
+export type MiiLookupTableColor = Record<number, any>;
+
 
 export const MiiFavoriteColorLookupTable: MiiLookupTableHex = {
   /** Red */

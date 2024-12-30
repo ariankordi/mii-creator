@@ -21,11 +21,11 @@ import { Config } from "../config";
 import { getSoundManager } from "./audio/SoundManager";
 import { SparkleParticle } from "./3d/effect/SparkleParticle";
 import { multiplyTexture } from "./3d/canvas/multiplyTexture";
-import { ExtHatFullHeadList } from "../constants/Extensions";
+import { HatType, HatTypeList } from "../constants/Extensions";
 import localforage from "localforage";
 import { traverseAddShader, traverseMesh } from "./3d/shader/ShaderUtils";
 import { RoomEnvironment } from "three/examples/jsm/Addons.js";
-import { getSetting } from "../util/Settings";
+import { getSetting } from "../util/SettingsHelper";
 
 export enum CameraPosition {
   MiiHead,
@@ -75,7 +75,6 @@ export class Mii3DScene {
       0.1,
       1000
     );
-    // this.#camera.position.set(0, 10, 25);
     this.ready = false;
     this.headReady = false;
     if (initCallback) this.#initCallback = initCallback;
@@ -89,6 +88,7 @@ export class Mii3DScene {
     } else {
       this.#renderer = new THREE.WebGLRenderer({ antialias: true });
     }
+    this.getRendererElement().classList.add("scene");
     this.setupType = setupType;
 
     getSetting("shaderType").then((type) => {
@@ -97,6 +97,7 @@ export class Mii3DScene {
         const pmremGen = new THREE.PMREMGenerator(this.#renderer);
         const roomEnv = pmremGen.fromScene(new RoomEnvironment()).texture;
         this.#scene.environment = roomEnv;
+        this.#scene.environmentIntensity = 0.6;
       } else if (type !== "lightDisabled") {
         this.#scene.environmentIntensity = 0;
       }
@@ -274,6 +275,11 @@ export class Mii3DScene {
     this.ready = true;
     if (this.setupType === SetupType.Screenshot) {
       this.#initCallback && this.#initCallback(this.#renderer);
+    } else {
+      // weird hacky fix to correct the camera position at startup
+      setTimeout(() => {
+        this.focusCamera(CameraPosition.MiiHead, true, false);
+      }, 500);
     }
   }
   getRendererElement() {
@@ -496,7 +502,6 @@ export class Mii3DScene {
       //     0.12 / scaleFactors.y,
       //     0.12 / scaleFactors.z
       //   );
-
       // object.traverse((o: THREE.Object3D) => {
       //   if ((o as THREE.Bone).isBone) {
       //     // attempt at porting some bone scaling code.. disabled for now
@@ -504,6 +509,34 @@ export class Mii3DScene {
       //     if (bone.name === "head") return;
       //     let boneScale = { x: 1, y: 1, z: 1 };
       //     switch (bone.name) {
+      //       case "skl_root":
+      //         break;
+      //       case "chest":
+      //       case "hip":
+      //       case "foot_l1":
+      //       case "foot_l2":
+      //       case "foot_r1":
+      //       case "foot_r2":
+      //         boneScale.x = scaleFactors.x;
+      //         boneScale.y = scaleFactors.y;
+      //         boneScale.z = scaleFactors.z;
+      //         break;
+      //       case "arm_l1":
+      //       case "arm_l2":
+      //       case "arm_r1":
+      //       case "arm_lr2":
+      //         boneScale.x = scaleFactors.y;
+      //         boneScale.y = scaleFactors.x;
+      //         boneScale.z = scaleFactors.z;
+      //         break;
+      //       case "wrist_l":
+      //       case "wrist_r":
+      //       case "ankle_l":
+      //       case "ankle_r":
+      //         boneScale.x = scaleFactors.x;
+      //         boneScale.y = scaleFactors.x;
+      //         boneScale.z = scaleFactors.x;
+      //         break;
       //       default:
       //         break;
       //       // case "chest":
@@ -707,15 +740,23 @@ export class Mii3DScene {
             tmpMii.favoriteColor = this.mii.extHatColor - 1;
           }
           let params: Record<string, string> = {};
-          if (
-            this.mii.extHatType !== 0 &&
-            !ExtHatFullHeadList.includes(this.mii.extHatType)
-          ) {
-            params["modelType"] = "hat";
+          if (this.mii.extHatType !== 0) {
+            // Custom hat model types
+            switch (HatTypeList[this.mii.extHatType]) {
+              case HatType.HAT:
+                params["modelType"] = "hat";
+                break;
+              case HatType.FACE_ONLY:
+                params["modelType"] = "face_only";
+                break;
+            }
           }
           const GLB = await this.#gltfLoader.loadAsync(
             tmpMii.studioUrl({
               ext: "glb",
+              miiName: this.mii.miiName,
+              creatorName: this.mii.creatorName,
+              miic: encodeURIComponent(this.mii.encode().toString("base64")),
               ...params,
             } as unknown as any)
           );
@@ -837,9 +878,15 @@ export class Mii3DScene {
     await this.updateBody();
   }
   sparkle() {
+    // remove all previous sparkles lol
+    this.animations
+      .keys()
+      .filter((p) => p.startsWith("particle_"))
+      .forEach((key) => this.animations.delete(key));
+
     // Load the sparkle texture
     const loader = new THREE.TextureLoader();
-    loader.load("./assets/img/sparkle.png", (texture) => {
+    loader.load("./assets/img/star.png", (texture) => {
       // Create a sparkle effect at the center of the scene
       const pos = new THREE.Vector3();
       const box = new THREE.Box3();
@@ -847,7 +894,7 @@ export class Mii3DScene {
       box.setFromObject(this.#scene.getObjectByName("MiiHead")!);
       let particle = new SparkleParticle(
         this.#scene,
-        new THREE.Vector3(0, box.max.y - box.min.y, 2),
+        new THREE.Vector3(0, pos.y + box.min.y / 2, 2),
         texture
       );
       this.animators.set("particle_" + performance.now(), (_t, delta) =>

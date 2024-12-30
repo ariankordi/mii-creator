@@ -1,6 +1,4 @@
 import localforage from "localforage";
-import Modal from "../../ui/components/Modal";
-import { getSetting } from "../../util/Settings";
 
 export const getMusicManager = () => mm;
 export class MusicManager {
@@ -61,6 +59,8 @@ export class MusicManager {
       this.previousVolume = 0.65;
       await this.loadSong("./assets/aud/ffl_app_menu.mp3", "mii_creator_music");
       await this.loadSong("./assets/aud/ffl_app_edit.mp3", "mii_editor_music");
+      //@ts-expect-error
+      window.music = this;
     } else {
       this.setVolume(0.28);
       this.previousVolume = 0.28;
@@ -74,21 +74,13 @@ export class MusicManager {
   }
 
   initMusicReady() {
-    this.playMusic();
     setTimeout(async () => {
       if (this.audioContext.state === "suspended") {
-        // Modal.alert(
-        //   "Audio needs action",
-        //   "Mii Creator wants to play music, but your browser has blocked autoplay.\n\nYou can press V to change sound volume (default is 0.35)"
-        // );
-        if (await getSetting("bgm")) {
-          Modal.modal(
-            "Audio needs action",
-            "Mii Creator wants to play music, but your browser has blocked autoplay.\nThe song will start playing after you interact with the page.\n\nYou can press V to change sound volume (default is 0.35)",
-            "body",
-            { text: "Cancel", callback() {} },
-            { text: "OK", callback() {} }
-          );
+        if (
+          location.hostname === "localhost" ||
+          location.hostname === "127.0.0.1"
+        ) {
+          this.playMusic();
         }
         document.onclick = () => {
           document.onclick = null;
@@ -98,8 +90,12 @@ export class MusicManager {
     }, 100);
   }
 
+  started!: boolean;
+
   playMusic() {
-    console.error("playMusic()");
+    // if (this.started) return;
+    if (this.mainSource) this.mainSource.stop();
+    if (this.editSource) this.editSource.stop();
 
     this.playSong(
       "mii_creator_music",
@@ -109,6 +105,7 @@ export class MusicManager {
       true,
       (source, gainNode) => {
         this.mainSource = source;
+        this.started = true;
         this.mainGainNode = gainNode;
         if (this.theme !== "wiiu") {
           //@ts-expect-error
@@ -213,33 +210,38 @@ export class MusicManager {
       gainNode: GainNode
     ) => void
   ): { source: AudioBufferSourceNode; gainNode: GainNode } | null {
-    const SongBuffer = this.SongBufs[name];
-    if (!SongBuffer) {
-      console.error(`Song "${name}" not found.`);
+    try {
+      const SongBuffer = this.SongBufs[name];
+      if (!SongBuffer) {
+        console.error(`Song "${name}" not found.`);
+        return null;
+      }
+
+      const source = this.audioContext.createBufferSource();
+      source.buffer = SongBuffer;
+      source.connect(this.gainNode);
+      if (loops === true) source.loop = true;
+      if (loopStart !== null) source.loopStart = loopStart;
+      if (loopEnd !== null) source.loopEnd = loopEnd;
+      this.sources.push(source);
+
+      const gainNode = this.audioContext.createGain();
+      source.connect(gainNode);
+      gainNode.connect(this.gainNode);
+
+      if (callbackBeforeStart) {
+        callbackBeforeStart(source, gainNode);
+      }
+
+      if (autoPlay) {
+        source.start();
+      }
+
+      return { source, gainNode };
+    } catch (e) {
+      console.log("OOPS", e);
       return null;
     }
-
-    const source = this.audioContext.createBufferSource();
-    source.buffer = SongBuffer;
-    source.connect(this.gainNode);
-    if (loops === true) source.loop = true;
-    if (loopStart !== null) source.loopStart = loopStart;
-    if (loopEnd !== null) source.loopEnd = loopEnd;
-    this.sources.push(source);
-
-    const gainNode = this.audioContext.createGain();
-    source.connect(gainNode);
-    gainNode.connect(this.gainNode);
-
-    if (callbackBeforeStart) {
-      callbackBeforeStart(source, gainNode);
-    }
-
-    if (autoPlay) {
-      source.start();
-    }
-
-    return { source, gainNode };
   }
 
   stopSong() {

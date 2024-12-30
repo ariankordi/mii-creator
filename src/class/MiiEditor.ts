@@ -36,14 +36,16 @@ import localforage from "localforage";
 import { Config } from "../config";
 import { OptionsTab } from "../ui/tabs/Options";
 import { ExtHatTab } from "../ui/tabs/ExtHat";
+import { Mii2DRenderer } from "./2DRenderer";
+import { getSetting } from "../util/SettingsHelper";
 
 export enum MiiGender {
   Male,
   Female,
 }
 export enum RenderMode {
-  Image,
-  ThreeJs,
+  Canvas2DRenderer,
+  Canvas3DScene,
 }
 export type IconSet = {
   face: string[];
@@ -75,6 +77,7 @@ export class MiiEditor {
   ui!: {
     base: Html;
     mii: Html;
+    renderer: Mii2DRenderer;
     scene: Mii3DScene;
     tabList: Html;
     tabContent: Html;
@@ -83,7 +86,7 @@ export class MiiEditor {
   dirty: boolean;
   ready: boolean;
 
-  renderingMode: RenderMode;
+  renderingMode!: RenderMode;
   onShutdown!: (mii: string, shutdownProperly?: boolean) => any | Promise<any>;
   errors: Map<string, boolean>;
 
@@ -116,7 +119,13 @@ export class MiiEditor {
       this.onShutdown = onShutdown;
     }
 
-    this.renderingMode = RenderMode.ThreeJs;
+    getSetting("editMode").then((s) => {
+      if (s === "2d") {
+        this.renderingMode = RenderMode.Canvas2DRenderer;
+      } else if (s === "3d") {
+        this.renderingMode = RenderMode.Canvas3DScene;
+      }
+    });
 
     this.mii = new Mii(Buffer.from(initString, "base64") as unknown as Buffer);
     activeMii = this.mii;
@@ -134,6 +143,9 @@ export class MiiEditor {
     const check = () => {
       if (this.ready) {
         clearInterval(this.#loadInterval);
+        if (this.ui.mii.qs(".loader")) {
+          this.ui.mii.qs(".loader")!.classOff("active");
+        }
         return;
       }
       playSound("wait");
@@ -159,9 +171,9 @@ export class MiiEditor {
   }
   #renderModeText(RM: RenderMode) {
     switch (RM) {
-      case RenderMode.Image:
+      case RenderMode.Canvas2DRenderer:
         return "2D";
-      case RenderMode.ThreeJs:
+      case RenderMode.Canvas3DScene:
         return "3D";
     }
   }
@@ -172,13 +184,13 @@ export class MiiEditor {
     );
     let nextRenderMode = 0;
     switch (this.renderingMode) {
-      case RenderMode.Image:
+      case RenderMode.Canvas2DRenderer:
         this.#setup2D();
-        nextRenderMode = RenderMode.ThreeJs;
+        nextRenderMode = RenderMode.Canvas3DScene;
         break;
-      case RenderMode.ThreeJs:
+      case RenderMode.Canvas3DScene:
         this.#setup3D();
-        nextRenderMode = RenderMode.Image;
+        nextRenderMode = RenderMode.Canvas2DRenderer;
         break;
     }
     const renderModeToggle = AddButtonSounds(
@@ -188,11 +200,11 @@ export class MiiEditor {
         .on("click", () => {
           renderModeToggle.text(this.#renderModeText(this.renderingMode));
           switch (this.renderingMode) {
-            case RenderMode.Image:
-              this.renderingMode = RenderMode.ThreeJs;
+            case RenderMode.Canvas2DRenderer:
+              this.renderingMode = RenderMode.Canvas3DScene;
               break;
-            case RenderMode.ThreeJs:
-              this.renderingMode = RenderMode.Image;
+            case RenderMode.Canvas3DScene:
+              this.renderingMode = RenderMode.Canvas2DRenderer;
           }
           this.render();
         })
@@ -200,6 +212,8 @@ export class MiiEditor {
     );
   }
   #setup2D() {
+    // TODO: Actually support the 2D renderer
+    // this.ui.renderer = new Mii2DRenderer(this.ui.mii.elm, this.mii);
     /* renderImage */
     new Html("img").attr({ crossorigin: "anonymous" }).appendTo(this.ui.mii);
   }
@@ -267,7 +281,7 @@ export class MiiEditor {
             activeMii = mii;
             // use of forceRender forces reload of the head in 3D mode
             this.render(forceRender, renderPart);
-            this.ui.scene.sparkle();
+            if (this.ui.scene) this.ui.scene.sparkle();
             this.#updateCssVars();
             this.dirty = true;
           },
@@ -346,33 +360,50 @@ export class MiiEditor {
     forceReloadHead: boolean = true,
     renderPart: RenderPart = RenderPart.Head
   ) {
+    // every "img" here should be changed to "canvas.renderer" for new 2d mode.
     switch (this.renderingMode) {
-      case RenderMode.Image:
+      case RenderMode.Canvas2DRenderer:
         if (this.ui.mii.qs("img") === null) {
           this.#setup2D();
         }
-        if (this.ui.mii.qs("canvas")) {
-          this.ui.mii.qs("canvas")?.style({ display: "none" });
+        if (this.ui.mii.qs("canvas.scene")) {
+          this.ui.mii.qs("canvas.scene")?.style({ display: "none" });
         }
+        this.ui.mii.qs("img")?.style({ display: "block" });
+
+        let pantsColor: string = "gray";
+        if (this.mii.normalMii === false) {
+          pantsColor = "gold";
+        }
+        if (this.mii.favorite) {
+          pantsColor = "red";
+        }
+        // replace for new 2d mode
         this.ui.mii
           .qs("img")
           ?.style({ display: "block" })
           .attr({
             src: `${
-              Config.renderer.renderHeadshotURL
+              Config.renderer.renderFullBodyURL
             }&data=${encodeURIComponent(
               this.mii.encodeStudio().toString("hex")
-            )}`,
+            )}&hatType=${this.mii.extHatType}&hatColor=${
+              this.mii.extHatColor
+            }&miic=${encodeURIComponent(
+              this.mii.encode().toString("base64")
+            )}&pantsColor=${pantsColor}`,
           });
+        // this.ui.renderer.mii = this.mii;
+        // this.ui.renderer.render();
         break;
-      case RenderMode.ThreeJs:
-        if (this.ui.mii.qs("canvas") === null) {
+      case RenderMode.Canvas3DScene:
+        if (this.ui.mii.qs("canvas.scene") === null) {
           await this.#setup3D();
         }
         if (this.ui.mii.qs("img")) {
           this.ui.mii.qs("img")?.style({ display: "none" });
         }
-        this.ui.mii.qs("canvas")?.style({ display: "block" });
+        this.ui.mii.qs("canvas.scene")?.style({ display: "block" });
         this.ui.scene.mii = this.mii;
         if (forceReloadHead) {
           // reload head and body
@@ -404,7 +435,7 @@ export class MiiEditor {
         return;
       }
 
-      if (this.renderingMode === RenderMode.ThreeJs) {
+      if (this.renderingMode === RenderMode.Canvas3DScene) {
         await new Promise((resolve, reject) => {
           this.#disableUI();
           // Tell scene to change animation
@@ -422,7 +453,7 @@ export class MiiEditor {
 
     this.ui.base.classOn("closing");
     setTimeout(() => {
-      if (this.ui.mii.qs("canvas")) {
+      if (this.ui.mii.qs("canvas.scene")) {
         this.ui.scene.shutdown();
       }
       this.ui.base.cleanup();

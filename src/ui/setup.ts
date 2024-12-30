@@ -22,11 +22,15 @@ export async function setupUi() {
   let state: "main" | "edit" = "main";
   document.addEventListener("editor-launch", () => {
     state = "edit";
-    updateMusicVol();
+    setTimeout(() => {
+      updateMusicVol();
+    }, 100);
   });
   document.addEventListener("editor-shutdown", () => {
     state = "main";
-    updateMusicVol();
+    setTimeout(() => {
+      updateMusicVol();
+    }, 100);
   });
 
   function updateMusicVol() {

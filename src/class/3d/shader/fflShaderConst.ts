@@ -108,9 +108,16 @@ export const cMaterialParam = [
 ];
 
 // FFLDefaultShader default lighting parameters
+
 export const cLightAmbient = new THREE.Vector4(0.73, 0.73, 0.73, 1.0);
 export const cLightDiffuse = new THREE.Vector4(0.6, 0.6, 0.6, 1.0);
 export const cLightSpecular = new THREE.Vector4(0.7, 0.7, 0.7, 1.0);
+
+// NWF lighting
+// export const cLightAmbient = new THREE.Vector4(0.5, 0.5, 0.5, 1.0);
+// export const cLightDiffuse = new THREE.Vector4(0.9, 0.9, 0.9, 1.0);
+// export const cLightSpecular = new THREE.Vector4(1.0, 1.0, 1.0, 1.0);
+
 // Light direction derived from this vector: [-0.65, 0.36]
 export const cLightDir = new THREE.Vector3(
   -0.4531539381,

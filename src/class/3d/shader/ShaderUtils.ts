@@ -25,7 +25,7 @@ import {
   type DrawParamMaterial,
 } from "./SwitchShaderMaterials";
 import type Mii from "../../../external/mii-js/mii";
-import { getSetting } from "../../../util/Settings";
+import { getSetting } from "../../../util/SettingsHelper";
 import { miitomoFragmentShader, miitomoVertexShader } from "./MiitomoShader";
 
 export function traverseAddShader(

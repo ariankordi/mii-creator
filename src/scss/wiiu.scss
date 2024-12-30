@@ -1,5 +1,5 @@
 :root[data-theme="wiiu"] {
-  background-image: url(../assets/img/bg.png) !important;
+  background-image: url(../assets/img/bg_qr_wiiu.png) !important;
   background-repeat: no-repeat !important;
   background-size: cover !important;
   height: 100% !important;
@@ -7,7 +7,7 @@
   @media (prefers-color-scheme: dark) {
     html,
     body {
-      background: black !important;
+      background-color: transparent !important;
       // UI colors
       --root: #ffffff;
       --text: #000000;
@@ -82,7 +82,7 @@
           #f6f6f6 45%,
           #fcfcfc 100%
         ) !important;
-        margin: 5px !important;
+        margin: 5px;
         border-radius: 7px !important;
       }
     }
@@ -237,7 +237,8 @@
     box-shadow: #f1da00 0px 1px 3px 4px inset,
       0px 0.5px 3px 1px rgb(133 133 133 / 42%) !important;
   }
-  button.selected {
+  button.selected,
+  button.selected-setting {
     background: linear-gradient(#e6e600 5%, #fffb7e 100%) !important;
     text-shadow: 0 1px #f3ff6a !important;
   }
@@ -264,7 +265,8 @@
     .feature-set-group
     .feature-switch
     .feature-switch-right.active:before,
-  button.selected::before {
+  button.selected::before,
+  button.selected-setting::before {
     background: linear-gradient(rgb(255 251 183), rgb(251 255 114)) !important;
   }
   .tab-content .feature-set-group .feature-switch .feature-switch-left svg,

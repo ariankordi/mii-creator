@@ -59,10 +59,20 @@ export const settingsInfo: Record<string, any> = {
     label: "Static camera in editor",
     default: false,
   },
+  editMode: {
+    type: "multi",
+    label: "Editing Mode",
+    description: "Changes the default edit mode option.",
+    default: "3d",
+    choices: [
+      { label: "2D", value: "2d" },
+      { label: "3D (default)", value: "3d" },
+    ],
+  },
   shaderType: {
     type: "multi",
     label: "Shader Type",
-    description: "Some shaders are not yet ready for use.",
+    description: "Sorry that most of the shaders are not yet ready for use.",
     default: "wiiu",
     choices: [
       { label: "No Lighting", value: "lightDisabled" },
@@ -76,17 +86,18 @@ export const settingsInfo: Record<string, any> = {
     type: "multi",
     label: "Body Model",
     description:
-      "Pose selections are different depending on the body model you use.",
-    default: "switch",
+      "Pose selections are different depending on the body model you use.\n* Does not apply to 2D mode.",
+    default: "wiiu",
     choices: [
-      { label: "Wii U", value: "wiiu" },
-      { label: "Switch (default)", value: "switch" },
+      { label: "Wii U (default)", value: "wiiu" },
+      { label: "Switch", value: "switch", disabled: true },
       { label: "Miitomo", value: "miitomo", disabled: true },
     ],
   },
   saveData: {
     type: "non-settings-multi",
     label: "Save Data",
+    description: "Not implemented yet.",
     choices: [
       {
         label: "Import",
@@ -112,10 +123,22 @@ export const settingsInfo: Record<string, any> = {
             if (input.files === null) return;
             if (input.files[0] === undefined) return;
             console.log(input.files);
-            const json = await input.files![0].json();
-            console.log("THE JSON!!", json);
+
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+              const fileContent = event.target!.result;
+              console.log(fileContent);
+            };
+
+            reader.onerror = function (event) {
+              console.error("File reading error:", event);
+            };
+
+            reader.readAsText(input.files[0]);
           });
         },
+        disabled: true,
       },
       {
         label: "Export",
@@ -141,6 +164,13 @@ export const settingsInfo: Record<string, any> = {
             a.remove();
           });
         },
+        disabled: true,
+      },
+      {
+        label: "Delete",
+        type: "danger",
+        async select() {},
+        disabled: true,
       },
     ],
   },
@@ -205,11 +235,14 @@ export async function Settings() {
         const val = await localforage.getItem(prefixedKey);
         modalBody.appendMany(
           new Html("label").text(settingsInfo[key].label),
+          new Html("small").text(settingsInfo[key].description),
           new Html("div").class("flex-group").appendMany(
             ...settingsInfo[key].choices.map((c: any) => {
               const button = AddButtonSounds(
                 new Html("button")
-                  .class(c.value === val ? "selected-setting" : (undefined as any))
+                  .class(
+                    c.value === val ? "selected-setting" : (undefined as any)
+                  )
                   .attr({ "data-setting": prefixedKey })
                   .text(c.label)
                   .on("click", async (e) => {
@@ -223,6 +256,33 @@ export async function Settings() {
                       p.classList.remove("selected-setting");
                     });
                     t.classList.add("selected-setting");
+                  }),
+                "hover",
+                "select_misc"
+              );
+
+              if (c.disabled) {
+                button.attr({ disabled: true });
+              }
+
+              return button;
+            })
+          )
+        );
+        break;
+      case "non-settings-multi":
+        modalBody.appendMany(
+          new Html("label").text(settingsInfo[key].label),
+          new Html("small").text(settingsInfo[key].description),
+          new Html("div").class("flex-group").appendMany(
+            ...settingsInfo[key].choices.map((c: any) => {
+              const button = AddButtonSounds(
+                new Html("button")
+                  .attr({ disabled: c.disabled })
+                  .class(c.type)
+                  .text(c.label)
+                  .on("click", async (e) => {
+                    c.select();
                   }),
                 "hover",
                 "select_misc"

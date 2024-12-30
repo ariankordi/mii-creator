@@ -33,9 +33,9 @@ import {
 } from "../../class/3d/shader/fflShaderConst";
 import { MiiFavoriteColorIconTable } from "../../constants/ColorTables";
 import { getString as _ } from "../../l10n/manager";
-import { FFLiDatabaseRandom_Get } from "../../util/FFLiDatabaseRandom";
+import { FFLiDatabaseRandom_Get } from "../../external/ffl/FFLiDatabaseRandom";
 import { Settings } from "./Settings";
-import { getSetting } from "../../util/Settings";
+import { getSetting } from "../../util/SettingsHelper";
 import { GLTFExporter } from "three/examples/jsm/Addons.js";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
@@ -46,7 +46,9 @@ export const miiIconUrl = (mii: Mii) =>
     .encodeStudio()
     .toString(
       "hex"
-    )}&shaderType=0&type=variableiconbody&width=180&verifyCharInfo=0`;
+    )}&shaderType=0&type=variableiconbody&width=180&verifyCharInfo=0&miic=${encodeURIComponent(
+    mii.encode().toString("base64")
+  )}`;
 
 export async function Library(highlightMiiId?: string) {
   function shutdown(): Promise<void> {
@@ -253,7 +255,7 @@ const miiCreateDialog = (shutdown: Function) => {
       },
     },
     {
-      text: "Random Mii",
+      text: "Choose a look-alike",
       callback: () => {
         miiCreateRandomFFL(shutdown);
       },
@@ -412,24 +414,44 @@ const miiCreateRandom = async (shutdown: Function) => {
   );
 };
 const miiCreateRandomFFL = async (shutdown: Function) => {
-  const editMii = new Mii(
-    Buffer.from(
-      "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn",
-      "base64"
-    )
-  );
-
-  FFLiDatabaseRandom_Get(editMii);
-
-  shutdown();
-  new MiiEditor(
-    0,
-    async (m, shouldSave) => {
-      if (shouldSave === true) await localforage.setItem(await newMiiId(), m);
-      Library();
+  var m = Modal.modal("Choose a look-alike", "", "body", {
+    text: "Cancel",
+    callback(e) {
+      miiCreateDialog(shutdown);
     },
-    editMii.encode().toString("base64")
-  );
+  });
+  m.classOn("random-mii-grid");
+  const container = m.qs(".modal-body")!;
+  container.clear();
+  for (let i = 0; i < 21; i++) {
+    const randomMii = new Mii(
+      Buffer.from(
+        "AwEAAAAAAAAAAAAAgP9wmQAAAAAAAAAAAABNAGkAaQAAAAAAAAAAAAAAAAAAAEBAAAAhAQJoRBgmNEYUgRIXaA0AACkAUkhQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMNn",
+        "base64"
+      )
+    );
+    FFLiDatabaseRandom_Get(randomMii);
+
+    let button = new Html("button")
+      .append(new Html("img").attr({ src: miiIconUrl(randomMii) }))
+      .appendTo(container);
+
+    const randomMiiB64 = randomMii.encode().toString("base64");
+
+    button.on("click", () => {
+      m.qs("button")?.elm.click();
+      shutdown();
+      new MiiEditor(
+        0,
+        async (m, shouldSave) => {
+          if (shouldSave === true)
+            await localforage.setItem(await newMiiId(), m);
+          Library();
+        },
+        randomMiiB64
+      );
+    });
+  }
 };
 const miiEdit = (mii: MiiLocalforage, shutdown: () => any, miiData: Mii) => {
   return () => {
@@ -530,11 +552,26 @@ const miiExport = (mii: MiiLocalforage, miiData: Mii) => {
     "What would you like to do?",
     "body",
     {
-      text: "Generate QR code",
+      text: "Generate Wii U/3DS compatible QR code",
       async callback() {
         if (!(await miiColorConversionWarning(miiData))) return;
+        // hack: force FFL shader for QR codes by changing the setting
+        const setting = await getSetting("shaderType");
+        await localforage.setItem("settings_shaderType", "wiiu");
         const qrCodeImage = await QRCodeCanvas(mii.mii, false);
-        downloadLink(qrCodeImage, `${miiData.miiName}_QR.png`);
+        await localforage.setItem("settings_shaderType", setting);
+        downloadLink(qrCodeImage, `${miiData.miiName}_QR_ffsd.png`);
+      },
+    },
+    {
+      text: "Mii Creator QR code",
+      async callback() {
+        // hack: force FFL shader for QR codes by changing the setting
+        const setting = await getSetting("shaderType");
+        await localforage.setItem("settings_shaderType", "wiiu");
+        const qrCodeImage = await QRCodeCanvas(mii.mii, true);
+        await localforage.setItem("settings_shaderType", setting);
+        downloadLink(qrCodeImage, `${miiData.miiName}_QR_miic.png`);
       },
     },
     {
@@ -642,7 +679,7 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
     {
       text: "Download 3D head model",
       async callback() {
-        const holder = new Html("div").style({ opacity: "0.1" });
+        const holder = new Html("div").style({ opacity: "0" });
         const scene = new Mii3DScene(
           miiData,
           holder.elm,
@@ -717,6 +754,12 @@ const miiExportDownload = async (mii: MiiLocalforage, miiData: Mii) => {
         modal
           .qs(".modal-body")!
           .prependMany(
+            new Html("div").appendMany(
+              new Html("span").class("h4").text("MiiC (Base64)"),
+              new Html("pre")
+                .class("pre-wrap", "mb-0")
+                .text(miiData.encode().toString("base64"))
+            ),
             new Html("div").appendMany(
               new Html("span").class("h4").text("FFSD (Base64)"),
               new Html("pre")
@@ -809,7 +852,8 @@ export async function customRender(miiData: Mii) {
     entries: {
       page1: {
         label: "Camera",
-        header: "Use mouse or touch to move the camera around.",
+        header:
+          "Use mouse or touch to move the camera around.\n\nIf you like this site, please consider sharing it with others and crediing me when you post your renders! 🙂",
         items: [
           {
             type: FeatureSetType.Slider,
@@ -825,7 +869,7 @@ export async function customRender(miiData: Mii) {
       pose: {
         label: "Pose",
         header:
-          "Change the Body Model option in Settings to get many different options of poses!",
+          "Change the Body Model option in Settings to get many different options of poses!\n\nUse option 0 here for the default animation.",
         items: ArrayNum(poseCount).map((k) => ({
           type: FeatureSetType.Icon,
           value: k,
@@ -849,7 +893,7 @@ export async function customRender(miiData: Mii) {
       page2: {
         label: "Render",
         header:
-          "Render resolution options will be here when the feature is ready.",
+          "Let's face it, you've been waiting for this feature, right? Well, it's not coming yet. I'm looking at you, LHI2010.\n\nCheck back in, hmm, maybe a few more months, heh...\n\nPsst.. If you like digging through these menus so much, why not check the settings to change your shader?",
         items: [
           {
             type: FeatureSetType.Text,
@@ -943,6 +987,7 @@ export async function customRender(miiData: Mii) {
 
   scene.init().then(() => {
     scene.updateBody();
+    scene.focusCamera(CameraPosition.MiiFullBody, true, false);
     parentBox.append(scene.getRendererElement());
   });
 

@@ -13,7 +13,7 @@ import {
   cPantsColorRedHex,
 } from "../../class/3d/shader/fflShaderConst";
 import { MiiFavoriteColorIconTable } from "../../constants/ColorTables";
-import { FFLiDatabaseRandom_Get } from "../../util/FFLiDatabaseRandom";
+import { FFLiDatabaseRandom_Get } from "../../external/ffl/FFLiDatabaseRandom";
 export const savedMiiCount = async () =>
   (await localforage.keys()).filter((k) => k.startsWith("mii-")).length;
 export const newMiiId = async () =>

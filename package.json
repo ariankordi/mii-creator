@@ -4,8 +4,7 @@
   "type": "module",
   "scripts": {
     "build-ts": "bun build.ts",
-    "build-jfl": "bun build-jfl.ts",
-    "serve": "bunx serve"
+    "serve": "bunx serve -l 3000 ./public"
   },
   "devDependencies": {
     "@types/bun": "latest"

@@ -15,17 +15,26 @@ const ver3Format = supportedFormats.find(
   (f) => f.className === "Gen2Wiiu3dsMiitomo"
 )!;
 
-const makeQrCodeImage = async (mii: string): Promise<HTMLImageElement> => {
-  const convertedVer3Data = new Uint8Array(
-    convertDataToType(
-      new Uint8Array(Buf.from(mii, "base64")),
-      ver3Format,
-      ver3Format.className,
-      true
-    )
-  );
-  const ver3QRData =
-    encryptAndEncodeVer3StoreDataToQRCodeFormat(convertedVer3Data);
+const makeQrCodeImage = async (
+  mii: string,
+  extendedColors: boolean
+): Promise<HTMLImageElement> => {
+  let convertedVer3Data: Uint8Array, ver3QRData: any[];
+
+  if (extendedColors === true) {
+    convertedVer3Data = new Uint8Array(Buf.from(mii, "base64"));
+    ver3QRData = Array.from(convertedVer3Data);
+  } else {
+    convertedVer3Data = new Uint8Array(
+      convertDataToType(
+        new Uint8Array(Buf.from(mii, "base64")),
+        ver3Format,
+        ver3Format.className,
+        true
+      )
+    );
+    ver3QRData = encryptAndEncodeVer3StoreDataToQRCodeFormat(convertedVer3Data);
+  }
   // console.log(convertedVer3Data, ver3QRData);
   const png = qrjs.generatePNG(ver3QRData, { margin: 0 });
   // //@ts-expect-error
@@ -82,7 +91,7 @@ export const getMiiRender = async (
       .style({
         width: "720px",
         height: "720px",
-        // opacity: "1",
+        opacity: "0",
         // position: "fixed",
       })
       .appendTo("body");
@@ -95,7 +104,7 @@ export const getMiiRender = async (
         // a.stop();
         // a.reset();
       });
-      // scene.swapAnimation("Pose.01");
+      scene.swapAnimation("Pose.01");
 
       let scn = scene.getScene()!,
         cam = scene.getCamera()!,
@@ -106,7 +115,10 @@ export const getMiiRender = async (
           // zoom in on head
           setTimeout(() => {
             scene.focusCamera(0, true, false);
-          }, 50);
+            ctl.dollyTo(80);
+            cam.fov = 15;
+            cam.updateProjectionMatrix();
+          }, 300);
           break;
         case MiiCustomRenderType.HeadOnly:
           // hide body from view
@@ -115,21 +127,15 @@ export const getMiiRender = async (
           scn.getObjectByName("body_f")!.visible = false;
           scn.getObjectByName("legs_f")!.visible = false;
           // Get the bounding box of the object
-          const box = new Box3().setFromObject(scn.getObjectByName("MiiHead")!);
-          const center = box.getCenter(new Vector3());
-          const objectPosition = scn
-            .getObjectByName("MiiHead")!
-            .getWorldPosition(new Vector3());
-          const cameraY = objectPosition.y + objectPosition.y + center.y;
-          ctl.moveTo(0, cameraY, 0, false);
+          scene.focusCamera(CameraPosition.MiiHead, true, false);
           ctl.dollyTo(40);
           cam.fov = 15;
           cam.updateProjectionMatrix();
           break;
         case MiiCustomRenderType.Body:
           // default screenshot camera position
-          ctl.moveTo(0, 1.5, 0);
-          ctl.dollyTo(80);
+          scene.focusCamera(CameraPosition.MiiFullBody, true, false);
+          ctl.dollyTo(90, false);
           cam.fov = 15;
           cam.updateProjectionMatrix();
           break;
@@ -171,8 +177,16 @@ export const getMiiRender = async (
   });
 };
 
-export const getBackground = async (): Promise<HTMLImageElement> => {
-  const blob = await (await fetch("./assets/img/bg.png")).blob();
+export const getBackground = async (
+  isMiic: boolean
+): Promise<HTMLImageElement> => {
+  let url: string = "";
+  if (isMiic) {
+    url = "./assets/img/bg_qr_miic.png";
+  } else {
+    url = "./assets/img/bg_qr_wiiu.png";
+  }
+  const blob = await (await fetch(url)).blob();
   const img = new Image(1280, 720);
   img.src = URL.createObjectURL(blob);
   return new Promise((resolve) => {
@@ -192,8 +206,8 @@ export const QRCodeCanvas = async (
     MiiCustomRenderType.Body,
     extendedColors
   );
-  const qrCodeSource = await makeQrCodeImage(mii);
-  const background = await getBackground();
+  const qrCodeSource = await makeQrCodeImage(mii, extendedColors);
+  const background = await getBackground(extendedColors);
 
   const canvas = document.createElement("canvas");
   canvas.width = 1280;
@@ -216,12 +230,12 @@ export const QRCodeCanvas = async (
   ctx.fill();
   ctx.drawImage(qrCodeSource, 797, 107, 408, 408);
   // name container
-  ctx.fillStyle = "#f6f6f6";
+  ctx.fillStyle = "#707070";
   ctx.beginPath();
   ctx.roundRect(769, 542, 463, 99, [0, 0, 16, 16]);
   ctx.fill();
   // mii name
-  ctx.fillStyle = "#000000";
+  ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = "500 38px sans-serif";
