@@ -336,6 +336,11 @@ export class Mii3DScene {
           this.anim.get(key)!.timeScale = 0.5;
         }, 33.33);
       }
+      if (newAnim === "Finish") {
+        setTimeout(() => {
+          this.anim.get(key)!.timeScale = 0.8;
+        }, 33.33);
+      }
 
       if (force === false) {
         this.anim.get(key)!.fadeIn(0.2).play();
