@@ -16,8 +16,8 @@ export function Input(
       if (validate)
         if (validate(value)) {
           input.classOff("invalid");
-          callback(value);
           if (editor) editor.errors.set(label, false);
+          callback(value);
         } else {
           input.classOn("invalid");
           if (editor) editor.errors.set(label, true);
