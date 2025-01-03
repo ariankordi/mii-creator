@@ -21,20 +21,20 @@ const makeQrCodeImage = async (
 ): Promise<HTMLImageElement> => {
   let convertedVer3Data: Uint8Array, ver3QRData: any[];
 
-  if (extendedColors === true) {
-    convertedVer3Data = new Uint8Array(Buf.from(mii, "base64"));
-    ver3QRData = Array.from(convertedVer3Data);
-  } else {
-    convertedVer3Data = new Uint8Array(
-      convertDataToType(
-        new Uint8Array(Buf.from(mii, "base64")),
-        ver3Format,
-        ver3Format.className,
-        true
-      )
-    );
-    ver3QRData = encryptAndEncodeVer3StoreDataToQRCodeFormat(convertedVer3Data);
-  }
+  const miiU8 = new Uint8Array(Buf.from(mii, "base64"));
+  convertedVer3Data = new Uint8Array(
+    convertDataToType(
+      miiU8,
+      ver3Format,
+      ver3Format.className,
+      true
+    )
+  );
+  ver3QRData = encryptAndEncodeVer3StoreDataToQRCodeFormat(convertedVer3Data);
+  // Append any data after the first 96 bytes (fixed by the function above)
+  ver3QRData = new Uint8Array([...ver3QRData, ...miiU8.subarray(96)]); // May or may not append nothing.
+  // ... after the encrypted portion (appending after that should still be safe to scan)
+
   // console.log(convertedVer3Data, ver3QRData);
   const png = qrjs.generatePNG(ver3QRData, { margin: 0 });
   // //@ts-expect-error

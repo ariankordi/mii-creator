@@ -533,7 +533,7 @@ const miiColorConversionWarning = async (miiData: Mii) => {
   if (miiData.hasExtendedColors() === true) {
     let result = await Modal.prompt(
       "Warning",
-      "This Mii is using extended Switch colors that will be lost in the conversion to Wii U/3DS format. Are you sure you want to continue?",
+      "This Mii is using extended Switch colors, but those colors will never show up if you scan this QR Code anywhere outside of this app. Is this OK?",
       "body",
       false
     );
@@ -548,26 +548,15 @@ const miiExport = (mii: MiiLocalforage, miiData: Mii) => {
     "What would you like to do?",
     "body",
     {
-      text: "Generate Wii U/3DS compatible QR code",
+      text: "Generate QR code",
       async callback() {
         if (!(await miiColorConversionWarning(miiData))) return;
         // hack: force FFL shader for QR codes by changing the setting
         const setting = await getSetting("shaderType");
         await localforage.setItem("settings_shaderType", "wiiu");
-        const qrCodeImage = await QRCodeCanvas(mii.mii, false);
+        const qrCodeImage = await QRCodeCanvas(mii.mii, miiData.hasExtendedColors()); // extendedColors
         await localforage.setItem("settings_shaderType", setting);
-        downloadLink(qrCodeImage, `${miiData.miiName}_QR_ffsd.png`);
-      },
-    },
-    {
-      text: "Mii Creator QR code",
-      async callback() {
-        // hack: force FFL shader for QR codes by changing the setting
-        const setting = await getSetting("shaderType");
-        await localforage.setItem("settings_shaderType", "wiiu");
-        const qrCodeImage = await QRCodeCanvas(mii.mii, true);
-        await localforage.setItem("settings_shaderType", setting);
-        downloadLink(qrCodeImage, `${miiData.miiName}_QR_miic.png`);
+        downloadLink(qrCodeImage, `${miiData.miiName}_QR.png`);
       },
     },
     {
