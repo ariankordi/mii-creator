@@ -414,7 +414,7 @@ export async function Library(highlightMiiId?: string) {
       setTimeout(() => {
         container.cleanup();
         resolve();
-      }, 500);
+      }, 0); // 500);
     });
   }
   shutdown = shutdownReal;
@@ -423,7 +423,7 @@ export async function Library(highlightMiiId?: string) {
 
   const sidebar = new Html("div").class("library-sidebar").appendTo(container);
 
-  sidebar.append(new Html("h1").text(__("Mii Creator")));
+  sidebar.append(new Html("h1").text(__("Mii Creator") + " (Rehost)"));
 
   const libraryList = new Html("div").class("library-list").appendTo(container);
 
@@ -727,6 +727,7 @@ export async function Library(highlightMiiId?: string) {
         })
       ),
       AddButtonSounds(
+        /*
         new Html("button").text(__("More Options")).on("click", async () => {
           Modal.modal(
             __("More Options"),
@@ -965,19 +966,25 @@ export async function Library(highlightMiiId?: string) {
             }
           );
         })
+        */
+        new Html("button").text(__("Settings")).on("click", Settings)
       )
     ),
     new Html("div").class("sidebar-credits").appendMany(
-      new Html("strong").text(__("This site is not affiliated with Nintendo.")),
+      // new Html("strong").text(__("This site is not affiliated with Nintendo.")),
       new Html("small")
         .html(
-          `Mii Creator ${Config.version.string} by kat21 (<b>${Config.version.name}</b>)`
+          // `Mii Creator ${Config.version.string} by kat21 (<b>${Config.version.name}</b>)`
+          'Mii Creator April 7th version <a target="_blank" href="https://github.com/ariankordi/mii-creator/commit/84205bb207135a0000c9b0481ea467dcd04bee88">(84205bb)</a>'
         )
-        .style({ cursor: "pointer" })
+        /*.style({ cursor: "pointer" })
         .on("click", () => {
           replayUpdateNotice();
-        }),
+        })
+        */,
       // new Html("strong").text("Please send any feedback or bug reports either through GitHub issues or to my email: datkat21.yt@gmail.com"),
+      new Html("strong").text("UNOFFICIAL SITE - Just a fork by Arian. If you've found this, well, you weren't supposed to."),
+      /*
       AddButtonSounds(
         new Html("a")
           .html(
@@ -991,6 +998,7 @@ export async function Library(highlightMiiId?: string) {
             cursor: "pointer"
           })
       )
+      */
     )
   );
 }

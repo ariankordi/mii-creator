@@ -119,7 +119,7 @@ export async function setupUi() {
   } else {
     // alert("safari check FAILED");
   }
-
+/*
   Modal.modal(
     __("Warning"),
     __(
@@ -139,7 +139,7 @@ export async function setupUi() {
       }
     }
   );
-
+*/
   // for U theme
   let state: "main" | "edit" = "main";
   document.addEventListener("editor-launch", () => {

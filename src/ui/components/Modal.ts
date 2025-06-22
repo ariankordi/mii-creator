@@ -13,6 +13,8 @@ export const buttonsOkCancel = [
   { callback() {}, text: "OK" }
 ];
 
+const duration = 0; //350;
+
 function closingCallback(modal: Html) {
   modal
     .qs(".modal-body")!
@@ -24,7 +26,7 @@ export function closeModal(modal: Html) {
   closingCallback(modal);
   setTimeout(() => {
     modal.cleanup();
-  }, 350);
+  }, duration);
 }
 
 export default {
@@ -77,7 +79,7 @@ export default {
           setTimeout(() => {
             x.cleanup();
             if (typeof button.callback === "function") button.callback(e);
-          }, 350);
+          }, duration);
         };
         AddButtonSounds(
           new Html("button")
@@ -99,7 +101,7 @@ export default {
           setTimeout(() => {
             x.cleanup();
             if (typeof button.callback === "function") button.callback(e);
-          }, 350);
+          }, duration);
         })
       );
 
@@ -263,7 +265,7 @@ export default {
             setTimeout(() => {
               modal.cleanup();
               res((input.elm as HTMLInputElement).value);
-            }, 350);
+            }, duration);
           }
         })
         .appendTo(wrapper);

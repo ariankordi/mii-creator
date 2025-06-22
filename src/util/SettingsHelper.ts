@@ -101,12 +101,14 @@ export {
 };
 
 export const settingsInfo: Record<string, SettingsOption> = {
+  /*
   bgm: {
     type: SettingsType.Checkbox,
     label: __("Enable background music"),
     default: true,
     description: __("Toggle background music depending on the theme.")
   },
+  */
   sfx: {
     type: SettingsType.Checkbox,
     label: __("Enable sound effects"),

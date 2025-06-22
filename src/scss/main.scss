@@ -211,7 +211,7 @@ h6 {
   margin: 0;
 }
 
-$animation-duration: 0.8s;
+$animation-duration: 0.0s; /*0.8s;*/
 $easing-function: cubic-bezier(0.16, 1, 0.3, 1);
 $phoneWidth: 540px;
 $tabletWidth: 960px;
@@ -347,14 +347,19 @@ $desktopWidth: 1875px;
         &:hover {
           filter: brightness(0.8);
         }
+        /*
         border-width: 0.1rem;
         border-radius: 50%;
         width: 1.25rem;
         height: 1.25rem;
+        */
+        /* Make the close button larger. TODO: needs redesign. */
+        width: 3.25rem;
+        height: 2.0rem;
         padding: 0;
         min-width: 0;
         position: absolute;
-        top: 50%;
+        top: /*50%;*/ 47%;
         right: 0.5rem;
         transform: translateY(-50%);
       }
@@ -963,6 +968,7 @@ canvas.scene {
     flex-direction: column;
     gap: 1rem;
     padding: 2rem;
+    width: 380px;
     background: var(--sub-container);
     grid-area: sidebar;
     .sidebar-buttons {

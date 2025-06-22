@@ -1,6 +1,7 @@
 import localforage from "localforage";
 
 export const getMusicManager = () => mm;
+/*
 export class MusicManager {
   SongBufs: Record<string, AudioBuffer>;
   audioContext: AudioContext;
@@ -272,5 +273,75 @@ export class MusicManager {
     this.setVolume(this.previousVolume);
   }
 }
+*/
+export class MusicManager {
+  SongBufs: Record<string, any> = {};
+  audioContext = null as unknown as AudioContext;
+  gainNode = null as unknown as GainNode;
+  muted = false;
+  previousVolume = 0.28;
+  sources: any[] = [];
+
+  mainSource: any = null;
+  editSource: any = null;
+  mainGainNode: any = null;
+  editGainNode: any = null;
+  theme: string = "";
+  started: boolean = false;
+
+  constructor() {
+    // No-op
+  }
+
+  async initMusic() {
+    // No-op
+  }
+
+  initMusicReady() {
+    // No-op
+  }
+
+  playMusic() {
+    // No-op
+  }
+
+  async loadSong(url: string, name: string) {
+    // No-op
+  }
+
+  playSong(
+    name: string,
+    loopStart: number | null = null,
+    loopEnd: number | null = null,
+    loops: boolean = true,
+    autoPlay: boolean = true,
+    callbackBeforeStart?: (
+      source: AudioBufferSourceNode,
+      gainNode: GainNode
+    ) => void
+  ): { source: AudioBufferSourceNode; gainNode: GainNode } | null {
+    return {
+      source: null as unknown as AudioBufferSourceNode,
+      gainNode: null as unknown as GainNode
+    };
+  }
+
+  stopSong() {
+    // No-op
+  }
+
+  setVolume(volume: number) {
+    // No-op
+  }
+
+  mute() {
+    this.muted = true;
+  }
+
+  unmute() {
+    this.muted = false;
+  }
+}
+
 
 let mm: MusicManager = new MusicManager();
