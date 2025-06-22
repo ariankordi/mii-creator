@@ -10,6 +10,7 @@ import {
   Settings,
   updateSettings
 } from "./pages/Settings";
+import { Config } from "../config";
 import { customRender } from "./pages/library/render/customRender";
 
 import { _ } from "../util/Lang";
@@ -22,10 +23,11 @@ export async function setupUi() {
   getSoundManager();
 
   let shownSessionModal = false;
+  if (Config.syncAPIBase) {
   // Check session every 60s
   setInterval(() => {
     // console.log("checking session..");
-    fetch("/api/session")
+      fetch(Config.syncAPIBase + "/session")
       .then((e) => {
         if (!e.ok) {
           // not ok
@@ -37,6 +39,7 @@ export async function setupUi() {
         showSessionModal();
       });
   }, 45_000);
+  }
 
   function showSessionModal() {
     if (shownSessionModal) return;

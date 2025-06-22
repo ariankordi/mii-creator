@@ -26,6 +26,12 @@ const nnidFetchOrigin = "https://mii-unsecure.ariankordi.net";
 const __ = _();
 
 export const Config = {
+  /**
+   * API base, or null to not use API for synchronization.
+   * Temporary option by Arian 05/18/2025
+   * @type {string|null}
+   */
+  syncAPIBase: null,// '/api',
   renderer: {
     baseURL,
     useRendererServer,

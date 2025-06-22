@@ -195,6 +195,11 @@ let shutdown: () => any = () => {
 };
 export const _shutdown = () => shutdown;
 export async function pushToServer() {
+  if (typeof Config.syncAPIBase !== 'string') {
+    console.debug('pushToServer: Called when Config.syncAPIBase is null. Not syncing.');
+    return;
+  }
+
   const miis = await Promise.all(
     (await localforage.keys())
       .filter((k) => k.startsWith("mii-"))
@@ -206,7 +211,7 @@ export async function pushToServer() {
   );
 
   // Push
-  await fetch("/api/sync_library", {
+  await fetch(Config.syncAPIBase + "sync_library", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ miis })
@@ -227,6 +232,8 @@ export function choosePersonalMii(
   miiList: MiiLocalforage[],
   cancelable: boolean = false
 ) {
+  console.assert(Config.syncAPIBase !== null);
+
   return new Promise((resolve) => {
     const personalMiiChooseModal = Modal.modal(
       __("Notice"),
@@ -311,6 +318,8 @@ function confirmPersonalMii(
   miiLocalforage: MiiLocalforage,
   modalRef?: Html
 ) {
+  console.assert(Config.syncAPIBase !== null);
+
   return new Promise((resolve) => {
     const miiIcon = new Html("img").style({
       opacity: "0",
@@ -363,7 +372,7 @@ function confirmPersonalMii(
         async callback(e) {
           // Click the invisible "confirm" button to close the modal normally
           if (modalRef) modalRef.qs(".flex-group button")?.elm.click();
-          await fetch("/api/personal_mii", {
+          await fetch(Config.syncAPIBase + "/personal_mii", {
             body: JSON.stringify({
               nickname: mii.nickname,
               creator: mii.creator,
@@ -417,13 +426,17 @@ export async function Library(highlightMiiId?: string) {
   const libraryList = new Html("div").class("library-list").appendTo(container);
 
   // Pull
-  let miisJson = await fetch("/api/sync_library", {
+  let miisJson: Object | null = null;
+
+  if (Config.syncAPIBase) {
+    miisJson = await fetch("/api/sync_library", {
     headers: { accept: "application/json" }
   }).then((j) => j.json());
+  }
 
   let miis: any = [];
 
-  if (miisJson === null) {
+  if (miisJson === null || !Array.isArray(miisJson)) {
     miisJson = [];
 
     // Fallback to checking your local storage data
@@ -440,7 +453,7 @@ export async function Library(highlightMiiId?: string) {
         .style({ position: "absolute", top: "2rem", left: "2rem" })
         .text(__("You don't have any Miis. Create one to get started!"))
     );
-  } else {
+  } else if (Config.syncAPIBase) {
     const resp = await fetch("/api/personal_mii");
 
     if (!resp.ok) {

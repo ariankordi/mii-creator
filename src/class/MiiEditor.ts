@@ -592,17 +592,19 @@ export class MiiEditor {
         });
       }
 
-      await fetch("/api/archive", {
-        body: JSON.stringify({
-          nickname: this.mii.nickname,
-          creator: this.mii.creator,
-          ffsd: this.mii.exportBase64("ffsd"),
-          data: this.mii.exportBase64("miic"),
-          studio: this.mii.exportBase64("studioData")
-        }),
-        method: "POST",
-        headers: { "content-type": "application/json" }
-      }).catch(undefined);
+      if (Config.syncAPIBase) {
+        await fetch(Config.syncAPIBase + "/archive", {
+          body: JSON.stringify({
+            nickname: this.mii.nickname,
+            creator: this.mii.creator,
+            ffsd: this.mii.exportBase64("ffsd"),
+            data: this.mii.exportBase64("miic"),
+            studio: this.mii.exportBase64("studioData")
+          }),
+          method: "POST",
+          headers: { "content-type": "application/json" }
+        }).catch(undefined);
+      }
     }
 
     if (this.#loadInterval) {
