@@ -14,7 +14,7 @@ import { Config } from "../config";
 import { customRender } from "./pages/library/render/customRender";
 
 import { _ } from "../util/Lang";
-import { getCurrentLoadingModal, prepareFFL } from "../util/FFLLoader";
+import { getCurrentLoadingModal, prepareFFLAsync } from "../util/FFLLoader";
 import Html from "@datkat21/html";
 const __ = _();
 
@@ -59,7 +59,7 @@ export async function setupUi() {
 
   updateSettings(true);
 
-  await prepareFFL().catch((e) => {
+  prepareFFLAsync().catch((e) => {
     closeModal(getCurrentLoadingModal());
     let m = Modal.modal(
       "Error",

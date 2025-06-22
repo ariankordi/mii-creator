@@ -8,12 +8,9 @@
 
 // ------------------ ESM imports, uncomment if you use ESM ------------------
 // Also see the bottom of the script for corresponding exports.
-import { _THREE } from "../../util/PrepareThree.js";
-const THREE = _THREE();
-// import * as THREE from 'three';
+import * as THREE from 'three';
 // import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.167.0/+esm';
-import * as _ from './struct-fu.js';
-
+import * as _Import from './struct-fu.js';
 
 // Hack to get library globals recognized throughout the file (remove for ESM).
 /**
@@ -24,7 +21,7 @@ import * as _ from './struct-fu.js';
 globalThis._ = /** @type {_} */ (/** @type {*} */ (globalThis)._);
 globalThis.THREE = /** @type {THREE} */ (/** @type {*} */ (globalThis).THREE);
 // NOTeslint-disable-next-line @stylistic/max-statements-per-line --  Hack to use either UMD or browser ESM import.
-// let _ = globalThis._; _ = (!_) ? _Import : _; // Uncomment for ESM
+let _ = globalThis._; _ = (!_) ? _Import : _; // Uncomment for ESM
 /* eslint-enable no-self-assign -- Get TypeScript to identify global imports. */
 /* globals _ THREE -- Global dependencies. */
 
@@ -772,7 +769,6 @@ const FFLCharModelDesc = _.struct([
 /**
  * Static default for FFLCharModelDesc.
  * @type {FFLCharModelDesc}
- * @readonly
  * @public
  */
 const FFLCharModelDescDefault = {
@@ -1656,6 +1652,52 @@ async function initializeFFL(resource, moduleOrPromise) {
 	};
 }
 
+// ------------- initializeFFLWithResource(module, resourcePath) -------------
+/**
+ * Fetches the FFL resource from the specified path or the "content"
+ * attribute of this HTML element: meta[itemprop=ffl-js-resource-fetch-path]
+ * It then calls {@link initializeFFL} on the specified module.
+ * @param {Module|Promise<Module>|function(): Promise<Module>} module - The Emscripten module by itself
+ * (window.Module when MODULARIZE=0), as a promise (window.Module() when MODULARIZE=1),
+ * or as a function returning a promise (window.Module when MODULARIZE=1).
+ * @param {string|null} resourcePath - The URL for the FFL resource.
+ * @returns {Promise<{module: Module, resourceDesc: FFLResourceDesc}>} Resolves when fetch is finished
+ * and initializeFFL returns, returning the final Emscripten {@link Module} instance
+ * and the {@link FFLResourceDesc} object that can later be passed into {@link exitFFL}.
+ * @throws {Error} resourcePath must be a URL string, or, an HTML element with FFL resource must exist and have content.
+ */
+async function initializeFFLWithResource(module, resourcePath) {
+	// Query selector string for element with "content" attribute for path to the resource.
+	const querySelectorResourcePath = 'meta[itemprop=ffl-js-resource-fetch-path]';
+
+	if (!resourcePath && typeof document !== 'undefined') {
+		// Load FFL resource file from meta tag in HTML.
+		const resourceFetchElement = document.querySelector(querySelectorResourcePath);
+		if (!resourceFetchElement || !resourceFetchElement.getAttribute('content')) {
+			throw new Error(`initializeFFLWithResource: Element not found or does not have "content" attribute with path to FFL resource: ${querySelectorResourcePath}`);
+		}
+		// URL to resource for FFL.
+		resourcePath = resourceFetchElement.getAttribute('content');
+	}
+	// is it still null?
+	if (!resourcePath) {
+		throw new Error('initializeFFLWithResource: resourcePath must be a string');
+	}
+	try {
+		/** Fetch resource. */
+		const response = await fetch(resourcePath);
+		// Initialize FFL using the resource from fetch response.
+		const ret = await initializeFFL(response, module);
+		console.debug('initializeFFLWithResource: FFLiManager and TextureManager initialized, exiting');
+		return ret;
+	} catch (error) {
+		if (typeof alert !== 'undefined') {
+			alert(`Error initializing FFL with resource: ${error}`);
+		}
+		throw error;
+	}
+}
+
 /**
  * Frees all pData pointers within {@link FFLResourceDesc}.
  * @param {FFLResourceDesc|null} desc - {@link FFLResourceDesc} to free pointers from.
@@ -2027,15 +2069,6 @@ class CharModel {
 		return this._model.charModelDesc.resolution & FFL_RESOLUTION_MASK;
 	}
 
-	/**
-	 * Returns the value for whether the CharModel was created without shapes.
-	 * @returns {boolean} Whether the CharModel was created without shapes.
-	 * @package
-	 */
-	_isTexOnly() {
-		return (this._model.charModelDesc.modelFlag & FFLModelFlag.NEW_MASK_ONLY) !== 0;
-	}
-
 	// --------------------------------- Disposal ---------------------------------
 
 	/**
@@ -2162,9 +2195,6 @@ class CharModel {
 		const targ = this._maskTargets[expression];
 		if (!targ || !targ.texture) {
 			throw new ExpressionNotSet(expression);
-		}
-		if (this._isTexOnly()) {
-			return;
 		}
 		const mesh = this._maskMesh;
 		if (!mesh || !(mesh instanceof THREE.Mesh)) {
@@ -2553,32 +2583,6 @@ function getRandomCharInfo(module, gender = FFLGender.ALL, age = FFLAge.ALL, rac
 	return result;
 }
 
-/**
- * Checks if the expression index disables any shapes in the
- * CharModel, meant to be used when setting multiple indices.
- * @param {FFLExpression} i - Expression index to check.
- * @param {boolean} [warn] - Whether to log using {@link console.warn}.
- * @returns {boolean} Whether the expression changes shapes.
- */
-function checkExpressionChangesShapes(i, warn = false) {
-	/** Expressions disabling nose: dog/cat, blank */
-	const expressionsDisablingNose = [49, 50, 51, 52, 61, 62];
-	/** Expressions disabling mask: blank */
-	const expressionsDisablingMask = [61, 62];
-
-	const prefix = `checkExpressionChangesShapes: An expression was enabled (${i}) that is meant to disable nose or mask shape for the entire CharModel, so it is only recommended to set this as a single expression rather than as one of multiple.`;
-	if (expressionsDisablingMask.indexOf(i) !== -1) {
-		warn && console.warn(`${prefix} (in this case, MASK SHAPE so there is supposed to be NO FACE)`);
-		return true;
-	}
-	if (expressionsDisablingNose.indexOf(i) !== -1) {
-		warn && console.warn(`${prefix} (nose shape)`);
-		return true;
-	}
-
-	return false;
-}
-
 // --------------------- makeExpressionFlag(expressions) ----------------------
 /**
  * Creates an expression flag to be used in FFLCharModelDesc.
@@ -2600,15 +2604,34 @@ function makeExpressionFlag(expressions) {
 		}
 	}
 
+	/**
+	 * Logs using {@link console.warn} if the expression index
+	 * disables any shapes in the CharModel, meant to
+	 * be used when setting multiple indices.
+	 * @param {FFLExpression} i - Expression index to check.
+	 */
+	function warnIfChangesShapes(i) {
+		// Disables nose: dog/cat, blank
+		const expressionsDisablingNose = [49, 50, 51, 52, 61, 62];
+		// Disables mask: blank
+		const expressionsDisablingMask = [61, 62];
+
+		const prefix = `makeExpressionFlag > warnIfChangesShapes: An expression was enabled (${i}) that is meant to disable nose or mask shape for the entire CharModel, so it is only recommended to set this as a single expression rather than as one of multiple.`;
+		if (expressionsDisablingNose.indexOf(i) !== -1) {
+			console.warn(`${prefix} (nose shape)`);
+		}
+		if (expressionsDisablingMask.indexOf(i) !== -1) {
+			console.warn(`${prefix} (in this case, MASK SHAPE so there is supposed to be NO FACE)`);
+		}
+	}
+
 	/** FFLAllExpressionFlag */
 	const flags = new Uint32Array([0, 0, 0]);
-	let checkForChangeShapes = true;
 
 	// Set single expression.
 	if (typeof expressions === 'number') {
 		// Make expressions into an array.
 		expressions = [expressions];
-		checkForChangeShapes = false; // Single expression, do not check this
 		// Fall-through.
 	} else if (!Array.isArray(expressions)) {
 		throw new Error('makeExpressionFlag: expected array or single number');
@@ -2617,9 +2640,7 @@ function makeExpressionFlag(expressions) {
 	// Set multiple expressions in an array.
 	for (const index of expressions) {
 		checkRange(index);
-		if (checkForChangeShapes) {
-			checkExpressionChangesShapes(index, true); // Warn if the expression changes shapes.
-		}
+		warnIfChangesShapes(index); // Warn if the expression changes shapes.
 		/** Determine which 32-bit block. */
 		const part = Math.floor(index / 32);
 		/** Determine the bit within the block. */
@@ -2785,61 +2806,51 @@ function _descOrExpFlagToModelDesc(descOrExpFlag, defaultDesc = FFLCharModelDesc
  * @param {import('three').WebGLRenderer} renderer - The Three.js renderer.
  * @param {CharModelDescOrExpressionFlag} [descOrExpFlag] - Either a new {@link FFLCharModelDesc},
  * an array of expressions, a single expression, or an expression flag (Uint32Array).
- * @param {Object} [options] - Options for updating the model.
- * @param {boolean} [options.texOnly] - Whether to only update the mask and faceline textures in the CharModel.
- * @param {boolean} [options.verify] - Whether the CharInfo provided should be verified.
+ * @param {boolean} verify - Whether the CharInfo provided should be verified.
  * @returns {CharModel} The updated CharModel instance.
  * @throws {Error} Unexpected type for descOrExpFlag, newData is null
  * @todo  TODO: Should `newData` just pass the charInfo object instance instead of "_data"?
  */
-function updateCharModel(charModel, newData, renderer,
-	descOrExpFlag = null, { texOnly = false, verify = true } = {}) {
+function updateCharModel(charModel, newData, renderer, descOrExpFlag = null, texOnly = false, verify = true) {
 	newData = newData || charModel._data;
 	if (!newData) {
 		throw new Error('updateCharModel: newData is null. It should be retrieved from charModel._data which is set by createCharModel.');
 	}
 
-
-	/** The new or updated CharModelDesc with the new expression specified. */
 	const newModelDesc = _descOrExpFlagToModelDesc(descOrExpFlag, charModel._model.charModelDesc);
 
-	if (!texOnly) {
-		// Dispose of the old CharModel.
-		charModel.dispose();
-	} else {
-		// Updating textures only. Set respective flag.
-		console.debug(`updateCharModel: Updating ONLY textures for model "${charModel._model.charInfo.personal.name}", ptr =`, charModel._ptr);
-		// NOTE: This flag will only take effect if your FFL is built with -DFFL_ENABLE_NEW_MASK_ONLY_FLAG=ON.
-		newModelDesc.modelFlag |= FFLModelFlag.NEW_MASK_ONLY;
-	}
-
+	// Dispose of the old CharModel.
+	charModel.dispose();
 	// Create a new CharModel with the new data and ModelDesc.
 	const newCharModel = createCharModel(newData, newModelDesc,
 		charModel._materialClass, charModel._module, verify);
-
-	// Initialize its textures unconditionally.
+	// Initialize its textures.
 	initCharModelTextures(newCharModel, renderer, charModel._materialTextureClass);
+	return newCharModel;
+}
 
-	// Handle textures only case, where new CharModel has textures and old one has shapes.
-	if (texOnly) {
-		charModel.disposeTargets(); // Dispose textures on destination model (will be replaced).
+/**
+ * Copies faceline and mask render targets from `src`
+ * to the `dst` CharModel, disposing textures from `dst`
+ * and disposing shapes from `src`, effectively transferring.
+ * @param {CharModel} src - The source {@link CharModel} from which to copy textures from and dispose shapes.
+ * @param {CharModel} dst - The destination {@link CharModel} receiving the textures.
+ * @returns {CharModel} The final CharModel.
+ * @todo TODO: Completely untested.
+ */
+function transferCharModelTex(src, dst) {
+	// Dispose textures on destination CharModel, they will be replaced.
+	dst.disposeTargets();
+	// Dispose everything but textures on the source CharModel.
+	src.dispose(false);
 
-		// Transfer faceline and mask targets.
-		charModel._facelineTarget = newCharModel._facelineTarget;
-		charModel._maskTargets = newCharModel._maskTargets;
-		// Set new CharModel and unset texture only flag.
-		// @ts-expect-error -- _model is supposed to be read-only.
-		charModel._model = newCharModel._model;
-		charModel._model.charModelDesc.modelFlag &= ~FFLModelFlag.NEW_MASK_ONLY;
-		charModel.expressions = newCharModel.expressions;
-		// Apply new faceline and mask to old shapes.
-		newCharModel._facelineTarget && _setFaceline(charModel, newCharModel._facelineTarget);
-		charModel.setExpression(newCharModel.expression);
+	// Transfer faceline and mask targets.
+	dst._facelineTarget = src._facelineTarget;
+	dst._maskTargets = src._maskTargets;
 
-		return charModel; // Source CharModel has new CharModel's textures.
-	}
-
-	return newCharModel; // Return new or modified CharModel.
+	// The references are transferred too so when the
+	// dst CharModel gets deleted it will dispose the right ones.
+	return dst;
 }
 
 // // ---------------------------------------------------------------------
@@ -3540,9 +3551,6 @@ function _setFaceline(charModel, target) {
 		throw new Error('setFaceline: passed in RenderTarget is invalid');
 	}
 	charModel._facelineTarget = target; // Store for later disposal.
-	if (charModel._isTexOnly()) {
-		return;
-	}
 	const mesh = charModel._facelineMesh;
 	if (!mesh || !(mesh instanceof THREE.Mesh)) {
 		throw new Error('setFaceline: faceline shape does not exist');
@@ -4790,12 +4798,12 @@ export {
 
 	// Begin public methods
 	initializeFFL,
+	initializeFFLWithResource,
 	exitFFL,
 	CharModel, // CharModel class
 	verifyCharInfo,
 	getRandomCharInfo,
 	makeExpressionFlag,
-	checkExpressionChangesShapes,
 
 	// Pants colors
 	PantsColor,
@@ -4805,6 +4813,7 @@ export {
 	_allocateModelSource,
 	createCharModel,
 	updateCharModel,
+	transferCharModelTex, // TODO
 	getIdentCamera,
 	createAndRenderToTarget,
 	matSupportsFFL,
@@ -4827,6 +4836,8 @@ export {
 	convertStudioCharInfoToFFLiCharInfo,
 	convertFFLiCharInfoToStudioCharInfo,
 	uint8ArrayToBase64,
-	parseHexOrB64ToUint8Array
-};
+	parseHexOrB64ToUint8Array,
 
+	// extra
+	FFLiShapeType
+};

@@ -19,18 +19,31 @@ export const getFFL = () => FFLModule;
 let currentLoadingModal: Html;
 export const getCurrentLoadingModal = () => currentLoadingModal;
 
-export async function prepareFFL() {
+let FFLReadyPromise: Promise<void> | null = null;
+
+export function ensureFFLReady(): Promise<void> {
+  if (FFLReadyPromise) return FFLReadyPromise;
+  return Promise.reject(new Error("Face Library is not loaded yet. Either the resource is still downloading, or it failed to load. TODO make this error message better."));
+}
+
+export async function prepareFFLAsync() {
   // Depending on config, load FFL.js
+
+  if (FFLReadyPromise) return;
+
+  FFLReadyPromise = (async () => {
   if (Config.renderer.useRendererServer !== false) {
     return console.log("why do you");
   }
 
-  currentLoadingModal = Modal.modal(
+    /*
+    currentLoadingModal = Modal.modal(
     __("Notice"),
     // TODO: Make a better message? 😅
     // Displayed in a modal while loading resource files.
     __("Mii Creator is loading assets, please wait...")
   );
+    */
 
   FFLModule = (await import("../external/ffl.js/ffl-emscripten.js")).default;
 
@@ -58,5 +71,6 @@ export async function prepareFFL() {
 
   console.log("Ready!");
 
-  closeModal(currentLoadingModal);
+    // closeModal(currentLoadingModal);
+  })();
 }

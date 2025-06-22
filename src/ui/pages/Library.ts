@@ -37,7 +37,7 @@ import type { WebGLRenderer } from "three";
 import { MiiExpression } from "../../external/ffl/FFLTypes";
 import Notify from "../components/Notify";
 import { dataToBase64 } from "../../util/dataConvert";
-import { getFFL } from "../../util/FFLLoader";
+import { getFFL, ensureFFLReady } from "../../util/FFLLoader";
 import { ViewType } from "../../util/camera";
 import LUTShaderMaterial from "../../external/ffl.js/LUTShaderMaterial";
 import { createMiiRender, iconRenderer } from "../../util/IconRendering";
@@ -78,6 +78,8 @@ export const getMiiIcon = async (
   expression: number = 0,
   useBlob: boolean = true
 ) => {
+  await ensureFFLReady(); // ensure FFL is ready before doing icon logic
+
   let m: string = "",
     drawBody = true,
     type = ViewType.Face;
