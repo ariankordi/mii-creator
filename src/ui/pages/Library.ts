@@ -975,7 +975,7 @@ export async function Library(highlightMiiId?: string) {
       new Html("small")
         .html(
           // `Mii Creator ${Config.version.string} by kat21 (<b>${Config.version.name}</b>)`
-          'Mii Creator April 7th version <a target="_blank" href="https://github.com/ariankordi/mii-creator/commit/84205bb207135a0000c9b0481ea467dcd04bee88">(84205bb)</a>'
+          'Mii Creator 2025-04-24 version <a target="_blank" href="https://github.com/ariankordi/mii-creator/commit/ce30e3defc154e853df87909b4f766cd395199a4">(ce30e3)</a>'
         )
         /*.style({ cursor: "pointer" })
         .on("click", () => {

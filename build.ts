@@ -27,7 +27,7 @@ export async function compile(
   }).catch((e) => {
     console.error("Failed to build:", e);
   })) as BuildOutput;
-  if (output.logs) {
+  if (output?.logs) {
     for (const log of output.logs) {
       console.error(log);
     }

@@ -14111,6 +14111,242 @@ var require_ffl_emscripten = __commonJS((exports2, module2) => {
     define([], () => ModuleFFL);
 });
 
+// node_modules/crypt/crypt.js
+var require_crypt = __commonJS((exports2, module2) => {
+  (function() {
+    var base64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", crypt = {
+      rotl: function(n2, b2) {
+        return n2 << b2 | n2 >>> 32 - b2;
+      },
+      rotr: function(n2, b2) {
+        return n2 << 32 - b2 | n2 >>> b2;
+      },
+      endian: function(n2) {
+        if (n2.constructor == Number) {
+          return crypt.rotl(n2, 8) & 16711935 | crypt.rotl(n2, 24) & 4278255360;
+        }
+        for (var i = 0;i < n2.length; i++)
+          n2[i] = crypt.endian(n2[i]);
+        return n2;
+      },
+      randomBytes: function(n2) {
+        for (var bytes = [];n2 > 0; n2--)
+          bytes.push(Math.floor(Math.random() * 256));
+        return bytes;
+      },
+      bytesToWords: function(bytes) {
+        for (var words = [], i = 0, b2 = 0;i < bytes.length; i++, b2 += 8)
+          words[b2 >>> 5] |= bytes[i] << 24 - b2 % 32;
+        return words;
+      },
+      wordsToBytes: function(words) {
+        for (var bytes = [], b2 = 0;b2 < words.length * 32; b2 += 8)
+          bytes.push(words[b2 >>> 5] >>> 24 - b2 % 32 & 255);
+        return bytes;
+      },
+      bytesToHex: function(bytes) {
+        for (var hex = [], i = 0;i < bytes.length; i++) {
+          hex.push((bytes[i] >>> 4).toString(16));
+          hex.push((bytes[i] & 15).toString(16));
+        }
+        return hex.join("");
+      },
+      hexToBytes: function(hex) {
+        for (var bytes = [], c2 = 0;c2 < hex.length; c2 += 2)
+          bytes.push(parseInt(hex.substr(c2, 2), 16));
+        return bytes;
+      },
+      bytesToBase64: function(bytes) {
+        for (var base64 = [], i = 0;i < bytes.length; i += 3) {
+          var triplet = bytes[i] << 16 | bytes[i + 1] << 8 | bytes[i + 2];
+          for (var j2 = 0;j2 < 4; j2++)
+            if (i * 8 + j2 * 6 <= bytes.length * 8)
+              base64.push(base64map.charAt(triplet >>> 6 * (3 - j2) & 63));
+            else
+              base64.push("=");
+        }
+        return base64.join("");
+      },
+      base64ToBytes: function(base64) {
+        base64 = base64.replace(/[^A-Z0-9+\/]/ig, "");
+        for (var bytes = [], i = 0, imod4 = 0;i < base64.length; imod4 = ++i % 4) {
+          if (imod4 == 0)
+            continue;
+          bytes.push((base64map.indexOf(base64.charAt(i - 1)) & Math.pow(2, -2 * imod4 + 8) - 1) << imod4 * 2 | base64map.indexOf(base64.charAt(i)) >>> 6 - imod4 * 2);
+        }
+        return bytes;
+      }
+    };
+    module2.exports = crypt;
+  })();
+});
+
+// node_modules/charenc/charenc.js
+var require_charenc = __commonJS((exports2, module2) => {
+  var charenc = {
+    utf8: {
+      stringToBytes: function(str) {
+        return charenc.bin.stringToBytes(unescape(encodeURIComponent(str)));
+      },
+      bytesToString: function(bytes) {
+        return decodeURIComponent(escape(charenc.bin.bytesToString(bytes)));
+      }
+    },
+    bin: {
+      stringToBytes: function(str) {
+        for (var bytes = [], i = 0;i < str.length; i++)
+          bytes.push(str.charCodeAt(i) & 255);
+        return bytes;
+      },
+      bytesToString: function(bytes) {
+        for (var str = [], i = 0;i < bytes.length; i++)
+          str.push(String.fromCharCode(bytes[i]));
+        return str.join("");
+      }
+    }
+  };
+  module2.exports = charenc;
+});
+
+// node_modules/is-buffer/index.js
+var require_is_buffer = __commonJS((exports2, module2) => {
+  /*!
+   * Determine if an object is a Buffer
+   *
+   * @author   Feross Aboukhadijeh <https://feross.org>
+   * @license  MIT
+   */
+  module2.exports = function(obj) {
+    return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer);
+  };
+  function isBuffer(obj) {
+    return !!obj.constructor && typeof obj.constructor.isBuffer === "function" && obj.constructor.isBuffer(obj);
+  }
+  function isSlowBuffer(obj) {
+    return typeof obj.readFloatLE === "function" && typeof obj.slice === "function" && isBuffer(obj.slice(0, 0));
+  }
+});
+
+// node_modules/md5/md5.js
+var require_md5 = __commonJS((exports2, module2) => {
+  (function() {
+    var crypt = require_crypt(), utf8 = require_charenc().utf8, isBuffer = require_is_buffer(), bin = require_charenc().bin, md5 = function(message, options) {
+      if (message.constructor == String)
+        if (options && options.encoding === "binary")
+          message = bin.stringToBytes(message);
+        else
+          message = utf8.stringToBytes(message);
+      else if (isBuffer(message))
+        message = Array.prototype.slice.call(message, 0);
+      else if (!Array.isArray(message) && message.constructor !== Uint8Array)
+        message = message.toString();
+      var m = crypt.bytesToWords(message), l2 = message.length * 8, a2 = 1732584193, b2 = -271733879, c2 = -1732584194, d = 271733878;
+      for (var i = 0;i < m.length; i++) {
+        m[i] = (m[i] << 8 | m[i] >>> 24) & 16711935 | (m[i] << 24 | m[i] >>> 8) & 4278255360;
+      }
+      m[l2 >>> 5] |= 128 << l2 % 32;
+      m[(l2 + 64 >>> 9 << 4) + 14] = l2;
+      var { _ff: FF, _gg: GG, _hh: HH, _ii: II } = md5;
+      for (var i = 0;i < m.length; i += 16) {
+        var aa = a2, bb = b2, cc = c2, dd = d;
+        a2 = FF(a2, b2, c2, d, m[i + 0], 7, -680876936);
+        d = FF(d, a2, b2, c2, m[i + 1], 12, -389564586);
+        c2 = FF(c2, d, a2, b2, m[i + 2], 17, 606105819);
+        b2 = FF(b2, c2, d, a2, m[i + 3], 22, -1044525330);
+        a2 = FF(a2, b2, c2, d, m[i + 4], 7, -176418897);
+        d = FF(d, a2, b2, c2, m[i + 5], 12, 1200080426);
+        c2 = FF(c2, d, a2, b2, m[i + 6], 17, -1473231341);
+        b2 = FF(b2, c2, d, a2, m[i + 7], 22, -45705983);
+        a2 = FF(a2, b2, c2, d, m[i + 8], 7, 1770035416);
+        d = FF(d, a2, b2, c2, m[i + 9], 12, -1958414417);
+        c2 = FF(c2, d, a2, b2, m[i + 10], 17, -42063);
+        b2 = FF(b2, c2, d, a2, m[i + 11], 22, -1990404162);
+        a2 = FF(a2, b2, c2, d, m[i + 12], 7, 1804603682);
+        d = FF(d, a2, b2, c2, m[i + 13], 12, -40341101);
+        c2 = FF(c2, d, a2, b2, m[i + 14], 17, -1502002290);
+        b2 = FF(b2, c2, d, a2, m[i + 15], 22, 1236535329);
+        a2 = GG(a2, b2, c2, d, m[i + 1], 5, -165796510);
+        d = GG(d, a2, b2, c2, m[i + 6], 9, -1069501632);
+        c2 = GG(c2, d, a2, b2, m[i + 11], 14, 643717713);
+        b2 = GG(b2, c2, d, a2, m[i + 0], 20, -373897302);
+        a2 = GG(a2, b2, c2, d, m[i + 5], 5, -701558691);
+        d = GG(d, a2, b2, c2, m[i + 10], 9, 38016083);
+        c2 = GG(c2, d, a2, b2, m[i + 15], 14, -660478335);
+        b2 = GG(b2, c2, d, a2, m[i + 4], 20, -405537848);
+        a2 = GG(a2, b2, c2, d, m[i + 9], 5, 568446438);
+        d = GG(d, a2, b2, c2, m[i + 14], 9, -1019803690);
+        c2 = GG(c2, d, a2, b2, m[i + 3], 14, -187363961);
+        b2 = GG(b2, c2, d, a2, m[i + 8], 20, 1163531501);
+        a2 = GG(a2, b2, c2, d, m[i + 13], 5, -1444681467);
+        d = GG(d, a2, b2, c2, m[i + 2], 9, -51403784);
+        c2 = GG(c2, d, a2, b2, m[i + 7], 14, 1735328473);
+        b2 = GG(b2, c2, d, a2, m[i + 12], 20, -1926607734);
+        a2 = HH(a2, b2, c2, d, m[i + 5], 4, -378558);
+        d = HH(d, a2, b2, c2, m[i + 8], 11, -2022574463);
+        c2 = HH(c2, d, a2, b2, m[i + 11], 16, 1839030562);
+        b2 = HH(b2, c2, d, a2, m[i + 14], 23, -35309556);
+        a2 = HH(a2, b2, c2, d, m[i + 1], 4, -1530992060);
+        d = HH(d, a2, b2, c2, m[i + 4], 11, 1272893353);
+        c2 = HH(c2, d, a2, b2, m[i + 7], 16, -155497632);
+        b2 = HH(b2, c2, d, a2, m[i + 10], 23, -1094730640);
+        a2 = HH(a2, b2, c2, d, m[i + 13], 4, 681279174);
+        d = HH(d, a2, b2, c2, m[i + 0], 11, -358537222);
+        c2 = HH(c2, d, a2, b2, m[i + 3], 16, -722521979);
+        b2 = HH(b2, c2, d, a2, m[i + 6], 23, 76029189);
+        a2 = HH(a2, b2, c2, d, m[i + 9], 4, -640364487);
+        d = HH(d, a2, b2, c2, m[i + 12], 11, -421815835);
+        c2 = HH(c2, d, a2, b2, m[i + 15], 16, 530742520);
+        b2 = HH(b2, c2, d, a2, m[i + 2], 23, -995338651);
+        a2 = II(a2, b2, c2, d, m[i + 0], 6, -198630844);
+        d = II(d, a2, b2, c2, m[i + 7], 10, 1126891415);
+        c2 = II(c2, d, a2, b2, m[i + 14], 15, -1416354905);
+        b2 = II(b2, c2, d, a2, m[i + 5], 21, -57434055);
+        a2 = II(a2, b2, c2, d, m[i + 12], 6, 1700485571);
+        d = II(d, a2, b2, c2, m[i + 3], 10, -1894986606);
+        c2 = II(c2, d, a2, b2, m[i + 10], 15, -1051523);
+        b2 = II(b2, c2, d, a2, m[i + 1], 21, -2054922799);
+        a2 = II(a2, b2, c2, d, m[i + 8], 6, 1873313359);
+        d = II(d, a2, b2, c2, m[i + 15], 10, -30611744);
+        c2 = II(c2, d, a2, b2, m[i + 6], 15, -1560198380);
+        b2 = II(b2, c2, d, a2, m[i + 13], 21, 1309151649);
+        a2 = II(a2, b2, c2, d, m[i + 4], 6, -145523070);
+        d = II(d, a2, b2, c2, m[i + 11], 10, -1120210379);
+        c2 = II(c2, d, a2, b2, m[i + 2], 15, 718787259);
+        b2 = II(b2, c2, d, a2, m[i + 9], 21, -343485551);
+        a2 = a2 + aa >>> 0;
+        b2 = b2 + bb >>> 0;
+        c2 = c2 + cc >>> 0;
+        d = d + dd >>> 0;
+      }
+      return crypt.endian([a2, b2, c2, d]);
+    };
+    md5._ff = function(a2, b2, c2, d, x2, s, t3) {
+      var n2 = a2 + (b2 & c2 | ~b2 & d) + (x2 >>> 0) + t3;
+      return (n2 << s | n2 >>> 32 - s) + b2;
+    };
+    md5._gg = function(a2, b2, c2, d, x2, s, t3) {
+      var n2 = a2 + (b2 & d | c2 & ~d) + (x2 >>> 0) + t3;
+      return (n2 << s | n2 >>> 32 - s) + b2;
+    };
+    md5._hh = function(a2, b2, c2, d, x2, s, t3) {
+      var n2 = a2 + (b2 ^ c2 ^ d) + (x2 >>> 0) + t3;
+      return (n2 << s | n2 >>> 32 - s) + b2;
+    };
+    md5._ii = function(a2, b2, c2, d, x2, s, t3) {
+      var n2 = a2 + (c2 ^ (b2 | ~d)) + (x2 >>> 0) + t3;
+      return (n2 << s | n2 >>> 32 - s) + b2;
+    };
+    md5._blocksize = 16;
+    md5._digestsize = 16;
+    module2.exports = function(message, options) {
+      if (message === undefined || message === null)
+        throw new Error("Illegal argument " + message);
+      var digestbytes = crypt.wordsToBytes(md5(message, options));
+      return options && options.asBytes ? digestbytes : options && options.asString ? bin.bytesToString(digestbytes) : crypt.bytesToHex(digestbytes);
+    };
+  })();
+});
+
 // src/external/mii-frontend/qrjs.min.js
 var require_qrjs_min = __commonJS((exports2, module2) => {
   (function(r, t3, e) {
@@ -17690,7 +17926,7 @@ Use Chrome, Firefox or Internet Explorer 11`);
     jp.exports = { AbortError: _h, aggregateTwoErrors: Kp(d_), hideStackFrames: Kp, codes: Po };
   });
   pa2 = T2((TI, Qp) => {
-    var { ArrayIsArray: $p, ArrayPrototypeIncludes: Gp, ArrayPrototypeJoin: Yp, ArrayPrototypeMap: c_, NumberIsInteger: Sh, NumberIsNaN: p_, NumberMAX_SAFE_INTEGER: v_, NumberMIN_SAFE_INTEGER: b_, NumberParseInt: m_, ObjectPrototypeHasOwnProperty: g_, RegExpPrototypeExec: y_, String: w_, StringPrototypeToUpperCase: M_, StringPrototypeTrim: __2 } = Tt3(), { hideStackFrames: Ir, codes: { ERR_SOCKET_BAD_PORT: x_, ERR_INVALID_ARG_TYPE: tr, ERR_INVALID_ARG_VALUE: Co, ERR_OUT_OF_RANGE: bn, ERR_UNKNOWN_SIGNAL: Zp } } = Jt(), { normalizeEncoding: S_ } = Gr(), { isAsyncFunction: E_, isArrayBufferView: A_ } = Gr().types, Vp = {};
+    var { ArrayIsArray: $p, ArrayPrototypeIncludes: Gp, ArrayPrototypeJoin: Yp, ArrayPrototypeMap: c_, NumberIsInteger: Sh, NumberIsNaN: p_, NumberMAX_SAFE_INTEGER: v_, NumberMIN_SAFE_INTEGER: b_, NumberParseInt: m_, ObjectPrototypeHasOwnProperty: g_, RegExpPrototypeExec: y_, String: w_, StringPrototypeToUpperCase: M_, StringPrototypeTrim: __24 } = Tt3(), { hideStackFrames: Ir, codes: { ERR_SOCKET_BAD_PORT: x_, ERR_INVALID_ARG_TYPE: tr, ERR_INVALID_ARG_VALUE: Co, ERR_OUT_OF_RANGE: bn, ERR_UNKNOWN_SIGNAL: Zp } } = Jt(), { normalizeEncoding: S_ } = Gr(), { isAsyncFunction: E_, isArrayBufferView: A_ } = Gr().types, Vp = {};
     function R_(t3) {
       return t3 === (t3 | 0);
     }
@@ -17778,7 +18014,7 @@ Use Chrome, Firefox or Internet Explorer 11`);
         throw new Co("encoding", e, `is invalid for data of length ${o}`);
     }
     function H_(t3, e = "Port", r = true) {
-      if (typeof t3 != "number" && typeof t3 != "string" || typeof t3 == "string" && __2(t3).length === 0 || +t3 !== +t3 >>> 0 || t3 > 65535 || t3 === 0 && !r)
+      if (typeof t3 != "number" && typeof t3 != "string" || typeof t3 == "string" && __24(t3).length === 0 || +t3 !== +t3 >>> 0 || t3 > 65535 || t3 === 0 && !r)
         throw new x_(e, t3, r);
       return t3 | 0;
     }
@@ -19887,7 +20123,7 @@ Use Chrome, Firefox or Internet Explorer 11`);
   });
   wu = T2((aT, xb) => {
     var N7 = Ie(), D7 = wb(), _b3 = yi(), Ma = Te().Buffer, P7 = mu(), gu = Bo(), yu = ko(), C7 = Ma.alloc(128);
-    function _a3(t3, e) {
+    function _a4(t3, e) {
       _b3.call(this, "digest"), typeof e == "string" && (e = Ma.from(e));
       var r = t3 === "sha512" || t3 === "sha384" ? 128 : 64;
       if (this._alg = t3, this._key = e, e.length > r) {
@@ -19899,16 +20135,16 @@ Use Chrome, Firefox or Internet Explorer 11`);
         f[m] = e[m] ^ 54, p[m] = e[m] ^ 92;
       this._hash = t3 === "rmd160" ? new gu : yu(t3), this._hash.update(f);
     }
-    N7(_a3, _b3);
-    _a3.prototype._update = function(t3) {
+    N7(_a4, _b3);
+    _a4.prototype._update = function(t3) {
       this._hash.update(t3);
     };
-    _a3.prototype._final = function() {
+    _a4.prototype._final = function() {
       var t3 = this._hash.digest(), e = this._alg === "rmd160" ? new gu : yu(this._alg);
       return e.update(this._opad).update(t3).digest();
     };
     xb.exports = function(e, r) {
-      return e = e.toLowerCase(), e === "rmd160" || e === "ripemd160" ? new _a3("rmd160", r) : e === "md5" ? new D7(P7, r) : new _a3(e, r);
+      return e = e.toLowerCase(), e === "rmd160" || e === "ripemd160" ? new _a4("rmd160", r) : e === "md5" ? new D7(P7, r) : new _a4(e, r);
     };
   });
   Mu = T2((oT, O7) => {
@@ -32539,242 +32775,6 @@ use chrome, FireFox or Internet Explorer 11`);
   /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 });
 
-// node_modules/crypt/crypt.js
-var require_crypt = __commonJS((exports2, module2) => {
-  (function() {
-    var base64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", crypt = {
-      rotl: function(n2, b3) {
-        return n2 << b3 | n2 >>> 32 - b3;
-      },
-      rotr: function(n2, b3) {
-        return n2 << 32 - b3 | n2 >>> b3;
-      },
-      endian: function(n2) {
-        if (n2.constructor == Number) {
-          return crypt.rotl(n2, 8) & 16711935 | crypt.rotl(n2, 24) & 4278255360;
-        }
-        for (var i = 0;i < n2.length; i++)
-          n2[i] = crypt.endian(n2[i]);
-        return n2;
-      },
-      randomBytes: function(n2) {
-        for (var bytes = [];n2 > 0; n2--)
-          bytes.push(Math.floor(Math.random() * 256));
-        return bytes;
-      },
-      bytesToWords: function(bytes) {
-        for (var words = [], i = 0, b3 = 0;i < bytes.length; i++, b3 += 8)
-          words[b3 >>> 5] |= bytes[i] << 24 - b3 % 32;
-        return words;
-      },
-      wordsToBytes: function(words) {
-        for (var bytes = [], b3 = 0;b3 < words.length * 32; b3 += 8)
-          bytes.push(words[b3 >>> 5] >>> 24 - b3 % 32 & 255);
-        return bytes;
-      },
-      bytesToHex: function(bytes) {
-        for (var hex = [], i = 0;i < bytes.length; i++) {
-          hex.push((bytes[i] >>> 4).toString(16));
-          hex.push((bytes[i] & 15).toString(16));
-        }
-        return hex.join("");
-      },
-      hexToBytes: function(hex) {
-        for (var bytes = [], c2 = 0;c2 < hex.length; c2 += 2)
-          bytes.push(parseInt(hex.substr(c2, 2), 16));
-        return bytes;
-      },
-      bytesToBase64: function(bytes) {
-        for (var base64 = [], i = 0;i < bytes.length; i += 3) {
-          var triplet = bytes[i] << 16 | bytes[i + 1] << 8 | bytes[i + 2];
-          for (var j2 = 0;j2 < 4; j2++)
-            if (i * 8 + j2 * 6 <= bytes.length * 8)
-              base64.push(base64map.charAt(triplet >>> 6 * (3 - j2) & 63));
-            else
-              base64.push("=");
-        }
-        return base64.join("");
-      },
-      base64ToBytes: function(base64) {
-        base64 = base64.replace(/[^A-Z0-9+\/]/ig, "");
-        for (var bytes = [], i = 0, imod4 = 0;i < base64.length; imod4 = ++i % 4) {
-          if (imod4 == 0)
-            continue;
-          bytes.push((base64map.indexOf(base64.charAt(i - 1)) & Math.pow(2, -2 * imod4 + 8) - 1) << imod4 * 2 | base64map.indexOf(base64.charAt(i)) >>> 6 - imod4 * 2);
-        }
-        return bytes;
-      }
-    };
-    module2.exports = crypt;
-  })();
-});
-
-// node_modules/charenc/charenc.js
-var require_charenc = __commonJS((exports2, module2) => {
-  var charenc = {
-    utf8: {
-      stringToBytes: function(str) {
-        return charenc.bin.stringToBytes(unescape(encodeURIComponent(str)));
-      },
-      bytesToString: function(bytes) {
-        return decodeURIComponent(escape(charenc.bin.bytesToString(bytes)));
-      }
-    },
-    bin: {
-      stringToBytes: function(str) {
-        for (var bytes = [], i = 0;i < str.length; i++)
-          bytes.push(str.charCodeAt(i) & 255);
-        return bytes;
-      },
-      bytesToString: function(bytes) {
-        for (var str = [], i = 0;i < bytes.length; i++)
-          str.push(String.fromCharCode(bytes[i]));
-        return str.join("");
-      }
-    }
-  };
-  module2.exports = charenc;
-});
-
-// node_modules/is-buffer/index.js
-var require_is_buffer = __commonJS((exports2, module2) => {
-  /*!
-   * Determine if an object is a Buffer
-   *
-   * @author   Feross Aboukhadijeh <https://feross.org>
-   * @license  MIT
-   */
-  module2.exports = function(obj) {
-    return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer);
-  };
-  function isBuffer(obj) {
-    return !!obj.constructor && typeof obj.constructor.isBuffer === "function" && obj.constructor.isBuffer(obj);
-  }
-  function isSlowBuffer(obj) {
-    return typeof obj.readFloatLE === "function" && typeof obj.slice === "function" && isBuffer(obj.slice(0, 0));
-  }
-});
-
-// node_modules/md5/md5.js
-var require_md5 = __commonJS((exports2, module2) => {
-  (function() {
-    var crypt = require_crypt(), utf8 = require_charenc().utf8, isBuffer = require_is_buffer(), bin = require_charenc().bin, md5 = function(message, options) {
-      if (message.constructor == String)
-        if (options && options.encoding === "binary")
-          message = bin.stringToBytes(message);
-        else
-          message = utf8.stringToBytes(message);
-      else if (isBuffer(message))
-        message = Array.prototype.slice.call(message, 0);
-      else if (!Array.isArray(message) && message.constructor !== Uint8Array)
-        message = message.toString();
-      var m = crypt.bytesToWords(message), l2 = message.length * 8, a2 = 1732584193, b3 = -271733879, c2 = -1732584194, d = 271733878;
-      for (var i = 0;i < m.length; i++) {
-        m[i] = (m[i] << 8 | m[i] >>> 24) & 16711935 | (m[i] << 24 | m[i] >>> 8) & 4278255360;
-      }
-      m[l2 >>> 5] |= 128 << l2 % 32;
-      m[(l2 + 64 >>> 9 << 4) + 14] = l2;
-      var { _ff: FF, _gg: GG, _hh: HH, _ii: II } = md5;
-      for (var i = 0;i < m.length; i += 16) {
-        var aa = a2, bb = b3, cc = c2, dd2 = d;
-        a2 = FF(a2, b3, c2, d, m[i + 0], 7, -680876936);
-        d = FF(d, a2, b3, c2, m[i + 1], 12, -389564586);
-        c2 = FF(c2, d, a2, b3, m[i + 2], 17, 606105819);
-        b3 = FF(b3, c2, d, a2, m[i + 3], 22, -1044525330);
-        a2 = FF(a2, b3, c2, d, m[i + 4], 7, -176418897);
-        d = FF(d, a2, b3, c2, m[i + 5], 12, 1200080426);
-        c2 = FF(c2, d, a2, b3, m[i + 6], 17, -1473231341);
-        b3 = FF(b3, c2, d, a2, m[i + 7], 22, -45705983);
-        a2 = FF(a2, b3, c2, d, m[i + 8], 7, 1770035416);
-        d = FF(d, a2, b3, c2, m[i + 9], 12, -1958414417);
-        c2 = FF(c2, d, a2, b3, m[i + 10], 17, -42063);
-        b3 = FF(b3, c2, d, a2, m[i + 11], 22, -1990404162);
-        a2 = FF(a2, b3, c2, d, m[i + 12], 7, 1804603682);
-        d = FF(d, a2, b3, c2, m[i + 13], 12, -40341101);
-        c2 = FF(c2, d, a2, b3, m[i + 14], 17, -1502002290);
-        b3 = FF(b3, c2, d, a2, m[i + 15], 22, 1236535329);
-        a2 = GG(a2, b3, c2, d, m[i + 1], 5, -165796510);
-        d = GG(d, a2, b3, c2, m[i + 6], 9, -1069501632);
-        c2 = GG(c2, d, a2, b3, m[i + 11], 14, 643717713);
-        b3 = GG(b3, c2, d, a2, m[i + 0], 20, -373897302);
-        a2 = GG(a2, b3, c2, d, m[i + 5], 5, -701558691);
-        d = GG(d, a2, b3, c2, m[i + 10], 9, 38016083);
-        c2 = GG(c2, d, a2, b3, m[i + 15], 14, -660478335);
-        b3 = GG(b3, c2, d, a2, m[i + 4], 20, -405537848);
-        a2 = GG(a2, b3, c2, d, m[i + 9], 5, 568446438);
-        d = GG(d, a2, b3, c2, m[i + 14], 9, -1019803690);
-        c2 = GG(c2, d, a2, b3, m[i + 3], 14, -187363961);
-        b3 = GG(b3, c2, d, a2, m[i + 8], 20, 1163531501);
-        a2 = GG(a2, b3, c2, d, m[i + 13], 5, -1444681467);
-        d = GG(d, a2, b3, c2, m[i + 2], 9, -51403784);
-        c2 = GG(c2, d, a2, b3, m[i + 7], 14, 1735328473);
-        b3 = GG(b3, c2, d, a2, m[i + 12], 20, -1926607734);
-        a2 = HH(a2, b3, c2, d, m[i + 5], 4, -378558);
-        d = HH(d, a2, b3, c2, m[i + 8], 11, -2022574463);
-        c2 = HH(c2, d, a2, b3, m[i + 11], 16, 1839030562);
-        b3 = HH(b3, c2, d, a2, m[i + 14], 23, -35309556);
-        a2 = HH(a2, b3, c2, d, m[i + 1], 4, -1530992060);
-        d = HH(d, a2, b3, c2, m[i + 4], 11, 1272893353);
-        c2 = HH(c2, d, a2, b3, m[i + 7], 16, -155497632);
-        b3 = HH(b3, c2, d, a2, m[i + 10], 23, -1094730640);
-        a2 = HH(a2, b3, c2, d, m[i + 13], 4, 681279174);
-        d = HH(d, a2, b3, c2, m[i + 0], 11, -358537222);
-        c2 = HH(c2, d, a2, b3, m[i + 3], 16, -722521979);
-        b3 = HH(b3, c2, d, a2, m[i + 6], 23, 76029189);
-        a2 = HH(a2, b3, c2, d, m[i + 9], 4, -640364487);
-        d = HH(d, a2, b3, c2, m[i + 12], 11, -421815835);
-        c2 = HH(c2, d, a2, b3, m[i + 15], 16, 530742520);
-        b3 = HH(b3, c2, d, a2, m[i + 2], 23, -995338651);
-        a2 = II(a2, b3, c2, d, m[i + 0], 6, -198630844);
-        d = II(d, a2, b3, c2, m[i + 7], 10, 1126891415);
-        c2 = II(c2, d, a2, b3, m[i + 14], 15, -1416354905);
-        b3 = II(b3, c2, d, a2, m[i + 5], 21, -57434055);
-        a2 = II(a2, b3, c2, d, m[i + 12], 6, 1700485571);
-        d = II(d, a2, b3, c2, m[i + 3], 10, -1894986606);
-        c2 = II(c2, d, a2, b3, m[i + 10], 15, -1051523);
-        b3 = II(b3, c2, d, a2, m[i + 1], 21, -2054922799);
-        a2 = II(a2, b3, c2, d, m[i + 8], 6, 1873313359);
-        d = II(d, a2, b3, c2, m[i + 15], 10, -30611744);
-        c2 = II(c2, d, a2, b3, m[i + 6], 15, -1560198380);
-        b3 = II(b3, c2, d, a2, m[i + 13], 21, 1309151649);
-        a2 = II(a2, b3, c2, d, m[i + 4], 6, -145523070);
-        d = II(d, a2, b3, c2, m[i + 11], 10, -1120210379);
-        c2 = II(c2, d, a2, b3, m[i + 2], 15, 718787259);
-        b3 = II(b3, c2, d, a2, m[i + 9], 21, -343485551);
-        a2 = a2 + aa >>> 0;
-        b3 = b3 + bb >>> 0;
-        c2 = c2 + cc >>> 0;
-        d = d + dd2 >>> 0;
-      }
-      return crypt.endian([a2, b3, c2, d]);
-    };
-    md5._ff = function(a2, b3, c2, d, x2, s, t4) {
-      var n2 = a2 + (b3 & c2 | ~b3 & d) + (x2 >>> 0) + t4;
-      return (n2 << s | n2 >>> 32 - s) + b3;
-    };
-    md5._gg = function(a2, b3, c2, d, x2, s, t4) {
-      var n2 = a2 + (b3 & d | c2 & ~d) + (x2 >>> 0) + t4;
-      return (n2 << s | n2 >>> 32 - s) + b3;
-    };
-    md5._hh = function(a2, b3, c2, d, x2, s, t4) {
-      var n2 = a2 + (b3 ^ c2 ^ d) + (x2 >>> 0) + t4;
-      return (n2 << s | n2 >>> 32 - s) + b3;
-    };
-    md5._ii = function(a2, b3, c2, d, x2, s, t4) {
-      var n2 = a2 + (c2 ^ (b3 | ~d)) + (x2 >>> 0) + t4;
-      return (n2 << s | n2 >>> 32 - s) + b3;
-    };
-    md5._blocksize = 16;
-    md5._digestsize = 16;
-    module2.exports = function(message, options) {
-      if (message === undefined || message === null)
-        throw new Error("Illegal argument " + message);
-      var digestbytes = crypt.wordsToBytes(md5(message, options));
-      return options && options.asBytes ? digestbytes : options && options.asString ? bin.bytesToString(digestbytes) : crypt.bytesToHex(digestbytes);
-    };
-  })();
-});
-
 // src/external/mii-frontend/qr-scanner-worker.min.js
 var exports_qr_scanner_worker_min = {};
 __export(exports_qr_scanner_worker_min, {
@@ -33544,3667 +33544,6 @@ if (globalThis.THREE) {
   THREE2 = three;
 }
 var _THREE = () => THREE2;
-
-// src/external/ffl.js/ffl.js
-var _ = __toESM(require_struct_fu(), 1);
-/*!
- * Bindings for FFL, a Mii renderer, in JavaScript.
- * https://github.com/ariankordi/FFL.js
- * @author Arian Kordi <https://github.com/ariankordi>
- */
-var THREE3 = _THREE();
-globalThis._ = globalThis._;
-globalThis.THREE = globalThis.THREE;
-var FFLResult = {
-  OK: 0,
-  ERROR: 1,
-  HDB_EMPTY: 2,
-  FILE_INVALID: 3,
-  MANAGER_NOT_CONSTRUCT: 4,
-  FILE_LOAD_ERROR: 5,
-  FILE_SAVE_ERROR: 7,
-  RES_FS_ERROR: 9,
-  ODB_EMPTY: 10,
-  OUT_OF_MEMORY: 12,
-  UNKNOWN_17: 17,
-  FS_ERROR: 18,
-  FS_NOT_FOUND: 19,
-  MAX: 20
-};
-var FFLiShapeType = {
-  OPA_BEARD: 0,
-  OPA_FACELINE: 1,
-  OPA_HAIR_NORMAL: 2,
-  OPA_FOREHEAD_NORMAL: 3,
-  XLU_MASK: 4,
-  XLU_NOSELINE: 5,
-  OPA_NOSE: 6,
-  OPA_HAT_NORMAL: 7,
-  XLU_GLASS: 8,
-  OPA_HAIR_CAP: 9,
-  OPA_FOREHEAD_CAP: 10,
-  OPA_HAT_CAP: 11,
-  MAX: 12
-};
-var FFLAttributeBufferType = {
-  POSITION: 0,
-  TEXCOORD: 1,
-  NORMAL: 2,
-  TANGENT: 3,
-  COLOR: 4,
-  MAX: 5
-};
-var FFLCullMode = {
-  NONE: 0,
-  BACK: 1,
-  FRONT: 2,
-  MAX: 3
-};
-var FFLModulateMode = {
-  CONSTANT: 0,
-  TEXTURE_DIRECT: 1,
-  RGB_LAYERED: 2,
-  ALPHA: 3,
-  LUMINANCE_ALPHA: 4,
-  ALPHA_OPA: 5
-};
-var FFLModulateType = {
-  SHAPE_FACELINE: 0,
-  SHAPE_BEARD: 1,
-  SHAPE_NOSE: 2,
-  SHAPE_FOREHEAD: 3,
-  SHAPE_HAIR: 4,
-  SHAPE_CAP: 5,
-  SHAPE_MASK: 6,
-  SHAPE_NOSELINE: 7,
-  SHAPE_GLASS: 8,
-  MUSTACHE: 9,
-  MOUTH: 10,
-  EYEBROW: 11,
-  EYE: 12,
-  MOLE: 13,
-  FACE_MAKE: 14,
-  FACE_LINE: 15,
-  FACE_BEARD: 16,
-  FILL: 17,
-  SHAPE_MAX: 9
-};
-var FFLResourceType = {
-  MIDDLE: 0,
-  HIGH: 1,
-  MAX: 2
-};
-var FFLExpression = {
-  NORMAL: 0,
-  SMILE: 1,
-  ANGER: 2,
-  SORROW: 3,
-  PUZZLED: 3,
-  SURPRISE: 4,
-  SURPRISED: 4,
-  BLINK: 5,
-  OPEN_MOUTH: 6,
-  SMILE_OPEN_MOUTH: 7,
-  HAPPY: 7,
-  ANGER_OPEN_MOUTH: 8,
-  SORROW_OPEN_MOUTH: 9,
-  SURPRISE_OPEN_MOUTH: 10,
-  BLINK_OPEN_MOUTH: 11,
-  WINK_LEFT: 12,
-  WINK_RIGHT: 13,
-  WINK_LEFT_OPEN_MOUTH: 14,
-  WINK_RIGHT_OPEN_MOUTH: 15,
-  LIKE_WINK_LEFT: 16,
-  LIKE: 16,
-  LIKE_WINK_RIGHT: 17,
-  FRUSTRATED: 18,
-  BORED: 19,
-  BORED_OPEN_MOUTH: 20,
-  SIGH_MOUTH_STRAIGHT: 21,
-  SIGH: 22,
-  DISGUSTED_MOUTH_STRAIGHT: 23,
-  DISGUSTED: 24,
-  LOVE: 25,
-  LOVE_OPEN_MOUTH: 26,
-  DETERMINED_MOUTH_STRAIGHT: 27,
-  DETERMINED: 28,
-  CRY_MOUTH_STRAIGHT: 29,
-  CRY: 30,
-  BIG_SMILE_MOUTH_STRAIGHT: 31,
-  BIG_SMILE: 32,
-  CHEEKY: 33,
-  CHEEKY_DUPLICATE: 34,
-  JOJO_EYES_FUNNY_MOUTH: 35,
-  JOJO_EYES_FUNNY_MOUTH_OPEN: 36,
-  SMUG: 37,
-  SMUG_OPEN_MOUTH: 38,
-  RESOLVE: 39,
-  RESOLVE_OPEN_MOUTH: 40,
-  UNBELIEVABLE: 41,
-  UNBELIEVABLE_DUPLICATE: 42,
-  CUNNING: 43,
-  CUNNING_DUPLICATE: 44,
-  RASPBERRY: 45,
-  RASPBERRY_DUPLICATE: 46,
-  INNOCENT: 47,
-  INNOCENT_DUPLICATE: 48,
-  CAT: 49,
-  CAT_DUPLICATE: 50,
-  DOG: 51,
-  DOG_DUPLICATE: 52,
-  TASTY: 53,
-  TASTY_DUPLICATE: 54,
-  MONEY_MOUTH_STRAIGHT: 55,
-  MONEY: 56,
-  SPIRAL_MOUTH_STRAIGHT: 57,
-  CONFUSED: 58,
-  CHEERFUL_MOUTH_STRAIGHT: 59,
-  CHEERFUL: 60,
-  BLANK_61: 61,
-  BLANK_62: 62,
-  GRUMBLE_MOUTH_STRAIGHT: 63,
-  GRUMBLE: 64,
-  MOVED_MOUTH_STRAIGHT: 65,
-  MOVED: 66,
-  SINGING_MOUTH_SMALL: 67,
-  SINGING: 68,
-  STUNNED: 69,
-  MAX: 70
-};
-var FFLModelFlag = {
-  NORMAL: 1 << 0,
-  HAT: 1 << 1,
-  FACE_ONLY: 1 << 2,
-  FLATTEN_NOSE: 1 << 3,
-  NEW_EXPRESSIONS: 1 << 4,
-  NEW_MASK_ONLY: 1 << 5
-};
-var _uintptr = _.uint32le;
-var FFLAttributeBuffer = _.struct([
-  _.uint32le("size"),
-  _.uint32le("stride"),
-  _uintptr("ptr")
-]);
-var FFLAttributeBufferParam = _.struct([
-  _.struct("attributeBuffers", [FFLAttributeBuffer], 5)
-]);
-var FFLPrimitiveParam = _.struct([
-  _.uint32le("primitiveType"),
-  _.uint32le("indexCount"),
-  _uintptr("pAdjustMatrix"),
-  _uintptr("pIndexBuffer")
-]);
-var FFLColor = _.struct([
-  _.float32le("r"),
-  _.float32le("g"),
-  _.float32le("b"),
-  _.float32le("a")
-]);
-var FFLVec3 = _.struct([
-  _.float32le("x"),
-  _.float32le("y"),
-  _.float32le("z")
-]);
-var FFLModulateParam = _.struct([
-  _.uint32le("mode"),
-  _.uint32le("type"),
-  _uintptr("pColorR"),
-  _uintptr("pColorG"),
-  _uintptr("pColorB"),
-  _uintptr("pTexture2D")
-]);
-var FFLDrawParam = _.struct([
-  _.struct("attributeBufferParam", [FFLAttributeBufferParam]),
-  _.struct("modulateParam", [FFLModulateParam]),
-  _.uint32le("cullMode"),
-  _.struct("primitiveParam", [FFLPrimitiveParam])
-]);
-var FFLCreateID = _.struct([
-  _.uint8("data", 10)
-]);
-var FFLiCharInfo = _.struct([
-  _.int32le("miiVersion"),
-  _.struct("faceline", [
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("texture"),
-    _.int32le("make")
-  ]),
-  _.struct("hair", [_.int32le("type"), _.int32le("color"), _.int32le("flip")]),
-  _.struct("eye", [
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("scale"),
-    _.int32le("aspect"),
-    _.int32le("rotate"),
-    _.int32le("x"),
-    _.int32le("y")
-  ]),
-  _.struct("eyebrow", [
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("scale"),
-    _.int32le("aspect"),
-    _.int32le("rotate"),
-    _.int32le("x"),
-    _.int32le("y")
-  ]),
-  _.struct("nose", [
-    _.int32le("type"),
-    _.int32le("scale"),
-    _.int32le("y")
-  ]),
-  _.struct("mouth", [
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("scale"),
-    _.int32le("aspect"),
-    _.int32le("y")
-  ]),
-  _.struct("beard", [
-    _.int32le("mustache"),
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("scale"),
-    _.int32le("y")
-  ]),
-  _.struct("glass", [
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("scale"),
-    _.int32le("y")
-  ]),
-  _.struct("mole", [
-    _.int32le("type"),
-    _.int32le("scale"),
-    _.int32le("x"),
-    _.int32le("y")
-  ]),
-  _.struct("body", [_.int32le("height"), _.int32le("build")]),
-  _.struct("personal", [
-    _.char16le("name", 22),
-    _.char16le("creator", 22),
-    _.int32le("gender"),
-    _.int32le("birthMonth"),
-    _.int32le("birthDay"),
-    _.int32le("favoriteColor"),
-    _.uint8("favorite"),
-    _.uint8("copyable"),
-    _.uint8("ngWord"),
-    _.uint8("localonly"),
-    _.int32le("regionMove"),
-    _.int32le("fontRegion"),
-    _.int32le("roomIndex"),
-    _.int32le("positionInRoom"),
-    _.int32le("birthPlatform")
-  ]),
-  _.struct("createID", [FFLCreateID]),
-  _.uint16le("padding_0"),
-  _.int32le("authorType"),
-  _.uint8("authorID", 8)
-]);
-var FFLStoreData_size = 96;
-var commonColorEnableMask = 1 << 31;
-var commonColorMask = (color) => color | commonColorEnableMask;
-var FFLAdditionalInfo = _.struct([
-  _.char16le("name", 22),
-  _.char16le("creator", 22),
-  _.struct("createID", [FFLCreateID]),
-  _.byte("_padding0", 2),
-  _.struct("skinColor", [FFLColor]),
-  _.uint32le("flags"),
-  _.uint8("facelineType"),
-  _.uint8("hairType"),
-  _.byte("_padding1", 2)
-]);
-var FFLiRenderTexture = _.struct([
-  _uintptr("pTexture2DRenderBufferColorTargetDepthTarget", 4)
-]);
-var FFLiFacelineTextureTempObject = _.struct([
-  _uintptr("pTextureFaceLine"),
-  _.struct("drawParamFaceLine", [FFLDrawParam]),
-  _uintptr("pTextureFaceMake"),
-  _.struct("drawParamFaceMake", [FFLDrawParam]),
-  _uintptr("pTextureFaceBeard"),
-  _.struct("drawParamFaceBeard", [FFLDrawParam]),
-  _uintptr("pRenderTextureCompressorParam", 2)
-]);
-var FFLiRawMaskDrawParam = _.struct([
-  _.struct("drawParamRawMaskPartsEye", [FFLDrawParam], 2),
-  _.struct("drawParamRawMaskPartsEyebrow", [FFLDrawParam], 2),
-  _.struct("drawParamRawMaskPartsMouth", [FFLDrawParam]),
-  _.struct("drawParamRawMaskPartsMustache", [FFLDrawParam], 2),
-  _.struct("drawParamRawMaskPartsMole", [FFLDrawParam]),
-  _.struct("drawParamRawMaskPartsFill", [FFLDrawParam])
-]);
-var FFLiMaskTexturesTempObject = _.struct([
-  _.uint8("partsTextures", 340),
-  _uintptr("pRawMaskDrawParam", FFLExpression.MAX),
-  _.byte("_remaining", 904 - 620)
-]);
-var FFLiTextureTempObject = _.struct([
-  _.struct("maskTextures", [FFLiMaskTexturesTempObject]),
-  _.struct("facelineTexture", [FFLiFacelineTextureTempObject])
-]);
-var FFLiMaskTextures = _.struct([
-  _uintptr("pRenderTextures", FFLExpression.MAX)
-]);
-var FFL_RESOLUTION_MASK = 1073741823;
-var FFLCharModelDesc = _.struct([
-  _.uint32le("resolution"),
-  _.uint32le("allExpressionFlag", 3),
-  _.uint32le("modelFlag"),
-  _.uint32le("resourceType")
-]);
-var FFLCharModelDescDefault = {
-  resolution: 512,
-  allExpressionFlag: new Uint32Array([1, 0, 0]),
-  modelFlag: FFLModelFlag.NORMAL,
-  resourceType: FFLResourceType.HIGH
-};
-var FFLBoundingBox = _.struct([
-  _.struct("min", [FFLVec3]),
-  _.struct("max", [FFLVec3])
-]);
-var FFLPartsTransform = _.struct([
-  _.struct("hatTranslate", [FFLVec3]),
-  _.struct("headFrontRotate", [FFLVec3]),
-  _.struct("headFrontTranslate", [FFLVec3]),
-  _.struct("headSideRotate", [FFLVec3]),
-  _.struct("headSideTranslate", [FFLVec3]),
-  _.struct("headTopRotate", [FFLVec3]),
-  _.struct("headTopTranslate", [FFLVec3])
-]);
-var FFLiCharModel = _.struct([
-  _.struct("charInfo", [FFLiCharInfo]),
-  _.struct("charModelDesc", [FFLCharModelDesc]),
-  _.uint32le("expression"),
-  _uintptr("pTextureTempObject"),
-  _.struct("drawParam", [FFLDrawParam], FFLiShapeType.MAX),
-  _uintptr("pShapeData", FFLiShapeType.MAX),
-  _.struct("facelineRenderTexture", [FFLiRenderTexture]),
-  _uintptr("pCapGlassNoselineTextures", 3),
-  _.struct("maskTextures", [FFLiMaskTextures]),
-  _.struct("beardHairFaceCenterPos", [FFLVec3], 3),
-  _.struct("partsTransform", [FFLPartsTransform]),
-  _.uint32le("modelType"),
-  _.struct("boundingBox", [FFLBoundingBox], 3)
-]);
-var FFLDataSource = {
-  OFFICIAL: 0,
-  DEFAULT: 1,
-  MIDDLE_DB: 2,
-  STORE_DATA_OFFICIAL: 3,
-  STORE_DATA: 4,
-  BUFFER: 5,
-  DIRECT_POINTER: 6
-};
-var FFLCharModelSource = _.struct([
-  _.uint32le("dataSource"),
-  _uintptr("pBuffer"),
-  _.uint16le("index")
-]);
-var FFLResourceDesc = _.struct([
-  _uintptr("pData", FFLResourceType.MAX),
-  _.uint32le("size", FFLResourceType.MAX)
-]);
-var FFLTextureFormat = {
-  R8_UNORM: 0,
-  R8_G8_UNORM: 1,
-  R8_G8_B8_A8_UNORM: 2,
-  MAX: 3
-};
-var FFLTextureInfo = _.struct([
-  _.uint16le("width"),
-  _.uint16le("height"),
-  _.uint8("mipCount"),
-  _.uint8("format"),
-  _.uint8("isGX2Tiled"),
-  _.byte("_padding", 1),
-  _.uint32le("imageSize"),
-  _uintptr("imagePtr"),
-  _.uint32le("mipSize"),
-  _uintptr("mipPtr"),
-  _.uint32le("mipLevelOffset", 13)
-]);
-var FFLTextureCallback = _.struct([
-  _uintptr("pObj"),
-  _.uint8("useOriginalTileMode"),
-  _.byte("_padding", 3),
-  _uintptr("pCreateFunc"),
-  _uintptr("pDeleteFunc")
-]);
-
-class TextureManager {
-  constructor(module2, setToFFLGlobal = false) {
-    this._module = module2;
-    this._textures = new Map;
-    this._textureCallbackPtr = 0;
-    this.logging = false;
-    this._setTextureCallback();
-    if (setToFFLGlobal) {
-      module2._FFLSetTextureCallback(this._textureCallbackPtr);
-    }
-  }
-  static _allocateTextureCallback(module2, createCallback, deleteCallback) {
-    const ptr = module2._malloc(FFLTextureCallback.size);
-    const textureCallback = {
-      pObj: 0,
-      useOriginalTileMode: false,
-      _padding: [0, 0, 0],
-      pCreateFunc: createCallback,
-      pDeleteFunc: deleteCallback
-    };
-    const packed = FFLTextureCallback.pack(textureCallback);
-    module2.HEAPU8.set(packed, ptr);
-    return ptr;
-  }
-  _setTextureCallback(addDeleteCallback = false) {
-    const mod2 = this._module;
-    this._createCallback = mod2.addFunction(this._textureCreateFunc.bind(this), "vppp");
-    if (addDeleteCallback) {
-      this._deleteCallback = mod2.addFunction(this._textureDeleteFunc.bind(this), "vpp");
-    }
-    this._textureCallbackPtr = TextureManager._allocateTextureCallback(mod2, this._createCallback, this._deleteCallback ? this._deleteCallback : 0);
-  }
-  _getTextureFormat(format) {
-    const useGLES2Formats = Number(THREE3.REVISION) <= 136;
-    const r8 = useGLES2Formats ? THREE3.LuminanceFormat : THREE3.RedFormat;
-    const r8g8 = useGLES2Formats ? THREE3.LuminanceAlphaFormat : THREE3.RGFormat;
-    const textureFormatToThreeFormat = {
-      [FFLTextureFormat.R8_UNORM]: r8,
-      [FFLTextureFormat.R8_G8_UNORM]: r8g8,
-      [FFLTextureFormat.R8_G8_B8_A8_UNORM]: THREE3.RGBAFormat
-    };
-    const dataFormat = textureFormatToThreeFormat[format];
-    if (dataFormat === undefined) {
-      throw new Error(`_textureCreateFunc: Unexpected FFLTextureFormat value: ${format}`);
-    }
-    return dataFormat;
-  }
-  _textureCreateFunc(_2, textureInfoPtr, texturePtrPtr) {
-    const u8 = this._module.HEAPU8.subarray(textureInfoPtr, textureInfoPtr + FFLTextureInfo.size);
-    const textureInfo = FFLTextureInfo.unpack(u8);
-    if (this.logging) {
-      console.debug(`_textureCreateFunc: width=${textureInfo.width}, height=${textureInfo.height}, format=${textureInfo.format}, imageSize=${textureInfo.imageSize}, mipCount=${textureInfo.mipCount}`);
-    }
-    const format = this._getTextureFormat(textureInfo.format);
-    const imageData = this._module.HEAPU8.slice(textureInfo.imagePtr, textureInfo.imagePtr + textureInfo.imageSize);
-    const canUseMipmaps = Number(THREE3.REVISION) >= 138;
-    const useMipmaps = textureInfo.mipCount > 1 && canUseMipmaps;
-    const texture = new THREE3.DataTexture(useMipmaps ? null : imageData, textureInfo.width, textureInfo.height, format, THREE3.UnsignedByteType);
-    texture.magFilter = THREE3.LinearFilter;
-    texture.minFilter = THREE3.LinearFilter;
-    if (useMipmaps) {
-      texture.mipmaps = [{
-        data: imageData,
-        width: textureInfo.width,
-        height: textureInfo.height
-      }];
-      texture.minFilter = THREE3.LinearMipmapLinearFilter;
-      texture.generateMipmaps = false;
-      this._addMipmaps(texture, textureInfo);
-    }
-    texture.needsUpdate = true;
-    this.set(texture.id, texture);
-    this._module.HEAPU32[texturePtrPtr / 4] = texture.id;
-  }
-  _addMipmaps(texture, textureInfo) {
-    if (textureInfo.mipPtr === 0) {
-      throw new Error("_addMipmaps: mipPtr is null, so the caller incorrectly assumed this texture has mipmaps");
-    }
-    for (let mipLevel = 1;mipLevel < textureInfo.mipCount; mipLevel++) {
-      const mipOffset = textureInfo.mipLevelOffset[mipLevel - 1];
-      const mipWidth = Math.max(1, textureInfo.width >> mipLevel);
-      const mipHeight = Math.max(1, textureInfo.height >> mipLevel);
-      const nextMipOffset = textureInfo.mipLevelOffset[mipLevel] || textureInfo.mipSize;
-      const end = textureInfo.mipPtr + nextMipOffset;
-      const start = textureInfo.mipPtr + mipOffset;
-      const mipData = this._module.HEAPU8.slice(start, end);
-      if (this.logging) {
-        console.debug(`  - Mip ${mipLevel}: ${mipWidth}x${mipHeight}, offset=${mipOffset}, range=${start}-${end}`);
-      }
-      texture.mipmaps.push({
-        data: mipData,
-        width: mipWidth,
-        height: mipHeight
-      });
-    }
-  }
-  _textureDeleteFunc(_2, texturePtrPtr) {
-    const texId = this._module.HEAPU32[texturePtrPtr / 4];
-    const tex = this._textures.get(texId);
-    if (tex && this.logging) {
-      console.debug("Delete texture    ", tex.id);
-    }
-  }
-  get(id) {
-    const texture = this._textures.get(id);
-    if (!texture && this.logging) {
-      console.error("Unknown texture", id);
-    }
-    return texture;
-  }
-  set(id, texture) {
-    const disposeReal = texture.dispose.bind(texture);
-    texture.dispose = () => {
-      disposeReal();
-      this.delete(id);
-    };
-    this._textures.set(id, texture);
-    if (this.logging) {
-      console.debug("Adding texture    ", texture.id);
-    }
-  }
-  delete(id) {
-    const texture = this._textures.get(id);
-    if (texture) {
-      texture.source = null;
-      texture.mipmaps = null;
-      if (this.logging) {
-        console.debug("Deleted texture   ", id);
-      }
-      this._textures.delete(id);
-    }
-  }
-  disposeCallback() {
-    if (this._textureCallbackPtr) {
-      this._module._free(this._textureCallbackPtr);
-      this._textureCallbackPtr = 0;
-    }
-    if (this._deleteCallback) {
-      this._module.removeFunction(this._deleteCallback);
-      this._deleteCallback = 0;
-    }
-    if (this._createCallback) {
-      this._module.removeFunction(this._createCallback);
-      this._createCallback = 0;
-    }
-  }
-  dispose() {
-    this._textures.forEach((tex) => {
-      tex.dispose();
-    });
-    this._textures.clear();
-    this.disposeCallback();
-  }
-}
-
-class FFLResultException extends Error {
-  constructor(result, funcName, message) {
-    if (!message) {
-      if (funcName) {
-        message = `${funcName} failed with FFLResult: ${result}`;
-      } else {
-        message = `From FFLResult: ${result}`;
-      }
-    }
-    super(message);
-    this.result = result;
-  }
-  static handleResult(result, funcName) {
-    switch (result) {
-      case FFLResult.ERROR:
-        throw new FFLResultWrongParam(funcName);
-      case FFLResult.FILE_INVALID:
-        throw new FFLResultBroken(funcName);
-      case FFLResult.MANAGER_NOT_CONSTRUCT:
-        throw new FFLResultNotAvailable(funcName);
-      case FFLResult.FILE_LOAD_ERROR:
-        throw new FFLResultFatal(funcName);
-      case FFLResult.OK:
-        return;
-      default:
-        throw new FFLResultException(result, funcName);
-    }
-  }
-}
-
-class FFLResultWrongParam extends FFLResultException {
-  constructor(funcName) {
-    super(FFLResult.ERROR, funcName, `${funcName} returned FFL_RESULT_WRONG_PARAM. This usually means parameters going into that function were invalid.`);
-  }
-}
-
-class FFLResultBroken extends FFLResultException {
-  constructor(funcName, message) {
-    super(FFLResult.FILE_INVALID, funcName, message ? message : `${funcName} returned FFL_RESULT_BROKEN. This usually indicates invalid underlying data.`);
-  }
-}
-
-class BrokenInitRes extends FFLResultBroken {
-  constructor() {
-    super("FFLInitRes", 'The header for the FFL resource is probably invalid. Check the version and magic, should be "FFRA" or "ARFF".');
-  }
-}
-
-class BrokenInitModel extends FFLResultBroken {
-  constructor() {
-    super("FFLInitCharModelCPUStep", "FFLInitCharModelCPUStep failed probably because your data failed CRC or CharInfo verification (FFLiVerifyCharInfoWithReason).");
-  }
-}
-
-class FFLResultNotAvailable extends FFLResultException {
-  constructor(funcName) {
-    super(FFLResult.MANAGER_NOT_CONSTRUCT, funcName, `Tried to call FFL function ${funcName} when FFLManager is not constructed (FFL is not initialized properly).`);
-  }
-}
-
-class FFLResultFatal extends FFLResultException {
-  constructor(funcName) {
-    super(FFLResult.FILE_LOAD_ERROR, funcName, `Failed to uncompress or load a specific asset from the FFL resource file during call to ${funcName}`);
-  }
-}
-
-class FFLiVerifyReasonException extends Error {
-  constructor(result) {
-    super(`FFLiVerifyCharInfoWithReason (CharInfo verification) failed with result: ${result}`);
-    this.result = result;
-  }
-}
-
-class ExpressionNotSet extends Error {
-  constructor(expression) {
-    super(`Attempted to set expression ${expression}, but the mask for that expression does not exist. You must reinitialize the CharModel with this expression in the expression flags before using it.`);
-    this.expression = expression;
-  }
-}
-async function _loadDataIntoHeap(resource, module2) {
-  let heapSize;
-  let heapPtr;
-  try {
-    if (resource instanceof ArrayBuffer) {
-      resource = new Uint8Array(resource);
-    }
-    if (resource instanceof Uint8Array) {
-      heapSize = resource.length;
-      heapPtr = module2._malloc(heapSize);
-      console.debug(`_loadDataIntoHeap: Loading from buffer. Size: ${heapSize}, pointer: ${heapPtr}`);
-      module2.HEAPU8.set(resource, heapPtr);
-    } else if (resource instanceof Response) {
-      if (!resource.ok) {
-        throw new Error(`_loadDataIntoHeap: Failed to fetch resource at URL = ${resource.url}, response code = ${resource.status}`);
-      }
-      if (!resource.body) {
-        throw new Error(`_loadDataIntoHeap: Fetch response body is null (resource.body = ${resource.body})`);
-      }
-      const contentLength = resource.headers.get("Content-Length");
-      if (!contentLength) {
-        console.debug("_loadDataIntoHeap: Fetch response is missing Content-Length, falling back to reading as ArrayBuffer.");
-        return _loadDataIntoHeap(await resource.arrayBuffer(), module2);
-      }
-      heapSize = parseInt(contentLength, 10);
-      heapPtr = module2._malloc(heapSize);
-      console.debug(`loadDataIntoHeap: Streaming from fetch response. Size: ${heapSize}, pointer: ${heapPtr}, URL: ${resource.url}`);
-      const reader = resource.body.getReader();
-      let offset = heapPtr;
-      while (true) {
-        const { done, value: value2 } = await reader.read();
-        if (done) {
-          break;
-        }
-        module2.HEAPU8.set(value2, offset);
-        offset += value2.length;
-      }
-    } else {
-      throw new Error("loadDataIntoHeap: type is not Uint8Array or Response");
-    }
-    return { pointer: heapPtr, size: heapSize };
-  } catch (error) {
-    if (heapPtr) {
-      module2._free(heapPtr);
-    }
-    throw error;
-  }
-}
-async function initializeFFL(resource, moduleOrPromise) {
-  console.debug("initializeFFL: Entrypoint, waiting for module to be ready.");
-  let resourceDescPtr;
-  function freeResDesc() {
-    if (resourceDescPtr) {
-      module2._free(resourceDescPtr);
-    }
-  }
-  const resourceType = FFLResourceType.HIGH;
-  let module2;
-  if (typeof moduleOrPromise === "function") {
-    moduleOrPromise = moduleOrPromise();
-  }
-  if (moduleOrPromise instanceof Promise) {
-    module2 = await moduleOrPromise;
-  } else {
-    module2 = moduleOrPromise;
-  }
-  if (!module2.calledRun && !module2.onRuntimeInitialized) {
-    await new Promise((resolve) => {
-      module2.onRuntimeInitialized = () => {
-        console.debug("initializeFFL: Emscripten runtime initialized, resolving.");
-        resolve(null);
-      };
-      console.debug(`initializeFFL: module.calledRun: ${module2.calledRun}, module.onRuntimeInitialized:
-${module2.onRuntimeInitialized}
- // ^^ assigned and waiting.`);
-    });
-  } else {
-    console.debug("initializeFFL: Assuming module is ready.");
-  }
-  let resourceDesc = null;
-  try {
-    if (resource instanceof Promise) {
-      resource = await resource;
-    }
-    const { pointer: heapPtr, size: heapSize } = await _loadDataIntoHeap(resource, module2);
-    console.debug(`initializeFFL: Resource loaded into heap. Pointer: ${heapPtr}, Size: ${heapSize}`);
-    resourceDesc = { pData: [0, 0], size: [0, 0] };
-    resourceDesc.pData[resourceType] = heapPtr;
-    resourceDesc.size[resourceType] = heapSize;
-    const resourceDescData = FFLResourceDesc.pack(resourceDesc);
-    resourceDescPtr = module2._malloc(FFLResourceDesc.size);
-    module2.HEAPU8.set(resourceDescData, resourceDescPtr);
-    const result = module2._FFLInitRes(0, resourceDescPtr);
-    if (result === FFLResult.FILE_INVALID) {
-      throw new BrokenInitRes;
-    }
-    FFLResultException.handleResult(result, "FFLInitRes");
-    module2._FFLInitResGPUStep();
-    module2._FFLSetNormalIsSnorm8_8_8_8(true);
-    module2._FFLSetTextureFlipY(true);
-  } catch (error) {
-    _freeResourceDesc(resourceDesc, module2);
-    freeResDesc();
-    console.error("initializeFFL failed:", error);
-    throw error;
-  } finally {
-    freeResDesc();
-  }
-  return {
-    module: module2,
-    resourceDesc
-  };
-}
-function _freeResourceDesc(desc, module2) {
-  if (!desc || !desc.pData) {
-    return;
-  }
-  desc.pData.forEach((ptr, i) => {
-    if (ptr) {
-      module2._free(ptr);
-      desc.pData[i] = 0;
-    }
-  });
-}
-class CharModel {
-  constructor(ptr, module2, materialClass, texManager) {
-    this._module = module2;
-    this._data = null;
-    this._materialClass = materialClass;
-    this._materialTextureClass = materialClass;
-    this._textureManager = texManager;
-    this._ptr = ptr;
-    this.__ptr = ptr;
-    const charModelData = this._module.HEAPU8.subarray(ptr, ptr + FFLiCharModel.size);
-    this._model = FFLiCharModel.unpack(charModelData);
-    this._facelineTarget = null;
-    this._maskTargets = new Array(FFLExpression.MAX).fill(null);
-    this.expressions = [];
-    this.meshes = new THREE3.Group;
-    this._addCharModelMeshes(module2);
-  }
-  _addCharModelMeshes(module2) {
-    if (!this.meshes) {
-      throw new Error("_addCharModelMeshes: this.meshes is null or undefined, was this CharModel disposed?");
-    }
-    for (let shapeType = 0;shapeType < FFLiShapeType.MAX; shapeType++) {
-      const drawParam = this._model.drawParam[shapeType];
-      const mesh = drawParamToMesh(drawParam, this._materialClass, module2, this._textureManager);
-      if (!mesh) {
-        continue;
-      }
-      mesh.renderOrder = drawParam.modulateParam.type;
-      switch (shapeType) {
-        case FFLiShapeType.OPA_FACELINE:
-          this._facelineMesh = mesh;
-          break;
-        case FFLiShapeType.XLU_MASK:
-          this._maskMesh = mesh;
-          break;
-      }
-      this.meshes.add(mesh);
-    }
-  }
-  _getTextureTempObjectPtr() {
-    return this._model.pTextureTempObject;
-  }
-  _getTextureTempObject() {
-    const ptr = this._getTextureTempObjectPtr();
-    return FFLiTextureTempObject.unpack(this._module.HEAPU8.subarray(ptr, ptr + FFLiTextureTempObject.size));
-  }
-  _getPartsTransform() {
-    const obj = this._model.partsTransform;
-    const newPartsTransform = {};
-    for (const key2 in obj) {
-      const vec = obj[key2];
-      if (vec.x === undefined) {
-        throw new Error;
-      }
-      newPartsTransform[key2] = new THREE3.Vector3(vec.x, vec.y, vec.z);
-    }
-    return newPartsTransform;
-  }
-  _getFacelineColor() {
-    const mod2 = this._module;
-    const facelineColor = this._model.charInfo.faceline.color;
-    const colorPtr = mod2._malloc(FFLColor.size);
-    mod2._FFLGetFacelineColor(colorPtr, facelineColor);
-    const color = _getFFLColor3(_getFFLColor(colorPtr, mod2.HEAPF32));
-    mod2._free(colorPtr);
-    return color;
-  }
-  _getFavoriteColor() {
-    const mod2 = this._module;
-    const favoriteColor = this._model.charInfo.personal.favoriteColor;
-    const colorPtr = mod2._malloc(FFLColor.size);
-    mod2._FFLGetFavoriteColor(colorPtr, favoriteColor);
-    const color = _getFFLColor3(_getFFLColor(colorPtr, mod2.HEAPF32));
-    mod2._free(colorPtr);
-    return color;
-  }
-  _getCharInfoUint8Array() {
-    return FFLiCharInfo.pack(this._model.charInfo);
-  }
-  _getPartsTexturesPtr() {
-    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.maskTextures.offset + FFLiMaskTexturesTempObject.fields.partsTextures.offset;
-  }
-  _getFacelineTempObjectPtr() {
-    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.facelineTexture.offset;
-  }
-  _getMaskTempObjectPtr() {
-    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.maskTextures.offset;
-  }
-  _getExpressionFlagPtr() {
-    return this._ptr + FFLiCharModel.fields.charModelDesc.offset + FFLCharModelDesc.fields.allExpressionFlag.offset;
-  }
-  _getBoundingBox() {
-    const bbox = this._model.boundingBox[this._model.modelType];
-    if (!(bbox.max.x === 0 && bbox.max.y === 0 && bbox.max.z === 0)) {
-      const min = new THREE3.Vector3(bbox.min.x, bbox.min.y, bbox.min.z);
-      const max = new THREE3.Vector3(bbox.max.x, bbox.max.y, bbox.max.z);
-      return new THREE3.Box3(min, max);
-    }
-    const excludeFromBox = [FFLModulateType.SHAPE_MASK, FFLModulateType.SHAPE_GLASS];
-    const box = new THREE3.Box3;
-    if (!this.meshes) {
-      throw new Error("_getBoundingBox: this.meshes is null.");
-    }
-    this.meshes.traverse((child) => {
-      if (!(child instanceof THREE3.Mesh) || excludeFromBox.indexOf(child.geometry.userData.modulateType) !== -1) {
-        return;
-      }
-      box.expandByObject(child);
-    });
-    return box;
-  }
-  _getResolution() {
-    return this._model.charModelDesc.resolution & FFL_RESOLUTION_MASK;
-  }
-  _isTexOnly() {
-    return (this._model.charModelDesc.modelFlag & FFLModelFlag.NEW_MASK_ONLY) !== 0;
-  }
-  _finalizeCharModel() {
-    if (!this._ptr) {
-      return;
-    }
-    this._module._FFLDeleteCharModel(this._ptr);
-    this._module._free(this._ptr);
-    this._ptr = 0;
-  }
-  disposeTargets() {
-    if (this._facelineTarget) {
-      console.debug(`Disposing target ${this._facelineTarget.texture.id} for faceline`);
-      this._facelineTarget.dispose();
-      this._facelineTarget = null;
-    }
-    this._maskTargets.forEach((target, i) => {
-      if (!target) {
-        return;
-      }
-      console.debug(`Disposing target ${target.texture.id} for mask ${i}`);
-      target.dispose();
-      this._maskTargets[i] = null;
-    });
-  }
-  dispose(disposeTargets = true) {
-    console.debug("CharModel.dispose: ptr =", this.__ptr);
-    this._finalizeCharModel();
-    if (this.meshes) {
-      this._facelineMesh = null;
-      this._maskMesh = null;
-      disposeMeshes(this.meshes);
-      this.meshes = null;
-    }
-    if (disposeTargets) {
-      this.disposeTargets();
-    }
-    if (this._textureManager) {
-      this._textureManager.dispose();
-      this._textureManager = null;
-    }
-  }
-  getStoreData() {
-    const charInfoData = this._getCharInfoUint8Array();
-    const mod2 = this._module;
-    const charInfoPtr = mod2._malloc(FFLiCharInfo.size);
-    const storeDataPtr = mod2._malloc(FFLStoreData_size);
-    mod2.HEAPU8.set(charInfoData, charInfoPtr);
-    const result = mod2._FFLpGetStoreDataFromCharInfo(storeDataPtr, charInfoPtr);
-    const storeData = mod2.HEAPU8.slice(storeDataPtr, storeDataPtr + FFLStoreData_size);
-    mod2._free(charInfoPtr);
-    mod2._free(storeDataPtr);
-    if (!result) {
-      throw new Error("getStoreData: call to FFLpGetStoreDataFromCharInfo returned false, CharInfo verification probably failed");
-    }
-    return storeData;
-  }
-  setExpression(expression) {
-    this._model.expression = expression;
-    const targ = this._maskTargets[expression];
-    if (!targ || !targ.texture) {
-      throw new ExpressionNotSet(expression);
-    }
-    if (this._isTexOnly()) {
-      return;
-    }
-    const mesh = this._maskMesh;
-    if (!mesh || !(mesh instanceof THREE3.Mesh)) {
-      if (expression === FFLExpression.BLANK_61 || expression === FFLExpression.BLANK_62) {
-        return;
-      }
-      throw new Error("setExpression: mask mesh does not exist, cannot set expression on it");
-    }
-    targ.texture._target = targ;
-    mesh.material.map = targ.texture;
-    mesh.material.needsUpdate = true;
-  }
-  getFaceline() {
-    if (this._facelineTarget) {
-      return this._facelineTarget;
-    }
-    return null;
-  }
-  getMask(expression = this.expression) {
-    if (this._maskTargets && this._maskTargets[expression]) {
-      return this._maskTargets[expression];
-    }
-    return null;
-  }
-  get expression() {
-    return this._model.expression;
-  }
-  get charInfo() {
-    return this._model.charInfo;
-  }
-  get facelineColor() {
-    if (!this._facelineColor) {
-      this._facelineColor = this._getFacelineColor();
-    }
-    return this._facelineColor;
-  }
-  get favoriteColor() {
-    if (!this._favoriteColor) {
-      this._favoriteColor = this._getFavoriteColor();
-    }
-    return this._favoriteColor;
-  }
-  get gender() {
-    return this._model.charInfo.personal.gender;
-  }
-  get partsTransform() {
-    if (!this._partsTransform) {
-      this._partsTransform = this._getPartsTransform();
-    }
-    return this._partsTransform;
-  }
-  get boundingBox() {
-    if (!this._boundingBox) {
-      this._boundingBox = this._getBoundingBox();
-    }
-    return this._boundingBox;
-  }
-  static BodyScaleMode = {
-    Apply: 0,
-    Limit: 1
-  };
-  getBodyScale(scaleMode = CharModel.BodyScaleMode.Apply) {
-    const build = this._model.charInfo.body.build;
-    const height2 = this._model.charInfo.body.height;
-    const bodyScale = new THREE3.Vector3;
-    switch (scaleMode) {
-      case CharModel.BodyScaleMode.Apply: {
-        bodyScale.x = build * (height2 * 0.003671875 + 0.4) / 128 + height2 * 0.001796875 + 0.4;
-        bodyScale.y = height2 * 0.006015625 + 0.5;
-        break;
-      }
-      case CharModel.BodyScaleMode.Limit: {
-        const heightFactor = height2 / 128;
-        bodyScale.y = heightFactor * 0.55 + 0.6;
-        bodyScale.x = heightFactor * 0.3 + 0.6;
-        bodyScale.x = (heightFactor * 0.6 + 0.8 - bodyScale.x) * (build / 128) + bodyScale.x;
-        break;
-      }
-      default:
-        throw new Error(`getBodyScale: Unexpected value for scaleMode: ${scaleMode}`);
-    }
-    bodyScale.z = bodyScale.x;
-    return bodyScale;
-  }
-}
-var PantsColor = {
-  GrayNormal: 0,
-  BluePresent: 1,
-  RedRegular: 2,
-  GoldSpecial: 3
-};
-var pantsColors = {
-  [PantsColor.GrayNormal]: new THREE3.Color(4212558),
-  [PantsColor.BluePresent]: new THREE3.Color(2637946),
-  [PantsColor.RedRegular]: new THREE3.Color(7348245),
-  [PantsColor.GoldSpecial]: new THREE3.Color(12623920)
-};
-function _allocateModelSource(data2, module2) {
-  const bufferPtr = module2._malloc(FFLiCharInfo.size);
-  const modelSource = {
-    dataSource: FFLDataSource.DIRECT_POINTER,
-    pBuffer: bufferPtr,
-    index: 0
-  };
-  if (!(data2 instanceof Uint8Array)) {
-    try {
-      if (typeof data2 !== "object") {
-        throw new Error("_allocateModelSource: data passed in is not FFLiCharInfo object or Uint8Array");
-      }
-      data2 = FFLiCharInfo.pack(data2);
-    } catch (e) {
-      module2._free(bufferPtr);
-      throw e;
-    }
-  }
-  function setStudioData(src) {
-    const studio = StudioCharInfo.unpack(src);
-    const charInfo = convertStudioCharInfoToFFLiCharInfo(studio);
-    data2 = FFLiCharInfo.pack(charInfo);
-    module2.HEAPU8.set(data2, bufferPtr);
-  }
-  function callGetCharInfoFunc(data3, size, funcName) {
-    const dataPtr = module2._malloc(size);
-    module2.HEAPU8.set(data3, dataPtr);
-    const result = module2[funcName](bufferPtr, dataPtr);
-    module2._free(dataPtr);
-    if (!result) {
-      module2._free(bufferPtr);
-      throw new Error(`_allocateModelSource: call to ${funcName} returned false, CharInfo verification probably failed`);
-    }
-  }
-  switch (data2.length) {
-    case FFLStoreData_size: {
-      callGetCharInfoFunc(data2, FFLStoreData_size, "_FFLpGetCharInfoFromStoreData");
-      break;
-    }
-    case 74:
-    case 76: {
-      callGetCharInfoFunc(data2, 74, "_FFLpGetCharInfoFromMiiDataOfficialRFL");
-      break;
-    }
-    case FFLiCharInfo.size:
-      module2.HEAPU8.set(data2, bufferPtr);
-      break;
-    case StudioCharInfo.size + 1: {
-      data2 = studioURLObfuscationDecode(data2);
-      setStudioData(data2);
-      break;
-    }
-    case StudioCharInfo.size: {
-      setStudioData(data2);
-      break;
-    }
-    case 88:
-      throw new Error("_allocateModelSource: NX CharInfo is not supported.");
-    case 48:
-    case 68:
-      throw new Error("_allocateModelSource: NX CoreData/StoreData is not supported.");
-    case 92:
-    case 72:
-      throw new Error("_allocateModelSource: Please convert your FFLiMiiDataOfficial/FFLiMiiDataCore to FFLStoreData (add a checksum).");
-    default: {
-      module2._free(bufferPtr);
-      throw new Error(`_allocateModelSource: Unknown length for character data: ${data2.length}`);
-    }
-  }
-  return modelSource;
-}
-function verifyCharInfo(data2, module2, verifyName = false) {
-  let charInfoPtr = 0;
-  let charInfoAllocated = false;
-  if (typeof data2 === "number") {
-    charInfoPtr = data2;
-    charInfoAllocated = false;
-  } else {
-    charInfoAllocated = true;
-    charInfoPtr = module2._malloc(FFLiCharInfo.size);
-    module2.HEAPU8.set(data2, charInfoPtr);
-  }
-  const result = module2._FFLiVerifyCharInfoWithReason(charInfoPtr, verifyName);
-  if (charInfoAllocated) {
-    module2._free(charInfoPtr);
-  }
-  if (result !== 0) {
-    throw new FFLiVerifyReasonException(result);
-  }
-}
-function checkExpressionChangesShapes(i, warn = false) {
-  const expressionsDisablingNose = [49, 50, 51, 52, 61, 62];
-  const expressionsDisablingMask = [61, 62];
-  const prefix = `checkExpressionChangesShapes: An expression was enabled (${i}) that is meant to disable nose or mask shape for the entire CharModel, so it is only recommended to set this as a single expression rather than as one of multiple.`;
-  if (expressionsDisablingMask.indexOf(i) !== -1) {
-    warn && console.warn(`${prefix} (in this case, MASK SHAPE so there is supposed to be NO FACE)`);
-    return true;
-  }
-  if (expressionsDisablingNose.indexOf(i) !== -1) {
-    warn && console.warn(`${prefix} (nose shape)`);
-    return true;
-  }
-  return false;
-}
-function makeExpressionFlag(expressions) {
-  function checkRange(i) {
-    if (i >= FFLExpression.MAX) {
-      throw new Error(`makeExpressionFlag: input out of range: got ${i}, max: ${FFLExpression.MAX}`);
-    }
-  }
-  const flags = new Uint32Array([0, 0, 0]);
-  let checkForChangeShapes = true;
-  if (typeof expressions === "number") {
-    expressions = [expressions];
-    checkForChangeShapes = false;
-  } else if (!Array.isArray(expressions)) {
-    throw new Error("makeExpressionFlag: expected array or single number");
-  }
-  for (const index2 of expressions) {
-    checkRange(index2);
-    if (checkForChangeShapes) {
-      checkExpressionChangesShapes(index2, true);
-    }
-    const part = Math.floor(index2 / 32);
-    const bitIndex = index2 % 32;
-    flags[part] |= 1 << bitIndex;
-  }
-  return flags;
-}
-function createCharModel(data2, descOrExpFlag, materialClass, module2, verify = true) {
-  if (!module2 || !module2._malloc) {
-    throw new Error("createCharModel: module is null not initialized properly (cannot find ._malloc).");
-  }
-  if (!data2) {
-    throw new Error("createCharModel: data is null or undefined.");
-  }
-  const modelSourcePtr = module2._malloc(FFLCharModelSource.size);
-  const modelDescPtr = module2._malloc(FFLCharModelDesc.size);
-  const charModelPtr = module2._malloc(FFLiCharModel.size);
-  const modelSource = _allocateModelSource(data2, module2);
-  const charInfoPtr = modelSource.pBuffer;
-  const modelSourceBuffer = FFLCharModelSource.pack(modelSource);
-  module2.HEAPU8.set(modelSourceBuffer, modelSourcePtr);
-  const modelDesc = _descOrExpFlagToModelDesc(descOrExpFlag);
-  modelDesc.modelFlag |= FFLModelFlag.NEW_EXPRESSIONS;
-  const modelDescBuffer = FFLCharModelDesc.pack(modelDesc);
-  module2.HEAPU8.set(modelDescBuffer, modelDescPtr);
-  let textureManager = null;
-  try {
-    if (verify) {
-      verifyCharInfo(charInfoPtr, module2, false);
-    }
-    textureManager = new TextureManager(module2, false);
-    const result = module2._FFLInitCharModelCPUStepWithCallback(charModelPtr, modelSourcePtr, modelDescPtr, textureManager._textureCallbackPtr);
-    if (result === FFLResult.FILE_INVALID) {
-      throw new BrokenInitModel;
-    }
-    FFLResultException.handleResult(result, "FFLInitCharModelCPUStep");
-  } catch (error) {
-    if (textureManager) {
-      textureManager.dispose();
-    }
-    module2._free(charModelPtr);
-    throw error;
-  } finally {
-    module2._free(modelSourcePtr);
-    module2._free(modelDescPtr);
-    module2._free(charInfoPtr);
-    if (textureManager) {
-      textureManager.disposeCallback();
-    }
-  }
-  const charModel = new CharModel(charModelPtr, module2, materialClass, textureManager);
-  charModel._data = data2;
-  console.debug(`createCharModel: Initialized for "${charModel._model.charInfo.personal.name}", ptr =`, charModelPtr);
-  return charModel;
-}
-function _descOrExpFlagToModelDesc(descOrExpFlag, defaultDesc = FFLCharModelDescDefault) {
-  if (!descOrExpFlag && typeof descOrExpFlag !== "number") {
-    return defaultDesc;
-  }
-  if (typeof descOrExpFlag === "number" || Array.isArray(descOrExpFlag)) {
-    descOrExpFlag = makeExpressionFlag(descOrExpFlag);
-  }
-  let newModelDesc = Object.assign({}, defaultDesc);
-  if (descOrExpFlag instanceof Uint32Array) {
-    newModelDesc.allExpressionFlag = descOrExpFlag;
-  } else if (typeof descOrExpFlag === "object") {
-    newModelDesc = descOrExpFlag;
-  } else {
-    throw new Error("_descOrExpFlagToModelDesc: Unexpected type for descOrExpFlag");
-  }
-  return newModelDesc;
-}
-function matSupportsFFL(material) {
-  return "modulateMode" in material.prototype;
-}
-function drawParamToMesh(drawParam, materialClass, module2, texManager) {
-  if (!drawParam) {
-    throw new Error("drawParamToMesh: drawParam may be null.");
-  }
-  if (!texManager) {
-    throw new Error("drawParamToMesh: Passed in TextureManager is null or undefined, is it constructed?");
-  }
-  if (typeof materialClass !== "function") {
-    throw new Error("drawParamToMesh: materialClass is unexpectedly not a function.");
-  }
-  if (drawParam.primitiveParam.indexCount === 0) {
-    return null;
-  }
-  const geometry = _bindDrawParamGeometry(drawParam, module2);
-  const cullModeToThreeSide = {
-    [FFLCullMode.NONE]: THREE3.DoubleSide,
-    [FFLCullMode.BACK]: THREE3.FrontSide,
-    [FFLCullMode.FRONT]: THREE3.BackSide,
-    [FFLCullMode.MAX]: THREE3.DoubleSide
-  };
-  const side = cullModeToThreeSide[drawParam.cullMode];
-  if (side === undefined) {
-    throw new Error(`drawParamToMesh: Unexpected value for FFLCullMode: ${drawParam.cullMode}`);
-  }
-  const texture = _getTextureFromModulateParam(drawParam.modulateParam, texManager);
-  const isFFLMaterial = matSupportsFFL(materialClass);
-  const params = _applyModulateParam(drawParam.modulateParam, module2, isFFLMaterial);
-  const materialParam = {
-    side,
-    map: texture,
-    ...params
-  };
-  if (geometry.attributes.tangent === undefined && "useSpecularModeBlinn" in materialClass.prototype) {
-    materialParam.useSpecularModeBlinn = true;
-  }
-  const material = new materialClass(materialParam);
-  const mesh = new THREE3.Mesh(geometry, material);
-  if (drawParam.primitiveParam.pAdjustMatrix !== 0) {
-    _applyAdjustMatrixToMesh(drawParam.primitiveParam.pAdjustMatrix, mesh, module2.HEAPF32);
-  }
-  if (mesh.geometry.userData) {
-    mesh.geometry.userData.modulateMode = drawParam.modulateParam.mode;
-    mesh.geometry.userData.modulateType = drawParam.modulateParam.type;
-    mesh.geometry.userData.modulateColor = params.color instanceof THREE3.Color ? [params.color.r, params.color.g, params.color.b, 1] : [1, 1, 1, 1];
-    mesh.geometry.userData.cullMode = drawParam.cullMode;
-  }
-  return mesh;
-}
-function _bindDrawParamGeometry(drawParam, module2) {
-  function unexpectedStride(typeStr, stride) {
-    throw new Error(`_bindDrawParamGeometry: Unexpected stride for attribute ${typeStr}: ${stride}`);
-  }
-  const attributes = drawParam.attributeBufferParam.attributeBuffers;
-  const positionBuffer = attributes[FFLAttributeBufferType.POSITION];
-  if (positionBuffer.size === 0) {
-    throw new Error("_bindDrawParamGeometry: Position buffer must not have size of 0");
-  }
-  const vertexCount = positionBuffer.size / positionBuffer.stride;
-  const geometry = new THREE3.BufferGeometry;
-  const indexPtr = drawParam.primitiveParam.pIndexBuffer / 2;
-  const indexCount = drawParam.primitiveParam.indexCount;
-  const indices = module2.HEAPU16.slice(indexPtr, indexPtr + indexCount);
-  geometry.setIndex(new THREE3.Uint16BufferAttribute(indices, 1));
-  for (const typeStr in attributes) {
-    const buffer = attributes[typeStr];
-    const type = parseInt(typeStr);
-    if (buffer.size === 0) {
-      continue;
-    }
-    switch (type) {
-      case FFLAttributeBufferType.POSITION: {
-        if (buffer.stride === 16) {
-          const ptr = buffer.ptr / 4;
-          const data2 = module2.HEAPF32.slice(ptr, ptr + vertexCount * 4);
-          const interleavedBuffer = new THREE3.InterleavedBuffer(data2, 4);
-          geometry.setAttribute("position", new THREE3.InterleavedBufferAttribute(interleavedBuffer, 3, 0));
-        } else if (buffer.stride === 6) {
-          const ptr = buffer.ptr / 2;
-          const data2 = module2.HEAPU16.slice(ptr, ptr + vertexCount * 3);
-          geometry.setAttribute("position", new THREE3.Float16BufferAttribute(data2, 3));
-        } else {
-          unexpectedStride(typeStr, buffer.stride);
-        }
-        break;
-      }
-      case FFLAttributeBufferType.NORMAL: {
-        const data2 = module2.HEAP8.slice(buffer.ptr, buffer.ptr + buffer.size);
-        geometry.setAttribute("normal", new THREE3.Int8BufferAttribute(data2, buffer.stride, true));
-        break;
-      }
-      case FFLAttributeBufferType.TANGENT: {
-        const data2 = module2.HEAP8.slice(buffer.ptr, buffer.ptr + buffer.size);
-        geometry.setAttribute("tangent", new THREE3.Int8BufferAttribute(data2, buffer.stride, true));
-        break;
-      }
-      case FFLAttributeBufferType.TEXCOORD: {
-        if (buffer.stride === 8) {
-          const ptr = buffer.ptr / 4;
-          const data2 = module2.HEAPF32.slice(ptr, ptr + vertexCount * 2);
-          geometry.setAttribute("uv", new THREE3.Float32BufferAttribute(data2, 2));
-        } else if (buffer.stride === 4) {
-          const ptr = buffer.ptr / 2;
-          const data2 = module2.HEAPU16.slice(ptr, ptr + vertexCount * 2);
-          geometry.setAttribute("uv", new THREE3.Float16BufferAttribute(data2, 2));
-        } else {
-          unexpectedStride(typeStr, buffer.stride);
-        }
-        break;
-      }
-      case FFLAttributeBufferType.COLOR: {
-        if (buffer.stride === 0) {
-          break;
-        }
-        const data2 = module2.HEAPU8.slice(buffer.ptr, buffer.ptr + buffer.size);
-        geometry.setAttribute("_color", new THREE3.Uint8BufferAttribute(data2, buffer.stride, true));
-        break;
-      }
-    }
-  }
-  return geometry;
-}
-function _getTextureFromModulateParam(modulateParam, textureManager) {
-  if (!modulateParam.pTexture2D || modulateParam.pTexture2D === 1) {
-    return null;
-  }
-  const texturePtr = modulateParam.pTexture2D;
-  const texture = textureManager.get(texturePtr);
-  if (!texture) {
-    throw new Error(`_getTextureFromModulateParam: Texture not found for ${texturePtr}.`);
-  }
-  const applyMirrorTypes = [
-    FFLModulateType.SHAPE_FACELINE,
-    FFLModulateType.SHAPE_CAP,
-    FFLModulateType.SHAPE_GLASS
-  ];
-  if (applyMirrorTypes.indexOf(modulateParam.type) !== -1) {
-    texture.wrapS = THREE3.MirroredRepeatWrapping;
-    texture.wrapT = THREE3.MirroredRepeatWrapping;
-    texture.needsUpdate = true;
-  }
-  return texture;
-}
-function _getBlendOptionsFromModulateType(modulateType, modulateMode) {
-  if (modulateMode !== 0 && modulateType >= FFLModulateType.SHAPE_MAX && modulateType <= FFLModulateType.MOLE) {
-    return {
-      blending: THREE3.CustomBlending,
-      blendSrc: THREE3.OneMinusDstAlphaFactor,
-      blendSrcAlpha: THREE3.SrcAlphaFactor,
-      blendDst: THREE3.DstAlphaFactor
-    };
-  } else if (modulateMode !== 0 && modulateType >= FFLModulateType.FACE_MAKE && modulateType <= FFLModulateType.FILL) {
-    return {
-      blending: THREE3.CustomBlending,
-      blendSrc: THREE3.SrcAlphaFactor,
-      blendDst: THREE3.OneMinusSrcAlphaFactor,
-      blendSrcAlpha: THREE3.OneFactor,
-      blendDstAlpha: THREE3.OneFactor
-    };
-  }
-  return {};
-}
-function _applyModulateParam(modulateParam, module2, forFFLMaterial = true) {
-  let color = null;
-  let color4 = null;
-  const f32 = module2.HEAPF32;
-  if (modulateParam.pColorG !== 0 && modulateParam.pColorB !== 0) {
-    color = [
-      _getFFLColor3(_getFFLColor(modulateParam.pColorR, f32)),
-      _getFFLColor3(_getFFLColor(modulateParam.pColorG, f32)),
-      _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32))
-    ];
-    if (self.eyeScleraHack && modulateParam.type === 12) {
-      color = [
-        _getFFLColor3(_getFFLColor(modulateParam.pColorR, f32)),
-        _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32)),
-        _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32))
-      ];
-    }
-  } else if (modulateParam.pColorR !== 0) {
-    color4 = _getFFLColor(modulateParam.pColorR, f32);
-    color = _getFFLColor3(color4);
-  }
-  const opacity = color4 ? color4.a : 1;
-  const transparent = modulateParam.type >= FFLModulateType.SHAPE_MASK;
-  const lightEnable = !(modulateParam.type >= FFLModulateType.SHAPE_MAX && modulateParam.mode !== FFLModulateMode.CONSTANT);
-  const modulateModeType = forFFLMaterial ? {
-    modulateMode: modulateParam.mode,
-    modulateType: modulateParam.type
-  } : {};
-  const param = Object.assign(modulateModeType, {
-    color,
-    opacity,
-    transparent,
-    depthWrite: !transparent,
-    ..._getBlendOptionsFromModulateType(modulateParam.type, modulateParam.mode)
-  });
-  if (!lightEnable) {
-    param.lightEnable = lightEnable;
-  }
-  return param;
-}
-function _getFFLColor(colorPtr, heapf32) {
-  if (!colorPtr) {
-    throw new Error("_getFFLColor: Received null pointer");
-  }
-  const colorData = heapf32.subarray(colorPtr / 4, colorPtr / 4 + 4);
-  return { r: colorData[0], g: colorData[1], b: colorData[2], a: colorData[3] };
-}
-function _getFFLColor3(color) {
-  return new THREE3.Color(color.r, color.g, color.b);
-}
-function _applyAdjustMatrixToMesh(pMtx, mesh, heapf32) {
-  const ptr = pMtx / 4;
-  const m = heapf32.slice(ptr, ptr + 48 / 4);
-  function matrixFromRowMajor3x4(m2) {
-    const matrix2 = new THREE3.Matrix4;
-    matrix2.set(m2[0], m2[4], m2[8], m2[3], m2[1], m2[5], m2[9], m2[7], m2[2], m2[6], m2[10], m2[11], 0, 0, 0, 1);
-    return matrix2;
-  }
-  const matrix = matrixFromRowMajor3x4(m);
-  mesh.scale.setFromMatrixScale(matrix);
-  mesh.position.setFromMatrixPosition(matrix);
-  if (matrix.elements[0] === -1) {
-    mesh.scale.x = -1;
-  }
-}
-function initCharModelTextures(charModel, renderer2, materialClass = charModel._materialClass) {
-  if (renderer2.render === undefined) {
-    throw new Error("initCharModelTextures: renderer is an unexpected type (cannot find .render).");
-  }
-  const module2 = charModel._module;
-  charModel._materialTextureClass = materialClass;
-  const textureTempObject = charModel._getTextureTempObject();
-  charModel.expressions = textureTempObject.maskTextures.pRawMaskDrawParam.map((val2, idx) => val2 !== 0 ? idx : -1).filter((i) => i !== -1);
-  _drawFacelineTexture(charModel, textureTempObject, renderer2, module2, materialClass);
-  const clearAlpha = renderer2.getClearAlpha();
-  clearAlpha !== 0 && renderer2.setClearAlpha(0);
-  _drawMaskTextures(charModel, textureTempObject, renderer2, module2, materialClass);
-  charModel._finalizeCharModel();
-  charModel.setExpression(charModel.expression);
-  clearAlpha !== 0 && renderer2.setClearAlpha(clearAlpha);
-  if (!matSupportsFFL(charModel._materialClass)) {
-    if (!matSupportsFFL(charModel._materialTextureClass)) {
-      console.warn("initCharModelTextures: charModel._materialClass does not support modulateMode (no getter), but the _materialTextureClass is either the same or also does not support modulateMode so textures will look wrong");
-    } else {
-      convertModelTexturesToRGBA(charModel, renderer2, charModel._materialTextureClass);
-    }
-  }
-}
-function _drawFacelineTexture(charModel, textureTempObject, renderer2, module2, materialClass) {
-  const facelineTempObjectPtr = charModel._getFacelineTempObjectPtr();
-  module2._FFLiInvalidateTempObjectFacelineTexture(facelineTempObjectPtr);
-  const drawParams = [
-    textureTempObject.facelineTexture.drawParamFaceMake,
-    textureTempObject.facelineTexture.drawParamFaceLine,
-    textureTempObject.facelineTexture.drawParamFaceBeard
-  ].filter((dp) => dp && dp.modulateParam.pTexture2D !== 0);
-  if (drawParams.length === 0) {
-    console.debug("_drawFacelineTexture: Skipping faceline texture.");
-    return;
-  }
-  const bgColor = charModel.facelineColor;
-  const { scene: offscreenScene } = createSceneFromDrawParams(drawParams, bgColor, materialClass, charModel._module, charModel._textureManager);
-  const width2 = charModel._getResolution() / 2;
-  const height2 = charModel._getResolution();
-  const options = {
-    depthBuffer: false,
-    stencilBuffer: false,
-    wrapS: THREE3.MirroredRepeatWrapping,
-    wrapT: THREE3.MirroredRepeatWrapping
-  };
-  const target = createAndRenderToTarget(offscreenScene, getIdentCamera(), renderer2, width2, height2, options);
-  console.debug(`Creating target ${target.texture.id} for faceline`);
-  _setFaceline(charModel, target);
-  module2._FFLiDeleteTempObjectFacelineTexture(facelineTempObjectPtr, charModel._ptr, charModel._model.charModelDesc.resourceType);
-  disposeMeshes(offscreenScene);
-}
-function _drawMaskTextures(charModel, textureTempObject, renderer2, module2, materialClass) {
-  const maskTempObjectPtr = charModel._getMaskTempObjectPtr();
-  const expressionFlagPtr = charModel._getExpressionFlagPtr();
-  const scenes = [];
-  for (let i = 0;i < charModel._model.maskTextures.pRenderTextures.length; i++) {
-    if (charModel._model.maskTextures.pRenderTextures[i] === 0) {
-      continue;
-    }
-    const rawMaskDrawParamPtr = textureTempObject.maskTextures.pRawMaskDrawParam[i];
-    const rawMaskDrawParam = FFLiRawMaskDrawParam.unpack(module2.HEAPU8.subarray(rawMaskDrawParamPtr, rawMaskDrawParamPtr + FFLiRawMaskDrawParam.size));
-    module2._FFLiInvalidateRawMask(rawMaskDrawParamPtr);
-    const { target, scene } = _drawMaskTexture(charModel, rawMaskDrawParam, renderer2, module2, materialClass);
-    console.debug(`Creating target ${target.texture.id} for mask ${i}`);
-    charModel._maskTargets[i] = target;
-    scenes.push(scene);
-  }
-  scenes.forEach((scene) => {
-    disposeMeshes(scene);
-  });
-  module2._FFLiDeleteTempObjectMaskTextures(maskTempObjectPtr, expressionFlagPtr, charModel._model.charModelDesc.resourceType);
-  module2._FFLiDeleteTextureTempObject(charModel._ptr);
-}
-function _drawMaskTexture(charModel, rawMaskParam, renderer2, module2, materialClass) {
-  const drawParams = [
-    rawMaskParam.drawParamRawMaskPartsMustache[0],
-    rawMaskParam.drawParamRawMaskPartsMustache[1],
-    rawMaskParam.drawParamRawMaskPartsMouth,
-    rawMaskParam.drawParamRawMaskPartsEyebrow[0],
-    rawMaskParam.drawParamRawMaskPartsEyebrow[1],
-    rawMaskParam.drawParamRawMaskPartsEye[0],
-    rawMaskParam.drawParamRawMaskPartsEye[1],
-    rawMaskParam.drawParamRawMaskPartsMole
-  ].filter((dp) => dp && dp.primitiveParam.indexCount !== 0);
-  if (drawParams.length === 0) {
-    throw new Error("_drawMaskTexture: All DrawParams are empty.");
-  }
-  const options = {
-    depthBuffer: false,
-    stencilBuffer: false
-  };
-  const { scene: offscreenScene } = createSceneFromDrawParams(drawParams, null, materialClass, module2, charModel._textureManager);
-  const width2 = charModel._getResolution();
-  const target = createAndRenderToTarget(offscreenScene, getIdentCamera(), renderer2, width2, width2, options);
-  return { target, scene: offscreenScene };
-}
-function _setFaceline(charModel, target) {
-  if (!target || !target.texture) {
-    throw new Error("setFaceline: passed in RenderTarget is invalid");
-  }
-  charModel._facelineTarget = target;
-  if (charModel._isTexOnly()) {
-    return;
-  }
-  const mesh = charModel._facelineMesh;
-  if (!mesh || !(mesh instanceof THREE3.Mesh)) {
-    throw new Error("setFaceline: faceline shape does not exist");
-  }
-  target.texture._target = target;
-  mesh.material.map = target.texture;
-  mesh.material.needsUpdate = true;
-}
-function _texDrawRGBATarget(renderer2, material, userData, materialTextureClass) {
-  const plane = new THREE3.PlaneGeometry(2, 2);
-  const scene = new THREE3.Scene;
-  const bgClearRGBMesh = new THREE3.Mesh(plane, new THREE3.MeshBasicMaterial({
-    color: material.color,
-    transparent: true,
-    opacity: 0,
-    blending: THREE3.NoBlending
-  }));
-  scene.add(bgClearRGBMesh);
-  if (!material.map) {
-    throw new Error("_texDrawRGBATarget: material.map is null or undefined");
-  }
-  const tex = material.map;
-  const texMat = new materialTextureClass({
-    map: tex,
-    modulateMode: userData.modulateMode,
-    color: material.color,
-    lightEnable: false
-  });
-  texMat.blending = THREE3.NoBlending;
-  texMat.transparent = true;
-  const textureMesh = new THREE3.Mesh(plane, texMat);
-  scene.add(textureMesh);
-  const target = createAndRenderToTarget(scene, getIdentCamera(false), renderer2, tex.image.width, tex.image.height, {
-    wrapS: tex.wrapS,
-    wrapT: tex.wrapT,
-    depthBuffer: false,
-    stencilBuffer: false
-  });
-  target.texture._target = target;
-  material.map.dispose();
-  material.map = target.texture;
-  material.color = new THREE3.Color(1, 1, 1);
-  userData.modulateMode = 1;
-  return target;
-}
-function convertModelTexturesToRGBA(charModel, renderer2, materialTextureClass) {
-  const convertTextureForTypes = [
-    FFLModulateType.SHAPE_CAP,
-    FFLModulateType.SHAPE_NOSELINE,
-    FFLModulateType.SHAPE_GLASS
-  ];
-  if (!charModel.meshes) {
-    throw new Error("convertModelTexturesToRGBA: charModel.meshes is null.");
-  }
-  charModel.meshes.traverse((mesh) => {
-    if (!(mesh instanceof THREE3.Mesh) || !mesh.geometry.userData.modulateType || !mesh.material.map || convertTextureForTypes.indexOf(mesh.geometry.userData.modulateType) === -1) {
-      return;
-    }
-    const target = _texDrawRGBATarget(renderer2, mesh.material, mesh.geometry.userData, materialTextureClass);
-    charModel._maskTargets.push(target);
-  });
-}
-class TextureShaderMaterial extends THREE3.ShaderMaterial {
-  constructor(options = {}) {
-    const uniforms = {
-      opacity: { value: 1 }
-    };
-    const blankMatrix3 = { value: new THREE3.Matrix3 };
-    if (Number(THREE3.REVISION) < 151) {
-      uniforms.uvTransform = blankMatrix3;
-    } else {
-      uniforms.mapTransform = blankMatrix3;
-    }
-    super({
-      vertexShader: `
-				#include <common>
-				#include <uv_pars_vertex>
-
-				void main() {
-					#include <begin_vertex>
-					#include <uv_vertex>
-					#include <project_vertex>
-				}`,
-      fragmentShader: `
-				#include <common>
-				#include <uv_pars_fragment>
-				#include <map_pars_fragment>
-				uniform vec3 diffuse;
-				uniform float opacity;
-				uniform int modulateMode;
-				uniform vec3 color1;
-				uniform vec3 color2;
-
-				void main() {
-					vec4 diffuseColor = vec4( diffuse, opacity );
-
-					#include <map_fragment>
-					#include <alphamap_fragment>
-				#ifdef USE_MAP
-					if (modulateMode == 2) { // FFL_MODULATE_MODE_RGB_LAYERED
-				    diffuseColor = vec4(
-				      diffuse.rgb * sampledDiffuseColor.r +
-				      color1.rgb * sampledDiffuseColor.g +
-				      color2.rgb * sampledDiffuseColor.b,
-				      sampledDiffuseColor.a
-				    );
-				  } else if (modulateMode == 3) { // FFL_MODULATE_MODE_ALPHA
-				    diffuseColor = vec4(
-				      diffuse.rgb * sampledDiffuseColor.r,
-				      sampledDiffuseColor.r
-				    );
-				  } else if (modulateMode == 4) { // FFL_MODULATE_MODE_LUMINANCE_ALPHA
-				    diffuseColor = vec4(
-				      diffuse.rgb * sampledDiffuseColor.g,
-				      sampledDiffuseColor.r
-				    );
-				  } else if (modulateMode == 5) { // FFL_MODULATE_MODE_ALPHA_OPA
-				    diffuseColor = vec4(
-				      diffuse.rgb * sampledDiffuseColor.r,
-				      1.0
-				    );
-				  }
-				#endif
-
-				  // avoids little outline around mask elements
-				  if (modulateMode != 0 && diffuseColor.a == 0.0) { // FFL_MODULATE_MODE_CONSTANT
-				      discard;
-				  }
-
-					gl_FragColor = diffuseColor;
-					//#include <colorspace_fragment>
-				}`,
-      uniforms
-    });
-    this.lightEnable = false;
-    this.modulateType = 0;
-    this.setValues(options);
-  }
-  get color() {
-    return this.uniforms.diffuse ? this.uniforms.diffuse.value : null;
-  }
-  set color(value2) {
-    if (Array.isArray(value2)) {
-      this.uniforms.diffuse = { value: value2[0] };
-      this.uniforms.color1 = { value: value2[1] };
-      this.uniforms.color2 = { value: value2[2] };
-      return;
-    }
-    const color3 = value2 ? value2 : new THREE3.Color(1, 1, 1);
-    this._color3 = color3;
-    this.uniforms.diffuse = { value: color3 };
-  }
-  get modulateMode() {
-    return this.uniforms.modulateMode ? this.uniforms.modulateMode.value : null;
-  }
-  set modulateMode(value2) {
-    this.uniforms.modulateMode = { value: value2 };
-  }
-  get map() {
-    return this.uniforms.map ? this.uniforms.map.value : null;
-  }
-  set map(value2) {
-    this.uniforms.map = { value: value2 };
-  }
-}
-function createSceneFromDrawParams(drawParams, bgColor, ...drawParamArgs) {
-  const scene = new THREE3.Scene;
-  scene.background = bgColor || null;
-  const meshes = [];
-  drawParams.forEach((param) => {
-    const mesh = drawParamToMesh(param, ...drawParamArgs);
-    if (mesh) {
-      scene.add(mesh);
-      meshes.push(mesh);
-    }
-  });
-  return { scene, meshes };
-}
-function getIdentCamera(flipY = false) {
-  const camera = new THREE3.OrthographicCamera(-1, 1, flipY ? -1 : 1, flipY ? 1 : -1, 0.1, 10);
-  camera.position.z = 1;
-  return camera;
-}
-function createAndRenderToTarget(scene, camera, renderer2, width2, height2, targetOptions = {}) {
-  const options = {
-    minFilter: THREE3.LinearFilter,
-    magFilter: THREE3.LinearFilter,
-    ...targetOptions
-  };
-  const renderTarget = renderer2["isWebGPURenderer"] === undefined ? new THREE3.WebGLRenderTarget(width2, height2, options) : new THREE3.RenderTarget(width2, height2, options);
-  const prevTarget = renderer2.getRenderTarget();
-  renderer2.setRenderTarget(renderTarget);
-  renderer2.render(scene, camera);
-  renderer2.setRenderTarget(prevTarget);
-  return renderTarget;
-}
-function disposeMeshes(group, scene) {
-  function disposeMaterial(material) {
-    if (material.map) {
-      material.map.dispose();
-    }
-    material.dispose();
-  }
-  group.traverse((child) => {
-    if (!(child instanceof THREE3.Mesh)) {
-      return;
-    }
-    if (child.geometry) {
-      child.geometry.dispose();
-    }
-    if (child.material) {
-      Array.isArray(child.material) ? child.material.forEach((material) => {
-        disposeMaterial(material);
-      }) : disposeMaterial(child.material);
-    }
-  });
-  if (scene && scene instanceof THREE3.Scene) {
-    scene.remove(group);
-  }
-  group.children = [];
-}
-var StudioCharInfo = _.struct([
-  _.uint8("beardColor"),
-  _.uint8("beardType"),
-  _.uint8("build"),
-  _.uint8("eyeAspect"),
-  _.uint8("eyeColor"),
-  _.uint8("eyeRotate"),
-  _.uint8("eyeScale"),
-  _.uint8("eyeType"),
-  _.uint8("eyeX"),
-  _.uint8("eyeY"),
-  _.uint8("eyebrowAspect"),
-  _.uint8("eyebrowColor"),
-  _.uint8("eyebrowRotate"),
-  _.uint8("eyebrowScale"),
-  _.uint8("eyebrowType"),
-  _.uint8("eyebrowX"),
-  _.uint8("eyebrowY"),
-  _.uint8("facelineColor"),
-  _.uint8("facelineMake"),
-  _.uint8("facelineType"),
-  _.uint8("facelineWrinkle"),
-  _.uint8("favoriteColor"),
-  _.uint8("gender"),
-  _.uint8("glassColor"),
-  _.uint8("glassScale"),
-  _.uint8("glassType"),
-  _.uint8("glassY"),
-  _.uint8("hairColor"),
-  _.uint8("hairFlip"),
-  _.uint8("hairType"),
-  _.uint8("height"),
-  _.uint8("moleScale"),
-  _.uint8("moleType"),
-  _.uint8("moleX"),
-  _.uint8("moleY"),
-  _.uint8("mouthAspect"),
-  _.uint8("mouthColor"),
-  _.uint8("mouthScale"),
-  _.uint8("mouthType"),
-  _.uint8("mouthY"),
-  _.uint8("mustacheScale"),
-  _.uint8("mustacheType"),
-  _.uint8("mustacheY"),
-  _.uint8("noseScale"),
-  _.uint8("noseType"),
-  _.uint8("noseY")
-]);
-function convertStudioCharInfoToFFLiCharInfo(src) {
-  return {
-    miiVersion: 0,
-    faceline: {
-      type: src.facelineType,
-      color: src.facelineColor,
-      texture: src.facelineWrinkle,
-      make: src.facelineMake
-    },
-    hair: {
-      type: src.hairType,
-      color: commonColorMask(src.hairColor),
-      flip: src.hairFlip
-    },
-    eye: {
-      type: src.eyeType,
-      color: commonColorMask(src.eyeColor),
-      scale: src.eyeScale,
-      aspect: src.eyeAspect,
-      rotate: src.eyeRotate,
-      x: src.eyeX,
-      y: src.eyeY
-    },
-    eyebrow: {
-      type: src.eyebrowType,
-      color: commonColorMask(src.eyebrowColor),
-      scale: src.eyebrowScale,
-      aspect: src.eyebrowAspect,
-      rotate: src.eyebrowRotate,
-      x: src.eyebrowX,
-      y: src.eyebrowY
-    },
-    nose: {
-      type: src.noseType,
-      scale: src.noseScale,
-      y: src.noseY
-    },
-    mouth: {
-      type: src.mouthType,
-      color: commonColorMask(src.mouthColor),
-      scale: src.mouthScale,
-      aspect: src.mouthAspect,
-      y: src.mouthY
-    },
-    beard: {
-      mustache: src.mustacheType,
-      type: src.beardType,
-      color: commonColorMask(src.beardColor),
-      scale: src.mustacheScale,
-      y: src.mustacheY
-    },
-    glass: {
-      type: src.glassType,
-      color: commonColorMask(src.glassColor),
-      scale: src.glassScale,
-      y: src.glassY
-    },
-    mole: {
-      type: src.moleType,
-      scale: src.moleScale,
-      x: src.moleX,
-      y: src.moleY
-    },
-    body: {
-      height: src.height,
-      build: src.build
-    },
-    personal: {
-      name: "",
-      creator: "",
-      gender: src.gender,
-      birthMonth: 0,
-      birthDay: 0,
-      favoriteColor: src.favoriteColor,
-      favorite: 0,
-      copyable: 0,
-      ngWord: 0,
-      localonly: 0,
-      regionMove: 0,
-      fontRegion: 0,
-      roomIndex: 0,
-      positionInRoom: 0,
-      birthPlatform: 3
-    },
-    createID: {
-      data: new Array(10).fill(0)
-    },
-    padding_0: 0,
-    authorType: 0,
-    authorID: new Array(8).fill(0)
-  };
-}
-function studioURLObfuscationDecode(data2) {
-  const decodedData = new Uint8Array(data2);
-  const random2 = decodedData[0];
-  let previous = random2;
-  for (let i = 1;i < 48; i++) {
-    const encodedByte = decodedData[i];
-    const original = (encodedByte - 7 + 256) % 256;
-    decodedData[i - 1] = original ^ previous;
-    previous = encodedByte;
-  }
-  return decodedData.slice(0, StudioCharInfo.size);
-}
-function stripSpaces(str) {
-  return str.replace(/\s+/g, "");
-}
-function hexToUint8Array(hex) {
-  const match = hex.match(/.{1,2}/g);
-  const arr = (match ? match : []).map(function(byte2) {
-    return parseInt(byte2, 16);
-  });
-  return new Uint8Array(arr);
-}
-function base64ToUint8Array(base64) {
-  const normalizedBase64 = base64.replace(/-/g, "+").replace(/_/g, "/");
-  function padBase64(str) {
-    while (str.length % 4 !== 0) {
-      str += "=";
-    }
-    return str;
-  }
-  const paddedBase64 = padBase64(normalizedBase64);
-  const binaryString = atob(paddedBase64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0;i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
-function parseHexOrB64ToUint8Array(text2) {
-  let inputData;
-  const textData = stripSpaces(text2);
-  if (/^[0-9a-fA-F]+$/.test(textData)) {
-    inputData = hexToUint8Array(textData);
-  } else {
-    inputData = base64ToUint8Array(textData);
-  }
-  return inputData;
-}
-
-// src/constants/BodyShaderTypes.ts
-var BodyType;
-((BodyType2) => {
-  BodyType2["WiiU"] = "wiiu";
-  BodyType2["Switch"] = "switch";
-  BodyType2["Miitomo"] = "miitomo";
-  BodyType2["StreetPass"] = "streetpass";
-})(BodyType ||= {});
-var ShaderType;
-((ShaderType2) => {
-  ShaderType2["WiiU"] = "wiiu";
-  ShaderType2["Switch"] = "switch";
-  ShaderType2["LightDisabled"] = "lightDisabled";
-  ShaderType2["Miitomo"] = "miitomo";
-  ShaderType2["MiitomoBasic"] = "miitomo_basic";
-  ShaderType2["WiiUBlinn"] = "wiiu_blinn";
-  ShaderType2["WiiUFFLIconWithBody"] = "wiiu_ffliconwithbody";
-  ShaderType2["WiiUToon"] = "wiiu_toon";
-  ShaderType2["ThreeToon"] = "three_toon";
-  ShaderType2["ThreePhong"] = "three_phong";
-})(ShaderType ||= {});
-function adjustShaderQuery(params, shader) {
-  switch (shader) {
-    case "wiiu" /* WiiU */:
-    case "switch" /* Switch */:
-    case "miitomo" /* Miitomo */:
-      params.set("shaderType", shader);
-      break;
-    case "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */:
-      params.set("shaderType", "ffliconwithbody");
-      break;
-    case "wiiu_toon" /* WiiUToon */:
-      params.set("shaderType", "wiiu");
-      break;
-    case "wiiu_blinn" /* WiiUBlinn */:
-      params.set("shaderType", "wiiu_blinn");
-      break;
-    case "lightDisabled" /* LightDisabled */:
-      params.set("shaderType", "wiiu");
-      params.set("lightEnable", "0");
-      break;
-    default:
-      console.warn(`unknown shader type: ${shader}`);
-  }
-}
-
-// src/external/ffl.js/FFLShaderMaterial.js
-var THREE4 = _THREE();
-var _FFLShader_vert = `
-// 頂点シェーダーに入力される attribute 変数
-//attribute vec4 position;       //!< 入力: 位置情報
-//attribute vec2 uv;             //!< 入力: テクスチャー座標
-//attribute vec3 normal;         //!< 入力: 法線ベクトル
-// All provided by three.js ^^
-
-// vertex color is not actually the color of the shape, as such
-// it is a custom attribute _COLOR in the glTF
-
-attribute vec4 _color;           //!< 入力: 頂点の色
-attribute vec3 tangent;          //!< 入力: 異方位
-
-// フラグメントシェーダーへの入力
-varying   vec4 v_color;          //!< 出力: 頂点の色
-varying   vec4 v_position;       //!< 出力: 位置情報
-varying   vec3 v_normal;         //!< 出力: 法線ベクトル
-varying   vec3 v_tangent;        //!< 出力: 異方位
-varying   vec2 v_texCoord;       //!< 出力: テクスチャー座標
-
-// ユニフォーム
-//uniform mat3 normalMatrix;     //!< ユニフォーム: モデルの法線用行列
-//uniform mat4 modelViewMatrix;  //!< ユニフォーム: プロジェクション行列
-//uniform mat4 projectionMatrix; //!< ユニフォーム: モデル行列
-// All provided by three.js ^^
-
-// skinning_pars_vertex.glsl.js
-#ifdef USE_SKINNING
-    uniform mat4 bindMatrix;
-    uniform mat4 bindMatrixInverse;
-    uniform highp sampler2D boneTexture;
-    mat4 getBoneMatrix( const in float i ) {
-        int size = textureSize( boneTexture, 0 ).x;
-        int j = int( i ) * 4;
-        int x = j % size;
-        int y = j / size;
-        vec4 v1 = texelFetch( boneTexture, ivec2( x, y ), 0 );
-        vec4 v2 = texelFetch( boneTexture, ivec2( x + 1, y ), 0 );
-        vec4 v3 = texelFetch( boneTexture, ivec2( x + 2, y ), 0 );
-        vec4 v4 = texelFetch( boneTexture, ivec2( x + 3, y ), 0 );
-        return mat4( v1, v2, v3, v4 );
-    }
-#endif
-
-void main()
-{
-
-    // begin_vertex.glsl.js
-    vec3 transformed = vec3( position );
-// skinbase_vertex.glsl.js
-#ifdef USE_SKINNING
-    mat4 boneMatX = getBoneMatrix( skinIndex.x );
-    mat4 boneMatY = getBoneMatrix( skinIndex.y );
-    mat4 boneMatZ = getBoneMatrix( skinIndex.z );
-    mat4 boneMatW = getBoneMatrix( skinIndex.w );
-    // skinning_vertex.glsl.js
-    vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );
-    vec4 skinned = vec4( 0.0 );
-    skinned += boneMatX * skinVertex * skinWeight.x;
-    skinned += boneMatY * skinVertex * skinWeight.y;
-    skinned += boneMatZ * skinVertex * skinWeight.z;
-    skinned += boneMatW * skinVertex * skinWeight.w;
-    transformed = ( bindMatrixInverse * skinned ).xyz;
-#endif
-
-//#ifdef FFL_COORDINATE_MODE_NORMAL
-    // 頂点座標を変換
-    v_position = modelViewMatrix * vec4(transformed, 1.0);
-    gl_Position =  projectionMatrix * v_position;
-
-    vec3 objectNormal = normal;
-    vec3 objectTangent = tangent.xyz;
-// skinnormal_vertex.glsl.js
-#ifdef USE_SKINNING
-    mat4 skinMatrix = mat4( 0.0 );
-    skinMatrix += skinWeight.x * boneMatX;
-    skinMatrix += skinWeight.y * boneMatY;
-    skinMatrix += skinWeight.z * boneMatZ;
-    skinMatrix += skinWeight.w * boneMatW;
-    skinMatrix = bindMatrixInverse * skinMatrix * bindMatrix;
-
-    objectNormal = vec4( skinMatrix * vec4( objectNormal, 0.0 ) ).xyz;
-    objectTangent = vec4( skinMatrix * vec4( objectTangent, 0.0 ) ).xyz;
-
-#endif
-
-    // 法線も変換
-    //v_normal = mat3(inverse(u_mv)) * a_normal;
-    v_normal = normalize(normalMatrix * objectNormal);
-//#elif defined(FFL_COORDINATE_MODE_NONE)
-//    // 頂点座標を変換
-//    gl_Position = vec4(a_position.x, a_position.y * -1.0, a_position.z, a_position.w);
-//    v_position = a_position;
-//
-//    v_normal = a_normal;
-//#endif
-
-     // その他の情報も書き出す
-    v_texCoord = uv;
-    // safe normalize
-    if (tangent != vec3(0.0, 0.0, 0.0))
-    {
-        v_tangent = normalize(normalMatrix * objectTangent);
-    }
-    else
-    {
-        v_tangent = vec3(0.0, 0.0, 0.0);
-    }
-
-    v_color = _color;
-}
-`;
-var _FFLShader_frag = `
-//
-//  sample.flg
-//  Fragment shader
-//  Copyright (c) 2014 Nintendo Co., Ltd. All rights reserved.
-//
-//
-
-#ifdef GL_ES
-precision mediump float;
-#else
-#   define lowp
-#   define mediump
-#   define highp
-#endif
-
-
-//
-//  定数定義ファイル
-//
-
-/// シェーダーモード
-#define FFL_SHADER_MODE_UR 0
-#define FFL_SHADER_MODE_UB 1
-
-/// 変調処理のマクロ
-#define FFL_MODULATE_MODE_CONSTANT        0
-#define FFL_MODULATE_MODE_TEXTURE_DIRECT  1
-#define FFL_MODULATE_MODE_RGB_LAYERED     2
-#define FFL_MODULATE_MODE_ALPHA           3
-#define FFL_MODULATE_MODE_LUMINANCE_ALPHA 4
-#define FFL_MODULATE_MODE_ALPHA_OPA       5
-
-/// スペキュラのモード
-#define FFL_SPECULAR_MODE_BLINN 0
-#define FFL_SPECULAR_MODE_ANISO 1
-
-/// ライトのON/OFF
-#define FFL_LIGHT_MODE_DISABLE 0
-#define FFL_LIGHT_MODE_ENABLE 1
-
-/// フラグメントのディスカードモード
-#define FFL_DISCARD_FRAGMENT_DISABLE 0
-#define FFL_DISCARD_FRAGMENT_ENABLE  1
-
-/// 座標変換モード
-#define FFL_COORDINATE_MODE_NONE   0
-#define FFL_COORDINATE_MODE_NORMAL 1
-
-//
-//  関数の定義ファイル
-//
-
-/**
- * @brief 異方性反射の反射率を計算します。
- * @param[in] light   ライトの向き
- * @param[in] tangent 接線
- * @param[in] eye     視線の向き
- * @param[in] power   鋭さ
- */
-mediump float calculateAnisotropicSpecular(mediump vec3 light, mediump vec3 tangent, mediump vec3 eye, mediump float power )
-{
-	mediump float dotLT = dot(light, tangent);
-	mediump float dotVT = dot(eye, tangent);
-	mediump float dotLN = sqrt(1.0 - dotLT * dotLT);
-	mediump float dotVR = dotLN*sqrt(1.0 - dotVT * dotVT) - dotLT * dotVT;
-
-	return pow(max(0.0, dotVR), power);
-}
-
-/**
- * @brief 異方性反射の反射率を計算します。
- * @param[in] light   ライトの向き
- * @param[in] normal  法線
- * @param[in] eye     視線の向き
- * @param[in] power   鋭さ
- */
-mediump float calculateBlinnSpecular(mediump vec3 light, mediump vec3 normal, mediump vec3 eye, mediump float power)
-{
-	return pow(max(dot(reflect(-light, normal), eye), 0.0), power);
-}
-
-/**
- * @brief 異方性反射、ブリン反射をブレンドします。
- * @param[in] blend ブレンド率
- * @param[in] blinn ブリンの値
- * @param[in] aniso 異方性の値
- */
-mediump float calculateSpecularBlend(mediump float blend, mediump float blinn, mediump float aniso)
-{
-	return mix(aniso, blinn, blend);
-}
-
-/**
- * @brief アンビエントを計算します。
- * @param[in] light    ライト
- * @param[in] material マテリアル
- */
-mediump vec3 calculateAmbientColor(mediump vec3 light, mediump vec3 material)
-{
-	return light * material;
-}
-
-/**
- * @brief 拡散を計算します。
- * @param[in] light    ライト
- * @param[in] material マテリアル
- * @param[in] ln       ライトと法線の内積
- */
-mediump vec3 calculateDiffuseColor(mediump vec3 light, mediump vec3 material, mediump float ln)
-{
-	return light * material * ln;
-}
-
-/**
- * @brief 鏡面反射を計算します。
- * @param[in] light      ライト
- * @param[in] material   マテリアル
- * @param[in] reflection 反射率
- * @param[in] strength   幅
- */
-mediump vec3 calculateSpecularColor(mediump vec3 light, mediump vec3 material, mediump float reflection, mediump float strength)
-{
-	return light * material * reflection * strength;
-}
-
-/**
- * @brief リムを計算します。
- * @param[in] color   リム色
- * @param[in] normalZ 法線のZ方向
- * @param[in] width   リム幅
- * @param[in] power   リムの鋭さ
- */
-mediump vec3 calculateRimColor(mediump vec3 color, mediump float normalZ, mediump float width, mediump float power)
-{
-	return color * pow(width * (1.0 - abs(normalZ)), power);
-}
-
-/**
- * @brief ライト方向と法線の内積を求める
- * @note 特殊な実装になっています。
- */
-mediump float calculateDot(mediump vec3 light, mediump vec3 normal)
-{
-	return max(dot(light, normal), 0.1);
-}
-
-// フラグメントシェーダーに入力される varying 変数
-varying mediump vec4 v_color;          //!< 出力: 頂点の色
-varying highp   vec4 v_position;       //!< 出力: 位置情報
-varying highp   vec3 v_normal;         //!< 出力: 法線ベクトル
-// NOTE: ^^ Those two need to be highp to avoid weird black dot issue on Android
-varying mediump vec3 v_tangent;        //!< 出力: 異方位
-varying mediump vec2 v_texCoord;       //!< 出力: テクスチャー座標
-
-/// constカラー
-uniform mediump vec4  u_const1; ///< constカラー1
-uniform mediump vec4  u_const2; ///< constカラー2
-uniform mediump vec4  u_const3; ///< constカラー3
-
-/// ライト設定
-uniform mediump vec3 u_light_ambient;  ///< カメラ空間のライト方向
-uniform mediump vec3 u_light_diffuse;  ///< 拡散光用ライト
-uniform mediump vec3 u_light_dir;
-uniform bool u_light_enable;
-uniform mediump vec3 u_light_specular; ///< 鏡面反射用ライト強度
-
-/// マテリアル設定
-uniform mediump vec3 u_material_ambient;         ///< 環境光用マテリアル設定
-uniform mediump vec3 u_material_diffuse;         ///< 拡散光用マテリアル設定
-uniform mediump vec3 u_material_specular;        ///< 鏡面反射用マテリアル設定
-uniform int u_material_specular_mode;            ///< スペキュラの反射モード(CharModelに依存する設定のためub_modulateにしている)
-uniform mediump float u_material_specular_power; ///< スペキュラの鋭さ(0.0を指定すると頂点カラーの設定が利用される)
-
-/// 変調設定
-uniform int u_mode;   ///< 描画モード
-
-/// リム設定
-uniform mediump vec3  u_rim_color;
-uniform mediump float u_rim_power;
-
-// サンプラー
-uniform sampler2D s_texture;
-
-
-// -------------------------------------------------------
-// メイン文
-void main()
-{
-    mediump vec4 color;
-
-    mediump float specularPower    = u_material_specular_power;
-    mediump float rimWidth         = v_color.a;
-
-//#ifdef FFL_MODULATE_MODE_CONSTANT
-    if(u_mode == FFL_MODULATE_MODE_CONSTANT)
-    {
-      color = u_const1;
-    }
-    // modified to handle u_const1 alpha:
-//#elif defined(FFL_MODULATE_MODE_TEXTURE_DIRECT)
-    else if(u_mode == FFL_MODULATE_MODE_TEXTURE_DIRECT)
-    {
-        mediump vec4 texel = texture2D(s_texture, v_texCoord);
-        color = vec4(texel.rgb, u_const1.a * texel.a);
-    }
-//#elif defined(FFL_MODULATE_MODE_RGB_LAYERED)
-    else if(u_mode == FFL_MODULATE_MODE_RGB_LAYERED)
-    {
-        mediump vec4 texel = texture2D(s_texture, v_texCoord);
-        color = vec4(texel.r * u_const1.rgb + texel.g * u_const2.rgb + texel.b * u_const3.rgb, u_const1.a * texel.a);
-    }
-//#elif defined(FFL_MODULATE_MODE_ALPHA)
-    else if(u_mode == FFL_MODULATE_MODE_ALPHA)
-    {
-        mediump vec4 texel = texture2D(s_texture, v_texCoord);
-        color = vec4(u_const1.rgb, u_const1.a * texel.r);
-    }
-//#elif defined(FFL_MODULATE_MODE_LUMINANCE_ALPHA)
-    else if(u_mode == FFL_MODULATE_MODE_LUMINANCE_ALPHA)
-    {
-        mediump vec4 texel = texture2D(s_texture, v_texCoord);
-        color = vec4(texel.g * u_const1.rgb, u_const1.a * texel.r);
-    }
-//#elif defined(FFL_MODULATE_MODE_ALPHA_OPA)
-    else if(u_mode == FFL_MODULATE_MODE_ALPHA_OPA)
-    {
-        mediump vec4 texel = texture2D(s_texture, v_texCoord);
-        color = vec4(texel.r * u_const1.rgb, u_const1.a);
-    }
-//#endif
-
-    // avoids little outline around mask elements
-    if(u_mode != FFL_MODULATE_MODE_CONSTANT && color.a == 0.0)
-    {
-        discard;
-    }
-
-//#ifdef FFL_LIGHT_MODE_ENABLE
-    if(u_light_enable)
-    {
-        /// 環境光の計算
-        mediump vec3 ambient = calculateAmbientColor(u_light_ambient.xyz, u_material_ambient.xyz);
-
-        /// 法線ベクトルの正規化
-        mediump vec3 norm = normalize(v_normal);
-
-        /// 視線ベクトル
-        mediump vec3 eye = normalize(-v_position.xyz);
-
-        // ライトの向き
-        mediump float fDot = calculateDot(u_light_dir, norm);
-
-        /// Diffuse計算
-        mediump vec3 diffuse = calculateDiffuseColor(u_light_diffuse.xyz, u_material_diffuse.xyz, fDot);
-
-        /// Specular計算
-        mediump float specularBlinn = calculateBlinnSpecular(u_light_dir, norm, eye, u_material_specular_power);
-
-        /// Specularの値を確保する変数を宣言
-        mediump float reflection;
-        mediump float strength = v_color.g;
-        if(u_material_specular_mode == 0)
-        {
-            /// Blinnモデルの場合
-            strength = 1.0;
-            reflection = specularBlinn;
-        }
-        else
-        {
-            /// Aisoモデルの場合
-            mediump float specularAniso = calculateAnisotropicSpecular(u_light_dir, v_tangent, eye, u_material_specular_power);
-            reflection = calculateSpecularBlend(v_color.r, specularBlinn, specularAniso);
-        }
-        /// Specularの色を取得
-        mediump vec3 specular = calculateSpecularColor(u_light_specular.xyz, u_material_specular.xyz, reflection, strength);
-
-        // リムの色を計算
-        mediump vec3 rimColor = calculateRimColor(u_rim_color.rgb, norm.z, rimWidth, u_rim_power);
-
-        // カラーの計算
-        color.rgb = (ambient + diffuse) * color.rgb + specular + rimColor;
-    }
-//#endif
-
-    gl_FragColor = color;
-}
-`;
-
-class FFLShaderMaterial extends THREE4.ShaderMaterial {
-  static defaultLightAmbient = new THREE4.Color(0.73, 0.73, 0.73);
-  static defaultLightDiffuse = new THREE4.Color(0.6, 0.6, 0.6);
-  static defaultLightSpecular = new THREE4.Color(0.7, 0.7, 0.7);
-  static defaultLightDir = new THREE4.Vector3(-0.4531539381, 0.4226179123, 0.7848858833);
-  static defaultRimColor = new THREE4.Color(0.3, 0.3, 0.3);
-  static defaultRimPower = 2;
-  static defaultLightDirection = this.defaultLightDir;
-  static materialParams = [
-    {
-      ambient: new THREE4.Color(0.85, 0.75, 0.75),
-      diffuse: new THREE4.Color(0.75, 0.75, 0.75),
-      specular: new THREE4.Color(0.3, 0.3, 0.3),
-      specularPower: 1.2,
-      specularMode: 0
-    },
-    {
-      ambient: new THREE4.Color(1, 1, 1),
-      diffuse: new THREE4.Color(0.7, 0.7, 0.7),
-      specular: new THREE4.Color(0, 0, 0),
-      specularPower: 40,
-      specularMode: 1
-    },
-    {
-      ambient: new THREE4.Color(0.9, 0.85, 0.85),
-      diffuse: new THREE4.Color(0.75, 0.75, 0.75),
-      specular: new THREE4.Color(0.22, 0.22, 0.22),
-      specularPower: 1.5,
-      specularMode: 0
-    },
-    {
-      ambient: new THREE4.Color(0.85, 0.75, 0.75),
-      diffuse: new THREE4.Color(0.75, 0.75, 0.75),
-      specular: new THREE4.Color(0.3, 0.3, 0.3),
-      specularPower: 1.2,
-      specularMode: 0
-    },
-    {
-      ambient: new THREE4.Color(1, 1, 1),
-      diffuse: new THREE4.Color(0.7, 0.7, 0.7),
-      specular: new THREE4.Color(0.35, 0.35, 0.35),
-      specularPower: 10,
-      specularMode: 1
-    },
-    {
-      ambient: new THREE4.Color(0.75, 0.75, 0.75),
-      diffuse: new THREE4.Color(0.72, 0.72, 0.72),
-      specular: new THREE4.Color(0.3, 0.3, 0.3),
-      specularPower: 1.5,
-      specularMode: 0
-    },
-    {
-      ambient: new THREE4.Color(1, 1, 1),
-      diffuse: new THREE4.Color(0.7, 0.7, 0.7),
-      specular: new THREE4.Color(0, 0, 0),
-      specularPower: 40,
-      specularMode: 1
-    },
-    {
-      ambient: new THREE4.Color(1, 1, 1),
-      diffuse: new THREE4.Color(0.7, 0.7, 0.7),
-      specular: new THREE4.Color(0, 0, 0),
-      specularPower: 40,
-      specularMode: 1
-    },
-    {
-      ambient: new THREE4.Color(1, 1, 1),
-      diffuse: new THREE4.Color(0.7, 0.7, 0.7),
-      specular: new THREE4.Color(0, 0, 0),
-      specularPower: 40,
-      specularMode: 1
-    },
-    {
-      ambient: new THREE4.Color(0.95622, 0.95622, 0.95622),
-      diffuse: new THREE4.Color(0.49673, 0.49673, 0.49673),
-      specular: new THREE4.Color(0.24099, 0.24099, 0.24099),
-      specularPower: 3,
-      specularMode: 0
-    },
-    {
-      ambient: new THREE4.Color(0.95622, 0.95622, 0.95622),
-      diffuse: new THREE4.Color(1.08497, 1.08497, 1.08497),
-      specular: new THREE4.Color(0.2409, 0.2409, 0.2409),
-      specularPower: 3,
-      specularMode: 0
-    }
-  ];
-  constructor(options = {}) {
-    const uniforms = {
-      u_light_ambient: {
-        value: FFLShaderMaterial.defaultLightAmbient
-      },
-      u_light_diffuse: {
-        value: FFLShaderMaterial.defaultLightDiffuse
-      },
-      u_light_specular: {
-        value: FFLShaderMaterial.defaultLightSpecular
-      },
-      u_light_dir: { value: FFLShaderMaterial.defaultLightDir.clone() },
-      u_light_enable: { value: true },
-      u_rim_color: { value: FFLShaderMaterial.defaultRimColor },
-      u_rim_power: { value: FFLShaderMaterial.defaultRimPower }
-    };
-    super({
-      vertexShader: _FFLShader_vert,
-      fragmentShader: _FFLShader_frag,
-      uniforms
-    });
-    this._modulateType = 0;
-    this.useSpecularModeBlinn = false;
-    this.setValues(options);
-  }
-  get color() {
-    if (!this.uniforms.u_const1) {
-      return null;
-    } else if (this._color3) {
-      return this._color3;
-    }
-    const color4 = this.uniforms.u_const1.value;
-    const color3 = new THREE4.Color(color4.x, color4.y, color4.z);
-    this._color3 = color3;
-    return color3;
-  }
-  set color(value2) {
-    function toColor4(color, opacity2 = 1) {
-      return new THREE4.Vector4(color.r, color.g, color.b, opacity2);
-    }
-    if (Array.isArray(value2)) {
-      this.uniforms.u_const1 = { value: toColor4(value2[0]) };
-      this.uniforms.u_const2 = { value: toColor4(value2[1]) };
-      this.uniforms.u_const3 = { value: toColor4(value2[2]) };
-      return;
-    }
-    const color3 = value2 ? value2 : new THREE4.Color(1, 1, 1);
-    this._color3 = color3;
-    const opacity = this.opacity;
-    if (this._opacity) {
-      delete this._opacity;
-    }
-    this.uniforms.u_const1 = { value: toColor4(color3, opacity) };
-  }
-  get opacity() {
-    if (!this.uniforms.u_const1) {
-      return this._opacity ? this._opacity : 1;
-    }
-    return this.uniforms.u_const1.value.w;
-  }
-  set opacity(value2) {
-    if (!this.uniforms || !this.uniforms.u_const1) {
-      this._opacity = 1;
-      return;
-    }
-    this.uniforms.u_const1.value.w = value2;
-  }
-  get modulateMode() {
-    return this.uniforms.u_mode ? this.uniforms.u_mode.value : null;
-  }
-  set modulateMode(value2) {
-    this.uniforms.u_mode = { value: value2 };
-  }
-  get lightEnable() {
-    return this.uniforms.u_light_enable ? this.uniforms.u_light_enable.value : null;
-  }
-  set lightEnable(value2) {
-    this.uniforms.u_light_enable = { value: value2 };
-  }
-  set useSpecularModeBlinn(value2) {
-    this._useSpecularModeBlinn = value2;
-    if (this._modulateType !== undefined) {
-      this.modulateType = this._modulateType;
-    }
-  }
-  get useSpecularModeBlinn() {
-    return this._useSpecularModeBlinn;
-  }
-  get modulateType() {
-    return this._modulateType;
-  }
-  set modulateType(value2) {
-    const matParam = FFLShaderMaterial.materialParams[value2];
-    if (!matParam) {
-      return;
-    }
-    this._modulateType = value2;
-    this.uniforms.u_material_ambient = { value: matParam.ambient };
-    this.uniforms.u_material_diffuse = { value: matParam.diffuse };
-    this.uniforms.u_material_specular = { value: matParam.specular };
-    this.uniforms.u_material_specular_mode = {
-      value: this._useSpecularModeBlinn ? 0 : matParam.specularMode
-    };
-    this.uniforms.u_material_specular_power = { value: matParam.specularPower };
-  }
-  get map() {
-    return this.uniforms.s_texture ? this.uniforms.s_texture.value : null;
-  }
-  set map(value2) {
-    this.uniforms.s_texture = { value: value2 };
-  }
-  get lightDirection() {
-    return this.uniforms.u_light_dir.value;
-  }
-  set lightDirection(value2) {
-    this.uniforms.u_light_dir = { value: value2 };
-  }
-}
-var FFLShaderMaterial_default = FFLShaderMaterial;
-
-// src/external/ffl.js/LUTShaderMaterial.js
-var THREE5 = _THREE();
-var _LUTShader_vert = `
-#define AGX_FEATURE_ALBEDO_TEXTURE
-/**
- * @file    LUT.vsh
- * @brief   LUT
- * @since   2014/10/02
- *
- * Copyright (c)2014 Nintendo Co., Ltd. All rights reserved.
- */
-
-// シェーダーの種類毎に設定されるマクロリスト
-// AGX_FEATURE_VERTEX_COLOR         頂点カラーが有効
-// AGX_FEATURE_ALBEDO_TEXTURE       アルベドテクスチャーが有効
-// AGX_FEATURE_BUMP_TEXTURE         バンプテクスチャーが有効
-// AGX_FEATURE_MASK_TEXTURE         マスクテクスチャーが有効
-// AGX_FEATURE_ALPHA_TEXTURE        アルファテクスチャーが有効
-// AGX_FEATURE_SPHERE_MAP_TEXTURE   スフィア環境マップが有効
-// AGX_FEATURE_SKIN_MASK            肌マスクが有効（uColor0）
-// AGX_FEATURE_HAIR_MASK            髪マスクが有効（uColor1）
-// AGX_FEATURE_ALPHA_TEST           アルファテストが有効
-// AGX_FEATURE_FADE_OUT_COLOR       フェードアウトカラーが有効（uColor2）
-// AGX_FEATURE_DISABLE_LIGHT        ライトが無効
-// AGX_FEATURE_ALPHA_COLOR_FILTER   アルベドアルファによる色替えが有効
-// AGX_FEATURE_ALBEDO_ALPHA         アルベドのアルファをカラーのアルファに適用
-// AGX_FEATURE_PREMULTIPLY_ALPHA    プレマルチプライアルファな描画
-// AGX_FEATURE_MII                  Miiを描画する
-// AGX_FEATURE_MII_CONSTANT         Miiを描画する：Constant
-// AGX_FEATURE_MII_TEXTURE_DIRECT   Miiを描画する：Texture Direct
-// AGX_FEATURE_MII_RGB_LAYERED      Miiを描画する：RGB Layered
-// AGX_FEATURE_MII_ALPHA            Miiを描画する：Alpha
-// AGX_FEATURE_MII_LUMINANCE_ALPHA  Miiを描画する：Luminance Alpha
-// AGX_FEATURE_MII_ALPHA_OPA        Miiを描画する：Alpha Opa
-//
-// AGX_BONE_MAX     ボーンの最大数
-
-#ifdef GL_ES
-precision highp float;
-#else
-#   define lowp
-#   define mediump
-#   define highp
-#endif
-
-//#ifndef AGX_BONE_MAX
-//#   define AGX_BONE_MAX 15
-//#endif
-#ifndef AGX_DIR_LIGHT_MAX
-#   define AGX_DIR_LIGHT_MAX 2
-#endif
-
-// ----------------------------------------
-// 頂点シェーダーに入力される attribute 変数
-//attribute highp   vec3 position;   //!< 入力:[ 1 : 1 ] 位置情報
-#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
-//attribute mediump vec2 uv;  //!< 入力:[ 1 : 5 ] テクスチャー座標
-#endif
-//attribute mediump vec3 normal;     //!< 入力:[ 1 : 2 ] 法線ベクトル
-//attribute mediump vec4 aBoneIndex;  //!< 入力:[ 1 : 3 ] ボーンのインデックス（最大4つ）
-//attribute mediump vec4 aBoneWeight; //!< 入力:[ 1 : 4 ] ボーンの影響度（最大4つ）
-#if defined(AGX_FEATURE_VERTEX_COLOR)
-//attribute lowp    vec4 _color;      //!< 入力:[ 1 : 6 ] 頂点カラー
-#endif
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-//attribute mediump vec3 tangent;    //!< 入力:[ 1 : 7 ] 接線ベクトル
-#endif
-
-// ^^ Commented attributes are provided by three.js.
-
-// ----------------------------------------
-// 頂点シェーダーに入力される uniform 変数
-//uniform highp   mat4 modelViewMatrix;                            //!< 入力:[ 4      /  4 :   4 ] モデルの合成行列
-//uniform mat4 projectionMatrix;
-//uniform highp   mat4 viewMatrix;                           //!< 入力:[ 4      /  4 :   8 ] モデルのビュー行列
-//uniform mediump mat3 normalMatrix;                         //!< 入力:[ 3      /  3 :  11 ] モデルの法線用行列
-//uniform highp   mat4 modelMatrix;                          //!< 入力:[ 4      /  4 :  15 ] モデルのワールド変換行列
-//uniform lowp    int  uBoneCount;                            //!< 入力:[ 1      /  1 :  16 ] ボーンの個数
-//uniform highp   mat4 uBoneMatrices[AGX_BONE_MAX];           //!< 入力:[ 4 x 15 / 60 :  76 ] ボーンの行列配列
-//uniform mediump mat3 uBoneNormalMatrices[AGX_BONE_MAX];     //!< 入力:[ 3 x 15 / 45 : 121 ] ボーンの法線行列配列
-// ^^ Unused in favor of three.js skinning.
-uniform lowp    int  uDirLightCount;                        //!< 入力:[ 1      /  1 : 122 ] 方向ライトの数
-uniform mediump vec4 uDirLightDirAndType0;//!< 入力:[ 1 x  2 /  2 : 124 ] 平行ライトの向く方向
-uniform mediump vec4 uDirLightDirAndType1;//!< 入力:[ 1 x  2 /  2 : 124 ] 平行ライトの向く方向
-uniform mediump vec3 uDirLightColor0;     //!< 入力:[ 1 x  2 /  2 : 126 ] 平行ライトのカラー
-uniform mediump vec3 uDirLightColor1;     //!< 入力:[ 1 x  2 /  2 : 126 ] 平行ライトのカラー
-uniform mediump vec3 uHSLightSkyColor;                      //!< 入力:[ 1      /  1 : 127 ] 半球ライトのスカイカラー
-uniform mediump vec3 uHSLightGroundColor;                   //!< 入力:[ 1      /  1 : 128 ] 半球ライトのグラウンドカラー
-//uniform mediump vec3 cameraPosition;                                //!< 入力:[ 1      /  1 : 129 ] カメラの位置
-// ^^ previously uEyePt
-uniform mediump float uAlpha;                               //!< 入力:[ 1      /  1 : 130 ] アルファ値
-
-// ^^ Commented uniforms are provided by three.js.
-
-// ----------------------------------------
-// フラグメントシェーダーに渡される varying 変数
-varying lowp    vec4    vModelColor;                            //!< 出力:[ 1 : 1 ] モデルの色
-#if !defined(AGX_FEATURE_BUMP_TEXTURE)
-varying mediump vec3    vNormal;                                //!< 出力:[ 1 : 2 ] モデルの法線
-#endif
-#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
-varying mediump vec2    vTexcoord0;                             //!< 出力:[ 1 : 3 ] テクスチャーUV
-#endif
-// camera
-varying mediump vec3    vEyeVecWorldOrTangent;                  //!< 出力:[ 1 : 4 ] 視線ベクトル
-#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-// punctual light
-varying mediump vec3    vPunctualLightDirWorldOrTangent;        //!< 出力:[ 1 : 5 ] ライトの方向
-varying mediump vec3    vPunctualLightHalfVecWorldOrTangent;    //!< 出力:[ 1 : 6 ] カメラとライトのハーフベクトル
-// GI
-varying mediump vec3    vGISpecularLightColor;                  //!< 出力:[ 1 : 7 ] GIフレネルで使用するカラー
-// Lighting Result
-varying mediump vec3    vDiffuseColor;                          //!< 出力:[ 1 : 8 ] ディフューズライティング結果
-#endif
-// Reflect
-#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
-varying lowp    vec3    vReflectDir;                            //!< 出力:[ 1 : 9 ] 環境マップの反射ベクトル
-#endif
-
-// skinning_pars_vertex.glsl.js
-#ifdef USE_SKINNING
-    uniform mat4 bindMatrix;
-    uniform mat4 bindMatrixInverse;
-    uniform highp sampler2D boneTexture;
-    mat4 getBoneMatrix( const in float i ) {
-        int size = textureSize( boneTexture, 0 ).x;
-        int j = int( i ) * 4;
-        int x = j % size;
-        int y = j / size;
-        vec4 v1 = texelFetch( boneTexture, ivec2( x, y ), 0 );
-        vec4 v2 = texelFetch( boneTexture, ivec2( x + 1, y ), 0 );
-        vec4 v3 = texelFetch( boneTexture, ivec2( x + 2, y ), 0 );
-        vec4 v4 = texelFetch( boneTexture, ivec2( x + 3, y ), 0 );
-        return mat4( v1, v2, v3, v4 );
-    }
-#endif
-
-// ------------------------------------------------------------
-// 頂点シェーダーのエントリーポイント
-// ------------------------------------------------------------
-void main()
-{
-    // ------------------------------------------------------------
-    // 頂点変換用の処理
-    // ------------------------------------------------------------
-    highp   vec4 position_;  //!< 最終的な頂点
-    mediump vec3 normal_;    //!< 最終的な法線
-    mediump vec3 tangent_;   //!< 最終的な接線
-    highp   vec4 positionWorld; //!< ワールド空間上での頂点
-
-
-    // begin_vertex.glsl.js
-    vec3 transformed = vec3( position );
-// skinbase_vertex.glsl.js
-#ifdef USE_SKINNING
-    mat4 boneMatX = getBoneMatrix( skinIndex.x );
-    mat4 boneMatY = getBoneMatrix( skinIndex.y );
-    mat4 boneMatZ = getBoneMatrix( skinIndex.z );
-    mat4 boneMatW = getBoneMatrix( skinIndex.w );
-    // skinning_vertex.glsl.js
-    vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );
-    vec4 skinned = vec4( 0.0 );
-    skinned += boneMatX * skinVertex * skinWeight.x;
-    skinned += boneMatY * skinVertex * skinWeight.y;
-    skinned += boneMatZ * skinVertex * skinWeight.z;
-    skinned += boneMatW * skinVertex * skinWeight.w;
-    transformed = ( bindMatrixInverse * skinned ).xyz;
-#endif
-
-    // ----------------------------------------
-    // ボーンが存在しない場合は位置と法線に手を加えない
-    position_ = vec4(transformed.xyz, 1.0);
-
-
-
-    normal_ = normal;
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-    tangent_ = tangent.xyz;
-#endif
-    // skinnormal_vertex.glsl.js
-#ifdef USE_SKINNING
-    mat4 skinMatrix = mat4( 0.0 );
-    skinMatrix += skinWeight.x * boneMatX;
-    skinMatrix += skinWeight.y * boneMatY;
-    skinMatrix += skinWeight.z * boneMatZ;
-    skinMatrix += skinWeight.w * boneMatW;
-    skinMatrix = bindMatrixInverse * skinMatrix * bindMatrix;
-
-    normal_ = vec4( skinMatrix * vec4( normal_, 0.0 ) ).xyz;
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-    tangent_ = vec4( skinMatrix * vec4( tangent_, 0.0 ) ).xyz;
-#endif // defined(AGX_FEATURE_BUMP_TEXTURE)
-#endif // USE_SKINNING
-
-    // ----------------------------------------
-    // ワールド上での位置を求める
-    positionWorld = modelMatrix * position_;
-    // 最終結果を行う
-    position_ = projectionMatrix * modelViewMatrix * position_;
-    normal_   = normalize(normalMatrix * normal_);
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-    tangent  = normalize(normalMatrix * tangent_);
-#endif
-
-    // ----------------------------------------
-    // 計算結果を保持させる
-    gl_Position = position_;
-#if !defined(AGX_FEATURE_BUMP_TEXTURE)
-    vNormal     = normal_;
-#endif
-#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
-    // テクスチャー座標を設定する
-    vTexcoord0 = uv;
-#endif
-    // モデルの色を指定する
-#if defined(AGX_FEATURE_VERTEX_COLOR)
-    lowp vec4 modelColor = aColor;
-
-#else
-    lowp vec4 modelColor = vec4(1.0, 1.0, 1.0, 1.0);
-#endif
-
-    // プリマルチプライドアルファ
-#if defined(AGX_FEATURE_PREMULTIPLY_ALPHA)
-    modelColor *= uAlpha;
-#else
-    modelColor.a *= uAlpha;
-#endif
-
-
-    // ------------------------------------------------------------
-    // ライト用の処理
-    // ------------------------------------------------------------
-    mediump vec3 eyeVecWorld;   //!< ワールド状態での視線ベクトル
-    mediump vec3 eyeVec;        //!< 最終的にフラグメントシェーダーに渡す視線ベクトル（バンプの有無によって、ワールド座標系になったり、タンジェント座標系になったりする）
-
-    vec4 eye = modelViewMatrix * position_;
-
-    // 視線ベクトルを取得する
-    //eyeVecWorld = normalize(cameraPosition - positionWorld.xyz);
-    eyeVecWorld = normalize(-(eye.xyz) - positionWorld.xyz);//normalize(cameraPosition - positionWorld.xyz);
-    eyeVec = eyeVecWorld;
-
-    lowp vec3 diffuseColor = vec3(0.0); // バーテックスシェーダーで計算できるディフューズの色をここに格納する
-
-#   if defined(AGX_FEATURE_BUMP_TEXTURE)
-    // Normal, Binormal, Tangent を取得する
-    mediump vec3 n = normal;
-    mediump vec3 t = tangent;
-    mediump vec3 b = cross(n, t);
-    // 接空間からローカルへ変換する行列を設定する（mat3(N, T, B)の逆行列）
-    mediump mat3 tangentMatrix = mat3(t.x, b.x, n.x, t.y, b.y, n.y, t.z, b.z, n.z);
-    // 視線ベクトルを接空間へ
-    vEyeVecWorldOrTangent.xyz = tangentMatrix * eyeVec;
-#else
-    vEyeVecWorldOrTangent.xyz = eyeVec;
-#endif
-
-#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-    // punctual lightの設定
-    if (uDirLightCount > 0)
-    {
-        mediump vec3 lightDir;
-
-        // 方向ライト
-        if (uDirLightDirAndType0.w < 0.0) { lightDir = uDirLightDirAndType0.xyz; }
-        // 点光源ライト
-        else                                { lightDir = uDirLightDirAndType0.xyz - positionWorld.xyz; }
-        lightDir = normalize(lightDir);
-
-#   if defined(AGX_FEATURE_BUMP_TEXTURE)
-        // ライトを接空間へ
-        vPunctualLightDirWorldOrTangent.xyz = tangentMatrix * lightDir;
-#   else
-        vPunctualLightDirWorldOrTangent.xyz = lightDir;
-#   endif
-
-        // Halfベクトルを求める
-        vPunctualLightHalfVecWorldOrTangent.xyz = normalize(vPunctualLightDirWorldOrTangent.xyz + vEyeVecWorldOrTangent.xyz);
-
-        // Diffuse計算
-        diffuseColor += (uDirLightColor0.rgb * clamp(dot(lightDir, normal_), 0.0, 1.0));
-    }
-    if (uDirLightCount > 1)
-    {
-        mediump vec3 lightDir;
-
-        // 方向ライト
-        if (uDirLightDirAndType1.w < 0.0) { lightDir = uDirLightDirAndType1.xyz; }
-        // 点光源ライト
-        else                                { lightDir = uDirLightDirAndType1.xyz - positionWorld.xyz; }
-        lightDir = normalize(lightDir);
-
-        diffuseColor += max(dot(lightDir, normal_), 0.0) * uDirLightColor1;
-    }
-    // ライトは1.0を超えないように
-    diffuseColor = min(diffuseColor, 1.0);
-#endif
-
-#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
-    {
-        // キューブ環境マップ用の反射ベクトルを求める
-//        vReflectDir = reflect(normalize(positionWorld.xyz - cameraPosition), normal_);
-
-        // スフィア環境マップ用の反射ベクトルを求める
-//        vReflectDir = normalize((uViewMatrix * vec4(normal_, 0.0)).xyz) * 0.5 + 0.5;
-
-        // ビュー座標系での位置と法線を取得
-        mediump vec3 viewNormal   = normalize(mat3(uViewMatrix) * normal_);
-        mediump vec4 viewPosition = uViewMatrix * positionWorld;
-        viewPosition = viewPosition / viewPosition.w;
-        // ビュー座標系での頂点ベクトルを取得
-        viewPosition.z = 1.0 - viewPosition.z;
-        mediump vec3 viewPositionVec = normalize(viewPosition.xyz);
-        // ビュー座標系での反射ベクトルを求める
-        mediump vec3 viewReflect  = viewPositionVec - 2.0 * dot(viewPositionVec, viewNormal) * viewNormal;
-        // 両面スフィア環境マップではないので、反射ベクトルを調整
-        viewReflect = normalize(viewReflect - vec3(0.0, 0.0, 1.5));
-        // 反射ベクトルをテクスチャー座標系へ
-        vReflectDir = viewReflect * 0.5 + 0.5;
-
-        // 公式
-//        mediump vec3  viewPositionVec = normalize(vec3(uViewMatrix * positionWorld));
-//        mediump vec3  viewReflectVec = viewPositionVec - 2.0 * dot(viewPositionVec, normal_) * normal;
-//        mediump float m = 2.0 * sqrt(viewReflectVec.x * viewReflectVec.x +
-//                                     viewReflectVec.y * viewReflectVec.y +
-//                                     (viewReflectVec.z + 1.0) * (viewReflectVec.z * 1.0));
-//        vReflectDir = viewReflectVec / m + 0.5;
-
-        // 別版
-//        mediump vec3 posW = positionWorld.xyz;
-//        mediump vec3 dir  = normalize(mat3(uViewMatrix) * normal);
-//
-//        mediump float radius     = 75.0;
-//        mediump vec3  posWDir    = dot(dir, posW) * dir;
-//        mediump vec3  posWDirV   = posW - posWDir;
-//        mediump float lengthDir  = sqrt(radius * radius - dot(posWDirV, posWDirV)) - length(posWDir);
-//        vReflectDir = normalize(posW + dir * lengthDir) * 0.5 + 0.5;
-    }
-#endif
-
-#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-    // GIの計算
-    {
-        mediump vec3 hemiColor;
-        mediump vec3 sky = uHSLightSkyColor;
-        mediump vec3 ground = uHSLightGroundColor;
-
-        {
-            mediump float skyRatio = (normal_.y + 1.0) * 0.5;
-            hemiColor =  (sky * skyRatio + ground * (1.0 - skyRatio));
-            diffuseColor += hemiColor;
-        }
-
-        {
-//            mediump vec3 reflectDir = -reflect(normal_, eyeVecWorld); // おそらくコレで良いはず
-            mediump vec3 reflectDir = 2.0 * dot(eyeVecWorld, normal_) * normal_ - eyeVecWorld; // 多少冗長でも、正しい計算で行なう
-
-            mediump float skyRatio = (reflectDir.y + 1.0) * 0.5;
-            hemiColor =  (sky * skyRatio + ground * (1.0 - skyRatio));
-            vGISpecularLightColor.rgb = hemiColor;
-        }
-    }
-#endif
-
-    // モデルの色を設定
-    vModelColor = modelColor;
-#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-    vDiffuseColor.rgb = diffuseColor;
-#endif
-}
-`;
-var _LUTShader_frag = `
-#define AGX_FEATURE_ALBEDO_TEXTURE
-#define AGX_FEATURE_MII
-/**
- * @file    LUT.fsh
- * @brief   LUT
- * @since   2014/10/02
- *
- * Copyright (c)2014 Nintendo Co., Ltd. All rights reserved.
- */
-
-// シェーダーの種類毎に設定されるマクロリスト
-// AGX_FEATURE_VERTEX_COLOR         頂点カラーが有効
-// AGX_FEATURE_ALBEDO_TEXTURE       アルベドテクスチャーが有効
-// AGX_FEATURE_BUMP_TEXTURE         バンプテクスチャーが有効
-// AGX_FEATURE_MASK_TEXTURE         マスクテクスチャーが有効
-// AGX_FEATURE_ALPHA_TEXTURE        アルファテクスチャーが有効
-// AGX_FEATURE_SPHERE_MAP_TEXTURE   スフィア環境マップが有効
-// AGX_FEATURE_SKIN_MASK            肌マスクが有効（uColor0）
-// AGX_FEATURE_HAIR_MASK            髪マスクが有効（uColor1）
-// AGX_FEATURE_ALPHA_TEST           アルファテストが有効
-// AGX_FEATURE_FADE_OUT_COLOR       フェードアウトカラーが有効（uColor2）
-// AGX_FEATURE_DISABLE_LIGHT        ライトが無効
-// AGX_FEATURE_ALPHA_COLOR_FILTER   アルベドアルファによる色替えが有効
-// AGX_FEATURE_ALBEDO_ALPHA         アルベドのアルファをカラーのアルファに適用
-// AGX_FEATURE_PREMULTIPLY_ALPHA    プレマルチプライアルファな描画
-// AGX_FEATURE_MII                  Miiを描画する
-// AGX_FEATURE_MII_CONSTANT         Miiを描画する：Constant
-// AGX_FEATURE_MII_TEXTURE_DIRECT   Miiを描画する：Texture Direct
-// AGX_FEATURE_MII_RGB_LAYERED      Miiを描画する：RGB Layered
-// AGX_FEATURE_MII_ALPHA            Miiを描画する：Alpha
-// AGX_FEATURE_MII_LUMINANCE_ALPHA  Miiを描画する：Luminance Alpha
-// AGX_FEATURE_MII_ALPHA_OPA        Miiを描画する：Alpha Opa
-
-#ifdef GL_ES
-precision mediump float;
-#else
-#   define lowp
-#   define mediump
-#   define highp
-#endif
-
-/// 変調処理のマクロ
-#define FFL_MODULATE_MODE_CONSTANT        0
-#define FFL_MODULATE_MODE_TEXTURE_DIRECT  1
-#define FFL_MODULATE_MODE_RGB_LAYERED     2
-#define FFL_MODULATE_MODE_ALPHA           3
-#define FFL_MODULATE_MODE_LUMINANCE_ALPHA 4
-#define FFL_MODULATE_MODE_ALPHA_OPA       5
-
-// ----------------------------------------
-// フラグメントシェーダーに入力される uniform 変数
-uniform int   uMode;   ///< 描画モード
-uniform bool uAlphaTest;
-uniform bool uLightEnable;
-uniform mediump vec4    uColor0;            //!< 入力:[ 1 : 1 ] カラー0 (OR 肌カラー)
-uniform mediump vec4    uColor1;            //!< 入力:[ 1 : 2 ] カラー1 (OR 髪カラー)
-uniform mediump vec4    uColor2;            //!< 入力:[ 1 : 3 ] カラー2 (OR フェードアウトカラー)
-//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-uniform mediump vec3    uLightColor;        //!< 入力:[ 1 : 4 ] ライトの色
-//#endif
-
-#if defined(AGX_FEATURE_ALBEDO_TEXTURE)
-uniform sampler2D       uAlbedoTexture;     //!< 入力: テクスチャー
-#endif
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-uniform sampler2D       uNormalTexture;     //!< 入力: ノーマルマップ
-#endif
-#if defined(AGX_FEATURE_MASK_TEXTURE)
-uniform sampler2D       uMaskTexture;       //!< 入力：マスクテクスチャー
-#endif
-#if defined(AGX_FEATURE_ALPHA_TEXTURE)
-uniform sampler2D       uAlphaTexture;      //!< 入力：アルファテクスチャー
-#endif
-uniform sampler2D       uLUTSpecTexture;    //!< 入力: スペキュラーLUT
-uniform sampler2D       uLUTFresTexture;    //!< 入力: フレネルLUT
-#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
-uniform sampler2D       uSphereMapTexture;  //!< 入力: スフィア環境マップ
-#endif
-
-// ----------------------------------------
-// フラグメントシェーダーに渡される varying 変数
-varying lowp    vec4    vModelColor;                            //!< 出力:[ 1 : 1 ] モデルの色
-#if !defined(AGX_FEATURE_BUMP_TEXTURE)
-varying mediump vec3    vNormal;                                //!< 出力:[ 1 : 2 ] モデルの法線
-#endif
-#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
-varying mediump vec2    vTexcoord0;                             //!< 出力:[ 1 : 3 ] テクスチャーUV
-#endif
-// camera
-varying mediump vec3    vEyeVecWorldOrTangent;                  //!< 出力:[ 1 : 4 ] 視線ベクトル
-//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-// punctual light
-varying mediump vec3    vPunctualLightDirWorldOrTangent;        //!< 出力:[ 1 : 5 ] ライトの方向
-varying mediump vec3    vPunctualLightHalfVecWorldOrTangent;    //!< 出力:[ 1 : 6 ] カメラとライトのハーフベクトル
-// GI
-varying mediump vec3    vGISpecularLightColor;                  //!< 出力:[ 1 : 7 ] GIフレネルで使用するカラー
-// Lighting Result
-varying mediump vec3    vDiffuseColor;                          //!< 出力:[ 1 : 8 ] ディフューズライティング結果
-//#endif
-// Reflect
-#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
-varying lowp    vec3    vReflectDir;                            //!< 出力:[ 1 : 9 ] 環境マップの反射ベクトル
-#endif
-
-// ------------------------------------------------------------
-// フラグメントシェーダーのエントリーポイント
-// ------------------------------------------------------------
-void main()
-{
-
-    // ディフューズカラーを取得
-    lowp vec4 albedoColor = vec4(1.0, 1.0, 1.0, 1.0);
-
-    // ============================================================
-    //  Mii
-    // ============================================================
-#if defined(AGX_FEATURE_MII)
-
-   //#if defined(AGX_FEATURE_MII_CONSTANT)
-    if(uMode == FFL_MODULATE_MODE_CONSTANT)
-    {
-        albedoColor = uColor0;
-    }
-    //#elif defined(AGX_FEATURE_MII_TEXTURE_DIRECT)
-    else if(uMode == FFL_MODULATE_MODE_TEXTURE_DIRECT)
-    {
-        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-    }
-    //#elif defined(AGX_FEATURE_MII_RGB_LAYERED)
-    else if(uMode == FFL_MODULATE_MODE_RGB_LAYERED)
-    {
-        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-        albedoColor = vec4(albedoColor.r * uColor0.rgb + albedoColor.g * uColor1.rgb + albedoColor.b * uColor2.rgb,
-                           uColor0.a * albedoColor.a);
-    }
-    //#elif defined(AGX_FEATURE_MII_ALPHA)
-    else if(uMode == FFL_MODULATE_MODE_ALPHA)
-    {
-        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-        albedoColor = vec4(uColor0.rgb, uColor0.a * albedoColor.r);
-    }
-    //#elif defined(AGX_FEATURE_MII_LUMINANCE_ALPHA)
-    else if(uMode == FFL_MODULATE_MODE_LUMINANCE_ALPHA)
-    {
-        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-        albedoColor = vec4(albedoColor.g * uColor0.rgb, uColor0.a * albedoColor.r);
-    }
-    //#elif defined(AGX_FEATURE_MII_ALPHA_OPA)
-    else if(uMode == FFL_MODULATE_MODE_ALPHA_OPA)
-    {
-        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-        albedoColor = vec4(albedoColor.r * uColor0.rgb, uColor0.a);
-    }
-//#endif
-
-    albedoColor = albedoColor * vModelColor;
-#endif
-
-    // ============================================================
-    //  Albedo Texture
-    // ============================================================
-#if !defined(AGX_FEATURE_MII) && defined(AGX_FEATURE_ALBEDO_TEXTURE)
-    albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-#endif
-#if defined(AGX_FEATURE_ALPHA_TEXTURE)
-    albedoColor.a   = texture2D(uAlphaTexture, vTexcoord0).r;
-#endif
-
-    // ============================================================
-    //  Color Mask
-    // ============================================================
-    // ----------------------------------------
-    // Deprecated
-#if defined(AGX_FEATURE_ALPHA_COLOR_FILTER)
-    // 一部の場所にColor0を反映する
-    albedoColor.rgb = (albedoColor.rgb * albedoColor.a + uColor0.rgb * (1.0 - albedoColor.a));
-    albedoColor.a = 1.0;
-#elif defined(AGX_FEATURE_MASK_TEXTURE)
-    lowp vec3  maskTextureColor = texture2D(uMaskTexture, vTexcoord0).rgb;
-
-#   if defined(AGX_FEATURE_SKIN_MASK) && defined(AGX_FEATURE_HAIR_MASK)
-    // 肌と髪両方マスクが存在する
-    lowp float maskColorValue = maskTextureColor.g + maskTextureColor.b;
-    lowp vec3  maskColor      = maskTextureColor.g * uColor0.rgb + maskTextureColor.b * uColor1.rgb;
-    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskColorValue) + maskColor);
-
-#   elif defined(AGX_FEATURE_SKIN_MASK)
-    // 肌しかマスクが存在しない
-    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskTextureColor.g) + maskTextureColor.g * uColor0.rgb);
-
-#   elif defined(AGX_FEATURE_HAIR_MASK)
-    // 髪しかマスクが存在しない
-    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskTextureColor.b) + maskTextureColor.b * uColor1.rgb);
-
-#   endif
-#endif
-
-    // アルベドに頂点カラーを掛ける
-    albedoColor *= vModelColor;
-
-    // ============================================================
-    //  Alpha test
-    // ============================================================
-//#if defined(AGX_FEATURE_ALPHA_TEST)
-    if (uAlphaTest && albedoColor.a < 0.5) { discard; }
-//#endif
-
-    // ============================================================
-    //  Bumpmap
-    // ============================================================
-    // 頂点からの情報
-    lowp vec3 normalWorldOrTangent;
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-    // バンプマップから法線を取得する
-    mediump vec3 bumpNormal = texture2D(uNormalTexture, vTexcoord0).rgb;
-
-    // 法線の正規化は処理が重いのでいったん正規化しない様に...
-//    normalWorldOrTangent = normalize(bumpNormal * 2.0 - 1.0);
-    normalWorldOrTangent = bumpNormal * 2.0 - 1.0;
-
-#else
-    // 法線を正規化して取得する
-    normalWorldOrTangent = normalize(vNormal);
-#endif
-
-    // ============================================================
-    //  Lighting
-    // ============================================================
-    // 最終的なカラー情報
-    lowp vec4 colorOut = vec4(0.0, 0.0, 0.0, albedoColor.a);  // 最終的に出力される色
-    lowp vec3 fresnel  = vec3(0.0, 0.0, 0.0);   // フレネル
-    lowp vec3 specular = vec3(0.0, 0.0, 0.0);   // スペキュラー
-
-//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-if (uLightEnable) {
-
-    // BRDFの計算を行う（バンプマッピングの場合は接空間）
-    lowp vec3 N = normalWorldOrTangent;
-    lowp vec3 V = vEyeVecWorldOrTangent.xyz;//normalize(vEyeVecWorldOrTangent.xyz);
-    lowp vec3 I = vPunctualLightDirWorldOrTangent.xyz;//normalize(vPunctualLightDirWorldOrTangent.xyz);
-    lowp vec3 H = vPunctualLightHalfVecWorldOrTangent.xyz;//normalize(vPunctualLightHalfVecWorldOrTangent.xyz);
-
-
-    // ----------------------------------------
-    // punctual light
-    // 平行光源や点光源などの厳密なライティング計算を行なうもの
-    {
-        lowp float fSpecular = dot(N, H);
-
-        lowp float specularIntensity = texture2D(uLUTSpecTexture, vec2(fSpecular)).r;
-        specular = (specularIntensity * uLightColor.rgb);
-    }
-
-    // ----------------------------------------
-    // GI
-    // 半球ライトやIBL、SHのように法線方向に半球積分された結果でライティング計算を行なうもの
-    {
-        lowp float fFresnel = dot(N, V);
-        lowp float fresnelIntensity = texture2D(uLUTFresTexture, vec2(fFresnel)).r;
-
-        fresnel = (fresnelIntensity * vGISpecularLightColor.rgb);
-    }
-}
-//#endif
-
-#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
-    // スフィア環境マップ
-    specular += texture2D(uSphereMapTexture, vReflectDir.xy).rgb;
-#endif
-
-    // ============================================================
-    //  Specular Mask
-    // ============================================================
-#if !defined(AGX_FEATURE_ALPHA_COLOR_FILTER) && defined(AGX_FEATURE_MASK_TEXTURE)
-    // スペキュラーマスク
-    specular = specular * maskTextureColor.r + fresnel;
-#else
-    specular += fresnel;
-#endif
-
-    // ============================================================
-    //  Output
-    // ============================================================
-//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-if (uLightEnable)
-    colorOut.rgb = vDiffuseColor.rgb * albedoColor.rgb + specular;
-//#else
-else
-    colorOut.rgb = albedoColor.rgb;
-//#endif
-
-    // フェードアウトを実装する
-#if defined(AGX_FEATURE_FADE_OUT_COLOR)
-    colorOut.rgb = (colorOut.rgb * (1.0 - uColor2.a)) + (uColor2.rgb * uColor2.a);
-#endif
-
-    // 色を反映させる
-    gl_FragColor = colorOut;
-
-    //#include <tonemapping_fragment>
-    //#include <colorspace_fragment>
-}
-`;
-
-class HermitianCurve {
-  constructor(keys2) {
-    this.keys = keys2.sort((a, b) => a.x - b.x);
-  }
-  interpolate(t, p0, p1, m0, m1) {
-    const h00 = 2 * t * t * t - 3 * t * t + 1;
-    const h10 = t * t * t - 2 * t * t + t;
-    const h01 = -2 * t * t * t + 3 * t * t;
-    const h11 = t * t * t - t * t;
-    return h00 * p0 + h10 * m0 + h01 * p1 + h11 * m1;
-  }
-  clamp(value2, min, max) {
-    return Math.min(Math.max(value2, min), max);
-  }
-  generateLUT(lutSize = 512) {
-    const lut = new Uint8Array(lutSize);
-    let keyIdx = 0;
-    for (let i = 0;i < lutSize; i++) {
-      const pos = i / (lutSize - 1);
-      while (keyIdx < this.keys.length - 2 && pos > this.keys[keyIdx + 1].x) {
-        keyIdx++;
-      }
-      const p0 = this.keys[keyIdx];
-      const p1 = this.keys[keyIdx + 1];
-      let t = (pos - p0.x) / (p1.x - p0.x);
-      t = isNaN(t) ? 0 : t;
-      const y = this.interpolate(t, p0.y, p1.y, p0.dx * (p1.x - p0.x), p1.dx * (p1.x - p0.x));
-      lut[i] = Math.round(this.clamp(y, 0, 1) * 255);
-    }
-    return lut;
-  }
-}
-
-class LUTShaderMaterial extends THREE5.ShaderMaterial {
-  static LUTSpecularTextureType = {
-    NONE: 0,
-    DEFAULT_02: 1,
-    SKIN_01: 2,
-    MAX: 3
-  };
-  static LUTFresnelTextureType = {
-    NONE: 0,
-    DEFAULT_02: 1,
-    SKIN_01: 2,
-    MAX: 3
-  };
-  static lutDefinitions = {
-    specular: {
-      [LUTShaderMaterial.LUTSpecularTextureType.NONE]: new HermitianCurve([
-        { x: 0, y: 0, dx: 0, dy: 0 },
-        { x: 1, y: 0, dx: 0, dy: 0 }
-      ]),
-      [LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02]: new HermitianCurve([
-        { x: 0, y: 0, dx: 0, dy: 0 },
-        { x: 0.05, y: 0, dx: 0, dy: 0 },
-        {
-          x: 0.8,
-          y: 0.038,
-          dx: 0.157894736842105,
-          dy: 0.157894736842105
-        },
-        { x: 1, y: 0.11, dx: 0, dy: 0 }
-      ]),
-      [LUTShaderMaterial.LUTSpecularTextureType.SKIN_01]: new HermitianCurve([
-        {
-          x: 0,
-          y: 0.03,
-          dx: -0.105263157894737,
-          dy: -0.105263157894737
-        },
-        { x: 1, y: 0, dx: 0, dy: 0 }
-      ])
-    },
-    fresnel: {
-      [LUTShaderMaterial.LUTFresnelTextureType.NONE]: new HermitianCurve([
-        { x: 0, y: 0, dx: 0, dy: 0 },
-        { x: 1, y: 0, dx: 0, dy: 0 }
-      ]),
-      [LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02]: new HermitianCurve([
-        {
-          x: 0,
-          y: 0.3,
-          dx: -0.105263157894734,
-          dy: -0.105263157894734
-        },
-        {
-          x: 0.175,
-          y: 0.23,
-          dx: -0.626315789473681,
-          dy: -0.626315789473681
-        },
-        {
-          x: 0.6,
-          y: 0.05,
-          dx: -0.210526315789474,
-          dy: -0.210526315789474
-        },
-        {
-          x: 1,
-          y: 0,
-          dx: -0.105263157894737,
-          dy: -0.105263157894737
-        }
-      ]),
-      [LUTShaderMaterial.LUTFresnelTextureType.SKIN_01]: new HermitianCurve([
-        {
-          x: 0.005,
-          y: 0.35,
-          dx: -0.105263157894734,
-          dy: -0.105263157894734
-        },
-        {
-          x: 0.173,
-          y: 0.319,
-          dx: -0.205263157894734,
-          dy: -0.205263157894734
-        },
-        {
-          x: 0.552,
-          y: 0.051,
-          dx: -0.210526315789474,
-          dy: -0.210526315789474
-        },
-        { x: 1, y: 0.001, dx: 0, dy: 0 }
-      ])
-    }
-  };
-  static modulateTypeToLUTSpecular = [
-    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
-    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTSpecularTextureType.NONE,
-    LUTShaderMaterial.LUTSpecularTextureType.NONE,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02
-  ];
-  static modulateTypeToLUTFresnel = [
-    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
-    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTFresnelTextureType.NONE,
-    LUTShaderMaterial.LUTFresnelTextureType.NONE,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02
-  ];
-  static _lutTextures = null;
-  static getLUTTextures(lutSize = 512) {
-    if (LUTShaderMaterial._lutTextures) {
-      return LUTShaderMaterial._lutTextures;
-    }
-    const textures = { specular: {}, fresnel: {} };
-    const r8 = Number(THREE5.REVISION) <= 136 ? THREE5.LuminanceFormat : THREE5.RedFormat;
-    function generateLUTTextures(lutType, target) {
-      for (const key2 in lutType) {
-        const lutData = lutType[key2].generateLUT(lutSize);
-        target[Number(key2)] = Object.assign(new THREE5.DataTexture(lutData, lutSize, 1, r8, THREE5.UnsignedByteType), {
-          colorSpace: THREE5.LinearSRGBColorSpace,
-          needsUpdate: true
-        });
-      }
-    }
-    generateLUTTextures(LUTShaderMaterial.lutDefinitions.specular, textures.specular);
-    generateLUTTextures(LUTShaderMaterial.lutDefinitions.fresnel, textures.fresnel);
-    LUTShaderMaterial._lutTextures = textures;
-    return textures;
-  }
-  static defaultHSLightGroundColor = new THREE5.Color(0.87843, 0.72157, 0.5898);
-  static defaultHSLightSkyColor = new THREE5.Color(0.87843, 0.83451, 0.80314);
-  static defaultDirLightColor0 = new THREE5.Color(0.35137, 0.32392, 0.32392);
-  static defaultDirLightColor1 = new THREE5.Color(0.10039, 0.09255, 0.09255);
-  static defaultDirLightCount = 2;
-  static defaultDirLightDirAndType0 = new THREE5.Vector4(-0.2, 0.5, 0.8, -1);
-  static defaultDirLightDirAndType1 = new THREE5.Vector4(0, -0.19612, 0.98058, -1);
-  static defaultLightColor = new THREE5.Color(0.35137, 0.32392, 0.32392);
-  static defaultLightDirection = this.defaultDirLightDirAndType0;
-  static multiplyColorIfNeeded(color, modulateType, modulateMode) {
-    if (modulateType === 1 || modulateType === 4 || modulateMode === 0 && modulateType === 9) {
-      const mul2 = 0.9019608;
-      color.r *= mul2;
-      color.g *= mul2;
-      color.b *= mul2;
-    }
-    return color;
-  }
-  constructor(options = {}) {
-    const uniforms = {
-      uBoneCount: { value: 0 },
-      uAlpha: { value: 1 },
-      uHSLightGroundColor: {
-        value: LUTShaderMaterial.defaultHSLightGroundColor
-      },
-      uHSLightSkyColor: {
-        value: LUTShaderMaterial.defaultHSLightSkyColor
-      },
-      uDirLightColor0: {
-        value: LUTShaderMaterial.defaultDirLightColor0
-      },
-      uDirLightColor1: {
-        value: LUTShaderMaterial.defaultDirLightColor1
-      },
-      uDirLightCount: {
-        value: LUTShaderMaterial.defaultDirLightCount
-      },
-      uDirLightDirAndType0: {
-        value: LUTShaderMaterial.defaultDirLightDirAndType0.clone()
-      },
-      uDirLightDirAndType1: {
-        value: LUTShaderMaterial.defaultDirLightDirAndType1.clone()
-      },
-      uLightEnable: { value: true },
-      uLightColor: { value: LUTShaderMaterial.defaultLightColor }
-    };
-    super({
-      vertexShader: _LUTShader_vert,
-      fragmentShader: _LUTShader_frag,
-      uniforms
-    });
-    this._modulateType = 0;
-    this.setValues(options);
-  }
-  get color() {
-    if (!this.uniforms.uColor0) {
-      return null;
-    } else if (this._color3) {
-      return this._color3;
-    }
-    const color4 = this.uniforms.uColor0.value;
-    const color3 = new THREE5.Color(color4.x, color4.y, color4.z);
-    this._color3 = color3;
-    return color3;
-  }
-  set color(value2) {
-    function toColor4(color, opacity2 = 1) {
-      return new THREE5.Vector4(color.r, color.g, color.b, opacity2);
-    }
-    if (Array.isArray(value2)) {
-      this.uniforms.uColor0 = { value: toColor4(value2[0]) };
-      this.uniforms.uColor1 = { value: toColor4(value2[1]) };
-      this.uniforms.uColor2 = { value: toColor4(value2[2]) };
-      return;
-    }
-    const color3 = value2 ? value2 : new THREE5.Color(1, 1, 1);
-    this._color3 = color3.clone();
-    if (this.modulateType !== undefined && typeof this.modulateMode === "number") {
-      LUTShaderMaterial.multiplyColorIfNeeded(color3, this.modulateType, this.modulateMode);
-    }
-    const opacity = this.opacity;
-    if (this._opacity) {
-      delete this._opacity;
-    }
-    this.uniforms.uColor0 = { value: toColor4(color3, opacity) };
-  }
-  get opacity() {
-    if (!this.uniforms.uColor0) {
-      return this._opacity ? this._opacity : 1;
-    }
-    return this.uniforms.uColor0.value.w;
-  }
-  set opacity(value2) {
-    if (!this.uniforms || !this.uniforms.uColor0) {
-      this._opacity = 1;
-      return;
-    }
-    this.uniforms.uColor0.value.w = value2;
-  }
-  get modulateMode() {
-    return this.uniforms.uMode ? this.uniforms.uMode.value : null;
-  }
-  set modulateMode(value2) {
-    this.uniforms.uMode = { value: value2 };
-  }
-  get lightEnable() {
-    return this.uniforms.uLightEnable ? this.uniforms.uLightEnable.value : null;
-  }
-  set lightEnable(value2) {
-    this.uniforms.uLightEnable = { value: value2 };
-  }
-  get modulateType() {
-    return this._modulateType;
-  }
-  set modulateType(value2) {
-    const lutTextures = LUTShaderMaterial.getLUTTextures();
-    const specType = LUTShaderMaterial.modulateTypeToLUTSpecular[value2];
-    const fresType = LUTShaderMaterial.modulateTypeToLUTFresnel[value2];
-    if (specType === undefined || fresType === undefined) {
-      return;
-    }
-    this._modulateType = value2;
-    const lutSpecTexture = lutTextures.specular[specType];
-    const lutFresTexture = lutTextures.fresnel[fresType];
-    this.uniforms.uLUTSpecTexture = { value: lutSpecTexture };
-    this.uniforms.uLUTFresTexture = { value: lutFresTexture };
-    this.uniforms.uAlphaTest = {
-      value: value2 >= 6 && value2 <= 8
-    };
-    this._side = this.side;
-    this.side = value2 === 6 ? THREE5.DoubleSide : this.side;
-  }
-  get map() {
-    return this.uniforms.uAlbedoTexture ? this.uniforms.uAlbedoTexture.value : null;
-  }
-  set map(value2) {
-    this.uniforms.uAlbedoTexture = { value: value2 };
-  }
-  get lightDirection() {
-    return this.uniforms.uDirLightDirAndType0.value;
-  }
-  set lightDirection(value2) {
-    this.uniforms.uDirLightDirAndType0 = { value: value2 };
-    this.uniforms.uDirLightDirAndType0.value.w = -1;
-  }
-}
-var LUTShaderMaterial_default = LUTShaderMaterial;
-
-// src/class/3d/shader/ShaderUtils.ts
-var import_localforage = __toESM(require_localforage(), 1);
 
 // node_modules/three/build/three.module.js
 var exports_three_module = {};
@@ -72641,21 +68980,3564 @@ class WebGLRenderer {
   }
 }
 
+// src/external/ffl.js/ffl.js
+var _Import = __toESM(require_struct_fu(), 1);
+/*!
+ * Bindings for FFL, a Mii renderer, in JavaScript.
+ * https://github.com/ariankordi/FFL.js
+ * @author Arian Kordi <https://github.com/ariankordi>
+ */
+globalThis._ = globalThis._;
+globalThis.THREE = globalThis.THREE;
+var _ = globalThis._;
+_ = !_ ? _Import : _;
+var FFLResult = {
+  OK: 0,
+  ERROR: 1,
+  HDB_EMPTY: 2,
+  FILE_INVALID: 3,
+  MANAGER_NOT_CONSTRUCT: 4,
+  FILE_LOAD_ERROR: 5,
+  FILE_SAVE_ERROR: 7,
+  RES_FS_ERROR: 9,
+  ODB_EMPTY: 10,
+  OUT_OF_MEMORY: 12,
+  UNKNOWN_17: 17,
+  FS_ERROR: 18,
+  FS_NOT_FOUND: 19,
+  MAX: 20
+};
+var FFLiShapeType = {
+  OPA_BEARD: 0,
+  OPA_FACELINE: 1,
+  OPA_HAIR_NORMAL: 2,
+  OPA_FOREHEAD_NORMAL: 3,
+  XLU_MASK: 4,
+  XLU_NOSELINE: 5,
+  OPA_NOSE: 6,
+  OPA_HAT_NORMAL: 7,
+  XLU_GLASS: 8,
+  OPA_HAIR_CAP: 9,
+  OPA_FOREHEAD_CAP: 10,
+  OPA_HAT_CAP: 11,
+  MAX: 12
+};
+var FFLAttributeBufferType = {
+  POSITION: 0,
+  TEXCOORD: 1,
+  NORMAL: 2,
+  TANGENT: 3,
+  COLOR: 4,
+  MAX: 5
+};
+var FFLCullMode = {
+  NONE: 0,
+  BACK: 1,
+  FRONT: 2,
+  MAX: 3
+};
+var FFLModulateMode = {
+  CONSTANT: 0,
+  TEXTURE_DIRECT: 1,
+  RGB_LAYERED: 2,
+  ALPHA: 3,
+  LUMINANCE_ALPHA: 4,
+  ALPHA_OPA: 5
+};
+var FFLModulateType = {
+  SHAPE_FACELINE: 0,
+  SHAPE_BEARD: 1,
+  SHAPE_NOSE: 2,
+  SHAPE_FOREHEAD: 3,
+  SHAPE_HAIR: 4,
+  SHAPE_CAP: 5,
+  SHAPE_MASK: 6,
+  SHAPE_NOSELINE: 7,
+  SHAPE_GLASS: 8,
+  MUSTACHE: 9,
+  MOUTH: 10,
+  EYEBROW: 11,
+  EYE: 12,
+  MOLE: 13,
+  FACE_MAKE: 14,
+  FACE_LINE: 15,
+  FACE_BEARD: 16,
+  FILL: 17,
+  SHAPE_MAX: 9
+};
+var FFLResourceType = {
+  MIDDLE: 0,
+  HIGH: 1,
+  MAX: 2
+};
+var FFLExpression = {
+  NORMAL: 0,
+  SMILE: 1,
+  ANGER: 2,
+  SORROW: 3,
+  PUZZLED: 3,
+  SURPRISE: 4,
+  SURPRISED: 4,
+  BLINK: 5,
+  OPEN_MOUTH: 6,
+  SMILE_OPEN_MOUTH: 7,
+  HAPPY: 7,
+  ANGER_OPEN_MOUTH: 8,
+  SORROW_OPEN_MOUTH: 9,
+  SURPRISE_OPEN_MOUTH: 10,
+  BLINK_OPEN_MOUTH: 11,
+  WINK_LEFT: 12,
+  WINK_RIGHT: 13,
+  WINK_LEFT_OPEN_MOUTH: 14,
+  WINK_RIGHT_OPEN_MOUTH: 15,
+  LIKE_WINK_LEFT: 16,
+  LIKE: 16,
+  LIKE_WINK_RIGHT: 17,
+  FRUSTRATED: 18,
+  BORED: 19,
+  BORED_OPEN_MOUTH: 20,
+  SIGH_MOUTH_STRAIGHT: 21,
+  SIGH: 22,
+  DISGUSTED_MOUTH_STRAIGHT: 23,
+  DISGUSTED: 24,
+  LOVE: 25,
+  LOVE_OPEN_MOUTH: 26,
+  DETERMINED_MOUTH_STRAIGHT: 27,
+  DETERMINED: 28,
+  CRY_MOUTH_STRAIGHT: 29,
+  CRY: 30,
+  BIG_SMILE_MOUTH_STRAIGHT: 31,
+  BIG_SMILE: 32,
+  CHEEKY: 33,
+  CHEEKY_DUPLICATE: 34,
+  JOJO_EYES_FUNNY_MOUTH: 35,
+  JOJO_EYES_FUNNY_MOUTH_OPEN: 36,
+  SMUG: 37,
+  SMUG_OPEN_MOUTH: 38,
+  RESOLVE: 39,
+  RESOLVE_OPEN_MOUTH: 40,
+  UNBELIEVABLE: 41,
+  UNBELIEVABLE_DUPLICATE: 42,
+  CUNNING: 43,
+  CUNNING_DUPLICATE: 44,
+  RASPBERRY: 45,
+  RASPBERRY_DUPLICATE: 46,
+  INNOCENT: 47,
+  INNOCENT_DUPLICATE: 48,
+  CAT: 49,
+  CAT_DUPLICATE: 50,
+  DOG: 51,
+  DOG_DUPLICATE: 52,
+  TASTY: 53,
+  TASTY_DUPLICATE: 54,
+  MONEY_MOUTH_STRAIGHT: 55,
+  MONEY: 56,
+  SPIRAL_MOUTH_STRAIGHT: 57,
+  CONFUSED: 58,
+  CHEERFUL_MOUTH_STRAIGHT: 59,
+  CHEERFUL: 60,
+  BLANK_61: 61,
+  BLANK_62: 62,
+  GRUMBLE_MOUTH_STRAIGHT: 63,
+  GRUMBLE: 64,
+  MOVED_MOUTH_STRAIGHT: 65,
+  MOVED: 66,
+  SINGING_MOUTH_SMALL: 67,
+  SINGING: 68,
+  STUNNED: 69,
+  MAX: 70
+};
+var FFLModelFlag = {
+  NORMAL: 1 << 0,
+  HAT: 1 << 1,
+  FACE_ONLY: 1 << 2,
+  FLATTEN_NOSE: 1 << 3,
+  NEW_EXPRESSIONS: 1 << 4,
+  NEW_MASK_ONLY: 1 << 5
+};
+var _uintptr = _.uint32le;
+var FFLAttributeBuffer = _.struct([
+  _.uint32le("size"),
+  _.uint32le("stride"),
+  _uintptr("ptr")
+]);
+var FFLAttributeBufferParam = _.struct([
+  _.struct("attributeBuffers", [FFLAttributeBuffer], 5)
+]);
+var FFLPrimitiveParam = _.struct([
+  _.uint32le("primitiveType"),
+  _.uint32le("indexCount"),
+  _uintptr("pAdjustMatrix"),
+  _uintptr("pIndexBuffer")
+]);
+var FFLColor = _.struct([
+  _.float32le("r"),
+  _.float32le("g"),
+  _.float32le("b"),
+  _.float32le("a")
+]);
+var FFLVec3 = _.struct([
+  _.float32le("x"),
+  _.float32le("y"),
+  _.float32le("z")
+]);
+var FFLModulateParam = _.struct([
+  _.uint32le("mode"),
+  _.uint32le("type"),
+  _uintptr("pColorR"),
+  _uintptr("pColorG"),
+  _uintptr("pColorB"),
+  _uintptr("pTexture2D")
+]);
+var FFLDrawParam = _.struct([
+  _.struct("attributeBufferParam", [FFLAttributeBufferParam]),
+  _.struct("modulateParam", [FFLModulateParam]),
+  _.uint32le("cullMode"),
+  _.struct("primitiveParam", [FFLPrimitiveParam])
+]);
+var FFLCreateID = _.struct([
+  _.uint8("data", 10)
+]);
+var FFLiCharInfo = _.struct([
+  _.int32le("miiVersion"),
+  _.struct("faceline", [
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("texture"),
+    _.int32le("make")
+  ]),
+  _.struct("hair", [_.int32le("type"), _.int32le("color"), _.int32le("flip")]),
+  _.struct("eye", [
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("scale"),
+    _.int32le("aspect"),
+    _.int32le("rotate"),
+    _.int32le("x"),
+    _.int32le("y")
+  ]),
+  _.struct("eyebrow", [
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("scale"),
+    _.int32le("aspect"),
+    _.int32le("rotate"),
+    _.int32le("x"),
+    _.int32le("y")
+  ]),
+  _.struct("nose", [
+    _.int32le("type"),
+    _.int32le("scale"),
+    _.int32le("y")
+  ]),
+  _.struct("mouth", [
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("scale"),
+    _.int32le("aspect"),
+    _.int32le("y")
+  ]),
+  _.struct("beard", [
+    _.int32le("mustache"),
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("scale"),
+    _.int32le("y")
+  ]),
+  _.struct("glass", [
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("scale"),
+    _.int32le("y")
+  ]),
+  _.struct("mole", [
+    _.int32le("type"),
+    _.int32le("scale"),
+    _.int32le("x"),
+    _.int32le("y")
+  ]),
+  _.struct("body", [_.int32le("height"), _.int32le("build")]),
+  _.struct("personal", [
+    _.char16le("name", 22),
+    _.char16le("creator", 22),
+    _.int32le("gender"),
+    _.int32le("birthMonth"),
+    _.int32le("birthDay"),
+    _.int32le("favoriteColor"),
+    _.uint8("favorite"),
+    _.uint8("copyable"),
+    _.uint8("ngWord"),
+    _.uint8("localonly"),
+    _.int32le("regionMove"),
+    _.int32le("fontRegion"),
+    _.int32le("roomIndex"),
+    _.int32le("positionInRoom"),
+    _.int32le("birthPlatform")
+  ]),
+  _.struct("createID", [FFLCreateID]),
+  _.uint16le("padding_0"),
+  _.int32le("authorType"),
+  _.uint8("authorID", 8)
+]);
+var FFLStoreData_size = 96;
+var commonColorEnableMask = 1 << 31;
+var commonColorMask = (color) => color | commonColorEnableMask;
+var FFLAdditionalInfo = _.struct([
+  _.char16le("name", 22),
+  _.char16le("creator", 22),
+  _.struct("createID", [FFLCreateID]),
+  _.byte("_padding0", 2),
+  _.struct("skinColor", [FFLColor]),
+  _.uint32le("flags"),
+  _.uint8("facelineType"),
+  _.uint8("hairType"),
+  _.byte("_padding1", 2)
+]);
+var FFLiRenderTexture = _.struct([
+  _uintptr("pTexture2DRenderBufferColorTargetDepthTarget", 4)
+]);
+var FFLiFacelineTextureTempObject = _.struct([
+  _uintptr("pTextureFaceLine"),
+  _.struct("drawParamFaceLine", [FFLDrawParam]),
+  _uintptr("pTextureFaceMake"),
+  _.struct("drawParamFaceMake", [FFLDrawParam]),
+  _uintptr("pTextureFaceBeard"),
+  _.struct("drawParamFaceBeard", [FFLDrawParam]),
+  _uintptr("pRenderTextureCompressorParam", 2)
+]);
+var FFLiRawMaskDrawParam = _.struct([
+  _.struct("drawParamRawMaskPartsEye", [FFLDrawParam], 2),
+  _.struct("drawParamRawMaskPartsEyebrow", [FFLDrawParam], 2),
+  _.struct("drawParamRawMaskPartsMouth", [FFLDrawParam]),
+  _.struct("drawParamRawMaskPartsMustache", [FFLDrawParam], 2),
+  _.struct("drawParamRawMaskPartsMole", [FFLDrawParam]),
+  _.struct("drawParamRawMaskPartsFill", [FFLDrawParam])
+]);
+var FFLiMaskTexturesTempObject = _.struct([
+  _.uint8("partsTextures", 340),
+  _uintptr("pRawMaskDrawParam", FFLExpression.MAX),
+  _.byte("_remaining", 904 - 620)
+]);
+var FFLiTextureTempObject = _.struct([
+  _.struct("maskTextures", [FFLiMaskTexturesTempObject]),
+  _.struct("facelineTexture", [FFLiFacelineTextureTempObject])
+]);
+var FFLiMaskTextures = _.struct([
+  _uintptr("pRenderTextures", FFLExpression.MAX)
+]);
+var FFL_RESOLUTION_MASK = 1073741823;
+var FFLCharModelDesc = _.struct([
+  _.uint32le("resolution"),
+  _.uint32le("allExpressionFlag", 3),
+  _.uint32le("modelFlag"),
+  _.uint32le("resourceType")
+]);
+var FFLCharModelDescDefault = {
+  resolution: 512,
+  allExpressionFlag: new Uint32Array([1, 0, 0]),
+  modelFlag: FFLModelFlag.NORMAL,
+  resourceType: FFLResourceType.HIGH
+};
+var FFLBoundingBox = _.struct([
+  _.struct("min", [FFLVec3]),
+  _.struct("max", [FFLVec3])
+]);
+var FFLPartsTransform = _.struct([
+  _.struct("hatTranslate", [FFLVec3]),
+  _.struct("headFrontRotate", [FFLVec3]),
+  _.struct("headFrontTranslate", [FFLVec3]),
+  _.struct("headSideRotate", [FFLVec3]),
+  _.struct("headSideTranslate", [FFLVec3]),
+  _.struct("headTopRotate", [FFLVec3]),
+  _.struct("headTopTranslate", [FFLVec3])
+]);
+var FFLiCharModel = _.struct([
+  _.struct("charInfo", [FFLiCharInfo]),
+  _.struct("charModelDesc", [FFLCharModelDesc]),
+  _.uint32le("expression"),
+  _uintptr("pTextureTempObject"),
+  _.struct("drawParam", [FFLDrawParam], FFLiShapeType.MAX),
+  _uintptr("pShapeData", FFLiShapeType.MAX),
+  _.struct("facelineRenderTexture", [FFLiRenderTexture]),
+  _uintptr("pCapGlassNoselineTextures", 3),
+  _.struct("maskTextures", [FFLiMaskTextures]),
+  _.struct("beardHairFaceCenterPos", [FFLVec3], 3),
+  _.struct("partsTransform", [FFLPartsTransform]),
+  _.uint32le("modelType"),
+  _.struct("boundingBox", [FFLBoundingBox], 3)
+]);
+var FFLDataSource = {
+  OFFICIAL: 0,
+  DEFAULT: 1,
+  MIDDLE_DB: 2,
+  STORE_DATA_OFFICIAL: 3,
+  STORE_DATA: 4,
+  BUFFER: 5,
+  DIRECT_POINTER: 6
+};
+var FFLCharModelSource = _.struct([
+  _.uint32le("dataSource"),
+  _uintptr("pBuffer"),
+  _.uint16le("index")
+]);
+var FFLResourceDesc = _.struct([
+  _uintptr("pData", FFLResourceType.MAX),
+  _.uint32le("size", FFLResourceType.MAX)
+]);
+var FFLTextureFormat = {
+  R8_UNORM: 0,
+  R8_G8_UNORM: 1,
+  R8_G8_B8_A8_UNORM: 2,
+  MAX: 3
+};
+var FFLTextureInfo = _.struct([
+  _.uint16le("width"),
+  _.uint16le("height"),
+  _.uint8("mipCount"),
+  _.uint8("format"),
+  _.uint8("isGX2Tiled"),
+  _.byte("_padding", 1),
+  _.uint32le("imageSize"),
+  _uintptr("imagePtr"),
+  _.uint32le("mipSize"),
+  _uintptr("mipPtr"),
+  _.uint32le("mipLevelOffset", 13)
+]);
+var FFLTextureCallback = _.struct([
+  _uintptr("pObj"),
+  _.uint8("useOriginalTileMode"),
+  _.byte("_padding", 3),
+  _uintptr("pCreateFunc"),
+  _uintptr("pDeleteFunc")
+]);
+
+class TextureManager {
+  constructor(module2, setToFFLGlobal = false) {
+    this._module = module2;
+    this._textures = new Map;
+    this._textureCallbackPtr = 0;
+    this.logging = false;
+    this._setTextureCallback();
+    if (setToFFLGlobal) {
+      module2._FFLSetTextureCallback(this._textureCallbackPtr);
+    }
+  }
+  static _allocateTextureCallback(module2, createCallback, deleteCallback) {
+    const ptr = module2._malloc(FFLTextureCallback.size);
+    const textureCallback = {
+      pObj: 0,
+      useOriginalTileMode: false,
+      _padding: [0, 0, 0],
+      pCreateFunc: createCallback,
+      pDeleteFunc: deleteCallback
+    };
+    const packed = FFLTextureCallback.pack(textureCallback);
+    module2.HEAPU8.set(packed, ptr);
+    return ptr;
+  }
+  _setTextureCallback(addDeleteCallback = false) {
+    const mod2 = this._module;
+    this._createCallback = mod2.addFunction(this._textureCreateFunc.bind(this), "vppp");
+    if (addDeleteCallback) {
+      this._deleteCallback = mod2.addFunction(this._textureDeleteFunc.bind(this), "vpp");
+    }
+    this._textureCallbackPtr = TextureManager._allocateTextureCallback(mod2, this._createCallback, this._deleteCallback ? this._deleteCallback : 0);
+  }
+  _getTextureFormat(format) {
+    const useGLES2Formats = Number(REVISION) <= 136;
+    const r8 = useGLES2Formats ? LuminanceFormat : RedFormat;
+    const r8g8 = useGLES2Formats ? LuminanceAlphaFormat : RGFormat;
+    const textureFormatToThreeFormat = {
+      [FFLTextureFormat.R8_UNORM]: r8,
+      [FFLTextureFormat.R8_G8_UNORM]: r8g8,
+      [FFLTextureFormat.R8_G8_B8_A8_UNORM]: RGBAFormat
+    };
+    const dataFormat = textureFormatToThreeFormat[format];
+    if (dataFormat === undefined) {
+      throw new Error(`_textureCreateFunc: Unexpected FFLTextureFormat value: ${format}`);
+    }
+    return dataFormat;
+  }
+  _textureCreateFunc(_2, textureInfoPtr, texturePtrPtr) {
+    const u8 = this._module.HEAPU8.subarray(textureInfoPtr, textureInfoPtr + FFLTextureInfo.size);
+    const textureInfo = FFLTextureInfo.unpack(u8);
+    if (this.logging) {
+      console.debug(`_textureCreateFunc: width=${textureInfo.width}, height=${textureInfo.height}, format=${textureInfo.format}, imageSize=${textureInfo.imageSize}, mipCount=${textureInfo.mipCount}`);
+    }
+    const format = this._getTextureFormat(textureInfo.format);
+    const imageData = this._module.HEAPU8.slice(textureInfo.imagePtr, textureInfo.imagePtr + textureInfo.imageSize);
+    const canUseMipmaps = Number(REVISION) >= 138;
+    const useMipmaps = textureInfo.mipCount > 1 && canUseMipmaps;
+    const texture = new DataTexture(useMipmaps ? null : imageData, textureInfo.width, textureInfo.height, format, UnsignedByteType);
+    texture.magFilter = LinearFilter;
+    texture.minFilter = LinearFilter;
+    if (useMipmaps) {
+      texture.mipmaps = [{
+        data: imageData,
+        width: textureInfo.width,
+        height: textureInfo.height
+      }];
+      texture.minFilter = LinearMipmapLinearFilter;
+      texture.generateMipmaps = false;
+      this._addMipmaps(texture, textureInfo);
+    }
+    texture.needsUpdate = true;
+    this.set(texture.id, texture);
+    this._module.HEAPU32[texturePtrPtr / 4] = texture.id;
+  }
+  _addMipmaps(texture, textureInfo) {
+    if (textureInfo.mipPtr === 0) {
+      throw new Error("_addMipmaps: mipPtr is null, so the caller incorrectly assumed this texture has mipmaps");
+    }
+    for (let mipLevel = 1;mipLevel < textureInfo.mipCount; mipLevel++) {
+      const mipOffset = textureInfo.mipLevelOffset[mipLevel - 1];
+      const mipWidth = Math.max(1, textureInfo.width >> mipLevel);
+      const mipHeight = Math.max(1, textureInfo.height >> mipLevel);
+      const nextMipOffset = textureInfo.mipLevelOffset[mipLevel] || textureInfo.mipSize;
+      const end = textureInfo.mipPtr + nextMipOffset;
+      const start = textureInfo.mipPtr + mipOffset;
+      const mipData = this._module.HEAPU8.slice(start, end);
+      if (this.logging) {
+        console.debug(`  - Mip ${mipLevel}: ${mipWidth}x${mipHeight}, offset=${mipOffset}, range=${start}-${end}`);
+      }
+      texture.mipmaps.push({
+        data: mipData,
+        width: mipWidth,
+        height: mipHeight
+      });
+    }
+  }
+  _textureDeleteFunc(_2, texturePtrPtr) {
+    const texId = this._module.HEAPU32[texturePtrPtr / 4];
+    const tex = this._textures.get(texId);
+    if (tex && this.logging) {
+      console.debug("Delete texture    ", tex.id);
+    }
+  }
+  get(id) {
+    const texture = this._textures.get(id);
+    if (!texture && this.logging) {
+      console.error("Unknown texture", id);
+    }
+    return texture;
+  }
+  set(id, texture) {
+    const disposeReal = texture.dispose.bind(texture);
+    texture.dispose = () => {
+      disposeReal();
+      this.delete(id);
+    };
+    this._textures.set(id, texture);
+    if (this.logging) {
+      console.debug("Adding texture    ", texture.id);
+    }
+  }
+  delete(id) {
+    const texture = this._textures.get(id);
+    if (texture) {
+      texture.source = null;
+      texture.mipmaps = null;
+      if (this.logging) {
+        console.debug("Deleted texture   ", id);
+      }
+      this._textures.delete(id);
+    }
+  }
+  disposeCallback() {
+    if (this._textureCallbackPtr) {
+      this._module._free(this._textureCallbackPtr);
+      this._textureCallbackPtr = 0;
+    }
+    if (this._deleteCallback) {
+      this._module.removeFunction(this._deleteCallback);
+      this._deleteCallback = 0;
+    }
+    if (this._createCallback) {
+      this._module.removeFunction(this._createCallback);
+      this._createCallback = 0;
+    }
+  }
+  dispose() {
+    this._textures.forEach((tex) => {
+      tex.dispose();
+    });
+    this._textures.clear();
+    this.disposeCallback();
+  }
+}
+
+class FFLResultException extends Error {
+  constructor(result, funcName, message) {
+    if (!message) {
+      if (funcName) {
+        message = `${funcName} failed with FFLResult: ${result}`;
+      } else {
+        message = `From FFLResult: ${result}`;
+      }
+    }
+    super(message);
+    this.result = result;
+  }
+  static handleResult(result, funcName) {
+    switch (result) {
+      case FFLResult.ERROR:
+        throw new FFLResultWrongParam(funcName);
+      case FFLResult.FILE_INVALID:
+        throw new FFLResultBroken(funcName);
+      case FFLResult.MANAGER_NOT_CONSTRUCT:
+        throw new FFLResultNotAvailable(funcName);
+      case FFLResult.FILE_LOAD_ERROR:
+        throw new FFLResultFatal(funcName);
+      case FFLResult.OK:
+        return;
+      default:
+        throw new FFLResultException(result, funcName);
+    }
+  }
+}
+
+class FFLResultWrongParam extends FFLResultException {
+  constructor(funcName) {
+    super(FFLResult.ERROR, funcName, `${funcName} returned FFL_RESULT_WRONG_PARAM. This usually means parameters going into that function were invalid.`);
+  }
+}
+
+class FFLResultBroken extends FFLResultException {
+  constructor(funcName, message) {
+    super(FFLResult.FILE_INVALID, funcName, message ? message : `${funcName} returned FFL_RESULT_BROKEN. This usually indicates invalid underlying data.`);
+  }
+}
+
+class BrokenInitRes extends FFLResultBroken {
+  constructor() {
+    super("FFLInitRes", 'The header for the FFL resource is probably invalid. Check the version and magic, should be "FFRA" or "ARFF".');
+  }
+}
+
+class BrokenInitModel extends FFLResultBroken {
+  constructor() {
+    super("FFLInitCharModelCPUStep", "FFLInitCharModelCPUStep failed probably because your data failed CRC or CharInfo verification (FFLiVerifyCharInfoWithReason).");
+  }
+}
+
+class FFLResultNotAvailable extends FFLResultException {
+  constructor(funcName) {
+    super(FFLResult.MANAGER_NOT_CONSTRUCT, funcName, `Tried to call FFL function ${funcName} when FFLManager is not constructed (FFL is not initialized properly).`);
+  }
+}
+
+class FFLResultFatal extends FFLResultException {
+  constructor(funcName) {
+    super(FFLResult.FILE_LOAD_ERROR, funcName, `Failed to uncompress or load a specific asset from the FFL resource file during call to ${funcName}`);
+  }
+}
+
+class FFLiVerifyReasonException extends Error {
+  constructor(result) {
+    super(`FFLiVerifyCharInfoWithReason (CharInfo verification) failed with result: ${result}`);
+    this.result = result;
+  }
+}
+
+class ExpressionNotSet extends Error {
+  constructor(expression) {
+    super(`Attempted to set expression ${expression}, but the mask for that expression does not exist. You must reinitialize the CharModel with this expression in the expression flags before using it.`);
+    this.expression = expression;
+  }
+}
+async function _loadDataIntoHeap(resource, module2) {
+  let heapSize;
+  let heapPtr;
+  try {
+    if (resource instanceof ArrayBuffer) {
+      resource = new Uint8Array(resource);
+    }
+    if (resource instanceof Uint8Array) {
+      heapSize = resource.length;
+      heapPtr = module2._malloc(heapSize);
+      console.debug(`_loadDataIntoHeap: Loading from buffer. Size: ${heapSize}, pointer: ${heapPtr}`);
+      module2.HEAPU8.set(resource, heapPtr);
+    } else if (resource instanceof Response) {
+      if (!resource.ok) {
+        throw new Error(`_loadDataIntoHeap: Failed to fetch resource at URL = ${resource.url}, response code = ${resource.status}`);
+      }
+      if (!resource.body) {
+        throw new Error(`_loadDataIntoHeap: Fetch response body is null (resource.body = ${resource.body})`);
+      }
+      const contentLength = resource.headers.get("Content-Length");
+      if (!contentLength) {
+        console.debug("_loadDataIntoHeap: Fetch response is missing Content-Length, falling back to reading as ArrayBuffer.");
+        return _loadDataIntoHeap(await resource.arrayBuffer(), module2);
+      }
+      heapSize = parseInt(contentLength, 10);
+      heapPtr = module2._malloc(heapSize);
+      console.debug(`loadDataIntoHeap: Streaming from fetch response. Size: ${heapSize}, pointer: ${heapPtr}, URL: ${resource.url}`);
+      const reader = resource.body.getReader();
+      let offset = heapPtr;
+      while (true) {
+        const { done, value: value2 } = await reader.read();
+        if (done) {
+          break;
+        }
+        module2.HEAPU8.set(value2, offset);
+        offset += value2.length;
+      }
+    } else {
+      throw new Error("loadDataIntoHeap: type is not Uint8Array or Response");
+    }
+    return { pointer: heapPtr, size: heapSize };
+  } catch (error) {
+    if (heapPtr) {
+      module2._free(heapPtr);
+    }
+    throw error;
+  }
+}
+async function initializeFFL(resource, moduleOrPromise) {
+  console.debug("initializeFFL: Entrypoint, waiting for module to be ready.");
+  let resourceDescPtr;
+  function freeResDesc() {
+    if (resourceDescPtr) {
+      module2._free(resourceDescPtr);
+    }
+  }
+  const resourceType = FFLResourceType.HIGH;
+  let module2;
+  if (typeof moduleOrPromise === "function") {
+    moduleOrPromise = moduleOrPromise();
+  }
+  if (moduleOrPromise instanceof Promise) {
+    module2 = await moduleOrPromise;
+  } else {
+    module2 = moduleOrPromise;
+  }
+  if (!module2.calledRun && !module2.onRuntimeInitialized) {
+    await new Promise((resolve) => {
+      module2.onRuntimeInitialized = () => {
+        console.debug("initializeFFL: Emscripten runtime initialized, resolving.");
+        resolve(null);
+      };
+      console.debug(`initializeFFL: module.calledRun: ${module2.calledRun}, module.onRuntimeInitialized:
+${module2.onRuntimeInitialized}
+ // ^^ assigned and waiting.`);
+    });
+  } else {
+    console.debug("initializeFFL: Assuming module is ready.");
+  }
+  let resourceDesc = null;
+  try {
+    if (resource instanceof Promise) {
+      resource = await resource;
+    }
+    const { pointer: heapPtr, size: heapSize } = await _loadDataIntoHeap(resource, module2);
+    console.debug(`initializeFFL: Resource loaded into heap. Pointer: ${heapPtr}, Size: ${heapSize}`);
+    resourceDesc = { pData: [0, 0], size: [0, 0] };
+    resourceDesc.pData[resourceType] = heapPtr;
+    resourceDesc.size[resourceType] = heapSize;
+    const resourceDescData = FFLResourceDesc.pack(resourceDesc);
+    resourceDescPtr = module2._malloc(FFLResourceDesc.size);
+    module2.HEAPU8.set(resourceDescData, resourceDescPtr);
+    const result = module2._FFLInitRes(0, resourceDescPtr);
+    if (result === FFLResult.FILE_INVALID) {
+      throw new BrokenInitRes;
+    }
+    FFLResultException.handleResult(result, "FFLInitRes");
+    module2._FFLInitResGPUStep();
+    module2._FFLSetNormalIsSnorm8_8_8_8(true);
+    module2._FFLSetTextureFlipY(true);
+  } catch (error) {
+    _freeResourceDesc(resourceDesc, module2);
+    freeResDesc();
+    console.error("initializeFFL failed:", error);
+    throw error;
+  } finally {
+    freeResDesc();
+  }
+  return {
+    module: module2,
+    resourceDesc
+  };
+}
+function _freeResourceDesc(desc, module2) {
+  if (!desc || !desc.pData) {
+    return;
+  }
+  desc.pData.forEach((ptr, i) => {
+    if (ptr) {
+      module2._free(ptr);
+      desc.pData[i] = 0;
+    }
+  });
+}
+class CharModel {
+  constructor(ptr, module2, materialClass, texManager) {
+    this._module = module2;
+    this._data = null;
+    this._materialClass = materialClass;
+    this._materialTextureClass = materialClass;
+    this._textureManager = texManager;
+    this._ptr = ptr;
+    this.__ptr = ptr;
+    const charModelData = this._module.HEAPU8.subarray(ptr, ptr + FFLiCharModel.size);
+    this._model = FFLiCharModel.unpack(charModelData);
+    this._facelineTarget = null;
+    this._maskTargets = new Array(FFLExpression.MAX).fill(null);
+    this.expressions = [];
+    this.meshes = new Group;
+    this._addCharModelMeshes(module2);
+  }
+  _addCharModelMeshes(module2) {
+    if (!this.meshes) {
+      throw new Error("_addCharModelMeshes: this.meshes is null or undefined, was this CharModel disposed?");
+    }
+    for (let shapeType = 0;shapeType < FFLiShapeType.MAX; shapeType++) {
+      const drawParam = this._model.drawParam[shapeType];
+      const mesh = drawParamToMesh(drawParam, this._materialClass, module2, this._textureManager);
+      if (!mesh) {
+        continue;
+      }
+      mesh.renderOrder = drawParam.modulateParam.type;
+      switch (shapeType) {
+        case FFLiShapeType.OPA_FACELINE:
+          this._facelineMesh = mesh;
+          break;
+        case FFLiShapeType.XLU_MASK:
+          this._maskMesh = mesh;
+          break;
+      }
+      this.meshes.add(mesh);
+    }
+  }
+  _getTextureTempObjectPtr() {
+    return this._model.pTextureTempObject;
+  }
+  _getTextureTempObject() {
+    const ptr = this._getTextureTempObjectPtr();
+    return FFLiTextureTempObject.unpack(this._module.HEAPU8.subarray(ptr, ptr + FFLiTextureTempObject.size));
+  }
+  _getPartsTransform() {
+    const obj = this._model.partsTransform;
+    const newPartsTransform = {};
+    for (const key2 in obj) {
+      const vec = obj[key2];
+      if (vec.x === undefined) {
+        throw new Error;
+      }
+      newPartsTransform[key2] = new Vector3(vec.x, vec.y, vec.z);
+    }
+    return newPartsTransform;
+  }
+  _getFacelineColor() {
+    const mod2 = this._module;
+    const facelineColor = this._model.charInfo.faceline.color;
+    const colorPtr = mod2._malloc(FFLColor.size);
+    mod2._FFLGetFacelineColor(colorPtr, facelineColor);
+    const color = _getFFLColor3(_getFFLColor(colorPtr, mod2.HEAPF32));
+    mod2._free(colorPtr);
+    return color;
+  }
+  _getFavoriteColor() {
+    const mod2 = this._module;
+    const favoriteColor = this._model.charInfo.personal.favoriteColor;
+    const colorPtr = mod2._malloc(FFLColor.size);
+    mod2._FFLGetFavoriteColor(colorPtr, favoriteColor);
+    const color = _getFFLColor3(_getFFLColor(colorPtr, mod2.HEAPF32));
+    mod2._free(colorPtr);
+    return color;
+  }
+  _getCharInfoUint8Array() {
+    return FFLiCharInfo.pack(this._model.charInfo);
+  }
+  _getPartsTexturesPtr() {
+    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.maskTextures.offset + FFLiMaskTexturesTempObject.fields.partsTextures.offset;
+  }
+  _getFacelineTempObjectPtr() {
+    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.facelineTexture.offset;
+  }
+  _getMaskTempObjectPtr() {
+    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.maskTextures.offset;
+  }
+  _getExpressionFlagPtr() {
+    return this._ptr + FFLiCharModel.fields.charModelDesc.offset + FFLCharModelDesc.fields.allExpressionFlag.offset;
+  }
+  _getBoundingBox() {
+    const bbox = this._model.boundingBox[this._model.modelType];
+    if (!(bbox.max.x === 0 && bbox.max.y === 0 && bbox.max.z === 0)) {
+      const min = new Vector3(bbox.min.x, bbox.min.y, bbox.min.z);
+      const max = new Vector3(bbox.max.x, bbox.max.y, bbox.max.z);
+      return new Box3(min, max);
+    }
+    const excludeFromBox = [FFLModulateType.SHAPE_MASK, FFLModulateType.SHAPE_GLASS];
+    const box = new Box3;
+    if (!this.meshes) {
+      throw new Error("_getBoundingBox: this.meshes is null.");
+    }
+    this.meshes.traverse((child) => {
+      if (!(child instanceof Mesh) || excludeFromBox.indexOf(child.geometry.userData.modulateType) !== -1) {
+        return;
+      }
+      box.expandByObject(child);
+    });
+    return box;
+  }
+  _getResolution() {
+    return this._model.charModelDesc.resolution & FFL_RESOLUTION_MASK;
+  }
+  _finalizeCharModel() {
+    if (!this._ptr) {
+      return;
+    }
+    this._module._FFLDeleteCharModel(this._ptr);
+    this._module._free(this._ptr);
+    this._ptr = 0;
+  }
+  disposeTargets() {
+    if (this._facelineTarget) {
+      console.debug(`Disposing target ${this._facelineTarget.texture.id} for faceline`);
+      this._facelineTarget.dispose();
+      this._facelineTarget = null;
+    }
+    this._maskTargets.forEach((target, i) => {
+      if (!target) {
+        return;
+      }
+      console.debug(`Disposing target ${target.texture.id} for mask ${i}`);
+      target.dispose();
+      this._maskTargets[i] = null;
+    });
+  }
+  dispose(disposeTargets = true) {
+    console.debug("CharModel.dispose: ptr =", this.__ptr);
+    this._finalizeCharModel();
+    if (this.meshes) {
+      this._facelineMesh = null;
+      this._maskMesh = null;
+      disposeMeshes(this.meshes);
+      this.meshes = null;
+    }
+    if (disposeTargets) {
+      this.disposeTargets();
+    }
+    if (this._textureManager) {
+      this._textureManager.dispose();
+      this._textureManager = null;
+    }
+  }
+  getStoreData() {
+    const charInfoData = this._getCharInfoUint8Array();
+    const mod2 = this._module;
+    const charInfoPtr = mod2._malloc(FFLiCharInfo.size);
+    const storeDataPtr = mod2._malloc(FFLStoreData_size);
+    mod2.HEAPU8.set(charInfoData, charInfoPtr);
+    const result = mod2._FFLpGetStoreDataFromCharInfo(storeDataPtr, charInfoPtr);
+    const storeData = mod2.HEAPU8.slice(storeDataPtr, storeDataPtr + FFLStoreData_size);
+    mod2._free(charInfoPtr);
+    mod2._free(storeDataPtr);
+    if (!result) {
+      throw new Error("getStoreData: call to FFLpGetStoreDataFromCharInfo returned false, CharInfo verification probably failed");
+    }
+    return storeData;
+  }
+  setExpression(expression) {
+    this._model.expression = expression;
+    const targ = this._maskTargets[expression];
+    if (!targ || !targ.texture) {
+      throw new ExpressionNotSet(expression);
+    }
+    const mesh = this._maskMesh;
+    if (!mesh || !(mesh instanceof Mesh)) {
+      if (expression === FFLExpression.BLANK_61 || expression === FFLExpression.BLANK_62) {
+        return;
+      }
+      throw new Error("setExpression: mask mesh does not exist, cannot set expression on it");
+    }
+    targ.texture._target = targ;
+    mesh.material.map = targ.texture;
+    mesh.material.needsUpdate = true;
+  }
+  getFaceline() {
+    if (this._facelineTarget) {
+      return this._facelineTarget;
+    }
+    return null;
+  }
+  getMask(expression = this.expression) {
+    if (this._maskTargets && this._maskTargets[expression]) {
+      return this._maskTargets[expression];
+    }
+    return null;
+  }
+  get expression() {
+    return this._model.expression;
+  }
+  get charInfo() {
+    return this._model.charInfo;
+  }
+  get facelineColor() {
+    if (!this._facelineColor) {
+      this._facelineColor = this._getFacelineColor();
+    }
+    return this._facelineColor;
+  }
+  get favoriteColor() {
+    if (!this._favoriteColor) {
+      this._favoriteColor = this._getFavoriteColor();
+    }
+    return this._favoriteColor;
+  }
+  get gender() {
+    return this._model.charInfo.personal.gender;
+  }
+  get partsTransform() {
+    if (!this._partsTransform) {
+      this._partsTransform = this._getPartsTransform();
+    }
+    return this._partsTransform;
+  }
+  get boundingBox() {
+    if (!this._boundingBox) {
+      this._boundingBox = this._getBoundingBox();
+    }
+    return this._boundingBox;
+  }
+  static BodyScaleMode = {
+    Apply: 0,
+    Limit: 1
+  };
+  getBodyScale(scaleMode = CharModel.BodyScaleMode.Apply) {
+    const build = this._model.charInfo.body.build;
+    const height2 = this._model.charInfo.body.height;
+    const bodyScale = new Vector3;
+    switch (scaleMode) {
+      case CharModel.BodyScaleMode.Apply: {
+        bodyScale.x = build * (height2 * 0.003671875 + 0.4) / 128 + height2 * 0.001796875 + 0.4;
+        bodyScale.y = height2 * 0.006015625 + 0.5;
+        break;
+      }
+      case CharModel.BodyScaleMode.Limit: {
+        const heightFactor = height2 / 128;
+        bodyScale.y = heightFactor * 0.55 + 0.6;
+        bodyScale.x = heightFactor * 0.3 + 0.6;
+        bodyScale.x = (heightFactor * 0.6 + 0.8 - bodyScale.x) * (build / 128) + bodyScale.x;
+        break;
+      }
+      default:
+        throw new Error(`getBodyScale: Unexpected value for scaleMode: ${scaleMode}`);
+    }
+    bodyScale.z = bodyScale.x;
+    return bodyScale;
+  }
+}
+var PantsColor = {
+  GrayNormal: 0,
+  BluePresent: 1,
+  RedRegular: 2,
+  GoldSpecial: 3
+};
+var pantsColors = {
+  [PantsColor.GrayNormal]: new Color(4212558),
+  [PantsColor.BluePresent]: new Color(2637946),
+  [PantsColor.RedRegular]: new Color(7348245),
+  [PantsColor.GoldSpecial]: new Color(12623920)
+};
+function _allocateModelSource(data2, module2) {
+  const bufferPtr = module2._malloc(FFLiCharInfo.size);
+  const modelSource = {
+    dataSource: FFLDataSource.DIRECT_POINTER,
+    pBuffer: bufferPtr,
+    index: 0
+  };
+  if (!(data2 instanceof Uint8Array)) {
+    try {
+      if (typeof data2 !== "object") {
+        throw new Error("_allocateModelSource: data passed in is not FFLiCharInfo object or Uint8Array");
+      }
+      data2 = FFLiCharInfo.pack(data2);
+    } catch (e) {
+      module2._free(bufferPtr);
+      throw e;
+    }
+  }
+  function setStudioData(src) {
+    const studio = StudioCharInfo.unpack(src);
+    const charInfo = convertStudioCharInfoToFFLiCharInfo(studio);
+    data2 = FFLiCharInfo.pack(charInfo);
+    module2.HEAPU8.set(data2, bufferPtr);
+  }
+  function callGetCharInfoFunc(data3, size, funcName) {
+    const dataPtr = module2._malloc(size);
+    module2.HEAPU8.set(data3, dataPtr);
+    const result = module2[funcName](bufferPtr, dataPtr);
+    module2._free(dataPtr);
+    if (!result) {
+      module2._free(bufferPtr);
+      throw new Error(`_allocateModelSource: call to ${funcName} returned false, CharInfo verification probably failed`);
+    }
+  }
+  switch (data2.length) {
+    case FFLStoreData_size: {
+      callGetCharInfoFunc(data2, FFLStoreData_size, "_FFLpGetCharInfoFromStoreData");
+      break;
+    }
+    case 74:
+    case 76: {
+      callGetCharInfoFunc(data2, 74, "_FFLpGetCharInfoFromMiiDataOfficialRFL");
+      break;
+    }
+    case FFLiCharInfo.size:
+      module2.HEAPU8.set(data2, bufferPtr);
+      break;
+    case StudioCharInfo.size + 1: {
+      data2 = studioURLObfuscationDecode(data2);
+      setStudioData(data2);
+      break;
+    }
+    case StudioCharInfo.size: {
+      setStudioData(data2);
+      break;
+    }
+    case 88:
+      throw new Error("_allocateModelSource: NX CharInfo is not supported.");
+    case 48:
+    case 68:
+      throw new Error("_allocateModelSource: NX CoreData/StoreData is not supported.");
+    case 92:
+    case 72:
+      throw new Error("_allocateModelSource: Please convert your FFLiMiiDataOfficial/FFLiMiiDataCore to FFLStoreData (add a checksum).");
+    default: {
+      module2._free(bufferPtr);
+      throw new Error(`_allocateModelSource: Unknown length for character data: ${data2.length}`);
+    }
+  }
+  return modelSource;
+}
+function verifyCharInfo(data2, module2, verifyName = false) {
+  let charInfoPtr = 0;
+  let charInfoAllocated = false;
+  if (typeof data2 === "number") {
+    charInfoPtr = data2;
+    charInfoAllocated = false;
+  } else {
+    charInfoAllocated = true;
+    charInfoPtr = module2._malloc(FFLiCharInfo.size);
+    module2.HEAPU8.set(data2, charInfoPtr);
+  }
+  const result = module2._FFLiVerifyCharInfoWithReason(charInfoPtr, verifyName);
+  if (charInfoAllocated) {
+    module2._free(charInfoPtr);
+  }
+  if (result !== 0) {
+    throw new FFLiVerifyReasonException(result);
+  }
+}
+function makeExpressionFlag(expressions) {
+  function checkRange(i) {
+    if (i >= FFLExpression.MAX) {
+      throw new Error(`makeExpressionFlag: input out of range: got ${i}, max: ${FFLExpression.MAX}`);
+    }
+  }
+  function warnIfChangesShapes(i) {
+    const expressionsDisablingNose = [49, 50, 51, 52, 61, 62];
+    const expressionsDisablingMask = [61, 62];
+    const prefix = `makeExpressionFlag > warnIfChangesShapes: An expression was enabled (${i}) that is meant to disable nose or mask shape for the entire CharModel, so it is only recommended to set this as a single expression rather than as one of multiple.`;
+    if (expressionsDisablingNose.indexOf(i) !== -1) {
+      console.warn(`${prefix} (nose shape)`);
+    }
+    if (expressionsDisablingMask.indexOf(i) !== -1) {
+      console.warn(`${prefix} (in this case, MASK SHAPE so there is supposed to be NO FACE)`);
+    }
+  }
+  const flags = new Uint32Array([0, 0, 0]);
+  if (typeof expressions === "number") {
+    expressions = [expressions];
+  } else if (!Array.isArray(expressions)) {
+    throw new Error("makeExpressionFlag: expected array or single number");
+  }
+  for (const index2 of expressions) {
+    checkRange(index2);
+    warnIfChangesShapes(index2);
+    const part = Math.floor(index2 / 32);
+    const bitIndex = index2 % 32;
+    flags[part] |= 1 << bitIndex;
+  }
+  return flags;
+}
+function createCharModel(data2, descOrExpFlag, materialClass, module2, verify = true) {
+  if (!module2 || !module2._malloc) {
+    throw new Error("createCharModel: module is null not initialized properly (cannot find ._malloc).");
+  }
+  if (!data2) {
+    throw new Error("createCharModel: data is null or undefined.");
+  }
+  const modelSourcePtr = module2._malloc(FFLCharModelSource.size);
+  const modelDescPtr = module2._malloc(FFLCharModelDesc.size);
+  const charModelPtr = module2._malloc(FFLiCharModel.size);
+  const modelSource = _allocateModelSource(data2, module2);
+  const charInfoPtr = modelSource.pBuffer;
+  const modelSourceBuffer = FFLCharModelSource.pack(modelSource);
+  module2.HEAPU8.set(modelSourceBuffer, modelSourcePtr);
+  const modelDesc = _descOrExpFlagToModelDesc(descOrExpFlag);
+  modelDesc.modelFlag |= FFLModelFlag.NEW_EXPRESSIONS;
+  const modelDescBuffer = FFLCharModelDesc.pack(modelDesc);
+  module2.HEAPU8.set(modelDescBuffer, modelDescPtr);
+  let textureManager = null;
+  try {
+    if (verify) {
+      verifyCharInfo(charInfoPtr, module2, false);
+    }
+    textureManager = new TextureManager(module2, false);
+    const result = module2._FFLInitCharModelCPUStepWithCallback(charModelPtr, modelSourcePtr, modelDescPtr, textureManager._textureCallbackPtr);
+    if (result === FFLResult.FILE_INVALID) {
+      throw new BrokenInitModel;
+    }
+    FFLResultException.handleResult(result, "FFLInitCharModelCPUStep");
+  } catch (error) {
+    if (textureManager) {
+      textureManager.dispose();
+    }
+    module2._free(charModelPtr);
+    throw error;
+  } finally {
+    module2._free(modelSourcePtr);
+    module2._free(modelDescPtr);
+    module2._free(charInfoPtr);
+    if (textureManager) {
+      textureManager.disposeCallback();
+    }
+  }
+  const charModel = new CharModel(charModelPtr, module2, materialClass, textureManager);
+  charModel._data = data2;
+  console.debug(`createCharModel: Initialized for "${charModel._model.charInfo.personal.name}", ptr =`, charModelPtr);
+  return charModel;
+}
+function _descOrExpFlagToModelDesc(descOrExpFlag, defaultDesc = FFLCharModelDescDefault) {
+  if (!descOrExpFlag && typeof descOrExpFlag !== "number") {
+    return defaultDesc;
+  }
+  if (typeof descOrExpFlag === "number" || Array.isArray(descOrExpFlag)) {
+    descOrExpFlag = makeExpressionFlag(descOrExpFlag);
+  }
+  let newModelDesc = Object.assign({}, defaultDesc);
+  if (descOrExpFlag instanceof Uint32Array) {
+    newModelDesc.allExpressionFlag = descOrExpFlag;
+  } else if (typeof descOrExpFlag === "object") {
+    newModelDesc = descOrExpFlag;
+  } else {
+    throw new Error("_descOrExpFlagToModelDesc: Unexpected type for descOrExpFlag");
+  }
+  return newModelDesc;
+}
+function matSupportsFFL(material) {
+  return "modulateMode" in material.prototype;
+}
+function drawParamToMesh(drawParam, materialClass, module2, texManager) {
+  if (!drawParam) {
+    throw new Error("drawParamToMesh: drawParam may be null.");
+  }
+  if (!texManager) {
+    throw new Error("drawParamToMesh: Passed in TextureManager is null or undefined, is it constructed?");
+  }
+  if (typeof materialClass !== "function") {
+    throw new Error("drawParamToMesh: materialClass is unexpectedly not a function.");
+  }
+  if (drawParam.primitiveParam.indexCount === 0) {
+    return null;
+  }
+  const geometry = _bindDrawParamGeometry(drawParam, module2);
+  const cullModeToThreeSide = {
+    [FFLCullMode.NONE]: DoubleSide,
+    [FFLCullMode.BACK]: FrontSide,
+    [FFLCullMode.FRONT]: BackSide,
+    [FFLCullMode.MAX]: DoubleSide
+  };
+  const side = cullModeToThreeSide[drawParam.cullMode];
+  if (side === undefined) {
+    throw new Error(`drawParamToMesh: Unexpected value for FFLCullMode: ${drawParam.cullMode}`);
+  }
+  const texture = _getTextureFromModulateParam(drawParam.modulateParam, texManager);
+  const isFFLMaterial = matSupportsFFL(materialClass);
+  const params = _applyModulateParam(drawParam.modulateParam, module2, isFFLMaterial);
+  const materialParam = {
+    side,
+    map: texture,
+    ...params
+  };
+  if (geometry.attributes.tangent === undefined && "useSpecularModeBlinn" in materialClass.prototype) {
+    materialParam.useSpecularModeBlinn = true;
+  }
+  const material = new materialClass(materialParam);
+  const mesh = new Mesh(geometry, material);
+  if (drawParam.primitiveParam.pAdjustMatrix !== 0) {
+    _applyAdjustMatrixToMesh(drawParam.primitiveParam.pAdjustMatrix, mesh, module2.HEAPF32);
+  }
+  if (mesh.geometry.userData) {
+    mesh.geometry.userData.modulateMode = drawParam.modulateParam.mode;
+    mesh.geometry.userData.modulateType = drawParam.modulateParam.type;
+    mesh.geometry.userData.modulateColor = params.color instanceof Color ? [params.color.r, params.color.g, params.color.b, 1] : [1, 1, 1, 1];
+    mesh.geometry.userData.cullMode = drawParam.cullMode;
+  }
+  return mesh;
+}
+function _bindDrawParamGeometry(drawParam, module2) {
+  function unexpectedStride(typeStr, stride) {
+    throw new Error(`_bindDrawParamGeometry: Unexpected stride for attribute ${typeStr}: ${stride}`);
+  }
+  const attributes = drawParam.attributeBufferParam.attributeBuffers;
+  const positionBuffer = attributes[FFLAttributeBufferType.POSITION];
+  if (positionBuffer.size === 0) {
+    throw new Error("_bindDrawParamGeometry: Position buffer must not have size of 0");
+  }
+  const vertexCount = positionBuffer.size / positionBuffer.stride;
+  const geometry = new BufferGeometry;
+  const indexPtr = drawParam.primitiveParam.pIndexBuffer / 2;
+  const indexCount = drawParam.primitiveParam.indexCount;
+  const indices = module2.HEAPU16.slice(indexPtr, indexPtr + indexCount);
+  geometry.setIndex(new Uint16BufferAttribute(indices, 1));
+  for (const typeStr in attributes) {
+    const buffer = attributes[typeStr];
+    const type = parseInt(typeStr);
+    if (buffer.size === 0) {
+      continue;
+    }
+    switch (type) {
+      case FFLAttributeBufferType.POSITION: {
+        if (buffer.stride === 16) {
+          const ptr = buffer.ptr / 4;
+          const data2 = module2.HEAPF32.slice(ptr, ptr + vertexCount * 4);
+          const interleavedBuffer = new InterleavedBuffer(data2, 4);
+          geometry.setAttribute("position", new InterleavedBufferAttribute(interleavedBuffer, 3, 0));
+        } else if (buffer.stride === 6) {
+          const ptr = buffer.ptr / 2;
+          const data2 = module2.HEAPU16.slice(ptr, ptr + vertexCount * 3);
+          geometry.setAttribute("position", new Float16BufferAttribute(data2, 3));
+        } else {
+          unexpectedStride(typeStr, buffer.stride);
+        }
+        break;
+      }
+      case FFLAttributeBufferType.NORMAL: {
+        const data2 = module2.HEAP8.slice(buffer.ptr, buffer.ptr + buffer.size);
+        geometry.setAttribute("normal", new Int8BufferAttribute(data2, buffer.stride, true));
+        break;
+      }
+      case FFLAttributeBufferType.TANGENT: {
+        const data2 = module2.HEAP8.slice(buffer.ptr, buffer.ptr + buffer.size);
+        geometry.setAttribute("tangent", new Int8BufferAttribute(data2, buffer.stride, true));
+        break;
+      }
+      case FFLAttributeBufferType.TEXCOORD: {
+        if (buffer.stride === 8) {
+          const ptr = buffer.ptr / 4;
+          const data2 = module2.HEAPF32.slice(ptr, ptr + vertexCount * 2);
+          geometry.setAttribute("uv", new Float32BufferAttribute(data2, 2));
+        } else if (buffer.stride === 4) {
+          const ptr = buffer.ptr / 2;
+          const data2 = module2.HEAPU16.slice(ptr, ptr + vertexCount * 2);
+          geometry.setAttribute("uv", new Float16BufferAttribute(data2, 2));
+        } else {
+          unexpectedStride(typeStr, buffer.stride);
+        }
+        break;
+      }
+      case FFLAttributeBufferType.COLOR: {
+        if (buffer.stride === 0) {
+          break;
+        }
+        const data2 = module2.HEAPU8.slice(buffer.ptr, buffer.ptr + buffer.size);
+        geometry.setAttribute("_color", new Uint8BufferAttribute(data2, buffer.stride, true));
+        break;
+      }
+    }
+  }
+  return geometry;
+}
+function _getTextureFromModulateParam(modulateParam, textureManager) {
+  if (!modulateParam.pTexture2D || modulateParam.pTexture2D === 1) {
+    return null;
+  }
+  const texturePtr = modulateParam.pTexture2D;
+  const texture = textureManager.get(texturePtr);
+  if (!texture) {
+    throw new Error(`_getTextureFromModulateParam: Texture not found for ${texturePtr}.`);
+  }
+  const applyMirrorTypes = [
+    FFLModulateType.SHAPE_FACELINE,
+    FFLModulateType.SHAPE_CAP,
+    FFLModulateType.SHAPE_GLASS
+  ];
+  if (applyMirrorTypes.indexOf(modulateParam.type) !== -1) {
+    texture.wrapS = MirroredRepeatWrapping;
+    texture.wrapT = MirroredRepeatWrapping;
+    texture.needsUpdate = true;
+  }
+  return texture;
+}
+function _getBlendOptionsFromModulateType(modulateType, modulateMode) {
+  if (modulateMode !== 0 && modulateType >= FFLModulateType.SHAPE_MAX && modulateType <= FFLModulateType.MOLE) {
+    return {
+      blending: CustomBlending,
+      blendSrc: OneMinusDstAlphaFactor,
+      blendSrcAlpha: SrcAlphaFactor,
+      blendDst: DstAlphaFactor
+    };
+  } else if (modulateMode !== 0 && modulateType >= FFLModulateType.FACE_MAKE && modulateType <= FFLModulateType.FILL) {
+    return {
+      blending: CustomBlending,
+      blendSrc: SrcAlphaFactor,
+      blendDst: OneMinusSrcAlphaFactor,
+      blendSrcAlpha: OneFactor,
+      blendDstAlpha: OneFactor
+    };
+  }
+  return {};
+}
+function _applyModulateParam(modulateParam, module2, forFFLMaterial = true) {
+  let color = null;
+  let color4 = null;
+  const f32 = module2.HEAPF32;
+  if (modulateParam.pColorG !== 0 && modulateParam.pColorB !== 0) {
+    color = [
+      _getFFLColor3(_getFFLColor(modulateParam.pColorR, f32)),
+      _getFFLColor3(_getFFLColor(modulateParam.pColorG, f32)),
+      _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32))
+    ];
+    if (self.eyeScleraHack && modulateParam.type === 12) {
+      color = [
+        _getFFLColor3(_getFFLColor(modulateParam.pColorR, f32)),
+        _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32)),
+        _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32))
+      ];
+    }
+  } else if (modulateParam.pColorR !== 0) {
+    color4 = _getFFLColor(modulateParam.pColorR, f32);
+    color = _getFFLColor3(color4);
+  }
+  const opacity = color4 ? color4.a : 1;
+  const transparent = modulateParam.type >= FFLModulateType.SHAPE_MASK;
+  const lightEnable = !(modulateParam.type >= FFLModulateType.SHAPE_MAX && modulateParam.mode !== FFLModulateMode.CONSTANT);
+  const modulateModeType = forFFLMaterial ? {
+    modulateMode: modulateParam.mode,
+    modulateType: modulateParam.type
+  } : {};
+  const param = Object.assign(modulateModeType, {
+    color,
+    opacity,
+    transparent,
+    depthWrite: !transparent,
+    ..._getBlendOptionsFromModulateType(modulateParam.type, modulateParam.mode)
+  });
+  if (!lightEnable) {
+    param.lightEnable = lightEnable;
+  }
+  return param;
+}
+function _getFFLColor(colorPtr, heapf32) {
+  if (!colorPtr) {
+    throw new Error("_getFFLColor: Received null pointer");
+  }
+  const colorData = heapf32.subarray(colorPtr / 4, colorPtr / 4 + 4);
+  return { r: colorData[0], g: colorData[1], b: colorData[2], a: colorData[3] };
+}
+function _getFFLColor3(color) {
+  return new Color(color.r, color.g, color.b);
+}
+function _applyAdjustMatrixToMesh(pMtx, mesh, heapf32) {
+  const ptr = pMtx / 4;
+  const m = heapf32.slice(ptr, ptr + 48 / 4);
+  function matrixFromRowMajor3x4(m2) {
+    const matrix2 = new Matrix4;
+    matrix2.set(m2[0], m2[4], m2[8], m2[3], m2[1], m2[5], m2[9], m2[7], m2[2], m2[6], m2[10], m2[11], 0, 0, 0, 1);
+    return matrix2;
+  }
+  const matrix = matrixFromRowMajor3x4(m);
+  mesh.scale.setFromMatrixScale(matrix);
+  mesh.position.setFromMatrixPosition(matrix);
+  if (matrix.elements[0] === -1) {
+    mesh.scale.x = -1;
+  }
+}
+function initCharModelTextures(charModel, renderer2, materialClass = charModel._materialClass) {
+  if (renderer2.render === undefined) {
+    throw new Error("initCharModelTextures: renderer is an unexpected type (cannot find .render).");
+  }
+  const module2 = charModel._module;
+  charModel._materialTextureClass = materialClass;
+  const textureTempObject = charModel._getTextureTempObject();
+  charModel.expressions = textureTempObject.maskTextures.pRawMaskDrawParam.map((val2, idx) => val2 !== 0 ? idx : -1).filter((i) => i !== -1);
+  _drawFacelineTexture(charModel, textureTempObject, renderer2, module2, materialClass);
+  const clearAlpha = renderer2.getClearAlpha();
+  clearAlpha !== 0 && renderer2.setClearAlpha(0);
+  _drawMaskTextures(charModel, textureTempObject, renderer2, module2, materialClass);
+  charModel._finalizeCharModel();
+  charModel.setExpression(charModel.expression);
+  clearAlpha !== 0 && renderer2.setClearAlpha(clearAlpha);
+  if (!matSupportsFFL(charModel._materialClass)) {
+    if (!matSupportsFFL(charModel._materialTextureClass)) {
+      console.warn("initCharModelTextures: charModel._materialClass does not support modulateMode (no getter), but the _materialTextureClass is either the same or also does not support modulateMode so textures will look wrong");
+    } else {
+      convertModelTexturesToRGBA(charModel, renderer2, charModel._materialTextureClass);
+    }
+  }
+}
+function _drawFacelineTexture(charModel, textureTempObject, renderer2, module2, materialClass) {
+  const facelineTempObjectPtr = charModel._getFacelineTempObjectPtr();
+  module2._FFLiInvalidateTempObjectFacelineTexture(facelineTempObjectPtr);
+  const drawParams = [
+    textureTempObject.facelineTexture.drawParamFaceMake,
+    textureTempObject.facelineTexture.drawParamFaceLine,
+    textureTempObject.facelineTexture.drawParamFaceBeard
+  ].filter((dp) => dp && dp.modulateParam.pTexture2D !== 0);
+  if (drawParams.length === 0) {
+    console.debug("_drawFacelineTexture: Skipping faceline texture.");
+    return;
+  }
+  const bgColor = charModel.facelineColor;
+  const { scene: offscreenScene } = createSceneFromDrawParams(drawParams, bgColor, materialClass, charModel._module, charModel._textureManager);
+  const width2 = charModel._getResolution() / 2;
+  const height2 = charModel._getResolution();
+  const options = {
+    depthBuffer: false,
+    stencilBuffer: false,
+    wrapS: MirroredRepeatWrapping,
+    wrapT: MirroredRepeatWrapping
+  };
+  const target = createAndRenderToTarget(offscreenScene, getIdentCamera(), renderer2, width2, height2, options);
+  console.debug(`Creating target ${target.texture.id} for faceline`);
+  _setFaceline(charModel, target);
+  module2._FFLiDeleteTempObjectFacelineTexture(facelineTempObjectPtr, charModel._ptr, charModel._model.charModelDesc.resourceType);
+  disposeMeshes(offscreenScene);
+}
+function _drawMaskTextures(charModel, textureTempObject, renderer2, module2, materialClass) {
+  const maskTempObjectPtr = charModel._getMaskTempObjectPtr();
+  const expressionFlagPtr = charModel._getExpressionFlagPtr();
+  const scenes = [];
+  for (let i = 0;i < charModel._model.maskTextures.pRenderTextures.length; i++) {
+    if (charModel._model.maskTextures.pRenderTextures[i] === 0) {
+      continue;
+    }
+    const rawMaskDrawParamPtr = textureTempObject.maskTextures.pRawMaskDrawParam[i];
+    const rawMaskDrawParam = FFLiRawMaskDrawParam.unpack(module2.HEAPU8.subarray(rawMaskDrawParamPtr, rawMaskDrawParamPtr + FFLiRawMaskDrawParam.size));
+    module2._FFLiInvalidateRawMask(rawMaskDrawParamPtr);
+    const { target, scene } = _drawMaskTexture(charModel, rawMaskDrawParam, renderer2, module2, materialClass);
+    console.debug(`Creating target ${target.texture.id} for mask ${i}`);
+    charModel._maskTargets[i] = target;
+    scenes.push(scene);
+  }
+  scenes.forEach((scene) => {
+    disposeMeshes(scene);
+  });
+  module2._FFLiDeleteTempObjectMaskTextures(maskTempObjectPtr, expressionFlagPtr, charModel._model.charModelDesc.resourceType);
+  module2._FFLiDeleteTextureTempObject(charModel._ptr);
+}
+function _drawMaskTexture(charModel, rawMaskParam, renderer2, module2, materialClass) {
+  const drawParams = [
+    rawMaskParam.drawParamRawMaskPartsMustache[0],
+    rawMaskParam.drawParamRawMaskPartsMustache[1],
+    rawMaskParam.drawParamRawMaskPartsMouth,
+    rawMaskParam.drawParamRawMaskPartsEyebrow[0],
+    rawMaskParam.drawParamRawMaskPartsEyebrow[1],
+    rawMaskParam.drawParamRawMaskPartsEye[0],
+    rawMaskParam.drawParamRawMaskPartsEye[1],
+    rawMaskParam.drawParamRawMaskPartsMole
+  ].filter((dp) => dp && dp.primitiveParam.indexCount !== 0);
+  if (drawParams.length === 0) {
+    throw new Error("_drawMaskTexture: All DrawParams are empty.");
+  }
+  const options = {
+    depthBuffer: false,
+    stencilBuffer: false
+  };
+  const { scene: offscreenScene } = createSceneFromDrawParams(drawParams, null, materialClass, module2, charModel._textureManager);
+  const width2 = charModel._getResolution();
+  const target = createAndRenderToTarget(offscreenScene, getIdentCamera(), renderer2, width2, width2, options);
+  return { target, scene: offscreenScene };
+}
+function _setFaceline(charModel, target) {
+  if (!target || !target.texture) {
+    throw new Error("setFaceline: passed in RenderTarget is invalid");
+  }
+  charModel._facelineTarget = target;
+  const mesh = charModel._facelineMesh;
+  if (!mesh || !(mesh instanceof Mesh)) {
+    throw new Error("setFaceline: faceline shape does not exist");
+  }
+  target.texture._target = target;
+  mesh.material.map = target.texture;
+  mesh.material.needsUpdate = true;
+}
+function _texDrawRGBATarget(renderer2, material, userData, materialTextureClass) {
+  const plane = new PlaneGeometry(2, 2);
+  const scene = new Scene;
+  const bgClearRGBMesh = new Mesh(plane, new MeshBasicMaterial({
+    color: material.color,
+    transparent: true,
+    opacity: 0,
+    blending: NoBlending
+  }));
+  scene.add(bgClearRGBMesh);
+  if (!material.map) {
+    throw new Error("_texDrawRGBATarget: material.map is null or undefined");
+  }
+  const tex = material.map;
+  const texMat = new materialTextureClass({
+    map: tex,
+    modulateMode: userData.modulateMode,
+    color: material.color,
+    lightEnable: false
+  });
+  texMat.blending = NoBlending;
+  texMat.transparent = true;
+  const textureMesh = new Mesh(plane, texMat);
+  scene.add(textureMesh);
+  const target = createAndRenderToTarget(scene, getIdentCamera(false), renderer2, tex.image.width, tex.image.height, {
+    wrapS: tex.wrapS,
+    wrapT: tex.wrapT,
+    depthBuffer: false,
+    stencilBuffer: false
+  });
+  target.texture._target = target;
+  material.map.dispose();
+  material.map = target.texture;
+  material.color = new Color(1, 1, 1);
+  userData.modulateMode = 1;
+  return target;
+}
+function convertModelTexturesToRGBA(charModel, renderer2, materialTextureClass) {
+  const convertTextureForTypes = [
+    FFLModulateType.SHAPE_CAP,
+    FFLModulateType.SHAPE_NOSELINE,
+    FFLModulateType.SHAPE_GLASS
+  ];
+  if (!charModel.meshes) {
+    throw new Error("convertModelTexturesToRGBA: charModel.meshes is null.");
+  }
+  charModel.meshes.traverse((mesh) => {
+    if (!(mesh instanceof Mesh) || !mesh.geometry.userData.modulateType || !mesh.material.map || convertTextureForTypes.indexOf(mesh.geometry.userData.modulateType) === -1) {
+      return;
+    }
+    const target = _texDrawRGBATarget(renderer2, mesh.material, mesh.geometry.userData, materialTextureClass);
+    charModel._maskTargets.push(target);
+  });
+}
+function createSceneFromDrawParams(drawParams, bgColor, ...drawParamArgs) {
+  const scene = new Scene;
+  scene.background = bgColor || null;
+  const meshes = [];
+  drawParams.forEach((param) => {
+    const mesh = drawParamToMesh(param, ...drawParamArgs);
+    if (mesh) {
+      scene.add(mesh);
+      meshes.push(mesh);
+    }
+  });
+  return { scene, meshes };
+}
+function getIdentCamera(flipY = false) {
+  const camera = new OrthographicCamera(-1, 1, flipY ? -1 : 1, flipY ? 1 : -1, 0.1, 10);
+  camera.position.z = 1;
+  return camera;
+}
+function createAndRenderToTarget(scene, camera, renderer2, width2, height2, targetOptions = {}) {
+  const options = {
+    minFilter: LinearFilter,
+    magFilter: LinearFilter,
+    ...targetOptions
+  };
+  const renderTarget = renderer2["isWebGPURenderer"] === undefined ? new WebGLRenderTarget(width2, height2, options) : new RenderTarget(width2, height2, options);
+  const prevTarget = renderer2.getRenderTarget();
+  renderer2.setRenderTarget(renderTarget);
+  renderer2.render(scene, camera);
+  renderer2.setRenderTarget(prevTarget);
+  return renderTarget;
+}
+function disposeMeshes(group, scene) {
+  function disposeMaterial(material) {
+    if (material.map) {
+      material.map.dispose();
+    }
+    material.dispose();
+  }
+  group.traverse((child) => {
+    if (!(child instanceof Mesh)) {
+      return;
+    }
+    if (child.geometry) {
+      child.geometry.dispose();
+    }
+    if (child.material) {
+      Array.isArray(child.material) ? child.material.forEach((material) => {
+        disposeMaterial(material);
+      }) : disposeMaterial(child.material);
+    }
+  });
+  if (scene && scene instanceof Scene) {
+    scene.remove(group);
+  }
+  group.children = [];
+}
+var StudioCharInfo = _.struct([
+  _.uint8("beardColor"),
+  _.uint8("beardType"),
+  _.uint8("build"),
+  _.uint8("eyeAspect"),
+  _.uint8("eyeColor"),
+  _.uint8("eyeRotate"),
+  _.uint8("eyeScale"),
+  _.uint8("eyeType"),
+  _.uint8("eyeX"),
+  _.uint8("eyeY"),
+  _.uint8("eyebrowAspect"),
+  _.uint8("eyebrowColor"),
+  _.uint8("eyebrowRotate"),
+  _.uint8("eyebrowScale"),
+  _.uint8("eyebrowType"),
+  _.uint8("eyebrowX"),
+  _.uint8("eyebrowY"),
+  _.uint8("facelineColor"),
+  _.uint8("facelineMake"),
+  _.uint8("facelineType"),
+  _.uint8("facelineWrinkle"),
+  _.uint8("favoriteColor"),
+  _.uint8("gender"),
+  _.uint8("glassColor"),
+  _.uint8("glassScale"),
+  _.uint8("glassType"),
+  _.uint8("glassY"),
+  _.uint8("hairColor"),
+  _.uint8("hairFlip"),
+  _.uint8("hairType"),
+  _.uint8("height"),
+  _.uint8("moleScale"),
+  _.uint8("moleType"),
+  _.uint8("moleX"),
+  _.uint8("moleY"),
+  _.uint8("mouthAspect"),
+  _.uint8("mouthColor"),
+  _.uint8("mouthScale"),
+  _.uint8("mouthType"),
+  _.uint8("mouthY"),
+  _.uint8("mustacheScale"),
+  _.uint8("mustacheType"),
+  _.uint8("mustacheY"),
+  _.uint8("noseScale"),
+  _.uint8("noseType"),
+  _.uint8("noseY")
+]);
+function convertStudioCharInfoToFFLiCharInfo(src) {
+  return {
+    miiVersion: 0,
+    faceline: {
+      type: src.facelineType,
+      color: src.facelineColor,
+      texture: src.facelineWrinkle,
+      make: src.facelineMake
+    },
+    hair: {
+      type: src.hairType,
+      color: commonColorMask(src.hairColor),
+      flip: src.hairFlip
+    },
+    eye: {
+      type: src.eyeType,
+      color: commonColorMask(src.eyeColor),
+      scale: src.eyeScale,
+      aspect: src.eyeAspect,
+      rotate: src.eyeRotate,
+      x: src.eyeX,
+      y: src.eyeY
+    },
+    eyebrow: {
+      type: src.eyebrowType,
+      color: commonColorMask(src.eyebrowColor),
+      scale: src.eyebrowScale,
+      aspect: src.eyebrowAspect,
+      rotate: src.eyebrowRotate,
+      x: src.eyebrowX,
+      y: src.eyebrowY
+    },
+    nose: {
+      type: src.noseType,
+      scale: src.noseScale,
+      y: src.noseY
+    },
+    mouth: {
+      type: src.mouthType,
+      color: commonColorMask(src.mouthColor),
+      scale: src.mouthScale,
+      aspect: src.mouthAspect,
+      y: src.mouthY
+    },
+    beard: {
+      mustache: src.mustacheType,
+      type: src.beardType,
+      color: commonColorMask(src.beardColor),
+      scale: src.mustacheScale,
+      y: src.mustacheY
+    },
+    glass: {
+      type: src.glassType,
+      color: commonColorMask(src.glassColor),
+      scale: src.glassScale,
+      y: src.glassY
+    },
+    mole: {
+      type: src.moleType,
+      scale: src.moleScale,
+      x: src.moleX,
+      y: src.moleY
+    },
+    body: {
+      height: src.height,
+      build: src.build
+    },
+    personal: {
+      name: "",
+      creator: "",
+      gender: src.gender,
+      birthMonth: 0,
+      birthDay: 0,
+      favoriteColor: src.favoriteColor,
+      favorite: 0,
+      copyable: 0,
+      ngWord: 0,
+      localonly: 0,
+      regionMove: 0,
+      fontRegion: 0,
+      roomIndex: 0,
+      positionInRoom: 0,
+      birthPlatform: 3
+    },
+    createID: {
+      data: new Array(10).fill(0)
+    },
+    padding_0: 0,
+    authorType: 0,
+    authorID: new Array(8).fill(0)
+  };
+}
+function studioURLObfuscationDecode(data2) {
+  const decodedData = new Uint8Array(data2);
+  const random2 = decodedData[0];
+  let previous = random2;
+  for (let i = 1;i < 48; i++) {
+    const encodedByte = decodedData[i];
+    const original = (encodedByte - 7 + 256) % 256;
+    decodedData[i - 1] = original ^ previous;
+    previous = encodedByte;
+  }
+  return decodedData.slice(0, StudioCharInfo.size);
+}
+function stripSpaces(str) {
+  return str.replace(/\s+/g, "");
+}
+function hexToUint8Array(hex) {
+  const match = hex.match(/.{1,2}/g);
+  const arr = (match ? match : []).map(function(byte) {
+    return parseInt(byte, 16);
+  });
+  return new Uint8Array(arr);
+}
+function base64ToUint8Array(base64) {
+  const normalizedBase64 = base64.replace(/-/g, "+").replace(/_/g, "/");
+  function padBase64(str) {
+    while (str.length % 4 !== 0) {
+      str += "=";
+    }
+    return str;
+  }
+  const paddedBase64 = padBase64(normalizedBase64);
+  const binaryString = atob(paddedBase64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0;i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+function parseHexOrB64ToUint8Array(text2) {
+  let inputData;
+  const textData = stripSpaces(text2);
+  if (/^[0-9a-fA-F]+$/.test(textData)) {
+    inputData = hexToUint8Array(textData);
+  } else {
+    inputData = base64ToUint8Array(textData);
+  }
+  return inputData;
+}
+
+// src/constants/BodyShaderTypes.ts
+var BodyType;
+((BodyType2) => {
+  BodyType2["WiiU"] = "wiiu";
+  BodyType2["Switch"] = "switch";
+  BodyType2["Miitomo"] = "miitomo";
+  BodyType2["StreetPass"] = "streetpass";
+})(BodyType ||= {});
+var ShaderType;
+((ShaderType2) => {
+  ShaderType2["WiiU"] = "wiiu";
+  ShaderType2["Switch"] = "switch";
+  ShaderType2["LightDisabled"] = "lightDisabled";
+  ShaderType2["Miitomo"] = "miitomo";
+  ShaderType2["MiitomoBasic"] = "miitomo_basic";
+  ShaderType2["WiiUBlinn"] = "wiiu_blinn";
+  ShaderType2["WiiUFFLIconWithBody"] = "wiiu_ffliconwithbody";
+  ShaderType2["WiiUToon"] = "wiiu_toon";
+  ShaderType2["ThreeToon"] = "three_toon";
+  ShaderType2["ThreePhong"] = "three_phong";
+})(ShaderType ||= {});
+function adjustShaderQuery(params, shader) {
+  switch (shader) {
+    case "wiiu" /* WiiU */:
+    case "switch" /* Switch */:
+    case "miitomo" /* Miitomo */:
+      params.set("shaderType", shader);
+      break;
+    case "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */:
+      params.set("shaderType", "ffliconwithbody");
+      break;
+    case "wiiu_toon" /* WiiUToon */:
+      params.set("shaderType", "wiiu");
+      break;
+    case "wiiu_blinn" /* WiiUBlinn */:
+      params.set("shaderType", "wiiu_blinn");
+      break;
+    case "lightDisabled" /* LightDisabled */:
+      params.set("shaderType", "wiiu");
+      params.set("lightEnable", "0");
+      break;
+    default:
+      console.warn(`unknown shader type: ${shader}`);
+  }
+}
+
+// src/external/ffl.js/FFLShaderMaterial.js
+var THREE3 = _THREE();
+var _FFLShader_vert = `
+// 頂点シェーダーに入力される attribute 変数
+//attribute vec4 position;       //!< 入力: 位置情報
+//attribute vec2 uv;             //!< 入力: テクスチャー座標
+//attribute vec3 normal;         //!< 入力: 法線ベクトル
+// All provided by three.js ^^
+
+// vertex color is not actually the color of the shape, as such
+// it is a custom attribute _COLOR in the glTF
+
+attribute vec4 _color;           //!< 入力: 頂点の色
+attribute vec3 tangent;          //!< 入力: 異方位
+
+// フラグメントシェーダーへの入力
+varying   vec4 v_color;          //!< 出力: 頂点の色
+varying   vec4 v_position;       //!< 出力: 位置情報
+varying   vec3 v_normal;         //!< 出力: 法線ベクトル
+varying   vec3 v_tangent;        //!< 出力: 異方位
+varying   vec2 v_texCoord;       //!< 出力: テクスチャー座標
+
+// ユニフォーム
+//uniform mat3 normalMatrix;     //!< ユニフォーム: モデルの法線用行列
+//uniform mat4 modelViewMatrix;  //!< ユニフォーム: プロジェクション行列
+//uniform mat4 projectionMatrix; //!< ユニフォーム: モデル行列
+// All provided by three.js ^^
+
+// skinning_pars_vertex.glsl.js
+#ifdef USE_SKINNING
+    uniform mat4 bindMatrix;
+    uniform mat4 bindMatrixInverse;
+    uniform highp sampler2D boneTexture;
+    mat4 getBoneMatrix( const in float i ) {
+        int size = textureSize( boneTexture, 0 ).x;
+        int j = int( i ) * 4;
+        int x = j % size;
+        int y = j / size;
+        vec4 v1 = texelFetch( boneTexture, ivec2( x, y ), 0 );
+        vec4 v2 = texelFetch( boneTexture, ivec2( x + 1, y ), 0 );
+        vec4 v3 = texelFetch( boneTexture, ivec2( x + 2, y ), 0 );
+        vec4 v4 = texelFetch( boneTexture, ivec2( x + 3, y ), 0 );
+        return mat4( v1, v2, v3, v4 );
+    }
+#endif
+
+void main()
+{
+
+    // begin_vertex.glsl.js
+    vec3 transformed = vec3( position );
+// skinbase_vertex.glsl.js
+#ifdef USE_SKINNING
+    mat4 boneMatX = getBoneMatrix( skinIndex.x );
+    mat4 boneMatY = getBoneMatrix( skinIndex.y );
+    mat4 boneMatZ = getBoneMatrix( skinIndex.z );
+    mat4 boneMatW = getBoneMatrix( skinIndex.w );
+    // skinning_vertex.glsl.js
+    vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );
+    vec4 skinned = vec4( 0.0 );
+    skinned += boneMatX * skinVertex * skinWeight.x;
+    skinned += boneMatY * skinVertex * skinWeight.y;
+    skinned += boneMatZ * skinVertex * skinWeight.z;
+    skinned += boneMatW * skinVertex * skinWeight.w;
+    transformed = ( bindMatrixInverse * skinned ).xyz;
+#endif
+
+//#ifdef FFL_COORDINATE_MODE_NORMAL
+    // 頂点座標を変換
+    v_position = modelViewMatrix * vec4(transformed, 1.0);
+    gl_Position =  projectionMatrix * v_position;
+
+    vec3 objectNormal = normal;
+    vec3 objectTangent = tangent.xyz;
+// skinnormal_vertex.glsl.js
+#ifdef USE_SKINNING
+    mat4 skinMatrix = mat4( 0.0 );
+    skinMatrix += skinWeight.x * boneMatX;
+    skinMatrix += skinWeight.y * boneMatY;
+    skinMatrix += skinWeight.z * boneMatZ;
+    skinMatrix += skinWeight.w * boneMatW;
+    skinMatrix = bindMatrixInverse * skinMatrix * bindMatrix;
+
+    objectNormal = vec4( skinMatrix * vec4( objectNormal, 0.0 ) ).xyz;
+    objectTangent = vec4( skinMatrix * vec4( objectTangent, 0.0 ) ).xyz;
+
+#endif
+
+    // 法線も変換
+    //v_normal = mat3(inverse(u_mv)) * a_normal;
+    v_normal = normalize(normalMatrix * objectNormal);
+//#elif defined(FFL_COORDINATE_MODE_NONE)
+//    // 頂点座標を変換
+//    gl_Position = vec4(a_position.x, a_position.y * -1.0, a_position.z, a_position.w);
+//    v_position = a_position;
+//
+//    v_normal = a_normal;
+//#endif
+
+     // その他の情報も書き出す
+    v_texCoord = uv;
+    // safe normalize
+    if (tangent != vec3(0.0, 0.0, 0.0))
+    {
+        v_tangent = normalize(normalMatrix * objectTangent);
+    }
+    else
+    {
+        v_tangent = vec3(0.0, 0.0, 0.0);
+    }
+
+    v_color = _color;
+}
+`;
+var _FFLShader_frag = `
+//
+//  sample.flg
+//  Fragment shader
+//  Copyright (c) 2014 Nintendo Co., Ltd. All rights reserved.
+//
+//
+
+#ifdef GL_ES
+precision mediump float;
+#else
+#   define lowp
+#   define mediump
+#   define highp
+#endif
+
+
+//
+//  定数定義ファイル
+//
+
+/// シェーダーモード
+#define FFL_SHADER_MODE_UR 0
+#define FFL_SHADER_MODE_UB 1
+
+/// 変調処理のマクロ
+#define FFL_MODULATE_MODE_CONSTANT        0
+#define FFL_MODULATE_MODE_TEXTURE_DIRECT  1
+#define FFL_MODULATE_MODE_RGB_LAYERED     2
+#define FFL_MODULATE_MODE_ALPHA           3
+#define FFL_MODULATE_MODE_LUMINANCE_ALPHA 4
+#define FFL_MODULATE_MODE_ALPHA_OPA       5
+
+/// スペキュラのモード
+#define FFL_SPECULAR_MODE_BLINN 0
+#define FFL_SPECULAR_MODE_ANISO 1
+
+/// ライトのON/OFF
+#define FFL_LIGHT_MODE_DISABLE 0
+#define FFL_LIGHT_MODE_ENABLE 1
+
+/// フラグメントのディスカードモード
+#define FFL_DISCARD_FRAGMENT_DISABLE 0
+#define FFL_DISCARD_FRAGMENT_ENABLE  1
+
+/// 座標変換モード
+#define FFL_COORDINATE_MODE_NONE   0
+#define FFL_COORDINATE_MODE_NORMAL 1
+
+//
+//  関数の定義ファイル
+//
+
+/**
+ * @brief 異方性反射の反射率を計算します。
+ * @param[in] light   ライトの向き
+ * @param[in] tangent 接線
+ * @param[in] eye     視線の向き
+ * @param[in] power   鋭さ
+ */
+mediump float calculateAnisotropicSpecular(mediump vec3 light, mediump vec3 tangent, mediump vec3 eye, mediump float power )
+{
+	mediump float dotLT = dot(light, tangent);
+	mediump float dotVT = dot(eye, tangent);
+	mediump float dotLN = sqrt(1.0 - dotLT * dotLT);
+	mediump float dotVR = dotLN*sqrt(1.0 - dotVT * dotVT) - dotLT * dotVT;
+
+	return pow(max(0.0, dotVR), power);
+}
+
+/**
+ * @brief 異方性反射の反射率を計算します。
+ * @param[in] light   ライトの向き
+ * @param[in] normal  法線
+ * @param[in] eye     視線の向き
+ * @param[in] power   鋭さ
+ */
+mediump float calculateBlinnSpecular(mediump vec3 light, mediump vec3 normal, mediump vec3 eye, mediump float power)
+{
+	return pow(max(dot(reflect(-light, normal), eye), 0.0), power);
+}
+
+/**
+ * @brief 異方性反射、ブリン反射をブレンドします。
+ * @param[in] blend ブレンド率
+ * @param[in] blinn ブリンの値
+ * @param[in] aniso 異方性の値
+ */
+mediump float calculateSpecularBlend(mediump float blend, mediump float blinn, mediump float aniso)
+{
+	return mix(aniso, blinn, blend);
+}
+
+/**
+ * @brief アンビエントを計算します。
+ * @param[in] light    ライト
+ * @param[in] material マテリアル
+ */
+mediump vec3 calculateAmbientColor(mediump vec3 light, mediump vec3 material)
+{
+	return light * material;
+}
+
+/**
+ * @brief 拡散を計算します。
+ * @param[in] light    ライト
+ * @param[in] material マテリアル
+ * @param[in] ln       ライトと法線の内積
+ */
+mediump vec3 calculateDiffuseColor(mediump vec3 light, mediump vec3 material, mediump float ln)
+{
+	return light * material * ln;
+}
+
+/**
+ * @brief 鏡面反射を計算します。
+ * @param[in] light      ライト
+ * @param[in] material   マテリアル
+ * @param[in] reflection 反射率
+ * @param[in] strength   幅
+ */
+mediump vec3 calculateSpecularColor(mediump vec3 light, mediump vec3 material, mediump float reflection, mediump float strength)
+{
+	return light * material * reflection * strength;
+}
+
+/**
+ * @brief リムを計算します。
+ * @param[in] color   リム色
+ * @param[in] normalZ 法線のZ方向
+ * @param[in] width   リム幅
+ * @param[in] power   リムの鋭さ
+ */
+mediump vec3 calculateRimColor(mediump vec3 color, mediump float normalZ, mediump float width, mediump float power)
+{
+	return color * pow(width * (1.0 - abs(normalZ)), power);
+}
+
+/**
+ * @brief ライト方向と法線の内積を求める
+ * @note 特殊な実装になっています。
+ */
+mediump float calculateDot(mediump vec3 light, mediump vec3 normal)
+{
+	return max(dot(light, normal), 0.1);
+}
+
+// フラグメントシェーダーに入力される varying 変数
+varying mediump vec4 v_color;          //!< 出力: 頂点の色
+varying highp   vec4 v_position;       //!< 出力: 位置情報
+varying highp   vec3 v_normal;         //!< 出力: 法線ベクトル
+// NOTE: ^^ Those two need to be highp to avoid weird black dot issue on Android
+varying mediump vec3 v_tangent;        //!< 出力: 異方位
+varying mediump vec2 v_texCoord;       //!< 出力: テクスチャー座標
+
+/// constカラー
+uniform mediump vec4  u_const1; ///< constカラー1
+uniform mediump vec4  u_const2; ///< constカラー2
+uniform mediump vec4  u_const3; ///< constカラー3
+
+/// ライト設定
+uniform mediump vec3 u_light_ambient;  ///< カメラ空間のライト方向
+uniform mediump vec3 u_light_diffuse;  ///< 拡散光用ライト
+uniform mediump vec3 u_light_dir;
+uniform bool u_light_enable;
+uniform mediump vec3 u_light_specular; ///< 鏡面反射用ライト強度
+
+/// マテリアル設定
+uniform mediump vec3 u_material_ambient;         ///< 環境光用マテリアル設定
+uniform mediump vec3 u_material_diffuse;         ///< 拡散光用マテリアル設定
+uniform mediump vec3 u_material_specular;        ///< 鏡面反射用マテリアル設定
+uniform int u_material_specular_mode;            ///< スペキュラの反射モード(CharModelに依存する設定のためub_modulateにしている)
+uniform mediump float u_material_specular_power; ///< スペキュラの鋭さ(0.0を指定すると頂点カラーの設定が利用される)
+
+/// 変調設定
+uniform int u_mode;   ///< 描画モード
+
+/// リム設定
+uniform mediump vec3  u_rim_color;
+uniform mediump float u_rim_power;
+
+// サンプラー
+uniform sampler2D s_texture;
+
+
+// -------------------------------------------------------
+// メイン文
+void main()
+{
+    mediump vec4 color;
+
+    mediump float specularPower    = u_material_specular_power;
+    mediump float rimWidth         = v_color.a;
+
+//#ifdef FFL_MODULATE_MODE_CONSTANT
+    if(u_mode == FFL_MODULATE_MODE_CONSTANT)
+    {
+      color = u_const1;
+    }
+    // modified to handle u_const1 alpha:
+//#elif defined(FFL_MODULATE_MODE_TEXTURE_DIRECT)
+    else if(u_mode == FFL_MODULATE_MODE_TEXTURE_DIRECT)
+    {
+        mediump vec4 texel = texture2D(s_texture, v_texCoord);
+        color = vec4(texel.rgb, u_const1.a * texel.a);
+    }
+//#elif defined(FFL_MODULATE_MODE_RGB_LAYERED)
+    else if(u_mode == FFL_MODULATE_MODE_RGB_LAYERED)
+    {
+        mediump vec4 texel = texture2D(s_texture, v_texCoord);
+        color = vec4(texel.r * u_const1.rgb + texel.g * u_const2.rgb + texel.b * u_const3.rgb, u_const1.a * texel.a);
+    }
+//#elif defined(FFL_MODULATE_MODE_ALPHA)
+    else if(u_mode == FFL_MODULATE_MODE_ALPHA)
+    {
+        mediump vec4 texel = texture2D(s_texture, v_texCoord);
+        color = vec4(u_const1.rgb, u_const1.a * texel.r);
+    }
+//#elif defined(FFL_MODULATE_MODE_LUMINANCE_ALPHA)
+    else if(u_mode == FFL_MODULATE_MODE_LUMINANCE_ALPHA)
+    {
+        mediump vec4 texel = texture2D(s_texture, v_texCoord);
+        color = vec4(texel.g * u_const1.rgb, u_const1.a * texel.r);
+    }
+//#elif defined(FFL_MODULATE_MODE_ALPHA_OPA)
+    else if(u_mode == FFL_MODULATE_MODE_ALPHA_OPA)
+    {
+        mediump vec4 texel = texture2D(s_texture, v_texCoord);
+        color = vec4(texel.r * u_const1.rgb, u_const1.a);
+    }
+//#endif
+
+    // avoids little outline around mask elements
+    if(u_mode != FFL_MODULATE_MODE_CONSTANT && color.a == 0.0)
+    {
+        discard;
+    }
+
+//#ifdef FFL_LIGHT_MODE_ENABLE
+    if(u_light_enable)
+    {
+        /// 環境光の計算
+        mediump vec3 ambient = calculateAmbientColor(u_light_ambient.xyz, u_material_ambient.xyz);
+
+        /// 法線ベクトルの正規化
+        mediump vec3 norm = normalize(v_normal);
+
+        /// 視線ベクトル
+        mediump vec3 eye = normalize(-v_position.xyz);
+
+        // ライトの向き
+        mediump float fDot = calculateDot(u_light_dir, norm);
+
+        /// Diffuse計算
+        mediump vec3 diffuse = calculateDiffuseColor(u_light_diffuse.xyz, u_material_diffuse.xyz, fDot);
+
+        /// Specular計算
+        mediump float specularBlinn = calculateBlinnSpecular(u_light_dir, norm, eye, u_material_specular_power);
+
+        /// Specularの値を確保する変数を宣言
+        mediump float reflection;
+        mediump float strength = v_color.g;
+        if(u_material_specular_mode == 0)
+        {
+            /// Blinnモデルの場合
+            strength = 1.0;
+            reflection = specularBlinn;
+        }
+        else
+        {
+            /// Aisoモデルの場合
+            mediump float specularAniso = calculateAnisotropicSpecular(u_light_dir, v_tangent, eye, u_material_specular_power);
+            reflection = calculateSpecularBlend(v_color.r, specularBlinn, specularAniso);
+        }
+        /// Specularの色を取得
+        mediump vec3 specular = calculateSpecularColor(u_light_specular.xyz, u_material_specular.xyz, reflection, strength);
+
+        // リムの色を計算
+        mediump vec3 rimColor = calculateRimColor(u_rim_color.rgb, norm.z, rimWidth, u_rim_power);
+
+        // カラーの計算
+        color.rgb = (ambient + diffuse) * color.rgb + specular + rimColor;
+    }
+//#endif
+
+    gl_FragColor = color;
+}
+`;
+
+class FFLShaderMaterial extends THREE3.ShaderMaterial {
+  static defaultLightAmbient = new THREE3.Color(0.73, 0.73, 0.73);
+  static defaultLightDiffuse = new THREE3.Color(0.6, 0.6, 0.6);
+  static defaultLightSpecular = new THREE3.Color(0.7, 0.7, 0.7);
+  static defaultLightDir = new THREE3.Vector3(-0.4531539381, 0.4226179123, 0.7848858833);
+  static defaultRimColor = new THREE3.Color(0.3, 0.3, 0.3);
+  static defaultRimPower = 2;
+  static defaultLightDirection = this.defaultLightDir;
+  static materialParams = [
+    {
+      ambient: new THREE3.Color(0.85, 0.75, 0.75),
+      diffuse: new THREE3.Color(0.75, 0.75, 0.75),
+      specular: new THREE3.Color(0.3, 0.3, 0.3),
+      specularPower: 1.2,
+      specularMode: 0
+    },
+    {
+      ambient: new THREE3.Color(1, 1, 1),
+      diffuse: new THREE3.Color(0.7, 0.7, 0.7),
+      specular: new THREE3.Color(0, 0, 0),
+      specularPower: 40,
+      specularMode: 1
+    },
+    {
+      ambient: new THREE3.Color(0.9, 0.85, 0.85),
+      diffuse: new THREE3.Color(0.75, 0.75, 0.75),
+      specular: new THREE3.Color(0.22, 0.22, 0.22),
+      specularPower: 1.5,
+      specularMode: 0
+    },
+    {
+      ambient: new THREE3.Color(0.85, 0.75, 0.75),
+      diffuse: new THREE3.Color(0.75, 0.75, 0.75),
+      specular: new THREE3.Color(0.3, 0.3, 0.3),
+      specularPower: 1.2,
+      specularMode: 0
+    },
+    {
+      ambient: new THREE3.Color(1, 1, 1),
+      diffuse: new THREE3.Color(0.7, 0.7, 0.7),
+      specular: new THREE3.Color(0.35, 0.35, 0.35),
+      specularPower: 10,
+      specularMode: 1
+    },
+    {
+      ambient: new THREE3.Color(0.75, 0.75, 0.75),
+      diffuse: new THREE3.Color(0.72, 0.72, 0.72),
+      specular: new THREE3.Color(0.3, 0.3, 0.3),
+      specularPower: 1.5,
+      specularMode: 0
+    },
+    {
+      ambient: new THREE3.Color(1, 1, 1),
+      diffuse: new THREE3.Color(0.7, 0.7, 0.7),
+      specular: new THREE3.Color(0, 0, 0),
+      specularPower: 40,
+      specularMode: 1
+    },
+    {
+      ambient: new THREE3.Color(1, 1, 1),
+      diffuse: new THREE3.Color(0.7, 0.7, 0.7),
+      specular: new THREE3.Color(0, 0, 0),
+      specularPower: 40,
+      specularMode: 1
+    },
+    {
+      ambient: new THREE3.Color(1, 1, 1),
+      diffuse: new THREE3.Color(0.7, 0.7, 0.7),
+      specular: new THREE3.Color(0, 0, 0),
+      specularPower: 40,
+      specularMode: 1
+    },
+    {
+      ambient: new THREE3.Color(0.95622, 0.95622, 0.95622),
+      diffuse: new THREE3.Color(0.49673, 0.49673, 0.49673),
+      specular: new THREE3.Color(0.24099, 0.24099, 0.24099),
+      specularPower: 3,
+      specularMode: 0
+    },
+    {
+      ambient: new THREE3.Color(0.95622, 0.95622, 0.95622),
+      diffuse: new THREE3.Color(1.08497, 1.08497, 1.08497),
+      specular: new THREE3.Color(0.2409, 0.2409, 0.2409),
+      specularPower: 3,
+      specularMode: 0
+    }
+  ];
+  constructor(options = {}) {
+    const uniforms = {
+      u_light_ambient: {
+        value: FFLShaderMaterial.defaultLightAmbient
+      },
+      u_light_diffuse: {
+        value: FFLShaderMaterial.defaultLightDiffuse
+      },
+      u_light_specular: {
+        value: FFLShaderMaterial.defaultLightSpecular
+      },
+      u_light_dir: { value: FFLShaderMaterial.defaultLightDir.clone() },
+      u_light_enable: { value: true },
+      u_rim_color: { value: FFLShaderMaterial.defaultRimColor },
+      u_rim_power: { value: FFLShaderMaterial.defaultRimPower }
+    };
+    super({
+      vertexShader: _FFLShader_vert,
+      fragmentShader: _FFLShader_frag,
+      uniforms
+    });
+    this._modulateType = 0;
+    this.useSpecularModeBlinn = false;
+    this.setValues(options);
+  }
+  get color() {
+    if (!this.uniforms.u_const1) {
+      return null;
+    } else if (this._color3) {
+      return this._color3;
+    }
+    const color4 = this.uniforms.u_const1.value;
+    const color3 = new THREE3.Color(color4.x, color4.y, color4.z);
+    this._color3 = color3;
+    return color3;
+  }
+  set color(value2) {
+    function toColor4(color, opacity2 = 1) {
+      return new THREE3.Vector4(color.r, color.g, color.b, opacity2);
+    }
+    if (Array.isArray(value2)) {
+      this.uniforms.u_const1 = { value: toColor4(value2[0]) };
+      this.uniforms.u_const2 = { value: toColor4(value2[1]) };
+      this.uniforms.u_const3 = { value: toColor4(value2[2]) };
+      return;
+    }
+    const color3 = value2 ? value2 : new THREE3.Color(1, 1, 1);
+    this._color3 = color3;
+    const opacity = this.opacity;
+    if (this._opacity) {
+      delete this._opacity;
+    }
+    this.uniforms.u_const1 = { value: toColor4(color3, opacity) };
+  }
+  get opacity() {
+    if (!this.uniforms.u_const1) {
+      return this._opacity ? this._opacity : 1;
+    }
+    return this.uniforms.u_const1.value.w;
+  }
+  set opacity(value2) {
+    if (!this.uniforms || !this.uniforms.u_const1) {
+      this._opacity = 1;
+      return;
+    }
+    this.uniforms.u_const1.value.w = value2;
+  }
+  get modulateMode() {
+    return this.uniforms.u_mode ? this.uniforms.u_mode.value : null;
+  }
+  set modulateMode(value2) {
+    this.uniforms.u_mode = { value: value2 };
+  }
+  get lightEnable() {
+    return this.uniforms.u_light_enable ? this.uniforms.u_light_enable.value : null;
+  }
+  set lightEnable(value2) {
+    this.uniforms.u_light_enable = { value: value2 };
+  }
+  set useSpecularModeBlinn(value2) {
+    this._useSpecularModeBlinn = value2;
+    if (this._modulateType !== undefined) {
+      this.modulateType = this._modulateType;
+    }
+  }
+  get useSpecularModeBlinn() {
+    return this._useSpecularModeBlinn;
+  }
+  get modulateType() {
+    return this._modulateType;
+  }
+  set modulateType(value2) {
+    const matParam = FFLShaderMaterial.materialParams[value2];
+    if (!matParam) {
+      return;
+    }
+    this._modulateType = value2;
+    this.uniforms.u_material_ambient = { value: matParam.ambient };
+    this.uniforms.u_material_diffuse = { value: matParam.diffuse };
+    this.uniforms.u_material_specular = { value: matParam.specular };
+    this.uniforms.u_material_specular_mode = {
+      value: this._useSpecularModeBlinn ? 0 : matParam.specularMode
+    };
+    this.uniforms.u_material_specular_power = { value: matParam.specularPower };
+  }
+  get map() {
+    return this.uniforms.s_texture ? this.uniforms.s_texture.value : null;
+  }
+  set map(value2) {
+    this.uniforms.s_texture = { value: value2 };
+  }
+  get lightDirection() {
+    return this.uniforms.u_light_dir.value;
+  }
+  set lightDirection(value2) {
+    this.uniforms.u_light_dir = { value: value2 };
+  }
+}
+var FFLShaderMaterial_default = FFLShaderMaterial;
+
+// src/external/ffl.js/LUTShaderMaterial.js
+var THREE4 = _THREE();
+var _LUTShader_vert = `
+#define AGX_FEATURE_ALBEDO_TEXTURE
+/**
+ * @file    LUT.vsh
+ * @brief   LUT
+ * @since   2014/10/02
+ *
+ * Copyright (c)2014 Nintendo Co., Ltd. All rights reserved.
+ */
+
+// シェーダーの種類毎に設定されるマクロリスト
+// AGX_FEATURE_VERTEX_COLOR         頂点カラーが有効
+// AGX_FEATURE_ALBEDO_TEXTURE       アルベドテクスチャーが有効
+// AGX_FEATURE_BUMP_TEXTURE         バンプテクスチャーが有効
+// AGX_FEATURE_MASK_TEXTURE         マスクテクスチャーが有効
+// AGX_FEATURE_ALPHA_TEXTURE        アルファテクスチャーが有効
+// AGX_FEATURE_SPHERE_MAP_TEXTURE   スフィア環境マップが有効
+// AGX_FEATURE_SKIN_MASK            肌マスクが有効（uColor0）
+// AGX_FEATURE_HAIR_MASK            髪マスクが有効（uColor1）
+// AGX_FEATURE_ALPHA_TEST           アルファテストが有効
+// AGX_FEATURE_FADE_OUT_COLOR       フェードアウトカラーが有効（uColor2）
+// AGX_FEATURE_DISABLE_LIGHT        ライトが無効
+// AGX_FEATURE_ALPHA_COLOR_FILTER   アルベドアルファによる色替えが有効
+// AGX_FEATURE_ALBEDO_ALPHA         アルベドのアルファをカラーのアルファに適用
+// AGX_FEATURE_PREMULTIPLY_ALPHA    プレマルチプライアルファな描画
+// AGX_FEATURE_MII                  Miiを描画する
+// AGX_FEATURE_MII_CONSTANT         Miiを描画する：Constant
+// AGX_FEATURE_MII_TEXTURE_DIRECT   Miiを描画する：Texture Direct
+// AGX_FEATURE_MII_RGB_LAYERED      Miiを描画する：RGB Layered
+// AGX_FEATURE_MII_ALPHA            Miiを描画する：Alpha
+// AGX_FEATURE_MII_LUMINANCE_ALPHA  Miiを描画する：Luminance Alpha
+// AGX_FEATURE_MII_ALPHA_OPA        Miiを描画する：Alpha Opa
+//
+// AGX_BONE_MAX     ボーンの最大数
+
+#ifdef GL_ES
+precision highp float;
+#else
+#   define lowp
+#   define mediump
+#   define highp
+#endif
+
+//#ifndef AGX_BONE_MAX
+//#   define AGX_BONE_MAX 15
+//#endif
+#ifndef AGX_DIR_LIGHT_MAX
+#   define AGX_DIR_LIGHT_MAX 2
+#endif
+
+// ----------------------------------------
+// 頂点シェーダーに入力される attribute 変数
+//attribute highp   vec3 position;   //!< 入力:[ 1 : 1 ] 位置情報
+#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
+//attribute mediump vec2 uv;  //!< 入力:[ 1 : 5 ] テクスチャー座標
+#endif
+//attribute mediump vec3 normal;     //!< 入力:[ 1 : 2 ] 法線ベクトル
+//attribute mediump vec4 aBoneIndex;  //!< 入力:[ 1 : 3 ] ボーンのインデックス（最大4つ）
+//attribute mediump vec4 aBoneWeight; //!< 入力:[ 1 : 4 ] ボーンの影響度（最大4つ）
+#if defined(AGX_FEATURE_VERTEX_COLOR)
+//attribute lowp    vec4 _color;      //!< 入力:[ 1 : 6 ] 頂点カラー
+#endif
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+//attribute mediump vec3 tangent;    //!< 入力:[ 1 : 7 ] 接線ベクトル
+#endif
+
+// ^^ Commented attributes are provided by three.js.
+
+// ----------------------------------------
+// 頂点シェーダーに入力される uniform 変数
+//uniform highp   mat4 modelViewMatrix;                            //!< 入力:[ 4      /  4 :   4 ] モデルの合成行列
+//uniform mat4 projectionMatrix;
+//uniform highp   mat4 viewMatrix;                           //!< 入力:[ 4      /  4 :   8 ] モデルのビュー行列
+//uniform mediump mat3 normalMatrix;                         //!< 入力:[ 3      /  3 :  11 ] モデルの法線用行列
+//uniform highp   mat4 modelMatrix;                          //!< 入力:[ 4      /  4 :  15 ] モデルのワールド変換行列
+//uniform lowp    int  uBoneCount;                            //!< 入力:[ 1      /  1 :  16 ] ボーンの個数
+//uniform highp   mat4 uBoneMatrices[AGX_BONE_MAX];           //!< 入力:[ 4 x 15 / 60 :  76 ] ボーンの行列配列
+//uniform mediump mat3 uBoneNormalMatrices[AGX_BONE_MAX];     //!< 入力:[ 3 x 15 / 45 : 121 ] ボーンの法線行列配列
+// ^^ Unused in favor of three.js skinning.
+uniform lowp    int  uDirLightCount;                        //!< 入力:[ 1      /  1 : 122 ] 方向ライトの数
+uniform mediump vec4 uDirLightDirAndType0;//!< 入力:[ 1 x  2 /  2 : 124 ] 平行ライトの向く方向
+uniform mediump vec4 uDirLightDirAndType1;//!< 入力:[ 1 x  2 /  2 : 124 ] 平行ライトの向く方向
+uniform mediump vec3 uDirLightColor0;     //!< 入力:[ 1 x  2 /  2 : 126 ] 平行ライトのカラー
+uniform mediump vec3 uDirLightColor1;     //!< 入力:[ 1 x  2 /  2 : 126 ] 平行ライトのカラー
+uniform mediump vec3 uHSLightSkyColor;                      //!< 入力:[ 1      /  1 : 127 ] 半球ライトのスカイカラー
+uniform mediump vec3 uHSLightGroundColor;                   //!< 入力:[ 1      /  1 : 128 ] 半球ライトのグラウンドカラー
+//uniform mediump vec3 cameraPosition;                                //!< 入力:[ 1      /  1 : 129 ] カメラの位置
+// ^^ previously uEyePt
+uniform mediump float uAlpha;                               //!< 入力:[ 1      /  1 : 130 ] アルファ値
+
+// ^^ Commented uniforms are provided by three.js.
+
+// ----------------------------------------
+// フラグメントシェーダーに渡される varying 変数
+varying lowp    vec4    vModelColor;                            //!< 出力:[ 1 : 1 ] モデルの色
+#if !defined(AGX_FEATURE_BUMP_TEXTURE)
+varying mediump vec3    vNormal;                                //!< 出力:[ 1 : 2 ] モデルの法線
+#endif
+#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
+varying mediump vec2    vTexcoord0;                             //!< 出力:[ 1 : 3 ] テクスチャーUV
+#endif
+// camera
+varying mediump vec3    vEyeVecWorldOrTangent;                  //!< 出力:[ 1 : 4 ] 視線ベクトル
+#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+// punctual light
+varying mediump vec3    vPunctualLightDirWorldOrTangent;        //!< 出力:[ 1 : 5 ] ライトの方向
+varying mediump vec3    vPunctualLightHalfVecWorldOrTangent;    //!< 出力:[ 1 : 6 ] カメラとライトのハーフベクトル
+// GI
+varying mediump vec3    vGISpecularLightColor;                  //!< 出力:[ 1 : 7 ] GIフレネルで使用するカラー
+// Lighting Result
+varying mediump vec3    vDiffuseColor;                          //!< 出力:[ 1 : 8 ] ディフューズライティング結果
+#endif
+// Reflect
+#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
+varying lowp    vec3    vReflectDir;                            //!< 出力:[ 1 : 9 ] 環境マップの反射ベクトル
+#endif
+
+// skinning_pars_vertex.glsl.js
+#ifdef USE_SKINNING
+    uniform mat4 bindMatrix;
+    uniform mat4 bindMatrixInverse;
+    uniform highp sampler2D boneTexture;
+    mat4 getBoneMatrix( const in float i ) {
+        int size = textureSize( boneTexture, 0 ).x;
+        int j = int( i ) * 4;
+        int x = j % size;
+        int y = j / size;
+        vec4 v1 = texelFetch( boneTexture, ivec2( x, y ), 0 );
+        vec4 v2 = texelFetch( boneTexture, ivec2( x + 1, y ), 0 );
+        vec4 v3 = texelFetch( boneTexture, ivec2( x + 2, y ), 0 );
+        vec4 v4 = texelFetch( boneTexture, ivec2( x + 3, y ), 0 );
+        return mat4( v1, v2, v3, v4 );
+    }
+#endif
+
+// ------------------------------------------------------------
+// 頂点シェーダーのエントリーポイント
+// ------------------------------------------------------------
+void main()
+{
+    // ------------------------------------------------------------
+    // 頂点変換用の処理
+    // ------------------------------------------------------------
+    highp   vec4 position_;  //!< 最終的な頂点
+    mediump vec3 normal_;    //!< 最終的な法線
+    mediump vec3 tangent_;   //!< 最終的な接線
+    highp   vec4 positionWorld; //!< ワールド空間上での頂点
+
+
+    // begin_vertex.glsl.js
+    vec3 transformed = vec3( position );
+// skinbase_vertex.glsl.js
+#ifdef USE_SKINNING
+    mat4 boneMatX = getBoneMatrix( skinIndex.x );
+    mat4 boneMatY = getBoneMatrix( skinIndex.y );
+    mat4 boneMatZ = getBoneMatrix( skinIndex.z );
+    mat4 boneMatW = getBoneMatrix( skinIndex.w );
+    // skinning_vertex.glsl.js
+    vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );
+    vec4 skinned = vec4( 0.0 );
+    skinned += boneMatX * skinVertex * skinWeight.x;
+    skinned += boneMatY * skinVertex * skinWeight.y;
+    skinned += boneMatZ * skinVertex * skinWeight.z;
+    skinned += boneMatW * skinVertex * skinWeight.w;
+    transformed = ( bindMatrixInverse * skinned ).xyz;
+#endif
+
+    // ----------------------------------------
+    // ボーンが存在しない場合は位置と法線に手を加えない
+    position_ = vec4(transformed.xyz, 1.0);
+
+
+
+    normal_ = normal;
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+    tangent_ = tangent.xyz;
+#endif
+    // skinnormal_vertex.glsl.js
+#ifdef USE_SKINNING
+    mat4 skinMatrix = mat4( 0.0 );
+    skinMatrix += skinWeight.x * boneMatX;
+    skinMatrix += skinWeight.y * boneMatY;
+    skinMatrix += skinWeight.z * boneMatZ;
+    skinMatrix += skinWeight.w * boneMatW;
+    skinMatrix = bindMatrixInverse * skinMatrix * bindMatrix;
+
+    normal_ = vec4( skinMatrix * vec4( normal_, 0.0 ) ).xyz;
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+    tangent_ = vec4( skinMatrix * vec4( tangent_, 0.0 ) ).xyz;
+#endif // defined(AGX_FEATURE_BUMP_TEXTURE)
+#endif // USE_SKINNING
+
+    // ----------------------------------------
+    // ワールド上での位置を求める
+    positionWorld = modelMatrix * position_;
+    // 最終結果を行う
+    position_ = projectionMatrix * modelViewMatrix * position_;
+    normal_   = normalize(normalMatrix * normal_);
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+    tangent  = normalize(normalMatrix * tangent_);
+#endif
+
+    // ----------------------------------------
+    // 計算結果を保持させる
+    gl_Position = position_;
+#if !defined(AGX_FEATURE_BUMP_TEXTURE)
+    vNormal     = normal_;
+#endif
+#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
+    // テクスチャー座標を設定する
+    vTexcoord0 = uv;
+#endif
+    // モデルの色を指定する
+#if defined(AGX_FEATURE_VERTEX_COLOR)
+    lowp vec4 modelColor = aColor;
+
+#else
+    lowp vec4 modelColor = vec4(1.0, 1.0, 1.0, 1.0);
+#endif
+
+    // プリマルチプライドアルファ
+#if defined(AGX_FEATURE_PREMULTIPLY_ALPHA)
+    modelColor *= uAlpha;
+#else
+    modelColor.a *= uAlpha;
+#endif
+
+
+    // ------------------------------------------------------------
+    // ライト用の処理
+    // ------------------------------------------------------------
+    mediump vec3 eyeVecWorld;   //!< ワールド状態での視線ベクトル
+    mediump vec3 eyeVec;        //!< 最終的にフラグメントシェーダーに渡す視線ベクトル（バンプの有無によって、ワールド座標系になったり、タンジェント座標系になったりする）
+
+    vec4 eye = modelViewMatrix * position_;
+
+    // 視線ベクトルを取得する
+    //eyeVecWorld = normalize(cameraPosition - positionWorld.xyz);
+    eyeVecWorld = normalize(-(eye.xyz) - positionWorld.xyz);//normalize(cameraPosition - positionWorld.xyz);
+    eyeVec = eyeVecWorld;
+
+    lowp vec3 diffuseColor = vec3(0.0); // バーテックスシェーダーで計算できるディフューズの色をここに格納する
+
+#   if defined(AGX_FEATURE_BUMP_TEXTURE)
+    // Normal, Binormal, Tangent を取得する
+    mediump vec3 n = normal;
+    mediump vec3 t = tangent;
+    mediump vec3 b = cross(n, t);
+    // 接空間からローカルへ変換する行列を設定する（mat3(N, T, B)の逆行列）
+    mediump mat3 tangentMatrix = mat3(t.x, b.x, n.x, t.y, b.y, n.y, t.z, b.z, n.z);
+    // 視線ベクトルを接空間へ
+    vEyeVecWorldOrTangent.xyz = tangentMatrix * eyeVec;
+#else
+    vEyeVecWorldOrTangent.xyz = eyeVec;
+#endif
+
+#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+    // punctual lightの設定
+    if (uDirLightCount > 0)
+    {
+        mediump vec3 lightDir;
+
+        // 方向ライト
+        if (uDirLightDirAndType0.w < 0.0) { lightDir = uDirLightDirAndType0.xyz; }
+        // 点光源ライト
+        else                                { lightDir = uDirLightDirAndType0.xyz - positionWorld.xyz; }
+        lightDir = normalize(lightDir);
+
+#   if defined(AGX_FEATURE_BUMP_TEXTURE)
+        // ライトを接空間へ
+        vPunctualLightDirWorldOrTangent.xyz = tangentMatrix * lightDir;
+#   else
+        vPunctualLightDirWorldOrTangent.xyz = lightDir;
+#   endif
+
+        // Halfベクトルを求める
+        vPunctualLightHalfVecWorldOrTangent.xyz = normalize(vPunctualLightDirWorldOrTangent.xyz + vEyeVecWorldOrTangent.xyz);
+
+        // Diffuse計算
+        diffuseColor += (uDirLightColor0.rgb * clamp(dot(lightDir, normal_), 0.0, 1.0));
+    }
+    if (uDirLightCount > 1)
+    {
+        mediump vec3 lightDir;
+
+        // 方向ライト
+        if (uDirLightDirAndType1.w < 0.0) { lightDir = uDirLightDirAndType1.xyz; }
+        // 点光源ライト
+        else                                { lightDir = uDirLightDirAndType1.xyz - positionWorld.xyz; }
+        lightDir = normalize(lightDir);
+
+        diffuseColor += max(dot(lightDir, normal_), 0.0) * uDirLightColor1;
+    }
+    // ライトは1.0を超えないように
+    diffuseColor = min(diffuseColor, 1.0);
+#endif
+
+#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
+    {
+        // キューブ環境マップ用の反射ベクトルを求める
+//        vReflectDir = reflect(normalize(positionWorld.xyz - cameraPosition), normal_);
+
+        // スフィア環境マップ用の反射ベクトルを求める
+//        vReflectDir = normalize((uViewMatrix * vec4(normal_, 0.0)).xyz) * 0.5 + 0.5;
+
+        // ビュー座標系での位置と法線を取得
+        mediump vec3 viewNormal   = normalize(mat3(uViewMatrix) * normal_);
+        mediump vec4 viewPosition = uViewMatrix * positionWorld;
+        viewPosition = viewPosition / viewPosition.w;
+        // ビュー座標系での頂点ベクトルを取得
+        viewPosition.z = 1.0 - viewPosition.z;
+        mediump vec3 viewPositionVec = normalize(viewPosition.xyz);
+        // ビュー座標系での反射ベクトルを求める
+        mediump vec3 viewReflect  = viewPositionVec - 2.0 * dot(viewPositionVec, viewNormal) * viewNormal;
+        // 両面スフィア環境マップではないので、反射ベクトルを調整
+        viewReflect = normalize(viewReflect - vec3(0.0, 0.0, 1.5));
+        // 反射ベクトルをテクスチャー座標系へ
+        vReflectDir = viewReflect * 0.5 + 0.5;
+
+        // 公式
+//        mediump vec3  viewPositionVec = normalize(vec3(uViewMatrix * positionWorld));
+//        mediump vec3  viewReflectVec = viewPositionVec - 2.0 * dot(viewPositionVec, normal_) * normal;
+//        mediump float m = 2.0 * sqrt(viewReflectVec.x * viewReflectVec.x +
+//                                     viewReflectVec.y * viewReflectVec.y +
+//                                     (viewReflectVec.z + 1.0) * (viewReflectVec.z * 1.0));
+//        vReflectDir = viewReflectVec / m + 0.5;
+
+        // 別版
+//        mediump vec3 posW = positionWorld.xyz;
+//        mediump vec3 dir  = normalize(mat3(uViewMatrix) * normal);
+//
+//        mediump float radius     = 75.0;
+//        mediump vec3  posWDir    = dot(dir, posW) * dir;
+//        mediump vec3  posWDirV   = posW - posWDir;
+//        mediump float lengthDir  = sqrt(radius * radius - dot(posWDirV, posWDirV)) - length(posWDir);
+//        vReflectDir = normalize(posW + dir * lengthDir) * 0.5 + 0.5;
+    }
+#endif
+
+#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+    // GIの計算
+    {
+        mediump vec3 hemiColor;
+        mediump vec3 sky = uHSLightSkyColor;
+        mediump vec3 ground = uHSLightGroundColor;
+
+        {
+            mediump float skyRatio = (normal_.y + 1.0) * 0.5;
+            hemiColor =  (sky * skyRatio + ground * (1.0 - skyRatio));
+            diffuseColor += hemiColor;
+        }
+
+        {
+//            mediump vec3 reflectDir = -reflect(normal_, eyeVecWorld); // おそらくコレで良いはず
+            mediump vec3 reflectDir = 2.0 * dot(eyeVecWorld, normal_) * normal_ - eyeVecWorld; // 多少冗長でも、正しい計算で行なう
+
+            mediump float skyRatio = (reflectDir.y + 1.0) * 0.5;
+            hemiColor =  (sky * skyRatio + ground * (1.0 - skyRatio));
+            vGISpecularLightColor.rgb = hemiColor;
+        }
+    }
+#endif
+
+    // モデルの色を設定
+    vModelColor = modelColor;
+#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+    vDiffuseColor.rgb = diffuseColor;
+#endif
+}
+`;
+var _LUTShader_frag = `
+#define AGX_FEATURE_ALBEDO_TEXTURE
+#define AGX_FEATURE_MII
+/**
+ * @file    LUT.fsh
+ * @brief   LUT
+ * @since   2014/10/02
+ *
+ * Copyright (c)2014 Nintendo Co., Ltd. All rights reserved.
+ */
+
+// シェーダーの種類毎に設定されるマクロリスト
+// AGX_FEATURE_VERTEX_COLOR         頂点カラーが有効
+// AGX_FEATURE_ALBEDO_TEXTURE       アルベドテクスチャーが有効
+// AGX_FEATURE_BUMP_TEXTURE         バンプテクスチャーが有効
+// AGX_FEATURE_MASK_TEXTURE         マスクテクスチャーが有効
+// AGX_FEATURE_ALPHA_TEXTURE        アルファテクスチャーが有効
+// AGX_FEATURE_SPHERE_MAP_TEXTURE   スフィア環境マップが有効
+// AGX_FEATURE_SKIN_MASK            肌マスクが有効（uColor0）
+// AGX_FEATURE_HAIR_MASK            髪マスクが有効（uColor1）
+// AGX_FEATURE_ALPHA_TEST           アルファテストが有効
+// AGX_FEATURE_FADE_OUT_COLOR       フェードアウトカラーが有効（uColor2）
+// AGX_FEATURE_DISABLE_LIGHT        ライトが無効
+// AGX_FEATURE_ALPHA_COLOR_FILTER   アルベドアルファによる色替えが有効
+// AGX_FEATURE_ALBEDO_ALPHA         アルベドのアルファをカラーのアルファに適用
+// AGX_FEATURE_PREMULTIPLY_ALPHA    プレマルチプライアルファな描画
+// AGX_FEATURE_MII                  Miiを描画する
+// AGX_FEATURE_MII_CONSTANT         Miiを描画する：Constant
+// AGX_FEATURE_MII_TEXTURE_DIRECT   Miiを描画する：Texture Direct
+// AGX_FEATURE_MII_RGB_LAYERED      Miiを描画する：RGB Layered
+// AGX_FEATURE_MII_ALPHA            Miiを描画する：Alpha
+// AGX_FEATURE_MII_LUMINANCE_ALPHA  Miiを描画する：Luminance Alpha
+// AGX_FEATURE_MII_ALPHA_OPA        Miiを描画する：Alpha Opa
+
+#ifdef GL_ES
+precision mediump float;
+#else
+#   define lowp
+#   define mediump
+#   define highp
+#endif
+
+/// 変調処理のマクロ
+#define FFL_MODULATE_MODE_CONSTANT        0
+#define FFL_MODULATE_MODE_TEXTURE_DIRECT  1
+#define FFL_MODULATE_MODE_RGB_LAYERED     2
+#define FFL_MODULATE_MODE_ALPHA           3
+#define FFL_MODULATE_MODE_LUMINANCE_ALPHA 4
+#define FFL_MODULATE_MODE_ALPHA_OPA       5
+
+// ----------------------------------------
+// フラグメントシェーダーに入力される uniform 変数
+uniform int   uMode;   ///< 描画モード
+uniform bool uAlphaTest;
+uniform bool uLightEnable;
+uniform mediump vec4    uColor0;            //!< 入力:[ 1 : 1 ] カラー0 (OR 肌カラー)
+uniform mediump vec4    uColor1;            //!< 入力:[ 1 : 2 ] カラー1 (OR 髪カラー)
+uniform mediump vec4    uColor2;            //!< 入力:[ 1 : 3 ] カラー2 (OR フェードアウトカラー)
+//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+uniform mediump vec3    uLightColor;        //!< 入力:[ 1 : 4 ] ライトの色
+//#endif
+
+#if defined(AGX_FEATURE_ALBEDO_TEXTURE)
+uniform sampler2D       uAlbedoTexture;     //!< 入力: テクスチャー
+#endif
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+uniform sampler2D       uNormalTexture;     //!< 入力: ノーマルマップ
+#endif
+#if defined(AGX_FEATURE_MASK_TEXTURE)
+uniform sampler2D       uMaskTexture;       //!< 入力：マスクテクスチャー
+#endif
+#if defined(AGX_FEATURE_ALPHA_TEXTURE)
+uniform sampler2D       uAlphaTexture;      //!< 入力：アルファテクスチャー
+#endif
+uniform sampler2D       uLUTSpecTexture;    //!< 入力: スペキュラーLUT
+uniform sampler2D       uLUTFresTexture;    //!< 入力: フレネルLUT
+#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
+uniform sampler2D       uSphereMapTexture;  //!< 入力: スフィア環境マップ
+#endif
+
+// ----------------------------------------
+// フラグメントシェーダーに渡される varying 変数
+varying lowp    vec4    vModelColor;                            //!< 出力:[ 1 : 1 ] モデルの色
+#if !defined(AGX_FEATURE_BUMP_TEXTURE)
+varying mediump vec3    vNormal;                                //!< 出力:[ 1 : 2 ] モデルの法線
+#endif
+#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
+varying mediump vec2    vTexcoord0;                             //!< 出力:[ 1 : 3 ] テクスチャーUV
+#endif
+// camera
+varying mediump vec3    vEyeVecWorldOrTangent;                  //!< 出力:[ 1 : 4 ] 視線ベクトル
+//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+// punctual light
+varying mediump vec3    vPunctualLightDirWorldOrTangent;        //!< 出力:[ 1 : 5 ] ライトの方向
+varying mediump vec3    vPunctualLightHalfVecWorldOrTangent;    //!< 出力:[ 1 : 6 ] カメラとライトのハーフベクトル
+// GI
+varying mediump vec3    vGISpecularLightColor;                  //!< 出力:[ 1 : 7 ] GIフレネルで使用するカラー
+// Lighting Result
+varying mediump vec3    vDiffuseColor;                          //!< 出力:[ 1 : 8 ] ディフューズライティング結果
+//#endif
+// Reflect
+#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
+varying lowp    vec3    vReflectDir;                            //!< 出力:[ 1 : 9 ] 環境マップの反射ベクトル
+#endif
+
+// ------------------------------------------------------------
+// フラグメントシェーダーのエントリーポイント
+// ------------------------------------------------------------
+void main()
+{
+
+    // ディフューズカラーを取得
+    lowp vec4 albedoColor = vec4(1.0, 1.0, 1.0, 1.0);
+
+    // ============================================================
+    //  Mii
+    // ============================================================
+#if defined(AGX_FEATURE_MII)
+
+   //#if defined(AGX_FEATURE_MII_CONSTANT)
+    if(uMode == FFL_MODULATE_MODE_CONSTANT)
+    {
+        albedoColor = uColor0;
+    }
+    //#elif defined(AGX_FEATURE_MII_TEXTURE_DIRECT)
+    else if(uMode == FFL_MODULATE_MODE_TEXTURE_DIRECT)
+    {
+        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+    }
+    //#elif defined(AGX_FEATURE_MII_RGB_LAYERED)
+    else if(uMode == FFL_MODULATE_MODE_RGB_LAYERED)
+    {
+        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+        albedoColor = vec4(albedoColor.r * uColor0.rgb + albedoColor.g * uColor1.rgb + albedoColor.b * uColor2.rgb,
+                           uColor0.a * albedoColor.a);
+    }
+    //#elif defined(AGX_FEATURE_MII_ALPHA)
+    else if(uMode == FFL_MODULATE_MODE_ALPHA)
+    {
+        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+        albedoColor = vec4(uColor0.rgb, uColor0.a * albedoColor.r);
+    }
+    //#elif defined(AGX_FEATURE_MII_LUMINANCE_ALPHA)
+    else if(uMode == FFL_MODULATE_MODE_LUMINANCE_ALPHA)
+    {
+        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+        albedoColor = vec4(albedoColor.g * uColor0.rgb, uColor0.a * albedoColor.r);
+    }
+    //#elif defined(AGX_FEATURE_MII_ALPHA_OPA)
+    else if(uMode == FFL_MODULATE_MODE_ALPHA_OPA)
+    {
+        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+        albedoColor = vec4(albedoColor.r * uColor0.rgb, uColor0.a);
+    }
+//#endif
+
+    albedoColor = albedoColor * vModelColor;
+#endif
+
+    // ============================================================
+    //  Albedo Texture
+    // ============================================================
+#if !defined(AGX_FEATURE_MII) && defined(AGX_FEATURE_ALBEDO_TEXTURE)
+    albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+#endif
+#if defined(AGX_FEATURE_ALPHA_TEXTURE)
+    albedoColor.a   = texture2D(uAlphaTexture, vTexcoord0).r;
+#endif
+
+    // ============================================================
+    //  Color Mask
+    // ============================================================
+    // ----------------------------------------
+    // Deprecated
+#if defined(AGX_FEATURE_ALPHA_COLOR_FILTER)
+    // 一部の場所にColor0を反映する
+    albedoColor.rgb = (albedoColor.rgb * albedoColor.a + uColor0.rgb * (1.0 - albedoColor.a));
+    albedoColor.a = 1.0;
+#elif defined(AGX_FEATURE_MASK_TEXTURE)
+    lowp vec3  maskTextureColor = texture2D(uMaskTexture, vTexcoord0).rgb;
+
+#   if defined(AGX_FEATURE_SKIN_MASK) && defined(AGX_FEATURE_HAIR_MASK)
+    // 肌と髪両方マスクが存在する
+    lowp float maskColorValue = maskTextureColor.g + maskTextureColor.b;
+    lowp vec3  maskColor      = maskTextureColor.g * uColor0.rgb + maskTextureColor.b * uColor1.rgb;
+    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskColorValue) + maskColor);
+
+#   elif defined(AGX_FEATURE_SKIN_MASK)
+    // 肌しかマスクが存在しない
+    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskTextureColor.g) + maskTextureColor.g * uColor0.rgb);
+
+#   elif defined(AGX_FEATURE_HAIR_MASK)
+    // 髪しかマスクが存在しない
+    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskTextureColor.b) + maskTextureColor.b * uColor1.rgb);
+
+#   endif
+#endif
+
+    // アルベドに頂点カラーを掛ける
+    albedoColor *= vModelColor;
+
+    // ============================================================
+    //  Alpha test
+    // ============================================================
+//#if defined(AGX_FEATURE_ALPHA_TEST)
+    if (uAlphaTest && albedoColor.a < 0.5) { discard; }
+//#endif
+
+    // ============================================================
+    //  Bumpmap
+    // ============================================================
+    // 頂点からの情報
+    lowp vec3 normalWorldOrTangent;
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+    // バンプマップから法線を取得する
+    mediump vec3 bumpNormal = texture2D(uNormalTexture, vTexcoord0).rgb;
+
+    // 法線の正規化は処理が重いのでいったん正規化しない様に...
+//    normalWorldOrTangent = normalize(bumpNormal * 2.0 - 1.0);
+    normalWorldOrTangent = bumpNormal * 2.0 - 1.0;
+
+#else
+    // 法線を正規化して取得する
+    normalWorldOrTangent = normalize(vNormal);
+#endif
+
+    // ============================================================
+    //  Lighting
+    // ============================================================
+    // 最終的なカラー情報
+    lowp vec4 colorOut = vec4(0.0, 0.0, 0.0, albedoColor.a);  // 最終的に出力される色
+    lowp vec3 fresnel  = vec3(0.0, 0.0, 0.0);   // フレネル
+    lowp vec3 specular = vec3(0.0, 0.0, 0.0);   // スペキュラー
+
+//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+if (uLightEnable) {
+
+    // BRDFの計算を行う（バンプマッピングの場合は接空間）
+    lowp vec3 N = normalWorldOrTangent;
+    lowp vec3 V = vEyeVecWorldOrTangent.xyz;//normalize(vEyeVecWorldOrTangent.xyz);
+    lowp vec3 I = vPunctualLightDirWorldOrTangent.xyz;//normalize(vPunctualLightDirWorldOrTangent.xyz);
+    lowp vec3 H = vPunctualLightHalfVecWorldOrTangent.xyz;//normalize(vPunctualLightHalfVecWorldOrTangent.xyz);
+
+
+    // ----------------------------------------
+    // punctual light
+    // 平行光源や点光源などの厳密なライティング計算を行なうもの
+    {
+        lowp float fSpecular = dot(N, H);
+
+        lowp float specularIntensity = texture2D(uLUTSpecTexture, vec2(fSpecular)).r;
+        specular = (specularIntensity * uLightColor.rgb);
+    }
+
+    // ----------------------------------------
+    // GI
+    // 半球ライトやIBL、SHのように法線方向に半球積分された結果でライティング計算を行なうもの
+    {
+        lowp float fFresnel = dot(N, V);
+        lowp float fresnelIntensity = texture2D(uLUTFresTexture, vec2(fFresnel)).r;
+
+        fresnel = (fresnelIntensity * vGISpecularLightColor.rgb);
+    }
+}
+//#endif
+
+#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
+    // スフィア環境マップ
+    specular += texture2D(uSphereMapTexture, vReflectDir.xy).rgb;
+#endif
+
+    // ============================================================
+    //  Specular Mask
+    // ============================================================
+#if !defined(AGX_FEATURE_ALPHA_COLOR_FILTER) && defined(AGX_FEATURE_MASK_TEXTURE)
+    // スペキュラーマスク
+    specular = specular * maskTextureColor.r + fresnel;
+#else
+    specular += fresnel;
+#endif
+
+    // ============================================================
+    //  Output
+    // ============================================================
+//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+if (uLightEnable)
+    colorOut.rgb = vDiffuseColor.rgb * albedoColor.rgb + specular;
+//#else
+else
+    colorOut.rgb = albedoColor.rgb;
+//#endif
+
+    // フェードアウトを実装する
+#if defined(AGX_FEATURE_FADE_OUT_COLOR)
+    colorOut.rgb = (colorOut.rgb * (1.0 - uColor2.a)) + (uColor2.rgb * uColor2.a);
+#endif
+
+    // 色を反映させる
+    gl_FragColor = colorOut;
+
+    //#include <tonemapping_fragment>
+    //#include <colorspace_fragment>
+}
+`;
+
+class HermitianCurve {
+  constructor(keys2) {
+    this.keys = keys2.sort((a, b) => a.x - b.x);
+  }
+  interpolate(t, p0, p1, m0, m1) {
+    const h00 = 2 * t * t * t - 3 * t * t + 1;
+    const h10 = t * t * t - 2 * t * t + t;
+    const h01 = -2 * t * t * t + 3 * t * t;
+    const h11 = t * t * t - t * t;
+    return h00 * p0 + h10 * m0 + h01 * p1 + h11 * m1;
+  }
+  clamp(value2, min, max) {
+    return Math.min(Math.max(value2, min), max);
+  }
+  generateLUT(lutSize = 512) {
+    const lut = new Uint8Array(lutSize);
+    let keyIdx = 0;
+    for (let i = 0;i < lutSize; i++) {
+      const pos = i / (lutSize - 1);
+      while (keyIdx < this.keys.length - 2 && pos > this.keys[keyIdx + 1].x) {
+        keyIdx++;
+      }
+      const p0 = this.keys[keyIdx];
+      const p1 = this.keys[keyIdx + 1];
+      let t = (pos - p0.x) / (p1.x - p0.x);
+      t = isNaN(t) ? 0 : t;
+      const y = this.interpolate(t, p0.y, p1.y, p0.dx * (p1.x - p0.x), p1.dx * (p1.x - p0.x));
+      lut[i] = Math.round(this.clamp(y, 0, 1) * 255);
+    }
+    return lut;
+  }
+}
+
+class LUTShaderMaterial extends THREE4.ShaderMaterial {
+  static LUTSpecularTextureType = {
+    NONE: 0,
+    DEFAULT_02: 1,
+    SKIN_01: 2,
+    MAX: 3
+  };
+  static LUTFresnelTextureType = {
+    NONE: 0,
+    DEFAULT_02: 1,
+    SKIN_01: 2,
+    MAX: 3
+  };
+  static lutDefinitions = {
+    specular: {
+      [LUTShaderMaterial.LUTSpecularTextureType.NONE]: new HermitianCurve([
+        { x: 0, y: 0, dx: 0, dy: 0 },
+        { x: 1, y: 0, dx: 0, dy: 0 }
+      ]),
+      [LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02]: new HermitianCurve([
+        { x: 0, y: 0, dx: 0, dy: 0 },
+        { x: 0.05, y: 0, dx: 0, dy: 0 },
+        {
+          x: 0.8,
+          y: 0.038,
+          dx: 0.157894736842105,
+          dy: 0.157894736842105
+        },
+        { x: 1, y: 0.11, dx: 0, dy: 0 }
+      ]),
+      [LUTShaderMaterial.LUTSpecularTextureType.SKIN_01]: new HermitianCurve([
+        {
+          x: 0,
+          y: 0.03,
+          dx: -0.105263157894737,
+          dy: -0.105263157894737
+        },
+        { x: 1, y: 0, dx: 0, dy: 0 }
+      ])
+    },
+    fresnel: {
+      [LUTShaderMaterial.LUTFresnelTextureType.NONE]: new HermitianCurve([
+        { x: 0, y: 0, dx: 0, dy: 0 },
+        { x: 1, y: 0, dx: 0, dy: 0 }
+      ]),
+      [LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02]: new HermitianCurve([
+        {
+          x: 0,
+          y: 0.3,
+          dx: -0.105263157894734,
+          dy: -0.105263157894734
+        },
+        {
+          x: 0.175,
+          y: 0.23,
+          dx: -0.626315789473681,
+          dy: -0.626315789473681
+        },
+        {
+          x: 0.6,
+          y: 0.05,
+          dx: -0.210526315789474,
+          dy: -0.210526315789474
+        },
+        {
+          x: 1,
+          y: 0,
+          dx: -0.105263157894737,
+          dy: -0.105263157894737
+        }
+      ]),
+      [LUTShaderMaterial.LUTFresnelTextureType.SKIN_01]: new HermitianCurve([
+        {
+          x: 0.005,
+          y: 0.35,
+          dx: -0.105263157894734,
+          dy: -0.105263157894734
+        },
+        {
+          x: 0.173,
+          y: 0.319,
+          dx: -0.205263157894734,
+          dy: -0.205263157894734
+        },
+        {
+          x: 0.552,
+          y: 0.051,
+          dx: -0.210526315789474,
+          dy: -0.210526315789474
+        },
+        { x: 1, y: 0.001, dx: 0, dy: 0 }
+      ])
+    }
+  };
+  static modulateTypeToLUTSpecular = [
+    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
+    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTSpecularTextureType.NONE,
+    LUTShaderMaterial.LUTSpecularTextureType.NONE,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02
+  ];
+  static modulateTypeToLUTFresnel = [
+    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
+    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTFresnelTextureType.NONE,
+    LUTShaderMaterial.LUTFresnelTextureType.NONE,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02
+  ];
+  static _lutTextures = null;
+  static getLUTTextures(lutSize = 512) {
+    if (LUTShaderMaterial._lutTextures) {
+      return LUTShaderMaterial._lutTextures;
+    }
+    const textures = { specular: {}, fresnel: {} };
+    const r8 = Number(THREE4.REVISION) <= 136 ? THREE4.LuminanceFormat : THREE4.RedFormat;
+    function generateLUTTextures(lutType, target) {
+      for (const key2 in lutType) {
+        const lutData = lutType[key2].generateLUT(lutSize);
+        target[Number(key2)] = Object.assign(new THREE4.DataTexture(lutData, lutSize, 1, r8, THREE4.UnsignedByteType), {
+          colorSpace: THREE4.LinearSRGBColorSpace,
+          needsUpdate: true
+        });
+      }
+    }
+    generateLUTTextures(LUTShaderMaterial.lutDefinitions.specular, textures.specular);
+    generateLUTTextures(LUTShaderMaterial.lutDefinitions.fresnel, textures.fresnel);
+    LUTShaderMaterial._lutTextures = textures;
+    return textures;
+  }
+  static defaultHSLightGroundColor = new THREE4.Color(0.87843, 0.72157, 0.5898);
+  static defaultHSLightSkyColor = new THREE4.Color(0.87843, 0.83451, 0.80314);
+  static defaultDirLightColor0 = new THREE4.Color(0.35137, 0.32392, 0.32392);
+  static defaultDirLightColor1 = new THREE4.Color(0.10039, 0.09255, 0.09255);
+  static defaultDirLightCount = 2;
+  static defaultDirLightDirAndType0 = new THREE4.Vector4(-0.2, 0.5, 0.8, -1);
+  static defaultDirLightDirAndType1 = new THREE4.Vector4(0, -0.19612, 0.98058, -1);
+  static defaultLightColor = new THREE4.Color(0.35137, 0.32392, 0.32392);
+  static defaultLightDirection = this.defaultDirLightDirAndType0;
+  static multiplyColorIfNeeded(color, modulateType, modulateMode) {
+    if (modulateType === 1 || modulateType === 4 || modulateMode === 0 && modulateType === 9) {
+      const mul2 = 0.9019608;
+      color.r *= mul2;
+      color.g *= mul2;
+      color.b *= mul2;
+    }
+    return color;
+  }
+  constructor(options = {}) {
+    const uniforms = {
+      uBoneCount: { value: 0 },
+      uAlpha: { value: 1 },
+      uHSLightGroundColor: {
+        value: LUTShaderMaterial.defaultHSLightGroundColor
+      },
+      uHSLightSkyColor: {
+        value: LUTShaderMaterial.defaultHSLightSkyColor
+      },
+      uDirLightColor0: {
+        value: LUTShaderMaterial.defaultDirLightColor0
+      },
+      uDirLightColor1: {
+        value: LUTShaderMaterial.defaultDirLightColor1
+      },
+      uDirLightCount: {
+        value: LUTShaderMaterial.defaultDirLightCount
+      },
+      uDirLightDirAndType0: {
+        value: LUTShaderMaterial.defaultDirLightDirAndType0.clone()
+      },
+      uDirLightDirAndType1: {
+        value: LUTShaderMaterial.defaultDirLightDirAndType1.clone()
+      },
+      uLightEnable: { value: true },
+      uLightColor: { value: LUTShaderMaterial.defaultLightColor }
+    };
+    super({
+      vertexShader: _LUTShader_vert,
+      fragmentShader: _LUTShader_frag,
+      uniforms
+    });
+    this._modulateType = 0;
+    this.setValues(options);
+  }
+  get color() {
+    if (!this.uniforms.uColor0) {
+      return null;
+    } else if (this._color3) {
+      return this._color3;
+    }
+    const color4 = this.uniforms.uColor0.value;
+    const color3 = new THREE4.Color(color4.x, color4.y, color4.z);
+    this._color3 = color3;
+    return color3;
+  }
+  set color(value2) {
+    function toColor4(color, opacity2 = 1) {
+      return new THREE4.Vector4(color.r, color.g, color.b, opacity2);
+    }
+    if (Array.isArray(value2)) {
+      this.uniforms.uColor0 = { value: toColor4(value2[0]) };
+      this.uniforms.uColor1 = { value: toColor4(value2[1]) };
+      this.uniforms.uColor2 = { value: toColor4(value2[2]) };
+      return;
+    }
+    const color3 = value2 ? value2 : new THREE4.Color(1, 1, 1);
+    this._color3 = color3.clone();
+    if (this.modulateType !== undefined && typeof this.modulateMode === "number") {
+      LUTShaderMaterial.multiplyColorIfNeeded(color3, this.modulateType, this.modulateMode);
+    }
+    const opacity = this.opacity;
+    if (this._opacity) {
+      delete this._opacity;
+    }
+    this.uniforms.uColor0 = { value: toColor4(color3, opacity) };
+  }
+  get opacity() {
+    if (!this.uniforms.uColor0) {
+      return this._opacity ? this._opacity : 1;
+    }
+    return this.uniforms.uColor0.value.w;
+  }
+  set opacity(value2) {
+    if (!this.uniforms || !this.uniforms.uColor0) {
+      this._opacity = 1;
+      return;
+    }
+    this.uniforms.uColor0.value.w = value2;
+  }
+  get modulateMode() {
+    return this.uniforms.uMode ? this.uniforms.uMode.value : null;
+  }
+  set modulateMode(value2) {
+    this.uniforms.uMode = { value: value2 };
+  }
+  get lightEnable() {
+    return this.uniforms.uLightEnable ? this.uniforms.uLightEnable.value : null;
+  }
+  set lightEnable(value2) {
+    this.uniforms.uLightEnable = { value: value2 };
+  }
+  get modulateType() {
+    return this._modulateType;
+  }
+  set modulateType(value2) {
+    const lutTextures = LUTShaderMaterial.getLUTTextures();
+    const specType = LUTShaderMaterial.modulateTypeToLUTSpecular[value2];
+    const fresType = LUTShaderMaterial.modulateTypeToLUTFresnel[value2];
+    if (specType === undefined || fresType === undefined) {
+      return;
+    }
+    this._modulateType = value2;
+    const lutSpecTexture = lutTextures.specular[specType];
+    const lutFresTexture = lutTextures.fresnel[fresType];
+    this.uniforms.uLUTSpecTexture = { value: lutSpecTexture };
+    this.uniforms.uLUTFresTexture = { value: lutFresTexture };
+    this.uniforms.uAlphaTest = {
+      value: value2 >= 6 && value2 <= 8
+    };
+    this._side = this.side;
+    this.side = value2 === 6 ? THREE4.DoubleSide : this.side;
+  }
+  get map() {
+    return this.uniforms.uAlbedoTexture ? this.uniforms.uAlbedoTexture.value : null;
+  }
+  set map(value2) {
+    this.uniforms.uAlbedoTexture = { value: value2 };
+  }
+  get lightDirection() {
+    return this.uniforms.uDirLightDirAndType0.value;
+  }
+  set lightDirection(value2) {
+    this.uniforms.uDirLightDirAndType0 = { value: value2 };
+    this.uniforms.uDirLightDirAndType0.value.w = -1;
+  }
+}
+var LUTShaderMaterial_default = LUTShaderMaterial;
+
+// src/class/3d/shader/ShaderUtils.ts
+var import_localforage = __toESM(require_localforage(), 1);
+
 // src/class/3d/shader/fflShaderConst.ts
-var THREE6 = _THREE();
+var THREE5 = _THREE();
 var FFLToonMaterial = {
-  ambient: new THREE6.Color(0.8, 0.8, 0.8),
-  diffuse: new THREE6.Color(0.8, 0.8, 0.8),
-  specular: new THREE6.Color(0.1, 0.1, 0.1),
+  ambient: new THREE5.Color(0.8, 0.8, 0.8),
+  diffuse: new THREE5.Color(0.8, 0.8, 0.8),
+  specular: new THREE5.Color(0.1, 0.1, 0.1),
   specularPower: 0.01,
   specularMode: 0
 };
-var cLightAmbientFFLIconWithBody = new THREE6.Color(0.5, 0.5, 0.5);
-var cLightDiffuseFFLIconWithBody = new THREE6.Color(0.9, 0.9, 0.9);
-var cLightSpecularFFLIconWithBody = new THREE6.Color(1, 1, 1);
-var cLightDirGlossy = new THREE6.Vector3(-0.35, 1, 0.8);
-var cLightDirFFLIconWithBody = new THREE6.Vector3(-0.5, 0.366, 0.785);
-var cRimColor = new THREE6.Vector4(0.3, 0.3, 0.3, 1);
+var cLightAmbientFFLIconWithBody = new THREE5.Color(0.5, 0.5, 0.5);
+var cLightDiffuseFFLIconWithBody = new THREE5.Color(0.9, 0.9, 0.9);
+var cLightSpecularFFLIconWithBody = new THREE5.Color(1, 1, 1);
+var cLightDirGlossy = new THREE5.Vector3(-0.35, 1, 0.8);
+var cLightDirFFLIconWithBody = new THREE5.Vector3(-0.5, 0.366, 0.785);
+var cRimColor = new THREE5.Vector4(0.3, 0.3, 0.3, 1);
 var cPantsColorGray = [0.25098, 0.27451, 0.30588];
 var cPantsColorRed = [0.43922, 0.12549, 0.06275];
 var cPantsColorBlue = [0.15686, 0.25098, 0.47059];
@@ -72745,7 +72627,7 @@ class CustomToonMaterial extends MeshToonMaterial {
 }
 
 // src/class/3d/shader/ShaderUtils.ts
-var THREE7 = _THREE();
+var THREE6 = _THREE();
 var getSettingSafe = async (key2) => {
   const value2 = await import_localforage.default.getItem("settings_" + key2);
   if (value2 == null && key2 === "shaderType") {
@@ -72778,28 +72660,28 @@ async function traverseMesh(node, shaderType) {
   let modulateColor;
   if (!userData.modulateColor) {
     console.warn(`Mesh "${node.name}" is missing "modulateColor" in userData.`);
-    modulateColor = new THREE7.Vector4(1, 0, 0, 1);
+    modulateColor = new THREE6.Vector4(1, 0, 0, 1);
   } else {
-    modulateColor = new THREE7.Vector4(...userData.modulateColor, 1);
+    modulateColor = new THREE6.Vector4(...userData.modulateColor, 1);
   }
-  THREE7.ColorManagement.enabled = false;
+  THREE6.ColorManagement.enabled = false;
   const defines = {};
   if (originalMaterial.map) {
     defines.USE_MAP = "";
-    originalMaterial.map.colorSpace = THREE7.LinearSRGBColorSpace;
+    originalMaterial.map.colorSpace = THREE6.LinearSRGBColorSpace;
     originalMaterial.needsUpdate = true;
   }
   let side = originalMaterial.side;
   if (userData.cullMode !== undefined) {
     switch (userData.cullMode) {
       case 0:
-        side = THREE7.DoubleSide;
+        side = THREE6.DoubleSide;
         break;
       case 1:
-        side = THREE7.FrontSide;
+        side = THREE6.FrontSide;
         break;
       case 2:
-        side = THREE7.BackSide;
+        side = THREE6.BackSide;
         break;
     }
   }
@@ -72811,7 +72693,7 @@ async function traverseMesh(node, shaderType) {
     lightEnable: shaderSetting === "lightDisabled" /* LightDisabled */ ? false : true
   } : {};
   const params = {
-    color: new THREE7.Color(...modulateColor),
+    color: new THREE6.Color(...modulateColor),
     ...modulate,
     map: originalMaterial.map || undefined,
     side
@@ -72843,7 +72725,7 @@ async function getShaderMaterialFromShaderType(type) {
     case "wiiu" /* WiiU */:
       return FFLShaderMaterial_default;
     case "lightDisabled" /* LightDisabled */:
-      return THREE7.MeshBasicMaterial;
+      return THREE6.MeshBasicMaterial;
     case "wiiu_blinn" /* WiiUBlinn */:
       return FFLShaderBlinnMaterial;
     case "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */:
@@ -72859,13 +72741,13 @@ async function getShaderMaterialFromShaderType(type) {
     case "three_toon" /* ThreeToon */:
       return CustomToonMaterial;
     case "three_phong" /* ThreePhong */:
-      return THREE7.MeshPhongMaterial;
+      return THREE6.MeshPhongMaterial;
   }
 }
 var ThreeMaterialStandardLights = (scene) => {
-  const intensity = Number(THREE7.REVISION) >= 155 ? Math.PI : 1;
-  const ambientLight = new THREE7.AmbientLight(new THREE7.Color(0.73, 0.73, 0.73), intensity);
-  const directionalLight = new THREE7.DirectionalLight(new THREE7.Color(0.6, 0.6, 0.6), intensity);
+  const intensity = Number(THREE6.REVISION) >= 155 ? Math.PI : 1;
+  const ambientLight = new THREE6.AmbientLight(new THREE6.Color(0.73, 0.73, 0.73), intensity);
+  const directionalLight = new THREE6.DirectionalLight(new THREE6.Color(0.6, 0.6, 0.6), intensity);
   directionalLight.position.set(-0.455, 0.348, 0.5);
   ambientLight.name = "ambientLight";
   directionalLight.name = "directionalLight";
@@ -72873,8 +72755,8 @@ var ThreeMaterialStandardLights = (scene) => {
 };
 var ThreeMaterialToonLights = (scene) => {
   const intensity = 2.5;
-  const ambientLight = new THREE7.AmbientLight(new THREE7.Color(0.73, 0.73, 0.73), intensity);
-  const directionalLight = new THREE7.DirectionalLight(new THREE7.Color(0.6, 0.6, 0.6), intensity);
+  const ambientLight = new THREE6.AmbientLight(new THREE6.Color(0.73, 0.73, 0.73), intensity);
+  const directionalLight = new THREE6.DirectionalLight(new THREE6.Color(0.6, 0.6, 0.6), intensity);
   directionalLight.position.set(-0.255, 0.348, 0.5);
   ambientLight.name = "ambientLight";
   directionalLight.name = "directionalLight";
@@ -94803,7 +94685,7 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
   var bidx = 0;
   var imageIndex = 0;
   var vpos = 0;
-  var byte2 = 0;
+  var byte = 0;
   var arr_a, arr_b;
   var bytes = RW2_Format == 6 ? new Uint32Array(18) : new Uint8Array(16);
   var i, j2, sh, pred = [0, 0], nonz = [0, 0], isOdd, idx = 0, pixel_base;
@@ -94825,8 +94707,8 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
       }
     } else {
       vpos = vpos - bits & 131071;
-      byte2 = vpos >> 3 ^ 16368;
-      return (buffer[byte2] | buffer[byte2 + 1] << 8) >> (vpos & 7) & ~(-1 << bits);
+      byte = vpos >> 3 ^ 16368;
+      return (buffer[byte] | buffer[byte + 1] << 8) >> (vpos & 7) & ~(-1 << bits);
     }
   }
   function getBufferDataRW6(i2) {
@@ -94848,7 +94730,7 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
     bytes[12] = (getBufferDataRW6(13) << 2 & 1020 | getBufferDataRW6(14) >> 6) & 1023;
     bytes[13] = (getBufferDataRW6(14) << 4 | getBufferDataRW6(15) >> 4) & 1023;
     vpos += 16;
-    byte2 = 0;
+    byte = 0;
   }
   function readPageRw6_bps12() {
     bytes[0] = getBufferDataRW6(0) << 4 | getBufferDataRW6(1) >> 4;
@@ -94870,7 +94752,7 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
     bytes[16] = getBufferDataRW6(14);
     bytes[17] = getBufferDataRW6(15);
     vpos += 16;
-    byte2 = 0;
+    byte = 0;
   }
   function resetPredNonzeros() {
     pred[0] = 0;
@@ -94898,13 +94780,13 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
           for (i = 0;i < pixelsPerBlock; i++) {
             isOdd = i & 1;
             if (i % 3 == 2) {
-              var base = byte2 < bufferSize ? bytes[byte2++] : 0;
+              var base = byte < bufferSize ? bytes[byte++] : 0;
               if (base == 3)
                 base = 4;
               pixel_base = pixelbase0 << base;
               sh = 1 << base;
             }
-            var epixel = byte2 < bufferSize ? bytes[byte2++] : 0;
+            var epixel = byte < bufferSize ? bytes[byte++] : 0;
             if (pred[isOdd]) {
               epixel *= sh;
               if (pixel_base < pixelbase_compare && nonz[isOdd] > pixel_base)
@@ -99014,13 +98896,13 @@ Parser.prototype.parseStruct = function(description) {
     return description.call(this);
   } else {
     var fields = Object.keys(description);
-    var struct2 = {};
+    var struct = {};
     for (var j2 = 0;j2 < fields.length; j2++) {
       var fieldName = fields[j2];
       var fieldType = description[fieldName];
-      struct2[fieldName] = fieldType.call(this);
+      struct[fieldName] = fieldType.call(this);
     }
-    return struct2;
+    return struct;
   }
 };
 Parser.prototype.parseValueRecord = function(valueFormat) {
@@ -126916,7 +126798,7 @@ var ExtClothesMiitomoMeshAndTextureList = [
   },
   {
     Shirt: "StudioHoodieShirt",
-    Pants: "StudioPants",
+    Pants: "StudioHoodiePants",
     SkirtMedium: "StudioMediumSkirt",
     Hoodie: "StudioHood"
   }
@@ -127008,7 +126890,9 @@ var FFLiCreateID = import_struct_fu.default.struct([
   import_struct_fu.default.ubit("create_date2", 14),
   import_struct_fu.default.byte("base", 6)
 ]);
-var FFLiAuthorID = import_struct_fu.default.struct([import_struct_fu.default.byte("data", 8)]);
+var FFLiAuthorID = import_struct_fu.default.struct([
+  import_struct_fu.default.byte("data", 8)
+]);
 var Ver3StoreData = import_struct_fu.default.struct([
   import_struct_fu.default.ubitLE("mii_version", 8),
   import_struct_fu.default.ubitLE("copyable", 1),
@@ -127092,10 +126976,10 @@ function calculateCRC16(storeData) {
   const data2 = storeData.subarray(0, 94);
   console.log(data2);
   let crc = 0;
-  for (const byte2 of data2) {
+  for (const byte of data2) {
     for (let bit = 7;bit >= 0; bit--) {
       const flag = (crc & 32768) != 0;
-      crc = (crc << 1 | byte2 >> bit & 1) ^ (flag ? 4129 : 0);
+      crc = (crc << 1 | byte >> bit & 1) ^ (flag ? 4129 : 0);
     }
   }
   for (let i = 16;i > 0; i--) {
@@ -127923,7 +127807,18 @@ var Ver3HairColorTable = [8, 1, 2, 3, 4, 5, 6, 7];
 var Ver3EyeColorTable = [8, 9, 10, 11, 12, 13];
 var Ver3MouthColorTable = [19, 20, 21, 22, 23];
 var Ver3GlassColorTable = [8, 14, 15, 16, 17, 18, 0];
-var ForbiddenShirtPantColors = [, 7, 22, 78, 79, 84, 91, 92, 93, 94];
+var ForbiddenShirtPantColors = [
+  ,
+  7,
+  22,
+  78,
+  79,
+  84,
+  91,
+  92,
+  93,
+  94
+];
 
 // src/class/struct/RFLStoreData.ts
 var RFLCreateID = import_struct_fu2.default.struct([import_struct_fu2.default.uint8("data", 8)]);
@@ -128827,8 +128722,8 @@ function stripSpaces2(str) {
 }
 function hexToUint8Array2(hex) {
   const match = hex.match(/.{1,2}/g);
-  const arr = (match ? match : []).map(function(byte2) {
-    return parseInt(byte2, 16);
+  const arr = (match ? match : []).map(function(byte) {
+    return parseInt(byte, 16);
   });
   return new Uint8Array(arr);
 }
@@ -129268,8 +129163,8 @@ class Mii {
 }
 
 // src/util/camera.js
-var THREE8 = _THREE();
-window.THREE3 = THREE8;
+var THREE7 = _THREE();
+window.THREE3 = THREE7;
 var ViewType = {
   Face: 0,
   MakeIcon: 1,
@@ -129283,48 +129178,48 @@ function getCameraForViewType(viewType, width2 = 1, height2 = 1, miiHeight = 1) 
   switch (viewType) {
     case ViewType.Face: {
       const fovy = 15;
-      const camera = new THREE8.PerspectiveCamera(fovy, aspect2, 0.1, 1000);
+      const camera = new THREE7.PerspectiveCamera(fovy, aspect2, 0.1, 1000);
       camera.position.set(0, 34.5, 380);
       camera.lookAt(0, 34.3, 0);
       return camera;
     }
     case ViewType.MakeIcon: {
       const fovy = 9.8762;
-      const camera = new THREE8.PerspectiveCamera(fovy, aspect2, 500, 1000);
+      const camera = new THREE7.PerspectiveCamera(fovy, aspect2, 500, 1000);
       camera.position.set(0, 34.5, 600);
       camera.lookAt(0, 34.5, 0);
       return camera;
     }
     case ViewType.IconFovy45: {
-      const camera = new THREE8.PerspectiveCamera(45, aspect2, 50, 1000);
+      const camera = new THREE7.PerspectiveCamera(45, aspect2, 50, 1000);
       camera.position.set(0, 34, 110);
       camera.lookAt(0, 34, 0);
       return camera;
     }
     case ViewType.AllBody: {
       const fovy = 15;
-      const camera = new THREE8.PerspectiveCamera(fovy, aspect2, 50, 1500);
+      const camera = new THREE7.PerspectiveCamera(fovy, aspect2, 50, 1500);
       camera.position.set(0, 50, 900);
       camera.lookAt(0, 105, 0);
       return camera;
     }
     case ViewType.AllBodySugar: {
       const fovy = 15;
-      const camera = new THREE8.PerspectiveCamera(fovy, aspect2, 50, 15000);
-      const posStart = new THREE8.Vector3(0, 65, 550);
-      const atStart = new THREE8.Vector3(0, 65, 0);
-      const posEnd = new THREE8.Vector3(0, 75, 850);
-      const atEnd = new THREE8.Vector3(0, 88, 0);
+      const camera = new THREE7.PerspectiveCamera(fovy, aspect2, 50, 15000);
+      const posStart = new THREE7.Vector3(0, 65, 550);
+      const atStart = new THREE7.Vector3(0, 65, 0);
+      const posEnd = new THREE7.Vector3(0, 75, 850);
+      const atEnd = new THREE7.Vector3(0, 88, 0);
       const t3 = (miiHeight - 0.5) / (1.264 - 0.5);
-      const pos = new THREE8.Vector3(posStart.x + t3 * (posEnd.x - posStart.x), posStart.y + t3 * (posEnd.y - posStart.y), posStart.z + t3 * (posEnd.z - posStart.z));
-      const at = new THREE8.Vector3(atStart.x + t3 * (atEnd.x - atStart.x), atStart.y + t3 * (atEnd.y - atStart.y), atStart.z + t3 * (atEnd.z - atStart.z));
+      const pos = new THREE7.Vector3(posStart.x + t3 * (posEnd.x - posStart.x), posStart.y + t3 * (posEnd.y - posStart.y), posStart.z + t3 * (posEnd.z - posStart.z));
+      const at = new THREE7.Vector3(atStart.x + t3 * (atEnd.x - atStart.x), atStart.y + t3 * (atEnd.y - atStart.y), atStart.z + t3 * (atEnd.z - atStart.z));
       camera.position.copy(pos);
       camera.lookAt(at);
       return camera;
     }
     case ViewType.CreditIcon: {
       const fovy = 15;
-      const camera = new THREE8.PerspectiveCamera(fovy, aspect2, 0.1, 1000);
+      const camera = new THREE7.PerspectiveCamera(fovy, aspect2, 0.1, 1000);
       camera.position.set(-60, 34.5, 380);
       camera.lookAt(0, 34.3, 0);
       return camera;
@@ -129335,30 +129230,30 @@ function getCameraForViewType(viewType, width2 = 1, height2 = 1, miiHeight = 1) 
 }
 
 // src/util/rendertarget.js
-var THREE9 = _THREE();
+var THREE8 = _THREE();
 var isWorker = false;
 if (typeof window === "undefined") {
   isWorker = true;
 }
 function renderTargetToDataURL(renderTarget, renderer2, flipY = false, blob = true) {
   return new Promise((resolve) => {
-    const scene = new THREE9.Scene;
+    const scene = new THREE8.Scene;
     scene.background = null;
-    const material = new THREE9.MeshBasicMaterial({
-      side: THREE9.DoubleSide,
+    const material = new THREE8.MeshBasicMaterial({
+      side: THREE8.DoubleSide,
       map: renderTarget.texture,
       transparent: true
     });
-    const plane = new THREE9.PlaneGeometry(2, 2);
-    const mesh = new THREE9.Mesh(plane, material);
+    const plane = new THREE8.PlaneGeometry(2, 2);
+    const mesh = new THREE8.Mesh(plane, material);
     scene.add(mesh);
     const camera = getIdentCamera(flipY);
     const prevTarget = renderer2.getRenderTarget();
     const prevColorSpace = renderer2.outputColorSpace;
-    const size2 = new THREE9.Vector2;
+    const size2 = new THREE8.Vector2;
     renderer2.getSize(size2);
     renderer2.setRenderTarget(null);
-    renderer2.outputColorSpace = THREE9.ColorManagement ? THREE9.ColorManagement.workingColorSpace : null;
+    renderer2.outputColorSpace = THREE8.ColorManagement ? THREE8.ColorManagement.workingColorSpace : null;
     renderer2.setSize(renderTarget.width, renderTarget.height, false);
     renderer2.render(scene, camera);
     function cleanup() {
@@ -129390,22 +129285,22 @@ async function renderTargetToDataTexture(renderTarget, renderer2, flipY = false,
   const { width: width2, height: height2 } = renderTarget;
   let buf = new Uint8Array(width2 * height2 * 4);
   await renderer2.readRenderTargetPixelsAsync(renderTarget, 0, 0, width2, height2, buf);
-  const dataTexture = new THREE9.DataTexture(buf, width2, height2, THREE9.RGBAFormat, THREE9.UnsignedByteType);
+  const dataTexture = new THREE8.DataTexture(buf, width2, height2, THREE8.RGBAFormat, THREE8.UnsignedByteType);
   dataTexture.needsUpdate = true;
   if (flipY) {
     dataTexture.flipY = true;
   }
   if (filtering) {
-    dataTexture.minFilter = THREE9.LinearFilter;
-    dataTexture.magFilter = THREE9.LinearFilter;
+    dataTexture.minFilter = THREE8.LinearFilter;
+    dataTexture.magFilter = THREE8.LinearFilter;
   }
   return dataTexture;
 }
 
 // src/class/3d/shader/ColorMix.ts
-var THREE10 = _THREE();
+var THREE9 = _THREE();
 function ColorMixShaderMaterial(texture, r, g3, b2) {
-  return new THREE10.ShaderMaterial({
+  return new THREE9.ShaderMaterial({
     uniforms: {
       u_texture: { value: texture },
       u_const1: { value: r },
@@ -129449,9 +129344,9 @@ gl_FragColor = vec4(mixedColor * mixedAlpha, mixedAlpha);
 `
   });
 }
-function colorMixTexture(tex, constR = new THREE10.Vector4(0, 1, 1, 1), constG = new THREE10.Vector4(1, 1, 0, 1), constB = new THREE10.Vector4(1, 1, 0, 1), constA, rendererMain, textureResolution) {
+function colorMixTexture(tex, constR = new THREE9.Vector4(0, 1, 1, 1), constG = new THREE9.Vector4(1, 1, 0, 1), constB = new THREE9.Vector4(1, 1, 0, 1), constA, rendererMain, textureResolution) {
   return new Promise((resolve) => {
-    const scene = new THREE10.Scene;
+    const scene = new THREE9.Scene;
     scene.background = constA;
     let width2, height2;
     if (tex instanceof ImageBitmap) {
@@ -129467,18 +129362,18 @@ function colorMixTexture(tex, constR = new THREE10.Vector4(0, 1, 1, 1), constG =
       height2 = textureResolution / aspect2;
     }
     console.log("HI ITS ME CLOTHING TEX RENDERER, IDK WTF I DID", width2, height2);
-    const renderTarget = new THREE10.WebGLRenderTarget(width2, height2, {
-      minFilter: THREE10.LinearFilter,
-      magFilter: THREE10.LinearFilter,
-      format: THREE10.RGBAFormat
+    const renderTarget = new THREE9.WebGLRenderTarget(width2, height2, {
+      minFilter: THREE9.LinearFilter,
+      magFilter: THREE9.LinearFilter,
+      format: THREE9.RGBAFormat
     });
-    const camera = new THREE10.OrthographicCamera(width2 / -2, width2 / 2, height2 / 2, height2 / -2, 0.1, 1000);
+    const camera = new THREE9.OrthographicCamera(width2 / -2, width2 / 2, height2 / 2, height2 / -2, 0.1, 1000);
     camera.position.z = 1;
     const renderer2 = rendererMain;
     if (typeof window !== "undefined")
       window.camera = camera;
-    const geometry = new THREE10.PlaneGeometry(width2, height2);
-    const plane = new THREE10.Mesh(geometry, ColorMixShaderMaterial(tex, constR, constG, constB));
+    const geometry = new THREE9.PlaneGeometry(width2, height2);
+    const plane = new THREE9.Mesh(geometry, ColorMixShaderMaterial(tex, constR, constG, constB));
     scene.add(plane);
     function render() {
       async function finalize(result) {
@@ -129491,7 +129386,7 @@ function colorMixTexture(tex, constR = new THREE10.Vector4(0, 1, 1, 1), constG =
         renderTarget.dispose();
       }
       const oldRT = renderer2.getRenderTarget();
-      const oldColor = new THREE10.Color;
+      const oldColor = new THREE9.Color;
       renderer2.setRenderTarget(renderTarget);
       renderer2.render(scene, camera);
       renderer2.setRenderTarget(oldRT);
@@ -129520,7 +129415,7 @@ async function clothingUpdate({
   customTextureType,
   texResolution
 }) {
-  const THREE11 = _THREE();
+  const THREE10 = _THREE();
   const suffix = gender == 1 ? "F" : "";
   const clothingEntry = clothesType;
   let key2 = `${bodyModel}_${ExtClothesList[clothingEntry]}${suffix}`;
@@ -129529,7 +129424,7 @@ async function clothingUpdate({
     let texture;
     switch (ClothesTypeList[clothingEntry]) {
       case 0 /* COLOR_MIXED */: {
-        const colorMixR = new THREE11.Vector4(...shirtColor, 1), colorMixG = new THREE11.Vector4(...shoesColor, 1), colorMixB = new THREE11.Vector4(...pantsColor, 1), colorMixA = new THREE11.Color(facelineColor ? facelineColor : 16777215);
+        const colorMixR = new THREE10.Vector4(...shirtColor, 1), colorMixG = new THREE10.Vector4(...shoesColor, 1), colorMixB = new THREE10.Vector4(...pantsColor, 1), colorMixA = new THREE10.Color(facelineColor ? facelineColor : 16777215);
         console.log("Clothing Texture Key:", clothesKey);
         texture = await colorMixTexture(clothesTextures2[clothesKey], colorMixR, colorMixG, colorMixB, colorMixA, renderer2, texResolution);
         console.log("loaded shirt texture!");
@@ -129550,7 +129445,7 @@ async function clothingUpdate({
   let nBodyMat = nBody.material;
   let nLegsMat = nLegs.material;
   let isUsingShader = await isShaderMaterial();
-  let clothesModulate = isUsingShader ? { modulateType: 9, modulateMode: 1, color: new THREE11.Color(16777215) } : {};
+  let clothesModulate = isUsingShader ? { modulateType: 9, modulateMode: 1, color: new THREE10.Color(16777215) } : {};
   if (bodyModel !== "miitomo" /* Miitomo */) {
     if (clothesType === -1) {
       return;
@@ -129635,8 +129530,8 @@ var defaultParams = {
   modelFlag: FFLCharModelDescDefault,
   drawBody: true
 };
-var THREE11 = _THREE();
-var renderer2 = new THREE11.WebGLRenderer({
+var THREE10 = _THREE();
+var renderer2 = new THREE10.WebGLRenderer({
   alpha: true,
   powerPreference: "high-performance",
   antialias: false,
@@ -129651,7 +129546,7 @@ function createMiiRender(request) {
       dataInput = parseHexOrB64ToUint8Array(request.data);
     else
       dataInput = request.data;
-    let scene = new THREE11.Scene;
+    let scene = new THREE10.Scene;
     const isTemporary = request.isTemporary !== false;
     const mii = new Mii(dataInput);
     const localModule = request.module;
@@ -129711,8 +129606,8 @@ function createMiiRender(request) {
       miiGroup = scene;
       miiGroup.background = null;
     } else {
-      miiGroup = new THREE11.Group;
-      headModel = new THREE11.Group;
+      miiGroup = new THREE10.Group;
+      headModel = new THREE10.Group;
     }
     const gender = charModel._model.charInfo.personal.gender;
     const bodyScale = charModel.getBodyScale();
@@ -129740,7 +129635,7 @@ function createMiiRender(request) {
           } : {};
           m.material = new shaderMaterial({
             ...modulate,
-            color: new THREE11.Color(...hatColor),
+            color: new THREE10.Color(...hatColor),
             opacity: 1,
             map: oldMat
           });
@@ -129826,7 +129721,7 @@ function createMiiRender(request) {
       } : {};
       bodyModelBody.material = new charModel._materialClass({
         ...modulate,
-        color: new THREE11.Color(...shirtColor),
+        color: new THREE10.Color(...shirtColor),
         opacity: 1
       });
       if (bodyModelHands)
@@ -129854,12 +129749,12 @@ function createMiiRender(request) {
       } : {};
       bodyModelLegs.material = new charModel._materialClass({
         ...modulate,
-        color: new THREE11.Color(...pantsColor),
+        color: new THREE10.Color(...pantsColor),
         opacity: 1
       });
       const nBody = bodyModelBody;
       const nLegs = bodyModelLegs;
-      THREE11.ColorManagement.enabled = false;
+      THREE10.ColorManagement.enabled = false;
       if (request.additionalInfo.clothesType !== undefined && request.additionalInfo.clothesType !== -1 && request.bodyModelType !== "low" /* low */ && (getLoadedBodyModelName() === "wiiu" || getLoadedBodyModelName() === "miitomo") && request.additionalInfo.clothesType < ExtClothesList.length) {
         console.log("LOADED BODY IS", getLoadedBodyModelName());
         await clothingUpdate({
@@ -129905,7 +129800,7 @@ function createMiiRender(request) {
         bodyModelHands.visible = false;
       }
       if (isStreetPass()) {
-        var scaleVec = new THREE11.Vector3;
+        var scaleVec = new THREE10.Vector3;
         bodyModel.getWorldScale(scaleVec);
         const handScaleX = 1 / scaleVec.x * 5;
         const handScaleY = 1 / scaleVec.y * 5;
@@ -131579,150 +131474,49 @@ function requestMiiSelection() {
   });
 }
 // src/ui/setup.ts
-var import_localforage14 = __toESM(require_localforage(), 1);
+var import_localforage13 = __toESM(require_localforage(), 1);
 
 // src/class/audio/MusicManager.ts
-var import_localforage3 = __toESM(require_localforage(), 1);
 var getMusicManager = () => mm;
 
 class MusicManager {
-  SongBufs;
-  audioContext;
-  gainNode;
-  muted;
-  previousVolume;
+  SongBufs = {};
+  audioContext = null;
+  gainNode = null;
+  muted = false;
+  previousVolume = 0.28;
+  sources = [];
+  mainSource = null;
+  editSource = null;
+  mainGainNode = null;
+  editGainNode = null;
+  theme = "";
+  started = false;
   constructor() {
-    this.SongBufs = {};
-    this.audioContext = new (window.AudioContext || window.webkitAudioContext);
-    this.gainNode = this.audioContext.createGain();
-    this.gainNode.connect(this.audioContext.destination);
-    this.muted = false;
-    this.previousVolume = 0.28;
-    setTimeout(() => {
-      let theme = "";
-      document.addEventListener("theme-change", () => {
-        let newTheme = document.documentElement.dataset.theme;
-        if (theme !== newTheme) {
-          this.initMusic();
-        }
-        theme = newTheme;
-      });
-    }, 2000);
-    this.sources = [];
   }
-  mainSource;
-  editSource;
-  mainGainNode;
-  editGainNode;
-  theme;
   async initMusic() {
-    this.sources.forEach((src) => src.stop());
-    const theme = document.documentElement.dataset.theme !== undefined ? document.documentElement.dataset.theme : await import_localforage3.default.getItem("settings_theme");
-    if (this.theme === theme)
-      return;
-    this.theme = theme;
-    console.error("initMusic()", theme, document.documentElement.dataset.theme);
-    this.setVolume(0.28);
-    this.previousVolume = 0.28;
-    await this.loadSong("./assets/audio/miimakermusic.mp3", "mii_creator_music");
-    this.initMusicReady();
   }
   initMusicReady() {
-    setTimeout(async () => {
-      if (this.audioContext.state === "suspended") {
-        if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-          this.playMusic();
-        }
-      }
-      document.onclick = () => {
-        document.onclick = null;
-        this.playMusic();
-      };
-    }, 100);
   }
-  started;
   playMusic() {
-    if (this.mainSource)
-      this.mainSource.stop();
-    if (this.editSource)
-      this.editSource.stop();
-    this.playSong("mii_creator_music", 0, 100, true, true, (source, gainNode) => {
-      this.mainSource = source;
-      this.started = true;
-      this.mainGainNode = gainNode;
-      if (this.theme !== "wiiu") {
-        this.editSource = undefined;
-        this.editGainNode = undefined;
-      }
-      gainNode.gain.setValueAtTime(-1, this.audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(-0.6, this.audioContext.currentTime + 2);
-    });
-    if (this.theme === "wiiu")
-      this.playSong("mii_editor_music", 0, 100, true, true, (source, gainNode) => {
-        this.editSource = source;
-        this.editGainNode = gainNode;
-        gainNode.gain.setValueAtTime(-1, this.audioContext.currentTime);
-      });
   }
   async loadSong(url, name2) {
-    const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-    this.SongBufs[name2] = audioBuffer;
   }
-  sources;
   playSong(name2, loopStart = null, loopEnd = null, loops = true, autoPlay = true, callbackBeforeStart) {
-    try {
-      const SongBuffer = this.SongBufs[name2];
-      if (!SongBuffer) {
-        console.error(`Song "${name2}" not found.`);
-        return null;
-      }
-      const source = this.audioContext.createBufferSource();
-      source.buffer = SongBuffer;
-      source.connect(this.gainNode);
-      if (loops === true)
-        source.loop = true;
-      if (loopStart !== null)
-        source.loopStart = loopStart;
-      if (loopEnd !== null)
-        source.loopEnd = loopEnd;
-      this.sources.push(source);
-      const gainNode = this.audioContext.createGain();
-      source.connect(gainNode);
-      gainNode.connect(this.gainNode);
-      if (callbackBeforeStart) {
-        callbackBeforeStart(source, gainNode);
-      }
-      if (autoPlay) {
-        source.start();
-      }
-      return { source, gainNode };
-    } catch (e) {
-      console.log("OOPS", e);
-      return null;
-    }
+    return {
+      source: null,
+      gainNode: null
+    };
   }
   stopSong() {
-    this.audioContext.suspend();
   }
   setVolume(volume) {
-    if (this.muted)
-      return;
-    this.gainNode.gain.value = volume;
   }
   mute() {
-    if (this.muted)
-      return;
-    this.previousVolume = this.gainNode.gain.value;
-    this.setVolume(0);
     this.muted = true;
   }
   unmute() {
-    if (this.muted === false)
-      return;
     this.muted = false;
-    this.setVolume(this.previousVolume);
   }
 }
 var mm = new MusicManager;
@@ -131745,6 +131539,7 @@ var buttonsOkCancel = [
   { callback() {
   }, text: "OK" }
 ];
+var duration = 0;
 function closingCallback(modal) {
   modal.qs(".modal-body").qsa("*").forEach((a2) => a2.attr({ disabled: true, tabindex: "-1" }));
 }
@@ -131753,7 +131548,7 @@ function closeModal(modal) {
   closingCallback(modal);
   setTimeout(() => {
     modal.cleanup();
-  }, 350);
+  }, duration);
 }
 var Modal_default = {
   modal: function(title, content2, parent2 = "body", ...buttons) {
@@ -131795,7 +131590,7 @@ var Modal_default = {
             x2.cleanup();
             if (typeof button.callback === "function")
               button.callback(e);
-          }, 350);
+          }, duration);
         };
         AddButtonSounds(new Html("button").class("close-button").appendTo(modalHeader).on("click", closeButtonHandler), "hover", "back");
         x2.on("click", (e) => {
@@ -131810,7 +131605,7 @@ var Modal_default = {
           x2.cleanup();
           if (typeof button.callback === "function")
             button.callback(e);
-        }, 350);
+        }, duration);
       }));
       if (button.type && button.type === "primary")
         b2.class("primary");
@@ -131912,7 +131707,7 @@ var Modal_default = {
           setTimeout(() => {
             modal.cleanup();
             res(input.elm.value);
-          }, 350);
+          }, duration);
         }
       }).appendTo(wrapper);
     });
@@ -131920,7 +131715,5965 @@ var Modal_default = {
 };
 
 // src/ui/pages/Library.ts
-var import_localforage13 = __toESM(require_localforage(), 1);
+var import_localforage12 = __toESM(require_localforage(), 1);
+
+// src/config.ts
+var useRendererServer = false;
+var fflResourcePath = [
+  "/FFLResLow.dat",
+  "/FFLResMiddle.dat",
+  "/FFLResHigh.dat"
+];
+var fflResourcesNames = ["Low", "Middle", "High"];
+var baseURL = "https://mii-renderer.nxw.pw/miis/image";
+var newApiParams = true;
+var nnidFetchOrigin = "https://mii-unsecure.ariankordi.net";
+var __2 = _8();
+var Config = {
+  syncAPIBase: null,
+  renderer: {
+    baseURL,
+    useRendererServer,
+    fflResourcePath,
+    fflResourcesNames,
+    renderFFLMakeIcon: `${baseURL}.png?shaderType=miitomo&type=fflmakeicon&width=360&verifyCharInfo=0`,
+    renderHeadshotURL: `${baseURL}.png?shaderType=wiiu&type=face&width=260&verifyCharInfo=0`,
+    renderHeadshotURLNoParams: `${baseURL}.png`,
+    renderFullBodyURL: `${baseURL}.png?shaderType=wiiu&type=all_body_sugar&width=420&verifyCharInfo=0&scale=1`,
+    renderFullBodyAltURL: `${baseURL}.png?shaderType=wiiu&type=all_body_sugar&width=960&verifyCharInfo=0&scale=1`,
+    render3DHeadURL: `${baseURL}.glb?shaderType=wiiu&type=face&width=260&verifyCharInfo=0`,
+    renderFaceURL: `${baseURL}.png?scale=1&drawStageMode=mask_only&verifyCharInfo=0`,
+    hatTypeParam: newApiParams ? "headwearIndex" : "hatType",
+    hatTypeAdd: newApiParams ? 0 : 0,
+    hatColorParam: newApiParams ? "headwearColor" : "hatColor",
+    hatColorAdd: newApiParams ? -1 : 0,
+    allow3DMode: true
+  },
+  apis: {
+    nnidRandomURL: `${nnidFetchOrigin}/mii_data_random`,
+    nnidFetchURL: (nnid) => `${nnidFetchOrigin}/mii_data/${nnid}`,
+    pnidFetchURL: (pnid) => `${nnidFetchOrigin}/mii_data/${pnid}?api_id=1`,
+    useSentry: true,
+    sentryURL: "https://5671de45addd464980ccd49e08d6d108@app.glitchtip.com/10073"
+  },
+  mii: {
+    scalingMode: "scaleApply"
+  },
+  version: {
+    string: "v1.0.0 r1",
+    name: __2("BETA"),
+    changelog: `
+    <p style="text-align:center;margin-top:20px;margin-bottom:200px;font-size:32px;color:var(--error-color)">The update changelog hasn't been written yet, so just ignore this for now</p>
+    `
+  }
+};
+
+// src/constants/EditorIcons.ts
+var EditorIcons_default = {
+  loading: `<svg width="64" height="64" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24.5" cy="24.5" r="15.5" stroke="url(#paint0_linear_1094_34)" stroke-width="4"/><defs><linearGradient id="paint0_linear_1094_34" x1="24.5" y1="7" x2="29.5" y2="11.5" gradientUnits="userSpaceOnUse"><stop stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs></svg>`,
+  error: `<svg width="66" height="66" viewBox="0 0 66 66" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.2929 26.1213L22.5858 26.8284L23.2929 27.5355L29.1716 33.4142L23.2929 39.2929L22.5858 40L23.2929 40.7071L26.1213 43.5355L26.8284 44.2426L27.5355 43.5355L33.4142 37.6569L39.2929 43.5355L40 44.2426L40.7071 43.5355L43.5355 40.7071L44.2426 40L43.5355 39.2929L37.6569 33.4142L43.5355 27.5355L44.2426 26.8284L43.5355 26.1213L40.7071 23.2929L40 22.5858L39.2929 23.2929L33.4142 29.1716L27.5355 23.2929L26.8284 22.5858L26.1213 23.2929L23.2929 26.1213Z" fill="black" stroke="white" stroke-width="2"/></svg>`,
+  eyes: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.7 17.27H10.57C8.78509 17.27 7.07329 17.9791 5.81117 19.2412C4.54905 20.5033 3.84 22.2151 3.84 24C3.84 25.7849 4.54905 27.4967 5.81117 28.7588C7.07329 30.021 8.78509 30.73 10.57 30.73H15.7C17.4849 30.73 19.1967 30.021 20.4588 28.7588C21.7209 27.4967 22.43 25.7849 22.43 24C22.43 22.2151 21.7209 20.5033 20.4588 19.2412C19.1967 17.9791 17.4849 17.27 15.7 17.27ZM6.32 24C6.32264 22.8737 6.77125 21.7942 7.56771 20.9977C8.36417 20.2013 9.44364 19.7527 10.57 19.75H11.48C10.762 20.197 10.1743 20.825 9.77584 21.571C9.37739 22.317 9.18224 23.1547 9.21 24C9.18224 24.8453 9.37739 25.683 9.77584 26.429C10.1743 27.175 10.762 27.803 11.48 28.25H10.57C9.44364 28.2474 8.36417 27.7988 7.56771 27.0023C6.77125 26.2058 6.32264 25.1264 6.32 24ZM15.7 28.25H14.79C15.508 27.803 16.0957 27.175 16.4941 26.429C16.8926 25.683 17.0877 24.8453 17.06 24C17.0877 23.1547 16.8926 22.317 16.4941 21.571C16.0957 20.825 15.508 20.197 14.79 19.75H15.7C16.2581 19.75 16.8108 19.8599 17.3264 20.0735C17.842 20.2871 18.3106 20.6002 18.7052 20.9948C19.0998 21.3895 19.4129 21.858 19.6265 22.3736C19.8401 22.8892 19.95 23.4419 19.95 24C19.95 24.5581 19.8401 25.1108 19.6265 25.6264C19.4129 26.1421 19.0998 26.6106 18.7052 27.0052C18.3106 27.3999 17.842 27.7129 17.3264 27.9265C16.8108 28.1401 16.2581 28.25 15.7 28.25ZM37.43 17.27H32.3C30.5151 17.27 28.8033 17.9791 27.5412 19.2412C26.279 20.5033 25.57 22.2151 25.57 24C25.57 25.7849 26.279 27.4967 27.5412 28.7588C28.8033 30.021 30.5151 30.73 32.3 30.73H37.43C39.2149 30.73 40.9267 30.021 42.1888 28.7588C43.4509 27.4967 44.16 25.7849 44.16 24C44.16 22.2151 43.4509 20.5033 42.1888 19.2412C40.9267 17.9791 39.2149 17.27 37.43 17.27ZM28.05 24C28.05 22.8728 28.4978 21.7918 29.2948 20.9948C30.0918 20.1978 31.1728 19.75 32.3 19.75H33.21C32.492 20.197 31.9043 20.825 31.5058 21.571C31.1074 22.317 30.9122 23.1547 30.94 24C30.9122 24.8453 31.1074 25.683 31.5058 26.429C31.9043 27.175 32.492 27.803 33.21 28.25H32.3C31.7419 28.25 31.1892 28.1401 30.6736 27.9265C30.158 27.7129 29.6894 27.3999 29.2948 27.0052C28.9001 26.6106 28.5871 26.1421 28.3735 25.6264C28.1599 25.1108 28.05 24.5581 28.05 24ZM37.43 28.25H36.52C37.238 27.803 37.8257 27.175 38.2241 26.429C38.6226 25.683 38.8177 24.8453 38.79 24C38.8177 23.1547 38.6226 22.317 38.2241 21.571C37.8257 20.825 37.238 20.197 36.52 19.75H37.43C38.5572 19.75 39.6382 20.1978 40.4352 20.9948C41.2322 21.7918 41.68 22.8728 41.68 24C41.68 25.1272 41.2322 26.2082 40.4352 27.0052C39.6382 27.8023 38.5572 28.25 37.43 28.25Z" fill="currentColor"/></svg>`,
+  eyebrows: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.57 26.1701V28.4401L43.79 23.4601L40.09 19.5601L26.57 26.1701ZM21.43 26.1701V28.4401L4.20999 23.4601L7.90999 19.5601L21.43 26.1701Z" fill="currentColor"/></svg>`,
+  details: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M24 34H35.25" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M29.47 13.5277C29.9676 13.03 30.6425 12.7505 31.3462 12.7505C32.05 12.7505 32.7249 13.03 33.2225 13.5277C33.7201 14.0253 33.9996 14.7002 33.9996 15.4039C33.9996 16.1076 33.7201 16.7825 33.2225 17.2802L18.21 32.2939C17.9126 32.5913 17.545 32.8088 17.1412 32.9264L13.5512 33.9739C13.4437 34.0053 13.3296 34.0072 13.2211 33.9794C13.1126 33.9515 13.0135 33.8951 12.9343 33.8158C12.8551 33.7366 12.7986 33.6376 12.7708 33.529C12.743 33.4205 12.7448 33.3065 12.7762 33.1989L13.8237 29.6089C13.9415 29.2056 14.159 28.8384 14.4562 28.5414L29.47 13.5277Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M27.75 15.25L31.5 19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`,
+  save: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 3.75C19.6594 3.75939 20.2884 4.02896 20.75 4.5L25.5 9.25C25.971 9.71158 26.2406 10.3406 26.25 11V23.75C26.25 24.413 25.9866 25.0489 25.5178 25.5178C25.0489 25.9866 24.413 26.25 23.75 26.25H6.25C5.58696 26.25 4.95107 25.9866 4.48223 25.5178C4.01339 25.0489 3.75 24.413 3.75 23.75V6.25C3.75 5.58696 4.01339 4.95107 4.48223 4.48223C4.95107 4.01339 5.58696 3.75 6.25 3.75H19Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.25 26.25V17.5C21.25 17.1685 21.1183 16.8505 20.8839 16.6161C20.6495 16.3817 20.3315 16.25 20 16.25H10C9.66848 16.25 9.35054 16.3817 9.11612 16.6161C8.8817 16.8505 8.75 17.1685 8.75 17.5V26.25" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.75 3.75V8.75C8.75 9.08152 8.8817 9.39946 9.11612 9.63388C9.35054 9.8683 9.66848 10 10 10H18.75" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  scale: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M33.47 17.9299C32.39 18.7099 32.47 20.4499 32.47 23.0199V38.7399C32.2054 38.7656 31.9597 38.8889 31.781 39.0857C31.6023 39.2826 31.5033 39.539 31.5033 39.8049C31.5033 40.0708 31.6023 40.3271 31.781 40.524C31.9597 40.7209 32.2054 40.8442 32.47 40.8699H33.82C34.0127 40.8668 34.2009 40.8113 34.3644 40.7093C34.5279 40.6073 34.6605 40.4626 34.7479 40.2908C34.8353 40.1191 34.8742 39.9268 34.8605 39.7345C34.8468 39.5423 34.7809 39.3575 34.67 39.1999V31.3199C34.67 31.1528 34.7364 30.9926 34.8545 30.8744C34.9727 30.7563 35.1329 30.6899 35.3 30.6899C35.4671 30.6899 35.6273 30.7563 35.7455 30.8744C35.8636 30.9926 35.93 31.1528 35.93 31.3199V39.1999C35.8195 39.3568 35.7537 39.5407 35.7395 39.7321C35.7254 39.9235 35.7635 40.1151 35.8497 40.2865C35.9359 40.458 36.0671 40.6028 36.2292 40.7055C36.3912 40.8083 36.5782 40.8651 36.77 40.8699H38.13C38.3947 40.8442 38.6403 40.7209 38.819 40.524C38.9977 40.3271 39.0967 40.0708 39.0967 39.8049C39.0967 39.539 38.9977 39.2826 38.819 39.0857C38.6403 38.8889 38.3947 38.7656 38.13 38.7399V22.9999C38.13 20.4299 38.2 18.6899 37.13 17.9099C36.5429 18.1039 35.9283 18.2019 35.31 18.1999C34.6862 18.2087 34.065 18.1176 33.47 17.9299ZM40.53 12.3599C40.53 11.3255 40.2233 10.3143 39.6486 9.45425C39.0739 8.59418 38.2571 7.92384 37.3014 7.528C36.3458 7.13215 35.2942 7.02858 34.2797 7.23038C33.2652 7.43218 32.3333 7.93029 31.6018 8.66172C30.8704 9.39315 30.3723 10.325 30.1705 11.3396C29.9687 12.3541 30.0723 13.4057 30.4681 14.3613C30.864 15.317 31.5343 16.1338 32.3944 16.7085C33.2544 17.2832 34.2656 17.5899 35.3 17.5899C35.9868 17.5899 36.6669 17.4546 37.3014 17.1918C37.936 16.9289 38.5125 16.5437 38.9982 16.0581C39.4838 15.5724 39.8691 14.9959 40.1319 14.3613C40.3947 13.7268 40.53 13.0467 40.53 12.3599ZM10.89 27.3099C9.79 28.0799 9.89 29.8199 9.89 32.3999V38.7499C9.60887 38.7578 9.34242 38.8772 9.14926 39.0816C8.95609 39.286 8.85205 39.5588 8.86 39.8399C8.86796 40.121 8.98727 40.3875 9.19168 40.5806C9.3961 40.7738 9.66887 40.8778 9.95 40.8699H11.31C11.5106 40.8653 11.7058 40.8038 11.8729 40.6926C12.04 40.5814 12.1721 40.425 12.2538 40.2417C12.3355 40.0584 12.3634 39.8557 12.3345 39.6571C12.3055 39.4585 12.2207 39.2722 12.09 39.1199V35.6199C12.09 35.4528 12.1564 35.2926 12.2745 35.1744C12.3927 35.0563 12.5529 34.9899 12.72 34.9899C12.8871 34.9899 13.0473 35.0563 13.1655 35.1744C13.2836 35.2926 13.35 35.4528 13.35 35.6199V39.1199C13.1901 39.3145 13.1019 39.558 13.1 39.8099C13.0918 39.9462 13.1116 40.0827 13.1582 40.211C13.2048 40.3394 13.2771 40.4568 13.3708 40.5561C13.4645 40.6554 13.5775 40.7345 13.7029 40.7885C13.8283 40.8424 13.9635 40.8701 14.1 40.8699H15.45C15.5892 40.8738 15.7278 40.8503 15.8579 40.8007C15.988 40.751 16.1071 40.6763 16.2083 40.5806C16.3095 40.485 16.3909 40.3703 16.4478 40.2432C16.5047 40.1162 16.5361 39.9791 16.54 39.8399C16.5439 39.7007 16.5204 39.5621 16.4708 39.432C16.4212 39.3018 16.3464 39.1828 16.2507 39.0816C16.1551 38.9803 16.0405 38.899 15.9134 38.8421C15.7863 38.7851 15.6492 38.7538 15.51 38.7499V32.3999C15.51 29.8199 15.59 28.0799 14.51 27.3099C13.3344 27.6968 12.0657 27.6968 10.89 27.3099ZM17.93 21.7299C17.9221 20.6972 17.6087 19.69 17.0292 18.8352C16.4497 17.9804 15.6302 17.3163 14.6739 16.9266C13.7176 16.5369 12.6673 16.439 11.6554 16.6453C10.6435 16.8516 9.71536 17.3528 8.98793 18.0858C8.26049 18.8188 7.76634 19.7508 7.56776 20.7642C7.36918 21.7776 7.47506 22.8271 7.87206 23.7804C8.26905 24.7338 8.93939 25.5482 9.79857 26.1212C10.6578 26.6941 11.6673 26.9999 12.7 26.9999C13.3902 26.9999 14.0736 26.8633 14.7107 26.598C15.3479 26.3327 15.9262 25.9438 16.4124 25.4539C16.8986 24.964 17.283 24.3828 17.5434 23.7436C17.8039 23.1044 17.9353 22.4201 17.93 21.7299Z" fill="currentColor"/></svg>`,
+  nose: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28.12 34.7999C24.87 34.7999 20.03 33.69 19.25 29.41C18.9957 28.2616 19.002 27.0708 19.2685 25.9251C19.535 24.7795 20.0549 23.7082 20.79 22.79C21.2648 22.1159 21.6702 21.3956 22 20.64C22.9075 18.2233 23.61 15.7345 24.1 13.2L27.73 13.88C27.2024 16.6802 26.426 19.4277 25.41 22.09C24.9817 23.0557 24.4591 23.9768 23.85 24.84C22.96 26.17 22.52 26.84 22.85 28.74C23.31 31.27 28.61 31.09 28.66 31.08L28.88 34.77H28.08L28.12 34.7999Z" fill="currentColor"/></svg>`,
+  mouth: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.28 25.71C11.7 28.47 17.73 34.16 24 34.16C30.27 34.16 36.3 28.47 36.72 25.71H11.28ZM30.88 14.44C28.15 13.15 24.61 13.86 24 17.27C23.39 13.86 19.85 13.15 17.12 14.44C13.97 15.94 11.28 22.37 11.28 22.76H36.72C36.72 22.37 34 15.94 30.88 14.44Z" fill="currentColor"/></svg>`,
+  glasses: `<svg width="48" height="48" viewBox="0 0 48 48" class="_31GRkaKLLh07JK-xJvjUvH_0"><path d="M34.34 14.34a9.67 9.67 0 0 0-9.55 8.28h-1.58a9.65 9.65 0 1 0 0 2.85h1.6a9.66 9.66 0 1 0 9.54-11.13zM13.66 30.81A6.81 6.81 0 1 1 20.48 24a6.81 6.81 0 0 1-6.82 6.81zm20.68 0A6.81 6.81 0 1 1 41.16 24a6.81 6.81 0 0 1-6.82 6.81z" fill="currentColor"></path></svg>`,
+  mole: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 11.8C29.79 11.8 34.51 17.27 34.51 24C34.51 30.73 29.79 36.2001 24 36.2001C18.21 36.2001 13.49 30.73 13.49 24C13.49 17.27 18.21 11.8 24 11.8ZM24 8.80005C16.54 8.80005 10.49 15.6 10.49 24C10.49 32.4 16.49 39.2001 24 39.2001C31.51 39.2001 37.51 32.4 37.51 24C37.51 15.6 31.46 8.80005 24 8.80005Z" fill="currentColor"/><path d="M30.22 29.3501C30.22 29.7457 30.1027 30.1323 29.8829 30.4612C29.6631 30.7901 29.3508 31.0465 28.9853 31.1979C28.6199 31.3492 28.2178 31.3888 27.8298 31.3117C27.4418 31.2345 27.0855 31.044 26.8058 30.7643C26.5261 30.4846 26.3356 30.1282 26.2584 29.7403C26.1812 29.3523 26.2208 28.9502 26.3722 28.5847C26.5236 28.2193 26.7799 27.9069 27.1088 27.6872C27.4377 27.4674 27.8244 27.3501 28.22 27.3501C28.7464 27.3628 29.2478 27.5776 29.6201 27.9499C29.9925 28.3223 30.2073 28.8237 30.22 29.3501Z" fill="currentColor"/></svg>`,
+  head: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 38.6701C21.53 38.6701 11.52 30.6701 11.09 23.3801C10.954 21.5451 11.1982 19.7019 11.8074 17.9657C12.4165 16.2296 13.3774 14.6378 14.63 13.2901C15.8315 12.0131 17.2841 10.9985 18.8967 10.3101C20.5092 9.62175 22.2467 9.27444 24 9.29005C25.7546 9.27547 27.4933 9.6232 29.1073 10.3115C30.7213 10.9998 32.1759 12.0138 33.38 13.2901C34.6308 14.6386 35.5899 16.2308 36.1973 17.9669C36.8047 19.7031 37.0473 21.5459 36.91 23.3801C36.44 30.7001 26.42 38.6701 24 38.6701ZM24 12.0001C22.6082 11.9813 21.2275 12.2495 19.944 12.788C18.6605 13.3265 17.5017 14.1238 16.54 15.1301C15.5369 16.2189 14.7688 17.5027 14.2836 18.9015C13.7984 20.3002 13.6066 21.7839 13.72 23.2601C14 29.0001 22.15 35.3701 24 36.0001C25.8 35.3601 34 29.0001 34.28 23.2201C34.3958 21.7437 34.2051 20.2594 33.7198 18.8603C33.2345 17.4612 32.4651 16.1776 31.46 15.0901C30.4959 14.0896 29.3358 13.2988 28.0522 12.7671C26.7686 12.2354 25.3891 11.9743 24 12.0001Z" fill="currentColor"/><path d="M23.83 31.08C22.4375 31.078 21.0909 30.5819 20.03 29.68C19.8231 29.493 19.699 29.2315 19.6849 28.953C19.6709 28.6745 19.768 28.4018 19.955 28.195C20.142 27.9881 20.4035 27.864 20.682 27.8499C20.9604 27.8358 21.2331 27.933 21.44 28.12C22.1393 28.6888 23.0164 28.9935 23.9177 28.9807C24.819 28.9679 25.6871 28.6384 26.37 28.05C26.5963 27.9151 26.8647 27.8694 27.1228 27.9217C27.381 27.9739 27.6105 28.1204 27.7665 28.3327C27.9226 28.5449 27.994 28.8076 27.9669 29.0696C27.9398 29.3316 27.8161 29.5742 27.62 29.75C26.5331 30.5904 25.2037 31.0569 23.83 31.08ZM19.71 21.43C19.3742 21.4319 19.0465 21.5333 18.7683 21.7213C18.49 21.9093 18.2737 22.1755 18.1465 22.4863C18.0194 22.7971 17.9872 23.1386 18.0539 23.4677C18.1206 23.7968 18.2833 24.0988 18.5214 24.3355C18.7596 24.5723 19.0625 24.7332 19.392 24.798C19.7215 24.8628 20.0628 24.8285 20.3728 24.6996C20.6829 24.5706 20.9478 24.3527 21.1342 24.0734C21.3205 23.794 21.42 23.4658 21.42 23.13C21.42 22.9059 21.3757 22.684 21.2896 22.4771C21.2036 22.2702 21.0775 22.0823 20.9185 21.9243C20.7596 21.7663 20.571 21.6413 20.3636 21.5565C20.1562 21.4716 19.9341 21.4286 19.71 21.43ZM28 21.43C27.6638 21.43 27.3351 21.5297 27.0555 21.7165C26.776 21.9033 26.5581 22.1688 26.4294 22.4794C26.3007 22.79 26.2671 23.1318 26.3327 23.4616C26.3982 23.7914 26.5602 24.0943 26.7979 24.332C27.0357 24.5698 27.3386 24.7317 27.6683 24.7973C27.9981 24.8629 28.3399 24.8292 28.6506 24.7006C28.9612 24.5719 29.2267 24.354 29.4135 24.0744C29.6003 23.7949 29.7 23.4662 29.7 23.13C29.7 22.6791 29.5209 22.2467 29.2021 21.9279C28.8833 21.6091 28.4509 21.43 28 21.43Z" fill="currentColor"/></svg>`,
+  hair: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 8.80005C16.55 8.80005 10.49 15.62 10.49 24C10.49 32.38 16.55 39.2001 24 39.2001C31.45 39.2001 37.51 32.38 37.51 24C37.51 15.62 31.45 8.80005 24 8.80005ZM24 36.4701C18.55 36.4701 14 31.71 13.38 25.56C15.78 25.66 21.69 22.89 23.91 19.49C24.5468 18.463 25.0286 17.3477 25.34 16.18C25.6853 17.3077 26.1868 18.3815 26.83 19.37C28.39 21.63 32.36 23.82 34.7 24.31C34.56 31 29.81 36.4701 24 36.4701Z" fill="currentColor"/></svg>`,
+  hat: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.8365 27.9617C32.7547 27.9617 36.9954 31.5831 38.8155 33.9331C39.3558 33.7001 39.7817 33.2624 40 32.7159C40 32.7159 37.0356 24.7859 23.8402 24.7859C10.6448 24.7859 7.67798 32.7159 7.67798 32.7159C7.89708 33.2627 8.32389 33.7004 8.86497 33.9331C10.6763 31.5831 14.9183 27.9617 23.8365 27.9617Z" fill="currentColor" fill-opacity="0.31"/><path d="M26.8813 14.2441C24.8709 13.8464 22.802 13.8464 20.7915 14.2441C17.4584 15.9371 12.2711 20.0343 11.862 29.1766H11.901C12.4121 28.7215 12.9566 28.3054 13.5298 27.9317C14.484 18.7101 20.7424 15.7219 23.0573 14.9326V25.2317C23.309 25.2241 23.5696 25.2141 23.8364 25.2141C24.1033 25.2141 24.3576 25.2241 24.6143 25.2317V14.9352C26.9292 15.7244 33.1876 18.7114 34.1418 27.9342C34.7152 28.3076 35.2597 28.7238 35.7706 29.1791H35.8096C35.4005 20.0293 30.2132 15.9371 26.8813 14.2441Z" fill="currentColor" fill-opacity="0.31"/><path fill-rule="evenodd" clip-rule="evenodd" d="M24.0004 13.9463C24.9656 13.9564 25.93 14.0556 26.8813 14.2438C30.0528 15.8553 34.9052 19.6404 35.718 27.8917C38.6379 29.8528 39.7386 32.1083 39.9573 32.6123V30.07C39.9576 25.794 38.2594 21.6931 35.2362 18.6692C32.2517 15.684 28.2172 13.9898 24.0004 13.9463ZM23.7331 13.9458C21.651 13.9593 19.5908 14.376 17.6666 15.1733C15.7105 15.9837 13.9332 17.1715 12.4361 18.6688C10.939 20.166 9.75154 21.9436 8.94143 23.8998C8.13131 25.856 7.71443 27.9526 7.7146 30.07V32.6189H7.71781C7.92956 32.1289 9.02574 29.866 11.9529 27.8975C12.7636 19.6472 17.618 15.8557 20.7915 14.2438C21.7628 14.0516 22.7477 13.9523 23.7331 13.9458ZM13.6617 26.9028C15.9246 25.7689 18.9779 24.8946 23.0573 24.795V14.9323C20.8308 15.6914 14.9558 18.485 13.6617 26.9028ZM24.6143 24.7948C28.6926 24.8932 31.7456 25.7657 34.0088 26.8982C32.7125 18.4848 26.8402 15.6937 24.6143 14.9348V24.7948Z" fill="currentColor"/></svg>`,
+  clothes: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.4211 9C18.4211 13.2857 21.8947 15 24.5 15C27.1053 15 30.5789 13.2857 30.5789 9C33.0593 9 34.9575 11.037 36.4923 12.9854C37.4566 14.2097 38.9026 15.3195 41 16.7143C39.8156 19.8352 38.5315 21.1545 34.9211 22.7143V38C34.9211 38.5523 34.4733 39 33.9211 39H24.5H15.0789C14.5267 39 14.0789 38.5523 14.0789 38V22.7143C10.4685 21.1545 9.18437 19.8352 8 16.7143C10.0974 15.3195 11.5434 14.2097 12.5077 12.9854C14.0425 11.037 15.9407 9 18.4211 9Z" fill="currentColor"/></svg>`,
+  favoriteColor: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M29.2 18.7701L35.86 19.7101C36.1622 19.7534 36.4464 19.8802 36.6805 20.0763C36.9145 20.2724 37.0892 20.5299 37.1848 20.8199C37.2804 21.1099 37.2932 21.4208 37.2217 21.7176C37.1502 22.0145 36.9972 22.2855 36.78 22.5001L32 27.2101C31.8812 27.3245 31.7925 27.4666 31.7419 27.6236C31.6913 27.7807 31.6803 27.9478 31.71 28.1101L32.88 34.7401C32.9307 35.0405 32.8968 35.3491 32.7819 35.6313C32.6671 35.9135 32.4759 36.1581 32.2298 36.3377C31.9837 36.5174 31.6925 36.6249 31.3887 36.6483C31.0849 36.6717 30.7807 36.6099 30.51 36.4701L24.51 33.3701C24.3641 33.2913 24.2008 33.2501 24.035 33.2501C23.8692 33.2501 23.7059 33.2913 23.56 33.3701L17.62 36.5201C17.351 36.6651 17.0467 36.7315 16.7418 36.7119C16.4369 36.6922 16.1436 36.5873 15.8955 36.409C15.6474 36.2307 15.4543 35.9863 15.3384 35.7036C15.2225 35.4208 15.1884 35.1112 15.24 34.8101L16.35 28.1701C16.3784 28.007 16.3659 27.8393 16.3135 27.6822C16.2612 27.5252 16.1706 27.3835 16.05 27.2701L11.22 22.5901C10.9994 22.3784 10.8428 22.1089 10.768 21.8125C10.6933 21.516 10.7034 21.2045 10.7973 20.9136C10.8911 20.6226 11.0649 20.3639 11.2988 20.167C11.5327 19.9701 11.8173 19.843 12.12 19.8001L18.77 18.8001C18.934 18.7755 19.0893 18.7106 19.222 18.6111C19.3547 18.5116 19.4605 18.3807 19.53 18.2301L22.53 12.2301C22.6639 11.9556 22.8722 11.7242 23.1313 11.5624C23.3903 11.4005 23.6896 11.3147 23.995 11.3147C24.3004 11.3147 24.5997 11.4005 24.8587 11.5624C25.1178 11.7242 25.3261 11.9556 25.46 12.2301L28.46 18.2301C28.5314 18.3725 28.6358 18.4959 28.7645 18.5898C28.8932 18.6837 29.0425 18.7455 29.2 18.7701Z" fill="currentColor"/></svg>`,
+  facialHair: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28.43 24.8399C27.1502 23.8855 25.5965 23.3699 24 23.3699C22.4035 23.3699 20.8497 23.8855 19.57 24.8399C18.0384 26.127 17.0316 27.9307 16.74 29.9099L19.1 28.9099L20.1 30.8199L22.03 29.2299L23.95 31.2299L25.87 29.2299L27.8 30.8199L28.8 28.9099L31.16 29.9099C30.8946 27.9449 29.9244 26.1432 28.43 24.8399Z" fill="currentColor"/><path d="M27.91 36.8L26.91 35L25.86 33.2001L24.91 33.85L23.97 34.4901L23 33.85L22 33.2001L21 34.84L20 36.4701L23.91 36.6301L27.91 36.8ZM24 11.8C25.4233 11.8204 26.8251 12.1503 28.1082 12.7668C29.3912 13.3833 30.5247 14.2716 31.43 15.37C33.4504 17.7889 34.5424 20.8486 34.51 24C34.5424 27.1515 33.4504 30.2112 31.43 32.6301C30.5247 33.7285 29.3912 34.6168 28.1082 35.2333C26.8251 35.8498 25.4233 36.1797 24 36.2001C22.5767 36.1797 21.1749 35.8498 19.8918 35.2333C18.6088 34.6168 17.4753 33.7285 16.57 32.6301C14.5497 30.2112 13.4577 27.1515 13.49 24C13.4577 20.8486 14.5497 17.7889 16.57 15.37C17.4753 14.2716 18.6088 13.3833 19.8918 12.7668C21.1749 12.1503 22.5767 11.8204 24 11.8ZM24 8.80005C22.183 8.81844 20.3909 9.22499 18.7439 9.99247C17.0968 10.7599 15.6328 11.8706 14.45 13.25C11.8446 16.2223 10.4212 20.0477 10.45 24C10.4212 27.9524 11.8446 31.7778 14.45 34.75C15.6328 36.1295 17.0968 37.2401 18.7439 38.0076C20.3909 38.7751 22.183 39.1817 24 39.2001C25.817 39.1817 27.6091 38.7751 29.2562 38.0076C30.9032 37.2401 32.3672 36.1295 33.55 34.75C36.1554 31.7778 37.5788 27.9524 37.55 24C37.5788 20.0477 36.1554 16.2223 33.55 13.25C32.3672 11.8706 30.9032 10.7599 29.2562 9.99247C27.6091 9.22499 25.817 8.81844 24 8.80005Z" fill="currentColor"/></svg>`,
+  gender: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.5172 12.0993C18.5172 14.9156 16.1852 17.1987 13.3084 17.1987C10.4317 17.1987 8.09965 14.9156 8.09965 12.0993C8.09965 9.28305 10.4317 7 13.3084 7C16.1852 7 18.5172 9.28305 18.5172 12.0993Z" fill="#3587F5"/><path d="M10.6712 17.5464H10.112C7.27087 19.7483 4.90324 25.7748 4.07457 28.0927C3.60115 29.4172 5.49526 30.7583 6.56058 28.7881L9.52023 24.0364V40.7252C9.44131 41.1501 9.63861 42 11.0592 42C12.4798 42 12.756 41.1501 12.7165 40.7252V31.6854C12.7165 31.4294 12.9285 31.2219 13.1901 31.2219H13.4266C13.6881 31.2219 13.9001 31.4294 13.9001 31.6854V40.7252C13.8607 41.1501 14.1369 42 15.5575 42C16.978 42 17.1753 41.1501 17.0964 40.7252V24.0364L20.0561 28.7881C21.1214 30.7583 23.0155 29.4172 22.5421 28.0927C21.7134 25.7748 19.3458 19.7483 16.5046 17.5464H15.9456C15.1463 17.9179 14.2522 18.1258 13.3084 18.1258C12.3647 18.1258 11.4706 17.9179 10.6712 17.5464Z" fill="#3587F5"/><path d="M39.9006 12.0993C39.9006 14.9156 37.5685 17.1987 34.6918 17.1987C31.8151 17.1987 29.483 14.9156 29.483 12.0993C29.483 9.28305 31.8151 7 34.6918 7C37.5685 7 39.9006 9.28305 39.9006 12.0993Z" fill="#FF4585"/><path d="M31.4954 17.5464H32.0546C32.8539 17.9179 33.7481 18.1258 34.6918 18.1258C35.6355 18.1258 36.5296 17.9179 37.329 17.5464H37.888C40.7291 19.7483 43.0968 25.7748 43.9254 28.0927C44.3988 29.4172 42.5047 30.7583 41.4394 28.7881L38.4798 24.0364L40.4349 30.9197C40.5608 31.3628 40.2204 31.8013 39.7506 31.8013H38.4798V40.7252C38.5587 41.1501 38.3614 42 36.9408 42C35.5202 42 35.244 41.1501 35.2835 40.7252V31.8013H34.0999V40.7252C34.1393 41.1501 33.8631 42 32.4425 42C31.022 42 30.8247 41.1501 30.9036 40.7252V31.8013H29.6328C29.163 31.8013 28.8226 31.3628 28.9485 30.9197L30.9036 24.0364L27.9439 28.7881C26.8786 30.7583 24.9845 29.4172 25.4579 28.0927C26.2866 25.7748 28.6542 19.7483 31.4954 17.5464Z" fill="#FF4585"/></svg>`,
+  genderMale: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.3697 5.07947C19.3697 7.3325 17.5433 9.15894 15.2903 9.15894C13.0372 9.15894 11.2108 7.3325 11.2108 5.07947C11.2108 2.82644 13.0372 1 15.2903 1C17.5433 1 19.3697 2.82644 19.3697 5.07947Z" fill="#3587F5"/><path d="M13.2249 9.43709H12.7869C10.5617 11.1987 8.70741 16.0199 8.0584 17.8742C7.68763 18.9338 9.17107 20.0066 10.0054 18.4305L12.3234 14.6291V27.9801C12.2616 28.3201 12.4161 29 13.5287 29C14.6413 29 14.8576 28.3201 14.8267 27.9801V20.7483C14.8267 20.5435 14.9927 20.3775 15.1976 20.3775H15.3828C15.5876 20.3775 15.7537 20.5435 15.7537 20.7483V27.9801C15.7228 28.3201 15.9391 29 17.0517 29C18.1643 29 18.3188 28.3201 18.257 27.9801V14.6291L20.575 18.4305C21.4093 20.0066 22.8928 18.9338 22.522 17.8742C21.873 16.0199 20.0187 11.1987 17.7935 9.43709H17.3557C16.7297 9.73434 16.0294 9.90066 15.2903 9.90066C14.5512 9.90066 13.8509 9.73434 13.2249 9.43709Z" fill="#3587F5"/></svg>`,
+  genderFemale: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.3947 5.07947C19.3947 7.3325 17.5682 9.15894 15.3152 9.15894C13.0622 9.15894 11.2357 7.3325 11.2357 5.07947C11.2357 2.82644 13.0622 1 15.3152 1C17.5682 1 19.3947 2.82644 19.3947 5.07947Z" fill="#FF4585"/><path d="M12.8118 9.43709H13.2498C13.8758 9.73434 14.5761 9.90066 15.3152 9.90066C16.0543 9.90066 16.7546 9.73434 17.3806 9.43709H17.8184C20.0436 11.1987 21.8979 16.0199 22.5469 17.8742C22.9177 18.9338 21.4342 20.0066 20.5999 18.4305L18.2819 14.6291L19.8131 20.1357C19.9117 20.4902 19.6451 20.8411 19.2772 20.8411H18.2819V27.9801C18.3437 28.3201 18.1892 29 17.0766 29C15.964 29 15.7477 28.3201 15.7786 27.9801V20.8411H14.8516V27.9801C14.8825 28.3201 14.6662 29 13.5536 29C12.441 29 12.2865 28.3201 12.3483 27.9801V20.8411H11.353C10.9851 20.8411 10.7185 20.4902 10.8171 20.1357L12.3483 14.6291L10.0303 18.4305C9.19598 20.0066 7.71253 18.9338 8.0833 17.8742C8.73231 16.0199 10.5866 11.1987 12.8118 9.43709Z" fill="#FF4585"/></svg>`,
+  genderMaleLg: `<svg width="80" height="80" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.3697 5.07947C19.3697 7.3325 17.5433 9.15894 15.2903 9.15894C13.0372 9.15894 11.2108 7.3325 11.2108 5.07947C11.2108 2.82644 13.0372 1 15.2903 1C17.5433 1 19.3697 2.82644 19.3697 5.07947Z" fill="#3587F5"/><path d="M13.2249 9.43709H12.7869C10.5617 11.1987 8.70741 16.0199 8.0584 17.8742C7.68763 18.9338 9.17107 20.0066 10.0054 18.4305L12.3234 14.6291V27.9801C12.2616 28.3201 12.4161 29 13.5287 29C14.6413 29 14.8576 28.3201 14.8267 27.9801V20.7483C14.8267 20.5435 14.9927 20.3775 15.1976 20.3775H15.3828C15.5876 20.3775 15.7537 20.5435 15.7537 20.7483V27.9801C15.7228 28.3201 15.9391 29 17.0517 29C18.1643 29 18.3188 28.3201 18.257 27.9801V14.6291L20.575 18.4305C21.4093 20.0066 22.8928 18.9338 22.522 17.8742C21.873 16.0199 20.0187 11.1987 17.7935 9.43709H17.3557C16.7297 9.73434 16.0294 9.90066 15.2903 9.90066C14.5512 9.90066 13.8509 9.73434 13.2249 9.43709Z" fill="#3587F5"/></svg>`,
+  genderFemaleLg: `<svg width="80" height="80" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.3947 5.07947C19.3947 7.3325 17.5682 9.15894 15.3152 9.15894C13.0622 9.15894 11.2357 7.3325 11.2357 5.07947C11.2357 2.82644 13.0622 1 15.3152 1C17.5682 1 19.3947 2.82644 19.3947 5.07947Z" fill="#FF4585"/><path d="M12.8118 9.43709H13.2498C13.8758 9.73434 14.5761 9.90066 15.3152 9.90066C16.0543 9.90066 16.7546 9.73434 17.3806 9.43709H17.8184C20.0436 11.1987 21.8979 16.0199 22.5469 17.8742C22.9177 18.9338 21.4342 20.0066 20.5999 18.4305L18.2819 14.6291L19.8131 20.1357C19.9117 20.4902 19.6451 20.8411 19.2772 20.8411H18.2819V27.9801C18.3437 28.3201 18.1892 29 17.0766 29C15.964 29 15.7477 28.3201 15.7786 27.9801V20.8411H14.8516V27.9801C14.8825 28.3201 14.6662 29 13.5536 29C12.441 29 12.2865 28.3201 12.3483 27.9801V20.8411H11.353C10.9851 20.8411 10.7185 20.4902 10.8171 20.1357L12.3483 14.6291L10.0303 18.4305C9.19598 20.0066 7.71253 18.9338 8.0833 17.8742C8.73231 16.0199 10.5866 11.1987 12.8118 9.43709Z" fill="#FF4585"/></svg>`,
+  favorite: `<svg width="49" height="48" viewBox="0 0 49 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M39.3884 15.9453L39.636 14.8448L38.6714 15.4295L31.0959 20.0206L24.6414 12.6439L24.2677 12.2169L23.9086 12.6561L17.8861 20.021L9.87914 15.4237L8.93213 14.88L9.17184 15.9453L11.3207 25.4956C11.3414 26.5901 11.9723 27.4324 12.8675 28.0586C13.7703 28.6899 14.991 29.1411 16.3056 29.4641C18.9374 30.1108 22.0979 30.2798 24.2801 30.24C26.4624 30.2798 29.6229 30.1108 32.2547 29.4641C33.5692 29.1411 34.79 28.6899 35.6927 28.0586C36.588 27.4324 37.2189 26.5901 37.2396 25.4956L39.3884 15.9453ZM12.7447 28.6157L11.9534 28.1968L12.0425 29.0877L12.2804 31.4661C12.2944 32.3073 12.9852 32.9508 13.7746 33.4207C14.6088 33.9172 15.7367 34.3315 16.9561 34.6577C19.3834 35.307 22.2989 35.6395 24.2801 35.5209C26.2612 35.6396 29.1178 35.3069 31.4871 34.6569C32.6773 34.3303 33.7761 33.9153 34.5885 33.4175C35.3606 32.9443 36.0263 32.3002 36.0399 31.466L36.2778 29.0877L36.3668 28.1968L35.5756 28.6157C31.6139 30.7131 27.4083 30.72 24.2801 30.72C21.1482 30.72 16.7051 30.7124 12.7447 28.6157Z" fill="url(#paint0_linear_1196_50)" stroke="white" stroke-width="0.96"/><defs><linearGradient id="paint0_linear_1196_50" x1="24.2801" y1="12.96" x2="39.1601" y2="35.04" gradientUnits="userSpaceOnUse"><stop stop-color="#EC0000"/><stop offset="0.955263" stop-color="#B50400"/></linearGradient></defs></svg>`,
+  special: `<svg width="49" height="48" viewBox="0 0 49 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M39.8284 20.2654L40.0693 19.1948L39.1196 19.7446L31.1139 24.3794L25.0924 16.9771L24.7325 16.5347L24.358 16.9649L17.9042 24.3789L10.3304 19.7505L9.36289 19.1592L9.61179 20.2654L11.7606 29.8157C11.7813 30.9102 12.4123 31.7525 13.3075 32.3786C14.2102 33.01 15.431 33.4611 16.7455 33.7842C19.3774 34.4309 22.5378 34.5999 24.7201 34.5601C26.9023 34.5999 30.0628 34.4309 32.6946 33.7842C34.0092 33.4611 35.2299 33.01 36.1327 32.3786C37.0279 31.7525 37.6588 30.9102 37.6796 29.8157L39.8284 20.2654ZM13.1847 32.9358L12.3934 32.5169L12.4825 33.4078L12.7203 35.7861C12.7343 36.6274 13.4252 37.2709 14.2146 37.7407C15.0488 38.2372 16.1766 38.6515 17.396 38.9777C19.8234 39.627 22.7389 39.9596 24.7201 39.8409C26.7011 39.9596 29.5578 39.627 31.9271 38.9769C33.1173 38.6504 34.216 38.2354 35.0284 37.7375C35.8005 37.2643 36.4663 36.6203 36.4799 35.7861L36.7177 33.4078L36.8068 32.5169L36.0155 32.9358C32.0538 35.0332 27.8483 35.04 24.7201 35.04C21.5882 35.04 17.1451 35.0325 13.1847 32.9358Z" fill="url(#paint0_linear_1196_45)" stroke="white" stroke-width="0.96"/><circle cx="9.36001" cy="15.12" r="4.08" fill="#F48700" stroke="white" stroke-width="0.96"/><circle cx="24.7199" cy="12.2399" r="4.08" fill="#F79400" stroke="white" stroke-width="0.96"/><circle cx="40.08" cy="15.12" r="4.08" fill="#FCC000" stroke="white" stroke-width="0.96"/><defs><linearGradient id="paint0_linear_1196_45" x1="20.1601" y1="24" x2="37.9201" y2="41.76" gradientUnits="userSpaceOnUse"><stop stop-color="#F78E00"/><stop offset="0.11" stop-color="#FCBA00"/><stop offset="0.42" stop-color="#FCBA00"/><stop offset="0.63" stop-color="#EF4D00"/></linearGradient></defs></svg>`,
+  personal: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.7159 23.8225L12.7245 23.7571L20.1936 27.3133L20.6969 27.5529L20.8592 27.0196L22.5392 21.4997L22.6353 21.1837L22.3747 20.981L13.7347 14.261L13.0734 13.7467L12.9641 14.5773L11.8588 22.9773L11.8133 23.3233L11.7641 23.6973L12.7159 23.8225ZM35.2759 23.6973L35.2267 23.3233L35.1812 22.9773L34.0759 14.5773L33.9666 13.7467L33.3053 14.261L24.6653 20.981L24.4046 21.1837L24.5008 21.4997L26.1808 27.0196L26.3431 27.5529L26.8463 27.3133L34.3155 23.7571L34.3241 23.8225L35.2759 23.6973Z" fill="url(#paint0_linear_1966_21)" stroke="white" stroke-width="0.96"/><path d="M41.2621 19.0968L41.6142 17.8433L40.5327 18.5683L30.7313 25.1386H30.3405L24.1568 16.0501L23.76 15.4668L23.3631 16.0501L17.1794 25.1386H16.7886L6.98724 18.5683L5.90574 17.8433L6.25786 19.0968L9.57319 30.899C9.599 32.0679 10.2815 32.9687 11.254 33.641C12.2385 34.3217 13.5725 34.8096 15.0136 35.1597C17.8986 35.8605 21.3655 36.0439 23.76 36.0007C26.1544 36.0439 29.6213 35.8605 32.5064 35.1597C33.9475 34.8096 35.2815 34.3217 36.2659 33.641C37.2384 32.9687 37.9209 32.0679 37.9468 30.899L41.2621 19.0968ZM11.0658 34.3136L10.276 33.9002L10.3657 34.7872L10.6271 37.3709C10.6414 38.2643 11.3834 38.9527 12.2474 39.4611C13.1581 39.9969 14.3919 40.4452 15.7291 40.7988C18.3922 41.503 21.5906 41.8632 23.76 41.7342C25.9292 41.8632 29.0628 41.503 31.662 40.798C32.967 40.4441 34.1688 39.9951 35.0554 39.4579C35.9 38.9462 36.6154 38.2572 36.6293 37.3709L36.8906 34.7872L36.9804 33.9002L36.1905 34.3136C31.8267 36.5973 27.1951 36.6041 23.76 36.6041C20.3211 36.6041 15.4284 36.5966 11.0658 34.3136Z" fill="url(#paint1_linear_1966_21)" stroke="white" stroke-width="0.96"/><circle cx="5.5199" cy="14.64" r="3.6" fill="#F48700" stroke="white" stroke-width="0.96"/><circle cx="23.7599" cy="12.2401" r="3.6" fill="#F79400" stroke="white" stroke-width="0.96"/><circle cx="13.68" cy="12.7201" r="2.64" fill="#EF9600" stroke="white" stroke-width="0.96"/><circle cx="34.3199" cy="12.7201" r="2.64" fill="#EF9600" stroke="white" stroke-width="0.96"/><circle cx="41.9999" cy="15.12" r="3.6" fill="#EF9600" stroke="white" stroke-width="0.96"/><defs><linearGradient id="paint0_linear_1966_21" x1="20.2045" y1="18.6886" x2="29.2193" y2="30.9992" gradientUnits="userSpaceOnUse"><stop stop-color="#EF9600"/><stop offset="0.63" stop-color="#EF9600"/></linearGradient><linearGradient id="paint1_linear_1966_21" x1="16.32" y1="22.0801" x2="32.4548" y2="38.1065" gradientUnits="userSpaceOnUse"><stop stop-color="#F4AD00"/><stop offset="0.29" stop-color="#FADF00"/><stop offset="0.665" stop-color="#FCE200"/><stop offset="1" stop-color="#EC7900"/></linearGradient></defs></svg>`,
+  sparkle: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21.5933 28.0833C21.4891 27.6795 21.2787 27.3111 20.9838 27.0162C20.689 26.7214 20.3205 26.511 19.9168 26.4068L12.7593 24.5611C12.6371 24.5265 12.5297 24.4529 12.4531 24.3517C12.3766 24.2504 12.3352 24.1269 12.3352 24C12.3352 23.873 12.3766 23.7496 12.4531 23.6483C12.5297 23.547 12.6371 23.4735 12.7593 23.4388L19.9168 21.592C20.3204 21.4879 20.6887 21.2776 20.9836 20.983C21.2784 20.6884 21.4889 20.3202 21.5933 19.9166L23.4389 12.7591C23.4732 12.6365 23.5467 12.5285 23.6481 12.4516C23.7496 12.3747 23.8734 12.333 24.0007 12.333C24.128 12.333 24.2518 12.3747 24.3532 12.4516C24.4546 12.5285 24.5281 12.6365 24.5624 12.7591L26.4069 19.9166C26.5111 20.3204 26.7215 20.6888 27.0164 20.9837C27.3112 21.2785 27.6797 21.489 28.0834 21.5931L35.2409 23.4376C35.364 23.4716 35.4726 23.545 35.5499 23.6466C35.6273 23.7481 35.6691 23.8723 35.6691 24C35.6691 24.1276 35.6273 24.2518 35.5499 24.3534C35.4726 24.455 35.364 24.5283 35.2409 24.5623L28.0834 26.4068C27.6797 26.511 27.3112 26.7214 27.0164 27.0162C26.7215 27.3111 26.5111 27.6795 26.4069 28.0833L24.5613 35.2408C24.5269 35.3634 24.4535 35.4714 24.3521 35.5483C24.2506 35.6253 24.1268 35.6669 23.9995 35.6669C23.8722 35.6669 23.7484 35.6253 23.647 35.5483C23.5455 35.4714 23.4721 35.3634 23.4378 35.2408L21.5933 28.0833Z" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M33.3333 13.5V18.1667" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M35.6667 15.8333H31" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.6667 29.8333V32.1666" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.8333 31H13.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  positionMoveDown: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M45.88 25.0702H43.44V16.7202C43.44 16.455 43.3346 16.2006 43.1471 16.0131C42.9595 15.8256 42.7052 15.7202 42.44 15.7202H33C32.7348 15.7202 32.4804 15.8256 32.2929 16.0131C32.1053 16.2006 32 16.455 32 16.7202V25.0702H29.53C29.3545 25.0716 29.1831 25.1232 29.036 25.2188C28.8889 25.3144 28.7722 25.4501 28.6996 25.6099C28.6271 25.7697 28.6018 25.9469 28.6267 26.1205C28.6515 26.2942 28.7255 26.4572 28.84 26.5902L37 36.0002C37.0854 36.0996 37.1913 36.1793 37.3104 36.234C37.4295 36.2886 37.5589 36.3169 37.69 36.3169C37.821 36.3169 37.9505 36.2886 38.0696 36.234C38.1887 36.1793 38.2945 36.0996 38.38 36.0002L46.53 26.5902C46.6425 26.4598 46.7162 26.3004 46.7427 26.1302C46.7691 25.9599 46.7472 25.7857 46.6795 25.6273C46.6117 25.4689 46.5009 25.3327 46.3595 25.2342C46.2182 25.1357 46.052 25.0789 45.88 25.0702Z" fill="currentColor"/><path d="M15.61 36.4001C21.3538 36.4001 26.01 31.7439 26.01 26.0001C26.01 20.2563 21.3538 15.6001 15.61 15.6001C9.86626 15.6001 5.21002 20.2563 5.21002 26.0001C5.21002 31.7439 9.86626 36.4001 15.61 36.4001Z" fill="currentColor"/></svg>`,
+  positionMoveUp: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M45.88 26.9298H43.44V35.2798C43.44 35.545 43.3346 35.7994 43.1471 35.9869C42.9595 36.1745 42.7052 36.2798 42.44 36.2798H33C32.7348 36.2798 32.4804 36.1745 32.2929 35.9869C32.1053 35.7994 32 35.545 32 35.2798V26.9298H29.53C29.3545 26.9284 29.1831 26.8768 29.036 26.7812C28.8889 26.6856 28.7722 26.5499 28.6996 26.3901C28.6271 26.2304 28.6018 26.0532 28.6267 25.8795C28.6515 25.7058 28.7255 25.5428 28.84 25.4098L37 15.9998C37.0854 15.9005 37.1913 15.8207 37.3104 15.7661C37.4295 15.7114 37.5589 15.6831 37.69 15.6831C37.821 15.6831 37.9505 15.7114 38.0696 15.7661C38.1887 15.8207 38.2945 15.9005 38.38 15.9998L46.53 25.4098C46.6425 25.5402 46.7162 25.6996 46.7427 25.8698C46.7691 26.0401 46.7472 26.2143 46.6795 26.3727C46.6117 26.5311 46.5009 26.6673 46.3595 26.7658C46.2182 26.8643 46.052 26.9211 45.88 26.9298Z" fill="currentColor"/><path d="M15.61 36.4001C21.3538 36.4001 26.01 31.7439 26.01 26.0001C26.01 20.2563 21.3538 15.6001 15.61 15.6001C9.86626 15.6001 5.21002 20.2563 5.21002 26.0001C5.21002 31.7439 9.86626 36.4001 15.61 36.4001Z" fill="currentColor"/></svg>`,
+  positionPushIn: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.99998 21.8799V23.1199H5.77998C5.7117 23.1199 5.64408 23.1334 5.58099 23.1595C5.5179 23.1856 5.46057 23.2239 5.41229 23.2722C5.364 23.3205 5.3257 23.3778 5.29957 23.4409C5.27343 23.504 5.25998 23.5716 5.25998 23.6399V28.3599C5.25865 28.429 5.27112 28.4977 5.29666 28.562C5.3222 28.6262 5.36029 28.6847 5.40871 28.7341C5.45713 28.7834 5.5149 28.8226 5.57865 28.8494C5.6424 28.8762 5.71085 28.8899 5.77998 28.8899H9.99998V30.1199C9.99974 30.2081 10.0248 30.2944 10.0723 30.3687C10.1197 30.443 10.1875 30.5022 10.2676 30.539C10.3476 30.5759 10.4366 30.589 10.5239 30.5767C10.6112 30.5645 10.6932 30.5274 10.76 30.4699L15.51 26.3299C15.5589 26.2868 15.5981 26.2337 15.625 26.1742C15.6518 26.1147 15.6657 26.0502 15.6657 25.9849C15.6657 25.9197 15.6518 25.8551 15.625 25.7957C15.5981 25.7362 15.5589 25.6831 15.51 25.6399L10.77 21.5299C10.7035 21.4692 10.6206 21.4293 10.5316 21.4153C10.4426 21.4013 10.3515 21.4136 10.2695 21.4509C10.1875 21.4882 10.1183 21.5487 10.0704 21.625C10.0224 21.7012 9.99798 21.7899 9.99998 21.8799ZM42 30.1199V28.8799H46.21C46.3479 28.8799 46.4802 28.8251 46.5777 28.7276C46.6752 28.6301 46.73 28.4978 46.73 28.3599V23.6399C46.7313 23.5708 46.7188 23.5021 46.6933 23.4379C46.6678 23.3736 46.6297 23.3151 46.5813 23.2657C46.5328 23.2164 46.4751 23.1772 46.4113 23.1504C46.3476 23.1237 46.2791 23.1099 46.21 23.1099H42V21.8799C42.0002 21.7918 41.9751 21.7054 41.9277 21.6311C41.8803 21.5568 41.8125 21.4977 41.7324 21.4608C41.6523 21.4239 41.5634 21.4108 41.4761 21.4231C41.3888 21.4353 41.3068 21.4724 41.24 21.5299L36.5 25.6699C36.451 25.7131 36.4118 25.7662 36.385 25.8257C36.3581 25.8851 36.3442 25.9497 36.3442 26.0149C36.3442 26.0802 36.3581 26.1447 36.385 26.2042C36.4118 26.2637 36.451 26.3168 36.5 26.3599L41.24 30.4699C41.3068 30.5274 41.3888 30.5645 41.4761 30.5767C41.5634 30.589 41.6523 30.5759 41.7324 30.539C41.8125 30.5022 41.8803 30.443 41.9277 30.3687C41.9751 30.2944 42.0002 30.2081 42 30.1199Z" fill="currentColor"/><path d="M21.06 30.6798C23.6447 30.6798 25.74 28.5845 25.74 25.9998C25.74 23.4151 23.6447 21.3198 21.06 21.3198C18.4753 21.3198 16.38 23.4151 16.38 25.9998C16.38 28.5845 18.4753 30.6798 21.06 30.6798Z" fill="currentColor"/><path d="M30.94 30.6798C33.5247 30.6798 35.62 28.5845 35.62 25.9998C35.62 23.4151 33.5247 21.3198 30.94 21.3198C28.3553 21.3198 26.26 23.4151 26.26 25.9998C26.26 28.5845 28.3553 30.6798 30.94 30.6798Z" fill="currentColor"/></svg>`,
+  positionPushOut: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M36.5 25.6402L31.76 21.5302C31.6921 21.4738 31.6097 21.4377 31.5222 21.426C31.4347 21.4143 31.3457 21.4275 31.2654 21.464C31.1851 21.5005 31.1166 21.5589 31.0679 21.6325C31.0192 21.7061 30.9922 21.792 30.99 21.8802V23.1202H21V21.8802C20.9978 21.792 20.9708 21.7061 20.9221 21.6325C20.8734 21.5589 20.805 21.5005 20.7247 21.464C20.6443 21.4275 20.5553 21.4143 20.4678 21.426C20.3804 21.4377 20.2979 21.4738 20.23 21.5302C18.96 22.6402 16.45 24.8202 15.49 25.6702C15.4411 25.7134 15.4019 25.7665 15.375 25.8259C15.3482 25.8854 15.3343 25.9499 15.3343 26.0152C15.3343 26.0805 15.3482 26.145 15.375 26.2045C15.4019 26.2639 15.4411 26.317 15.49 26.3602L20.23 30.4702C20.2979 30.5266 20.3804 30.5627 20.4678 30.5744C20.5553 30.5861 20.6443 30.5729 20.7247 30.5364C20.805 30.4999 20.8734 30.4415 20.9221 30.3679C20.9708 30.2943 20.9978 30.2084 21 30.1202V28.8802H31V30.1102C31.0022 30.1984 31.0292 30.2843 31.0779 30.3579C31.1266 30.4315 31.1951 30.4899 31.2754 30.5264C31.3557 30.5629 31.4447 30.5761 31.5322 30.5644C31.6197 30.5527 31.7021 30.5166 31.77 30.4602C33.04 29.3502 35.55 27.1702 36.51 26.3202C36.5567 26.2764 36.5937 26.2233 36.6187 26.1644C36.6437 26.1055 36.6562 26.042 36.6552 25.978C36.6543 25.914 36.64 25.8509 36.6133 25.7927C36.5865 25.7346 36.548 25.6826 36.5 25.6402Z" fill="currentColor"/><path d="M9.93 30.6798C12.5147 30.6798 14.61 28.5845 14.61 25.9998C14.61 23.4151 12.5147 21.3198 9.93 21.3198C7.34531 21.3198 5.25 23.4151 5.25 25.9998C5.25 28.5845 7.34531 30.6798 9.93 30.6798Z" fill="currentColor"/><path d="M42.07 30.6798C44.6547 30.6798 46.75 28.5845 46.75 25.9998C46.75 23.4151 44.6547 21.3198 42.07 21.3198C39.4853 21.3198 37.39 23.4151 37.39 25.9998C37.39 28.5845 39.4853 30.6798 42.07 30.6798Z" fill="currentColor"/></svg>`,
+  positionRotateCW: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M25.85 38.9298C28.7219 38.9298 31.05 36.6017 31.05 33.7298C31.05 30.8579 28.7219 28.5298 25.85 28.5298C22.9781 28.5298 20.65 30.8579 20.65 33.7298C20.65 36.6017 22.9781 38.9298 25.85 38.9298Z" fill="currentColor"/><path d="M30.44 28.0898L36.09 24.7398C34.3706 22.8055 32.1318 21.4059 29.6399 20.7072C27.148 20.0086 24.5079 20.0404 22.0336 20.7988C19.5592 21.5572 17.3548 23.0103 15.6824 24.9854C14.0101 26.9604 12.9402 29.3743 12.6 31.9398C12.4838 32.8483 12.457 33.766 12.52 34.6798C12.5386 34.8216 12.5266 34.9657 12.4847 35.1025C12.4428 35.2392 12.3721 35.3654 12.2774 35.4725C12.1826 35.5796 12.0659 35.6651 11.9353 35.7233C11.8046 35.7815 11.663 35.811 11.52 35.8098H6.42C6.15479 35.8098 5.90043 35.7044 5.7129 35.5169C5.52536 35.3293 5.42 35.075 5.42 34.8098C5.36697 33.7293 5.39371 32.6463 5.5 31.5698C6.04893 26.4088 8.51929 21.6433 12.4202 18.2199C16.3212 14.7966 21.3672 12.9661 26.5557 13.092C31.7443 13.218 36.6955 15.2912 40.4257 18.8998C44.156 22.5084 46.3922 27.3883 46.69 32.5698C46.6975 32.7106 46.6717 32.8513 46.6148 32.9803C46.558 33.1094 46.4715 33.2233 46.3625 33.3128C46.2535 33.4024 46.125 33.465 45.9874 33.4958C45.8497 33.5265 45.7067 33.5244 45.57 33.4898L30.68 29.7198C30.5084 29.6774 30.3534 29.585 30.2345 29.4542C30.1157 29.3234 30.0385 29.1602 30.0128 28.9853C29.987 28.8105 30.0139 28.632 30.09 28.4725C30.1661 28.313 30.2879 28.1798 30.44 28.0898Z" fill="currentColor"/></svg>`,
+  positionRotateCCW: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M25.85 23.4698C28.7219 23.4698 31.05 21.1417 31.05 18.2698C31.05 15.3979 28.7219 13.0698 25.85 13.0698C22.9781 13.0698 20.65 15.3979 20.65 18.2698C20.65 21.1417 22.9781 23.4698 25.85 23.4698Z" fill="currentColor"/><path d="M30.44 23.91L36.09 27.26C34.3706 29.1942 32.1318 30.5939 29.6399 31.2925C27.148 31.9912 24.5079 31.9594 22.0336 31.201C19.5592 30.4425 17.3548 28.9894 15.6824 27.0144C14.0101 25.0393 12.9402 22.6255 12.6 20.06C12.4838 19.1515 12.457 18.2337 12.52 17.32C12.5386 17.1782 12.5266 17.034 12.4847 16.8973C12.4428 16.7605 12.3721 16.6343 12.2774 16.5272C12.1826 16.4201 12.0659 16.3346 11.9353 16.2764C11.8046 16.2182 11.663 16.1888 11.52 16.19H6.42C6.15479 16.19 5.90043 16.2953 5.7129 16.4829C5.52536 16.6704 5.42 16.9248 5.42 17.19C5.36697 18.2705 5.39371 19.3534 5.5 20.43C6.04893 25.5909 8.51929 30.3565 12.4202 33.7798C16.3212 37.2031 21.3672 39.0337 26.5557 38.9077C31.7443 38.7817 36.6955 36.7085 40.4257 33.0999C44.156 29.4913 46.3922 24.6115 46.69 19.43C46.6975 19.2891 46.6717 19.1485 46.6148 19.0194C46.558 18.8903 46.4715 18.7764 46.3625 18.6869C46.2535 18.5974 46.125 18.5347 45.9874 18.504C45.8497 18.4732 45.7067 18.4753 45.57 18.51L30.68 22.28C30.5084 22.3223 30.3534 22.4148 30.2345 22.5456C30.1157 22.6764 30.0385 22.8396 30.0128 23.0144C29.987 23.1892 30.0139 23.3678 30.09 23.5273C30.1661 23.6867 30.2879 23.82 30.44 23.91Z" fill="currentColor"/></svg>`,
+  positionSizeDown: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26 32.5C29.5899 32.5 32.5 29.5899 32.5 26C32.5 22.4101 29.5899 19.5 26 19.5C22.4101 19.5 19.5 22.4101 19.5 26C19.5 29.5899 22.4101 32.5 26 32.5Z" fill="currentColor"/><path d="M39.23 18.59L38.36 17.72L41.36 14.72C41.4102 14.6723 41.4503 14.6149 41.4776 14.5513C41.5049 14.4877 41.519 14.4192 41.519 14.35C41.519 14.2807 41.5049 14.2122 41.4776 14.1486C41.4503 14.085 41.4102 14.0276 41.36 13.98L38 10.66C37.8994 10.5628 37.7649 10.5085 37.625 10.5085C37.4851 10.5085 37.3507 10.5628 37.25 10.66L34.25 13.66L33.38 12.79C33.3181 12.7258 33.2389 12.681 33.152 12.6611C33.0651 12.6412 32.9743 12.6469 32.8906 12.6776C32.8069 12.7083 32.7339 12.7627 32.6805 12.8342C32.6272 12.9056 32.5957 12.991 32.59 13.08C32.47 14.76 32.24 18.08 32.16 19.36C32.1556 19.4255 32.1652 19.4911 32.1883 19.5526C32.2113 19.614 32.2473 19.6699 32.2937 19.7163C32.3401 19.7627 32.3959 19.7986 32.4574 19.8217C32.5188 19.8448 32.5845 19.8544 32.65 19.85L38.91 19.4C39.006 19.4046 39.1009 19.3791 39.1816 19.327C39.2623 19.2749 39.3247 19.1988 39.36 19.1095C39.3953 19.0202 39.4017 18.922 39.3784 18.8289C39.3551 18.7357 39.3032 18.6522 39.23 18.59ZM12.77 33.41L13.64 34.28L10.64 37.28C10.5898 37.3276 10.5498 37.385 10.5225 37.4486C10.4951 37.5122 10.481 37.5807 10.481 37.65C10.481 37.7192 10.4951 37.7877 10.5225 37.8513C10.5498 37.9149 10.5898 37.9723 10.64 38.02L14 41.34C14.1007 41.4371 14.2351 41.4914 14.375 41.4914C14.5149 41.4914 14.6494 41.4371 14.75 41.34L17.75 38.34L18.62 39.21C18.6819 39.2741 18.7612 39.3189 18.8481 39.3388C18.935 39.3588 19.0258 39.353 19.1095 39.3223C19.1932 39.2916 19.2661 39.2372 19.3195 39.1658C19.3729 39.0943 19.4043 39.0089 19.41 38.92C19.53 37.24 19.76 33.92 19.84 32.64C19.8444 32.5745 19.8348 32.5088 19.8118 32.4473C19.7887 32.3859 19.7528 32.3301 19.7063 32.2836C19.6599 32.2372 19.6041 32.2013 19.5427 32.1782C19.4812 32.1552 19.4155 32.1455 19.35 32.15L13.09 32.6C12.9941 32.5953 12.8991 32.6209 12.8184 32.673C12.7377 32.725 12.6754 32.8011 12.6401 32.8904C12.6048 32.9797 12.5983 33.0779 12.6216 33.171C12.6449 33.2642 12.6968 33.3478 12.77 33.41ZM18.59 12.77L17.72 13.64L14.72 10.64C14.6724 10.5897 14.615 10.5497 14.5514 10.5224C14.4878 10.4951 14.4193 10.481 14.35 10.481C14.2808 10.481 14.2123 10.4951 14.1487 10.5224C14.085 10.5497 14.0277 10.5897 13.98 10.64L10.66 14C10.5629 14.1006 10.5086 14.2351 10.5086 14.375C10.5086 14.5149 10.5629 14.6493 10.66 14.75L13.66 17.75L12.79 18.62C12.7259 18.6819 12.6811 18.7611 12.6612 18.848C12.6412 18.9349 12.647 19.0257 12.6777 19.1094C12.7084 19.1931 12.7628 19.2661 12.8342 19.3194C12.9057 19.3728 12.991 19.4042 13.08 19.41L19.36 19.84C19.4255 19.8444 19.4912 19.8348 19.5527 19.8117C19.6141 19.7886 19.6699 19.7527 19.7163 19.7063C19.7628 19.6599 19.7987 19.604 19.8218 19.5426C19.8448 19.4811 19.8545 19.4155 19.85 19.35L19.4 13.09C19.4046 12.994 19.3791 12.899 19.327 12.8184C19.2749 12.7377 19.1989 12.6753 19.1096 12.64C19.0202 12.6047 18.9221 12.5983 18.8289 12.6216C18.7358 12.6449 18.6522 12.6968 18.59 12.77ZM33.41 39.23L34.28 38.36L37.28 41.36C37.3277 41.4102 37.3851 41.4502 37.4487 41.4775C37.5123 41.5049 37.5808 41.519 37.65 41.519C37.7193 41.519 37.7878 41.5049 37.8514 41.4775C37.915 41.4502 37.9724 41.4102 38.02 41.36L41.34 38C41.4372 37.8993 41.4915 37.7649 41.4915 37.625C41.4915 37.4851 41.4372 37.3506 41.34 37.25L38.34 34.25L39.21 33.38C39.2742 33.318 39.3189 33.2388 39.3389 33.1519C39.3588 33.065 39.3531 32.9742 39.3224 32.8905C39.2916 32.8068 39.2372 32.7338 39.1658 32.6805C39.0944 32.6271 39.009 32.5957 38.92 32.59L32.64 32.16C32.5745 32.1555 32.5088 32.1652 32.4474 32.1882C32.3859 32.2113 32.3301 32.2472 32.2837 32.2936C32.2373 32.3401 32.2013 32.3959 32.1783 32.4573C32.1552 32.5188 32.1456 32.5845 32.15 32.65L32.6 38.91C32.5954 39.0059 32.6209 39.1009 32.673 39.1816C32.7251 39.2623 32.8011 39.3246 32.8905 39.3599C32.9798 39.3952 33.0779 39.4016 33.1711 39.3783C33.2643 39.355 33.3478 39.3031 33.41 39.23Z" fill="currentColor"/></svg>`,
+  positionSizeUp: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26 39.5902C33.5055 39.5902 39.59 33.5057 39.59 26.0002C39.59 18.4946 33.5055 12.4102 26 12.4102C18.4944 12.4102 12.41 18.4946 12.41 26.0002C12.41 33.5057 18.4944 39.5902 26 39.5902Z" fill="currentColor"/><path d="M38.07 7.16011L39.07 8.16011L35.61 11.6101C35.4958 11.7261 35.4318 11.8823 35.4318 12.0451C35.4318 12.2079 35.4958 12.3641 35.61 12.4801L39.49 16.3501C39.5459 16.4076 39.6128 16.4532 39.6866 16.4844C39.7605 16.5156 39.8398 16.5317 39.92 16.5317C40.0002 16.5317 40.0795 16.5156 40.1534 16.4844C40.2272 16.4532 40.2941 16.4076 40.35 16.3501L43.81 12.9001L44.81 13.9001C44.8817 13.9742 44.9735 14.0257 45.0741 14.0484C45.1747 14.0712 45.2797 14.064 45.3763 14.0279C45.4729 13.9918 45.5568 13.9284 45.6179 13.8453C45.6789 13.7622 45.7144 13.6631 45.72 13.5601C45.86 11.6101 46.13 7.75011 46.22 6.26011C46.226 6.18373 46.2154 6.10695 46.1889 6.03506C46.1624 5.96317 46.1206 5.89789 46.0664 5.84371C46.0122 5.78953 45.947 5.74774 45.8751 5.72123C45.8032 5.69471 45.7264 5.6841 45.65 5.69011L38.38 6.22011C38.2729 6.2252 38.1698 6.26266 38.0845 6.32754C37.9991 6.39243 37.9354 6.48168 37.9018 6.58353C37.8682 6.68537 37.8663 6.795 37.8963 6.89795C37.9264 7.00089 37.9869 7.09231 38.07 7.16011ZM13.93 44.8401L12.93 43.8401L16.39 40.3901C16.5042 40.2741 16.5682 40.1179 16.5682 39.9551C16.5682 39.7923 16.5042 39.6361 16.39 39.5201L12.51 35.6501C12.4541 35.5927 12.3872 35.547 12.3134 35.5158C12.2395 35.4846 12.1602 35.4686 12.08 35.4686C11.9998 35.4686 11.9205 35.4846 11.8466 35.5158C11.7728 35.547 11.7059 35.5927 11.65 35.6501L8.17001 39.0801L7.17001 38.0801C7.09829 38.006 7.00651 37.9545 6.90593 37.9318C6.80535 37.9091 6.70033 37.9162 6.60374 37.9523C6.50715 37.9884 6.42318 38.0519 6.36213 38.135C6.30108 38.2181 6.26559 38.3172 6.26001 38.4201C6.12001 40.4201 5.85001 44.2301 5.76001 45.7201C5.75399 45.7965 5.76461 45.8733 5.79112 45.9452C5.81764 46.0171 5.85943 46.0823 5.91361 46.1365C5.96779 46.1907 6.03307 46.2325 6.10496 46.259C6.17685 46.2855 6.25363 46.2961 6.33001 46.2901L13.6 45.7601C13.7043 45.7546 13.8046 45.7184 13.8883 45.6561C13.9721 45.5937 14.0356 45.5081 14.0708 45.4098C14.1061 45.3115 14.1115 45.205 14.0865 45.1037C14.0614 45.0023 14.007 44.9106 13.93 44.8401ZM7.16001 13.9301L8.16001 12.9301L11.61 16.3901C11.726 16.5043 11.8822 16.5683 12.045 16.5683C12.2078 16.5683 12.364 16.5043 12.48 16.3901L16.35 12.5101C16.4075 12.4542 16.4531 12.3873 16.4843 12.3135C16.5155 12.2396 16.5316 12.1603 16.5316 12.0801C16.5316 11.9999 16.5155 11.9206 16.4843 11.8467C16.4531 11.7729 16.4075 11.706 16.35 11.6501L12.92 8.17011L13.92 7.17011C13.9941 7.09839 14.0456 7.00662 14.0683 6.90603C14.091 6.80545 14.0839 6.70043 14.0478 6.60384C14.0117 6.50725 13.9483 6.42329 13.8652 6.36223C13.7821 6.30118 13.683 6.26569 13.58 6.26011C11.63 6.12011 7.77001 5.85011 6.28001 5.76011C6.20363 5.7541 6.12684 5.76471 6.05496 5.79123C5.98307 5.81774 5.91779 5.85953 5.86361 5.91371C5.80943 5.96789 5.76764 6.03317 5.74112 6.10506C5.71461 6.17695 5.70399 6.25373 5.71001 6.33011L6.24001 13.6001C6.24554 13.7044 6.28174 13.8047 6.34406 13.8884C6.40638 13.9722 6.49205 14.0357 6.59032 14.0709C6.68859 14.1062 6.79508 14.1116 6.89643 14.0866C6.99778 14.0615 7.08948 14.0071 7.16001 13.9301ZM44.84 38.0701L43.84 39.0701L40.39 35.6101C40.274 35.4959 40.1178 35.4319 39.955 35.4319C39.7922 35.4319 39.636 35.4959 39.52 35.6101L35.65 39.4901C35.5926 39.546 35.5469 39.6129 35.5157 39.6867C35.4845 39.7606 35.4685 39.8399 35.4685 39.9201C35.4685 40.0003 35.4845 40.0796 35.5157 40.1535C35.5469 40.2273 35.5926 40.2942 35.65 40.3501L39.1 43.8101L38.1 44.8101C38.0259 44.8818 37.9744 44.9736 37.9517 45.0742C37.929 45.1748 37.9361 45.2798 37.9722 45.3764C38.0083 45.473 38.0718 45.5569 38.1549 45.618C38.238 45.679 38.337 45.7145 38.44 45.7201C40.44 45.8601 44.25 46.1301 45.74 46.2201C45.8164 46.2261 45.8932 46.2155 45.9651 46.189C46.037 46.1625 46.1022 46.1207 46.1564 46.0665C46.2106 46.0123 46.2524 45.9471 46.2789 45.8752C46.3054 45.8033 46.316 45.7265 46.31 45.6501L45.78 38.3801C45.7749 38.273 45.7375 38.1699 45.6726 38.0846C45.6077 37.9992 45.5184 37.9355 45.4166 37.9019C45.3148 37.8683 45.2051 37.8664 45.1022 37.8965C44.9992 37.9265 44.9078 37.987 44.84 38.0701Z" fill="currentColor"/></svg>`,
+  positionStretchIn: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.3 31.1998C23.0438 31.1998 27.7 28.8717 27.7 25.9998C27.7 23.1279 23.0438 20.7998 17.3 20.7998C11.5563 20.7998 6.90002 23.1279 6.90002 25.9998C6.90002 28.8717 11.5563 31.1998 17.3 31.1998Z" fill="currentColor"/><path d="M44.49 15.8701H42.84V8.87012C42.84 8.6049 42.7347 8.35055 42.5471 8.16301C42.3596 7.97547 42.1052 7.87012 41.84 7.87012H36.19C35.9248 7.87012 35.6705 7.97547 35.4829 8.16301C35.2954 8.35055 35.19 8.6049 35.19 8.87012V15.8701H33.51C33.3949 15.8718 33.2826 15.9061 33.1861 15.9689C33.0897 16.0317 33.0129 16.1205 32.9648 16.2251C32.9167 16.3297 32.8992 16.4458 32.9143 16.5599C32.9293 16.6741 32.9764 16.7816 33.05 16.8701C34.52 18.5601 37.42 21.8701 38.56 23.1901C38.6173 23.2559 38.688 23.3086 38.7673 23.3447C38.8467 23.3808 38.9328 23.3995 39.02 23.3995C39.1072 23.3995 39.1934 23.3808 39.2727 23.3447C39.3521 23.3086 39.4228 23.2559 39.48 23.1901L45 16.8901C45.0786 16.7975 45.1283 16.6838 45.1428 16.5632C45.1573 16.4426 45.1361 16.3204 45.0818 16.2117C45.0275 16.1031 44.9424 16.0128 44.8372 15.952C44.732 15.8913 44.6113 15.8628 44.49 15.8701ZM33.51 36.1301H35.16V43.1301C35.16 43.3953 35.2654 43.6497 35.4529 43.8372C35.6404 44.0248 35.8948 44.1301 36.16 44.1301H41.8C42.0652 44.1301 42.3196 44.0248 42.5071 43.8372C42.6947 43.6497 42.8 43.3953 42.8 43.1301V36.1301H44.45C44.5635 36.1247 44.6733 36.0883 44.7674 36.0248C44.8616 35.9613 44.9365 35.8731 44.9839 35.7699C45.0314 35.6667 45.0496 35.5525 45.0366 35.4397C45.0235 35.3268 44.9798 35.2198 44.91 35.1301C43.44 33.4401 40.53 30.1301 39.4 28.8101C39.3428 28.7444 39.2721 28.6917 39.1927 28.6555C39.1134 28.6194 39.0272 28.6007 38.94 28.6007C38.8528 28.6007 38.7667 28.6194 38.6873 28.6555C38.608 28.6917 38.5373 28.7444 38.48 28.8101L33 35.1101C32.9214 35.2027 32.8718 35.3164 32.8572 35.437C32.8427 35.5576 32.8639 35.6799 32.9182 35.7885C32.9726 35.8972 33.0576 35.9875 33.1628 36.0482C33.268 36.1089 33.3888 36.1374 33.51 36.1301Z" fill="currentColor"/></svg>`,
+  positionStretchOut: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M30.91 12.7098H32.56V39.2898H30.91C30.7949 39.2915 30.6826 39.3257 30.5861 39.3885C30.4896 39.4514 30.4129 39.5402 30.3648 39.6448C30.3167 39.7494 30.2992 39.8655 30.3142 39.9796C30.3293 40.0937 30.3764 40.2013 30.45 40.2898C31.92 41.9898 34.82 45.2898 35.96 46.6198C36.0173 46.6855 36.0879 46.7382 36.1673 46.7744C36.2466 46.8105 36.3328 46.8292 36.42 46.8292C36.5072 46.8292 36.5933 46.8105 36.6727 46.7744C36.752 46.7382 36.8227 46.6855 36.88 46.6198L42.35 40.2998C42.4236 40.2113 42.4707 40.1037 42.4858 39.9896C42.5008 39.8755 42.4833 39.7594 42.4352 39.6548C42.3871 39.5502 42.3103 39.4614 42.2139 39.3985C42.1174 39.3357 42.0051 39.3015 41.89 39.2998H40.24V12.7098H41.89C42.0051 12.7081 42.1174 12.6739 42.2139 12.611C42.3103 12.5482 42.3871 12.4594 42.4352 12.3548C42.4833 12.2502 42.5008 12.1341 42.4858 12.02C42.4707 11.9058 42.4236 11.7983 42.35 11.7098C40.88 10.0098 37.97 6.70979 36.84 5.37979C36.7827 5.31404 36.7121 5.26133 36.6327 5.22522C36.5534 5.1891 36.4672 5.17041 36.38 5.17041C36.2928 5.17041 36.2066 5.1891 36.1273 5.22522C36.0479 5.26133 35.9773 5.31404 35.92 5.37979L30.45 11.6998C30.3733 11.7881 30.3236 11.8966 30.3068 12.0123C30.2901 12.1281 30.3069 12.2462 30.3554 12.3526C30.4039 12.4591 30.4819 12.5493 30.5803 12.6126C30.6786 12.676 30.793 12.7097 30.91 12.7098Z" fill="currentColor"/><path d="M14.7 44.1998C17.5719 44.1998 19.9 36.0514 19.9 25.9998C19.9 15.9482 17.5719 7.7998 14.7 7.7998C11.8281 7.7998 9.5 15.9482 9.5 25.9998C9.5 36.0514 11.8281 44.1998 14.7 44.1998Z" fill="currentColor"/></svg>`,
+  positionHairFlip: `<svg width="36" height="45" viewBox="0 0 36 45" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M34.6632 14.4036C34.0799 10.3327 32.031 6.61843 28.9049 3.96466C25.7788 1.31089 21.7927 -0.097907 17.7021 0.00529359C13.6158 -0.0917043 9.63571 1.31991 6.51485 3.97311C3.39399 6.62631 1.34872 10.3371 0.765934 14.4036C0.561997 15.7016 0.462197 17.014 0.467499 18.3281C0.165022 20.4216 0.0650764 22.5396 0.169064 24.6524C0.915151 36.626 8.10246 45 17.5778 45C27.0531 45 34.3399 36.626 34.9865 24.6524C35.1769 22.5987 35.1769 20.5318 34.9865 18.4781C34.9733 17.114 34.8653 15.7525 34.6632 14.4036ZM30.4353 24.4024C29.8633 33.7513 24.6407 40.2756 17.7021 40.2756C10.7635 40.2756 5.54089 33.7013 4.99376 24.3524C8.4395 22.7467 11.632 20.6412 14.4691 18.1032C17.4174 15.5334 19.8706 12.4407 21.7061 8.97924C24.2833 13.5086 27.2191 17.822 30.4851 21.8777C30.5099 22.6776 30.4851 23.5025 30.4353 24.3524V24.4024Z" fill="currentColor"/></svg>`,
+  positionHairFlipped: `<svg width="36" height="45" viewBox="0 0 36 45" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M35.3322 18.337C35.3375 17.0234 35.2381 15.7114 35.0348 14.4138C34.3654 10.3851 32.3013 6.72618 29.2092 4.08717C26.1172 1.44817 22.1974 0 18.1465 0C14.0956 0 10.1759 1.44817 7.08379 4.08717C3.99173 6.72618 1.9276 10.3851 1.25819 14.4138C1.05681 15.7623 0.949164 17.1233 0.936033 18.487C0.668253 20.5327 0.601842 22.6002 0.73778 24.6592C1.45643 36.6288 8.61818 45 18.2828 45C27.9475 45 34.9605 36.6288 35.6296 24.6592C35.7332 22.5471 35.6336 20.4298 35.3322 18.337ZM5.47098 24.3593C6.04095 33.7051 11.245 40.2272 18.1341 40.2272C25.0481 40.2272 30.2769 33.7051 30.8964 24.2594C27.4588 22.6794 24.2695 20.5999 21.43 18.0872C18.4921 15.5183 16.0477 12.4266 14.2187 8.96627C11.6507 13.4941 8.72533 17.8061 5.47098 21.8604V24.3593Z" fill="currentColor"/></svg>`,
+  scaleShort: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1090_2)"><path d="M23.84 24.13C22.6 25 22.68 27 22.68 29.85V37C22.3644 37.0093 22.0654 37.1436 21.8488 37.3733C21.6322 37.603 21.5157 37.9094 21.525 38.225C21.5343 38.5406 21.6686 38.8396 21.8983 39.0562C22.128 39.2728 22.4344 39.3893 22.75 39.38H24.27C24.5812 39.3747 24.8777 39.2467 25.095 39.0238C25.3123 38.801 25.4327 38.5013 25.43 38.19C25.4353 37.9075 25.3355 37.6331 25.15 37.42V33.46C25.15 33.2717 25.2248 33.0911 25.358 32.958C25.4911 32.8248 25.6717 32.75 25.86 32.75C26.0483 32.75 26.2289 32.8248 26.362 32.958C26.4952 33.0911 26.57 33.2717 26.57 33.46V37.4C26.4118 37.5702 26.307 37.783 26.2683 38.0121C26.2297 38.2412 26.259 38.4766 26.3525 38.6893C26.4461 38.902 26.5999 39.0826 26.7949 39.2089C26.9899 39.3352 27.2177 39.4016 27.45 39.4H29C29.1576 39.4039 29.3144 39.3768 29.4615 39.3201C29.6086 39.2635 29.7431 39.1784 29.8573 39.0697C29.9715 38.9611 30.0632 38.831 30.1272 38.6869C30.1911 38.5429 30.2261 38.3876 30.23 38.23C30.2339 38.0724 30.2068 37.9156 30.1501 37.7685C30.0935 37.6214 30.0084 37.4869 29.8997 37.3727C29.7911 37.2585 29.661 37.1668 29.5169 37.1028C29.3729 37.0389 29.2176 37.0039 29.06 37V29.85C29.06 26.96 29.14 24.99 27.91 24.13C27.2643 24.3423 26.5897 24.4536 25.91 24.46C25.2067 24.4629 24.5076 24.3514 23.84 24.13ZM31.74 17.87C31.74 16.709 31.3957 15.5741 30.7507 14.6088C30.1057 13.6435 29.189 12.8911 28.1164 12.4468C27.0438 12.0025 25.8635 11.8863 24.7248 12.1128C23.5862 12.3393 22.5402 12.8984 21.7193 13.7193C20.8984 14.5402 20.3393 15.5862 20.1128 16.7248C19.8863 17.8635 20.0025 19.0438 20.4468 20.1164C20.8911 21.189 21.6435 22.1057 22.6088 22.7507C23.5741 23.3957 24.709 23.74 25.87 23.74C27.4268 23.74 28.9199 23.1216 30.0207 22.0207C31.1216 20.9199 31.74 19.4268 31.74 17.87Z" fill="currentColor"/></g><defs><clipPath id="clip0_1090_2"><rect width="11.74" height="27.36" fill="white" transform="translate(20 12)"/></clipPath></defs></svg>`,
+  scaleTall: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1090_6)"><path d="M24.1 20.21C23.66 20.72 23.4 21.74 23.4 23.75V42.3H22.76C22.4444 42.3 22.1417 42.4254 21.9185 42.6485C21.6954 42.8717 21.57 43.1744 21.57 43.49C21.57 43.8056 21.6954 44.1083 21.9185 44.3315C22.1417 44.5546 22.4444 44.68 22.76 44.68H24.29C24.4445 44.6787 24.5972 44.6468 24.7393 44.5862C24.8814 44.5256 25.0101 44.4374 25.118 44.3267C25.2258 44.2161 25.3107 44.0852 25.3677 43.9416C25.4247 43.798 25.4526 43.6445 25.45 43.49C25.4484 43.2009 25.3458 42.9215 25.16 42.7V33.07C25.1638 32.9811 25.1853 32.8938 25.2232 32.8133C25.2611 32.7328 25.3147 32.6607 25.3808 32.6011C25.4469 32.5415 25.5242 32.4957 25.6082 32.4663C25.6922 32.437 25.7812 32.4246 25.87 32.43C25.9588 32.4246 26.0478 32.437 26.1318 32.4663C26.2158 32.4957 26.2931 32.5415 26.3592 32.6011C26.4253 32.6607 26.4789 32.7328 26.5168 32.8133C26.5547 32.8938 26.5762 32.9811 26.58 33.07V42.68C26.3913 42.9005 26.2853 43.1798 26.28 43.47C26.2787 43.625 26.3079 43.7787 26.366 43.9223C26.4241 44.066 26.5099 44.1968 26.6185 44.3073C26.7272 44.4178 26.8565 44.5059 26.9992 44.5664C27.1419 44.6269 27.295 44.6587 27.45 44.66H29C29.2865 44.6226 29.5496 44.4823 29.7403 44.2651C29.9309 44.048 30.0361 43.7689 30.0361 43.48C30.0361 43.1911 29.9309 42.912 29.7403 42.6949C29.5496 42.4777 29.2865 42.3374 29 42.3H28.35V23.75C28.35 21.75 28.09 20.75 27.64 20.21C27.0635 20.3706 26.4684 20.4547 25.87 20.46C25.2716 20.454 24.6766 20.37 24.1 20.21ZM31.74 13.87C31.74 12.709 31.3957 11.5741 30.7507 10.6088C30.1057 9.64349 29.189 8.89112 28.1164 8.44683C27.0438 8.00254 25.8635 7.8863 24.7248 8.11279C23.5862 8.33929 22.5402 8.89835 21.7193 9.71929C20.8984 10.5402 20.3393 11.5862 20.1128 12.7248C19.8863 13.8635 20.0025 15.0438 20.4468 16.1164C20.8911 17.189 21.6435 18.1057 22.6088 18.7507C23.5741 19.3957 24.709 19.74 25.87 19.74C27.4268 19.74 28.9199 19.1216 30.0207 18.0207C31.1216 16.9199 31.74 15.4268 31.74 13.87Z" fill="currentColor"/></g><defs><clipPath id="clip0_1090_6"><rect width="11.74" height="36.68" fill="white" transform="translate(20 8)"/></clipPath></defs></svg>`,
+  scaleThin: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1090_9)"><path d="M23.94 19.17C22.6 20 22.68 22 22.68 25V42.62C22.3644 42.62 22.0617 42.7454 21.8385 42.9685C21.6154 43.1917 21.49 43.4944 21.49 43.81C21.49 44.1256 21.6154 44.4283 21.8385 44.6515C22.0617 44.8746 22.3644 45 22.68 45H24.21C24.4296 45.0021 24.6456 44.9438 24.8344 44.8316C25.0232 44.7194 25.1776 44.5575 25.2807 44.3636C25.3839 44.1697 25.4318 43.9512 25.4194 43.7319C25.4069 43.5126 25.3345 43.301 25.21 43.12V34.28C25.2203 34.1014 25.3007 33.934 25.4336 33.8142C25.5665 33.6944 25.7413 33.6318 25.92 33.64C26.0088 33.6346 26.0978 33.647 26.1818 33.6763C26.2658 33.7057 26.3431 33.7515 26.4092 33.8111C26.4753 33.8707 26.5289 33.9428 26.5668 34.0233C26.6047 34.1038 26.6262 34.1911 26.63 34.28V43.12C26.4937 43.3244 26.4207 43.5644 26.42 43.81C26.4144 44.1136 26.5271 44.4075 26.7342 44.6296C26.9414 44.8517 27.2267 44.9845 27.53 45H29.05C29.3656 45 29.6683 44.8746 29.8915 44.6515C30.1146 44.4283 30.24 44.1256 30.24 43.81C30.24 43.4944 30.1146 43.1917 29.8915 42.9685C29.6683 42.7454 29.3656 42.62 29.05 42.62V25C29.05 22 29.13 20 27.79 19.22C27.1639 19.4086 26.5139 19.5062 25.86 19.51C25.207 19.4891 24.5604 19.3746 23.94 19.17ZM31.74 12.87C31.74 11.709 31.3957 10.5741 30.7507 9.60881C30.1057 8.64349 29.189 7.89112 28.1164 7.44683C27.0438 7.00254 25.8635 6.8863 24.7248 7.11279C23.5862 7.33929 22.5402 7.89835 21.7193 8.71929C20.8984 9.54022 20.3393 10.5862 20.1128 11.7248C19.8863 12.8635 20.0025 14.0438 20.4468 15.1164C20.8911 16.189 21.6435 17.1057 22.6088 17.7507C23.5741 18.3957 24.709 18.74 25.87 18.74C27.4268 18.74 28.9199 18.1216 30.0207 17.0207C31.1216 15.9199 31.74 14.4268 31.74 12.87Z" fill="currentColor"/></g><defs><clipPath id="clip0_1090_9"><rect width="11.74" height="38" fill="white" transform="translate(20 7)"/></clipPath></defs></svg>`,
+  scaleFat: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1090_24)"><path d="M31.35 41.55H31.15L31.71 37.36C33.24 35.04 34.85 31.78 34.85 28.94C34.85 24.37 32.56 21.01 28.94 19.94C28.1488 20.2739 27.2988 20.4459 26.44 20.4459C25.5812 20.4459 24.7312 20.2739 23.94 19.94C20.29 21 18 24.37 18 28.94C18 31.94 19.77 35.33 21.35 37.66L21.88 41.55H21.68C21.2945 41.55 20.9247 41.7024 20.6511 41.9741C20.3776 42.2457 20.2226 42.6145 20.22 43V43.44C20.22 44.25 20.87 44.66 21.68 44.66H24.6C25.4 44.66 25.82 44.01 25.82 43.2V37.2C25.82 37.0117 25.8948 36.8311 26.028 36.698C26.1611 36.5648 26.3417 36.49 26.53 36.49C26.7183 36.49 26.8989 36.5648 27.032 36.698C27.1652 36.8311 27.24 37.0117 27.24 37.2V43.28C27.2653 43.6532 27.4309 44.003 27.7037 44.259C27.9764 44.5151 28.3359 44.6583 28.71 44.66H31.35C32.16 44.66 32.82 44.25 32.82 43.44V43C32.8147 42.6136 32.6576 42.2448 32.3824 41.9735C32.1073 41.7021 31.7364 41.55 31.35 41.55ZM32.3 13.87C32.3 12.709 31.9557 11.5741 31.3107 10.6088C30.6657 9.64349 29.749 8.89112 28.6764 8.44683C27.6037 8.00254 26.4235 7.8863 25.2848 8.11279C24.1462 8.33929 23.1002 8.89835 22.2793 9.71929C21.4583 10.5402 20.8993 11.5862 20.6728 12.7248C20.4463 13.8635 20.5625 15.0438 21.0068 16.1164C21.4511 17.189 22.2035 18.1057 23.1688 18.7507C24.1341 19.3957 25.269 19.74 26.43 19.74C27.9868 19.74 29.4799 19.1216 30.5807 18.0207C31.6816 16.9199 32.3 15.4268 32.3 13.87Z" fill="currentColor"/></g><defs><clipPath id="clip0_1090_24"><rect width="16.85" height="36.68" fill="white" transform="translate(18 8)"/></clipPath></defs></svg>`,
+  face: `<svg width="37" height="36" viewBox="0 0 37 36" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1061_108)"><path d="M18.8 34.6142C27.9756 34.6142 35.414 27.1759 35.414 18.0002C35.414 8.82457 27.9756 1.38623 18.8 1.38623C9.62431 1.38623 2.18597 8.82457 2.18597 18.0002C2.18597 27.1759 9.62431 34.6142 18.8 34.6142Z" fill="white"/><path d="M18.8 36C15.2399 36 11.7598 34.9443 8.79973 32.9665C5.83965 30.9886 3.53254 28.1774 2.17016 24.8883C0.807787 21.5992 0.451327 17.98 1.14586 14.4884C1.84039 10.9967 3.55473 7.78943 6.07207 5.27209C8.58942 2.75474 11.7967 1.04041 15.2884 0.345873C18.78 -0.348661 22.3992 0.00779911 25.6883 1.37018C28.9774 2.73255 31.7886 5.03966 33.7664 7.99974C35.7443 10.9598 36.8 14.4399 36.8 18C36.8 22.7739 34.9036 27.3523 31.5279 30.7279C28.1523 34.1036 23.5739 36 18.8 36ZM18.8 2.77201C15.7882 2.77201 12.844 3.66512 10.3398 5.33839C7.83554 7.01166 5.88373 9.38995 4.73116 12.1725C3.57859 14.9551 3.27702 18.0169 3.8646 20.9708C4.45217 23.9248 5.9025 26.6382 8.03217 28.7678C10.1618 30.8975 12.8752 32.3478 15.8292 32.9354C18.7831 33.523 21.8449 33.2214 24.6275 32.0688C27.4101 30.9163 29.7883 28.9645 31.4616 26.4602C33.1349 23.956 34.028 21.0118 34.028 18C34.028 13.9613 32.4236 10.088 29.5678 7.23219C26.712 4.37638 22.8387 2.77201 18.8 2.77201Z" fill="currentColor"/><path d="M14.552 17.2978C14.5556 17.7009 14.4393 18.0959 14.218 18.4327C13.9967 18.7696 13.6803 19.0331 13.3089 19.1898C12.9376 19.3465 12.5281 19.3893 12.1323 19.3129C11.7366 19.2365 11.3725 19.0442 11.0862 18.7605C10.8 18.4767 10.6044 18.1143 10.5245 17.7193C10.4445 17.3243 10.4838 16.9144 10.6372 16.5417C10.7906 16.1689 11.0512 15.8502 11.3861 15.6259C11.721 15.4016 12.1149 15.2818 12.518 15.2818C12.7842 15.2794 13.0483 15.3298 13.295 15.4301C13.5417 15.5303 13.7661 15.6784 13.9552 15.8659C14.1443 16.0533 14.2944 16.2764 14.3968 16.5221C14.4993 16.7679 14.552 17.0316 14.552 17.2978ZM27.026 17.2978C27.0296 17.7009 26.9133 18.0959 26.692 18.4327C26.4707 18.7696 26.1543 19.0331 25.7829 19.1898C25.4116 19.3465 25.0021 19.3893 24.6063 19.3129C24.2106 19.2365 23.8465 19.0442 23.5602 18.7605C23.274 18.4767 23.0784 18.1143 22.9985 17.7193C22.9185 17.3243 22.9578 16.9144 23.1112 16.5417C23.2646 16.1689 23.5252 15.8502 23.8601 15.6259C24.195 15.4016 24.5889 15.2818 24.992 15.2818C25.5283 15.2818 26.043 15.4936 26.4239 15.8712C26.8049 16.2487 27.0212 16.7615 27.026 17.2978ZM18.8 28.0258C16.7932 28.0297 14.8012 27.6824 12.914 26.9998L13.634 25.0558C16.9817 26.2078 20.6183 26.2078 23.966 25.0558L24.686 26.9998C22.7977 27.6763 20.8057 28.0174 18.8 28.0078V28.0258Z" fill="#BFBFBF"/></g><defs><clipPath id="clip0_1061_108"><rect width="36" height="36" fill="white" transform="translate(0.799988)"/></clipPath></defs></svg>`,
+  face_makeup: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1061_113)"><path d="M18 34.7218C27.2353 34.7218 34.722 27.2351 34.722 17.9998C34.722 8.76453 27.2353 1.27783 18 1.27783C8.76471 1.27783 1.27802 8.76453 1.27802 17.9998C1.27802 27.2351 8.76471 34.7218 18 34.7218Z" fill="white"/><path d="M18 36C14.4399 36 10.9598 34.9443 7.99974 32.9665C5.03966 30.9886 2.73255 28.1774 1.37018 24.8883C0.00779911 21.5992 -0.348661 17.98 0.345873 14.4884C1.04041 10.9967 2.75474 7.78943 5.27209 5.27209C7.78943 2.75474 10.9967 1.04041 14.4884 0.345873C17.98 -0.348661 21.5992 0.00779911 24.8883 1.37018C28.1774 2.73255 30.9886 5.03966 32.9665 7.99974C34.9443 10.9598 36 14.4399 36 18C36 22.7739 34.1036 27.3523 30.7279 30.7279C27.3523 34.1036 22.7739 36 18 36ZM18 2.57401C14.949 2.57401 11.9666 3.47873 9.42978 5.17376C6.89299 6.86879 4.9158 9.278 3.74824 12.0967C2.58069 14.9155 2.2752 18.0171 2.87041 21.0095C3.46563 24.0018 4.93481 26.7505 7.09218 28.9078C9.24954 31.0652 11.9982 32.5344 14.9905 33.1296C17.9829 33.7248 21.0846 33.4193 23.9033 32.2518C26.722 31.0842 29.1312 29.107 30.8263 26.5702C32.5213 24.0334 33.426 21.051 33.426 18C33.426 13.9088 31.8008 9.98512 28.9078 7.09218C26.0149 4.19924 22.0912 2.57401 18 2.57401Z" fill="#999999"/><path d="M14.076 22.4822C14.744 23.6893 14.9089 25.1111 14.5348 26.4389C14.1607 27.7668 13.2779 28.8934 12.078 29.5742C10.7814 30.0402 9.3535 29.9765 8.10354 29.397C6.85358 28.8175 5.88227 27.7688 5.40003 26.4782C4.73681 25.2702 4.57458 23.85 4.94829 22.5235C5.32199 21.197 6.20173 20.0704 7.39803 19.3862C8.69461 18.9203 10.1226 18.984 11.3725 19.5635C12.6225 20.143 13.5938 21.1916 14.076 22.4822ZM21.924 22.4822C21.256 23.6893 21.0912 25.1111 21.4653 26.4389C21.8394 27.7668 22.7222 28.8934 23.922 29.5742C25.2186 30.0402 26.6466 29.9765 27.8965 29.397C29.1465 28.8175 30.1178 27.7688 30.6 26.4782C31.2632 25.2702 31.4255 23.85 31.0518 22.5235C30.6781 21.197 29.7983 20.0704 28.602 19.3862C27.3054 18.9203 25.8775 18.984 24.6275 19.5635C23.3776 20.143 22.4063 21.1916 21.924 22.4822Z" fill="var(--icon-face-makeup)"/></g><defs><clipPath id="clip0_1061_113"><rect width="36" height="36" fill="white"/></clipPath></defs></svg>`,
+  face_wrinkles: `<svg width="37" height="36" viewBox="0 0 37 36" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1061_118)"><path d="M18.2 34.7218C27.4353 34.7218 34.922 27.2351 34.922 17.9998C34.922 8.76453 27.4353 1.27783 18.2 1.27783C8.96472 1.27783 1.47803 8.76453 1.47803 17.9998C1.47803 27.2351 8.96472 34.7218 18.2 34.7218Z" fill="white"/><path d="M18.2 36C14.64 36 11.1598 34.9443 8.19976 32.9665C5.23967 30.9886 2.93257 28.1774 1.57019 24.8883C0.207811 21.5992 -0.148649 17.98 0.545885 14.4884C1.24042 10.9967 2.95475 7.78943 5.4721 5.27209C7.98944 2.75474 11.1967 1.04041 14.6884 0.345873C18.1801 -0.348661 21.7993 0.00779911 25.0883 1.37018C28.3774 2.73255 31.1886 5.03966 33.1665 7.99974C35.1443 10.9598 36.2 14.4399 36.2 18C36.2 22.7739 34.3036 27.3523 30.9279 30.7279C27.5523 34.1036 22.9739 36 18.2 36ZM18.2 2.57401C15.149 2.57401 12.1666 3.47873 9.62979 5.17376C7.093 6.86879 5.11581 9.278 3.94825 12.0967C2.7807 14.9155 2.47521 18.0171 3.07043 21.0095C3.66564 24.0018 5.13483 26.7505 7.29219 28.9078C9.44956 31.0652 12.1982 32.5344 15.1906 33.1296C18.1829 33.7248 21.2846 33.4193 24.1033 32.2518C26.922 31.0842 29.3312 29.107 31.0263 26.5702C32.7213 24.0334 33.626 21.051 33.626 18C33.626 13.9088 32.0008 9.98512 29.1079 7.09218C26.2149 4.19924 22.2913 2.57401 18.2 2.57401Z" fill="#999999"/><path d="M11.126 21.6002L9.83002 20.1782C11.345 18.9244 12.7154 17.5056 13.916 15.9482C14.2539 15.3921 14.4972 14.7838 14.636 14.1482L16.526 14.4002C16.3598 15.3406 16.0112 16.2395 15.5 17.0462C14.2292 18.7334 12.7607 20.2623 11.126 21.6002ZM25.274 21.6002C23.6394 20.2623 22.1709 18.7334 20.9 17.0462C20.3888 16.2395 20.0403 15.3406 19.874 14.4002L21.8 14.0762C21.9389 14.7118 22.1822 15.3201 22.52 15.8762C23.7223 17.4213 25.0928 18.828 26.606 20.0702L25.274 21.6002Z" fill="var(--icon-face-wrinkles)"/></g><defs><clipPath id="clip0_1061_118"><rect width="36" height="36" fill="white" transform="translate(0.200012)"/></clipPath></defs></svg>`,
+  face_paint: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_560_2)"><mask id="mask0_560_2" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="36" height="36"><path d="M36 0H0V36H36V0Z" fill="white"/></mask><g mask="url(#mask0_560_2)"><path d="M18 34.6142C27.1756 34.6142 34.614 27.1759 34.614 18.0002C34.614 8.82457 27.1756 1.38623 18 1.38623C8.82433 1.38623 1.38599 8.82457 1.38599 18.0002C1.38599 27.1759 8.82433 34.6142 18 34.6142Z" fill="black"/><mask id="mask1_560_2" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="1" y="1" width="34" height="34"><path d="M18 34.6142C27.1756 34.6142 34.614 27.1759 34.614 18.0002C34.614 8.82457 27.1756 1.38623 18 1.38623C8.82433 1.38623 1.38599 8.82457 1.38599 18.0002C1.38599 27.1759 8.82433 34.6142 18 34.6142Z" fill="white"/></mask><g mask="url(#mask1_560_2)"><path d="M16.9999 37C9.9999 21 26.4999 14.0001 16.9999 2.00003C7.5 -10 23.9999 2.00003 23.9999 2.00003L31.9999 7.50002L34.4999 21L28.4999 32.5C28.4999 32.5 24 53 16.9999 37Z" fill="#801B1B"/><path d="M14.0679 18.2978C14.0715 18.7009 13.9552 19.0959 13.7339 19.4327C13.5126 19.7696 13.1962 20.0331 12.8249 20.1898C12.4535 20.3465 12.044 20.3893 11.6483 20.3129C11.2525 20.2365 10.8884 20.0442 10.6022 19.7605C10.3159 19.4767 10.1204 19.1143 10.0404 18.7193C9.96048 18.3243 9.99969 17.9144 10.1531 17.5417C10.3065 17.1689 10.5672 16.8502 10.902 16.6259C11.2369 16.4016 11.6309 16.2818 12.0339 16.2818C12.3002 16.2794 12.5643 16.3298 12.8109 16.4301C13.0576 16.5303 13.282 16.6784 13.4711 16.8659C13.6602 17.0533 13.8103 17.2764 13.9128 17.5221C14.0152 17.7679 14.0679 18.0316 14.0679 18.2978ZM26.5419 18.2978C26.5455 18.7009 26.4292 19.0959 26.2079 19.4327C25.9866 19.7696 25.6702 20.0331 25.2989 20.1898C24.9275 20.3465 24.518 20.3893 24.1223 20.3129C23.7265 20.2365 23.3624 20.0442 23.0762 19.7605C22.7899 19.4767 22.5944 19.1143 22.5144 18.7193C22.4345 18.3243 22.4737 17.9144 22.6271 17.5417C22.7805 17.1689 23.0412 16.8502 23.376 16.6259C23.7109 16.4016 24.1049 16.2818 24.5079 16.2818C25.0443 16.2818 25.5589 16.4936 25.9398 16.8712C26.3208 17.2487 26.5372 17.7615 26.5419 18.2978ZM18.3159 29.0258C16.3091 29.0297 14.3171 28.6824 12.4299 27.9998L13.1499 26.0558C16.4976 27.2078 20.1343 27.2078 23.4819 26.0558L24.2019 27.9998C22.3137 28.6763 20.3217 29.0174 18.3159 29.0078V29.0258Z" fill="white"/></g><path d="M18 36C14.4399 36 10.9598 34.9443 7.99974 32.9665C5.03966 30.9886 2.73255 28.1774 1.37018 24.8883C0.00779903 21.5992 -0.348661 17.98 0.345873 14.4884C1.04041 10.9967 2.75474 7.78943 5.27209 5.27209C7.78943 2.75474 10.9967 1.04041 14.4884 0.345873C17.98 -0.348661 21.5992 0.00779903 24.8883 1.37018C28.1774 2.73255 30.9886 5.03966 32.9665 7.99974C34.9443 10.9598 36 14.4399 36 18C36 22.7739 34.1036 27.3523 30.7279 30.7279C27.3523 34.1036 22.7739 36 18 36ZM18 2.77201C14.9882 2.77201 12.044 3.66512 9.53978 5.33839C7.03555 7.01166 5.08374 9.38995 3.93117 12.1725C2.7786 14.9551 2.47703 18.0169 3.06461 20.9708C3.65219 23.9248 5.10251 26.6382 7.23219 28.7678C9.36186 30.8975 12.0752 32.3478 15.0292 32.9354C17.9831 33.523 21.045 33.2214 23.8275 32.0688C26.6101 30.9163 28.9884 28.9645 30.6616 26.4602C32.3349 23.956 33.228 21.0118 33.228 18C33.228 13.9613 31.6236 10.088 28.7678 7.23219C25.912 4.37638 22.0387 2.77201 18 2.77201Z" fill="#999999"/></g><circle opacity="0.46" cx="13" cy="23" r="0.5" fill="#801B1B"/><circle opacity="0.78" cx="17" cy="16" r="1" fill="#801B1B"/><circle cx="10.5" cy="12.5" r="1.5" fill="#801B1B"/><circle opacity="0.46" cx="16.5" cy="5.5" r="0.75" fill="#801B1B"/></g><defs><clipPath id="clip0_560_2"><rect width="36" height="36" fill="white"/></clipPath></defs></svg>`,
+  color: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.66675 15.9998C2.66675 8.6665 8.66675 2.6665 16.0001 2.6665C23.2814 2.6665 29.2867 8.01584 29.3227 14.4532C29.3227 18.5212 25.9841 21.8585 21.9161 21.8585H19.2547C18.9613 21.8534 18.6698 21.9075 18.3977 22.0175C18.1256 22.1275 17.8784 22.2911 17.6709 22.4986C17.4633 22.7062 17.2997 22.9534 17.1897 23.2255C17.0798 23.4976 17.0257 23.7891 17.0307 24.0825C17.0307 24.7132 17.2281 25.1972 17.6147 25.5825C17.9574 25.9692 18.1974 26.4998 18.1974 27.0825C18.1974 28.3385 17.2347 29.3332 16.0001 29.3332C8.66675 29.3332 2.66675 23.3332 2.66675 15.9998ZM24 15.0001C24 16.1047 23.1046 16.9999 22 16.9999C20.8954 16.9999 20 16.1047 20 15.0001C20 13.8955 20.8954 13 22 13C23.1046 13 24 13.8955 24 15.0001Z" fill="#EBC585"/><path d="M16.0001 2.6665C8.66675 2.6665 2.66675 8.6665 2.66675 15.9998C2.66675 23.3332 8.66675 29.3332 16.0001 29.3332C17.2347 29.3332 18.1974 28.3385 18.1974 27.0825C18.1974 26.4998 17.9574 25.9692 17.6147 25.5825C17.2281 25.1972 17.0307 24.7132 17.0307 24.0825C17.0257 23.7891 17.0798 23.4976 17.1897 23.2255C17.2997 22.9534 17.4633 22.7062 17.6709 22.4986C17.8784 22.2911 18.1256 22.1275 18.3977 22.0175C18.6698 21.9075 18.9613 21.8534 19.2547 21.8585H21.9161C25.9841 21.8585 29.3227 18.5212 29.3227 14.4532C29.2867 8.01584 23.2814 2.6665 16.0001 2.6665Z" stroke="#895D44" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.6666 12.6667C13.7712 12.6667 14.6666 11.7713 14.6666 10.6668C14.6666 9.56219 13.7712 8.66675 12.6666 8.66675C11.562 8.66675 10.6667 9.56219 10.6667 10.6668C10.6667 11.7713 11.562 12.6667 12.6666 12.6667Z" fill="#54DD4A"/><path d="M18.6666 10.6666C19.7712 10.6666 20.6667 9.77145 20.6667 8.66685C20.6667 7.56216 19.7712 6.66675 18.6666 6.66675C17.562 6.66675 16.6665 7.56216 16.6665 8.66685C16.6665 9.77145 17.562 10.6666 18.6666 10.6666Z" fill="#6691FF"/><path d="M8.66676 18.6666C9.77133 18.6666 10.6667 17.7714 10.6667 16.6668C10.6667 15.5622 9.77133 14.6667 8.66676 14.6667C7.56219 14.6667 6.66675 15.5622 6.66675 16.6668C6.66675 17.7714 7.56219 18.6666 8.66676 18.6666Z" fill="#DD4A4A"/></svg>`,
+  contact_discord: `<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M68.8257 28.8084C64.8836 27.0036 60.7221 25.7233 56.4473 25C55.8623 26.0457 55.333 27.1216 54.8616 28.2232C50.3081 27.5371 45.6775 27.5371 41.124 28.2232C40.6524 27.1217 40.1231 26.0458 39.5384 25C35.2608 25.7294 31.0965 27.0128 27.1505 28.8178C19.3166 40.4082 17.193 51.7107 18.2548 62.8527C22.8425 66.2423 27.9775 68.8201 33.4364 70.4742C34.6657 68.821 35.7533 67.0671 36.688 65.2312C34.9128 64.5681 33.1994 63.7501 31.5676 62.7866C31.9971 62.4751 32.4171 62.1542 32.823 61.8428C37.5709 64.0756 42.7531 65.2333 47.9999 65.2333C53.2467 65.2333 58.4289 64.0756 63.1768 61.8428C63.5874 62.1778 64.0074 62.4987 64.4321 62.7866C62.7972 63.7517 61.0807 64.5713 59.3024 65.2359C60.2359 67.0709 61.3236 68.8234 62.5539 70.4742C68.0176 68.8268 73.1564 66.2501 77.745 62.8574C78.9909 49.9362 75.6166 38.7376 68.8257 28.8084ZM38.0329 56.0004C35.074 56.0004 32.6295 53.3152 32.6295 50.0117C32.6295 46.7083 34.9891 43.9995 38.0235 43.9995C41.058 43.9995 43.4836 46.7083 43.4317 50.0117C43.3798 53.3152 41.0485 56.0004 38.0329 56.0004ZM57.9668 56.0004C55.0032 56.0004 52.5681 53.3152 52.5681 50.0117C52.5681 46.7083 54.9277 43.9995 57.9668 43.9995C61.006 43.9995 63.4128 46.7083 63.3609 50.0117C63.309 53.3152 60.9824 56.0004 57.9668 56.0004Z" fill="currentColor"/></svg>`,
+  contact_email: `<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M68 28H28C25.2386 28 23 30.2386 23 33V63C23 65.7614 25.2386 68 28 68H68C70.7614 68 73 65.7614 73 63V33C73 30.2386 70.7614 28 68 28Z" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M73 35.5L50.575 49.75C49.8032 50.2336 48.9108 50.49 48 50.49C47.0892 50.49 46.1968 50.2336 45.425 49.75L23 35.5" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  contact_github: `<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1481_45)"><path fill-rule="evenodd" clip-rule="evenodd" d="M47.9106 19C31.3708 19 18 32.4694 18 49.1329C18 62.4529 26.5671 73.728 38.452 77.7186C39.938 78.0186 40.4822 77.0702 40.4822 76.2724C40.4822 75.5739 40.4333 73.1794 40.4333 70.6845C32.1129 72.4808 30.3802 67.0925 30.3802 67.0925C29.0431 63.6002 27.0618 62.7027 27.0618 62.7027C24.3386 60.8567 27.2602 60.8567 27.2602 60.8567C30.281 61.0563 31.8661 63.9498 31.8661 63.9498C34.5398 68.5392 38.8482 67.2424 40.5814 66.4441C40.8288 64.4984 41.6216 63.1514 42.4635 62.4033C35.8273 61.7047 28.8453 59.1106 28.8453 47.5361C28.8453 44.2435 30.0331 41.5496 31.9151 39.4545C31.6182 38.7063 30.578 35.6127 32.2127 31.472C32.2127 31.472 34.7382 30.6737 40.4327 34.5651C42.8707 33.9055 45.385 33.57 47.9106 33.5671C50.4361 33.5671 53.0106 33.9167 55.388 34.5651C61.0831 30.6737 63.6086 31.472 63.6086 31.472C65.2433 35.6127 64.2024 38.7063 63.9055 39.4545C65.8371 41.5496 66.9759 44.2435 66.9759 47.5361C66.9759 59.1106 59.9939 61.6545 53.3082 62.4033C54.398 63.351 55.3384 65.1467 55.3384 67.9906C55.3384 72.0314 55.2894 75.2745 55.2894 76.2718C55.2894 77.0702 55.8343 78.0186 57.3196 77.7192C69.2045 73.7273 77.7716 62.4529 77.7716 49.1329C77.8206 32.4694 64.4008 19 47.9106 19Z" fill="currentColor"/></g><defs><clipPath id="clip0_1481_45"><rect width="60" height="58.7755" fill="currentColor" transform="translate(18 19)"/></clipPath></defs></svg>`
+};
+
+// src/util/downloadLink.ts
+function downloadLink(url, name2) {
+  const a2 = document.createElement("a");
+  a2.href = url;
+  a2.download = name2;
+  document.body.appendChild(a2);
+  a2.click();
+  setTimeout(() => {
+    a2.remove();
+  }, 1000);
+}
+var link = document.createElement("a");
+function saveBlob(blob, filename) {
+  if (link.href) {
+    URL.revokeObjectURL(link.href);
+  }
+  link.href = URL.createObjectURL(blob);
+  link.download = filename || "data.json";
+  link.dispatchEvent(new MouseEvent("click"));
+}
+function saveArrayBuffer(buffer, filename) {
+  saveBlob(new Blob([buffer], { type: "application/octet-stream" }), filename);
+}
+
+// src/ui/pages/Settings.ts
+var import_localforage4 = __toESM(require_localforage(), 1);
+
+// src/util/SettingsHelper.ts
+var import_localforage3 = __toESM(require_localforage(), 1);
+var __3 = _8();
+__3("Low");
+__3("Middle");
+__3("High");
+var settingsInfo = {
+  sfx: {
+    type: 0 /* Checkbox */,
+    label: __3("Enable sound effects"),
+    default: true,
+    description: __3("Toggle sound effects for buttons and inputs.")
+  },
+  accessibilityFeature: {
+    type: 0 /* Checkbox */,
+    label: __3("Enable accessibility features"),
+    default: false,
+    description: __3("The editor UI will be tweaked to be more accessible.")
+  },
+  autoCloseCustomRender: {
+    type: 0 /* Checkbox */,
+    label: __3("Auto-close custom render menu"),
+    default: true,
+    description: __3("The custom render menu will automatically close when pressing save.")
+  },
+  autoCloseQrScan: {
+    type: 0 /* Checkbox */,
+    label: __3("Auto-close QR scan menu"),
+    default: true,
+    description: __3("The QR code scanner will disappear after a successful scan.")
+  },
+  allowQrCamera: {
+    type: 0 /* Checkbox */,
+    label: __3("Allow using camera in QR scanner"),
+    default: true,
+    description: __3("When this is disabled, the camera won't be used and some errors may not appear.")
+  },
+  editMode: {
+    type: 1 /* Multi */,
+    label: __3("Editing Mode"),
+    description: __3("Changes the default edit mode option."),
+    default: "3d",
+    choices: [
+      { label: __3("2D"), value: "2d" },
+      { label: __3("3D"), value: "3d" }
+    ]
+  },
+  theme: {
+    type: 1 /* Multi */,
+    label: __3("Theme"),
+    default: "default",
+    description: __3("When this is set to Normal, your device's color theme preferences will be used."),
+    choices: [
+      { label: __3("Normal"), value: "default" },
+      { label: __3("Wii U"), value: "wiiu", disabled: true }
+    ]
+  },
+  resourceType: {
+    type: 1 /* Multi */,
+    label: __3("Resource Type"),
+    default: String(Config.renderer.fflResourcePath.length - 1),
+    description: __3(`This changes model/texture quality.
+* Low resource cannot use some shader features.`),
+    choices: [
+      ...Config.renderer.fflResourcesNames.map((n2, i) => ({
+        label: __3(n2),
+        value: String(i)
+      }))
+    ]
+  },
+  shaderType: {
+    type: 1 /* Multi */,
+    label: __3("Shader Type"),
+    description: __3("Change the lighting used in icons, renders and the editor."),
+    default: "wiiu" /* WiiU */,
+    choices: [
+      { label: __3("No Lighting"), value: "lightDisabled" /* LightDisabled */ },
+      { label: __3("Simple"), value: "three_phong" /* ThreePhong */ },
+      { label: __3("Toon"), value: "three_toon" /* ThreeToon */ },
+      { label: __3("Wii U"), value: "wiiu" /* WiiU */ },
+      { label: __3("Wii U (Blinn)"), value: "wiiu_blinn" /* WiiUBlinn */ },
+      { label: __3("Wii U (Bright)"), value: "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */ },
+      { label: __3("Wii U (Toon)"), value: "wiiu_toon" /* WiiUToon */ },
+      { label: __3("Miitomo"), value: "miitomo" /* Miitomo */ },
+      { label: __3("Miitomo (Basic)"), value: "miitomo_basic" /* MiitomoBasic */ }
+    ]
+  },
+  toonShaderOutline: {
+    type: 0 /* Checkbox */,
+    label: __3("Toon shader uses outline"),
+    description: __3("Apply toon outline to renders and 3D scene."),
+    default: true,
+    condition(allSettings) {
+      return allSettings["shaderType"] === "three_toon" /* ThreeToon */ ? true : false;
+    }
+  },
+  bodyModel: {
+    type: 1 /* Multi */,
+    label: __3("Body Model"),
+    description: __3("Pose selections are different depending on the body model you use."),
+    default: "wiiu" /* WiiU */,
+    choices: [
+      { label: __3("Wii U"), value: "wiiu" /* WiiU */ },
+      { label: __3("Switch"), value: "switch" /* Switch */, disabled: true },
+      { label: __3("Miitomo"), value: "miitomo" /* Miitomo */ }
+    ]
+  },
+  customRenderGreenScreen: {
+    type: 1 /* Multi */,
+    label: __3("Use background in custom render"),
+    default: "off",
+    description: __3("The custom render will have a solid color background."),
+    choices: [
+      { label: __3("Disabled"), value: "off" },
+      { label: __3("Green"), value: "green" },
+      { label: __3("Blue"), value: "blue" },
+      { label: __3("Black"), value: "black" },
+      { label: __3("White"), value: "white" },
+      { label: __3("Custom"), value: "custom", isColor: true }
+    ]
+  },
+  personalMii: {
+    type: 2 /* NonConfigMulti */,
+    label: __3("Personal Mii"),
+    description: __3("Manage your choice of Personal Mii."),
+    choices: [
+      {
+        label: __3("Choose"),
+        async select() {
+          const miis = await getAllMiis();
+          await choosePersonalMii(miis, true);
+        }
+      }
+    ],
+    render(html) {
+      html.append(new Html("div").text("REAL"));
+    }
+  },
+  saveData: {
+    type: 2 /* NonConfigMulti */,
+    label: __3("Save Data"),
+    description: __3("Not implemented yet."),
+    choices: [
+      {
+        label: __3("Import"),
+        disabled: true
+      },
+      {
+        label: __3("Export"),
+        disabled: true
+      },
+      {
+        label: __3("Delete"),
+        type: "danger",
+        async select() {
+        },
+        disabled: true
+      }
+    ]
+  },
+  updateNotices: {
+    type: 2 /* NonConfigMulti */,
+    label: __3("Update Notices"),
+    description: __3("View the last update notice if you missed it."),
+    choices: [
+      {
+        label: __3("Review update notice"),
+        select() {
+          replayUpdateNotice();
+        }
+      }
+    ]
+  }
+};
+var getSetting = async (key2) => {
+  const result = await import_localforage3.default.getItem("settings_" + key2);
+  if (result === null) {
+    if (settingsInfo[key2])
+      return settingsInfo[key2].default;
+    else
+      return null;
+  } else
+    return result;
+};
+var setSetting = async (key2, value2) => {
+  return await import_localforage3.default.setItem("settings_" + key2, value2);
+};
+
+// src/ui/components/Notify.ts
+var notifyBox;
+var Notify_default = {
+  show: function(title, description, callback, callbackTitle = "") {
+    if (notifyBox === undefined)
+      notifyBox = new Html("div").class("notify-box").appendTo("body");
+    let notifyTitle = new Html("div").class("notify-title").text(title);
+    let notifyDescription = new Html("div").class("notify-text").text(description);
+    playSound("notice");
+    let notify = new Html("div").class("notify", "slideIn").appendMany(notifyTitle, notifyDescription).appendTo(notifyBox);
+    if (callback) {
+      notify.append(new Html("button").on("click", callback).text(callbackTitle));
+    }
+    setTimeout(() => {
+      notify.classOff("slideIn").classOn("slideOut");
+      setTimeout(() => {
+        notify.cleanup();
+      }, 500);
+    }, 5000);
+  }
+};
+
+// src/ui/pages/Settings.ts
+var needsToNotify = true;
+var __4 = _8();
+var resourceRefreshFlag = false;
+var updateSettings = async (force = false) => {
+  await checkPrevSettings();
+  function askRefreshNotice() {
+    if (needsToNotify && force === false) {
+      Notify_default.show(__4("Refresh to apply changes"), __4("Icons won't be affected until you reload."), () => {
+        location.reload();
+      }, "Refresh");
+      needsToNotify = false;
+      setTimeout(() => {
+        needsToNotify = true;
+      }, 5000);
+    }
+  }
+  let useBgm = await import_localforage4.default.getItem("settings_bgm");
+  if (useBgm === true)
+    getMusicManager().unmute();
+  else if (useBgm === false)
+    getMusicManager().mute();
+  let useSfx = await import_localforage4.default.getItem("settings_sfx");
+  if (useSfx === true)
+    getSoundManager().unmute();
+  else if (useSfx === false)
+    getSoundManager().mute();
+  const wiiu = await import_localforage4.default.getItem("settings_wiiu");
+  if (wiiu) {
+    await import_localforage4.default.removeItem("settings_wiiu");
+    await import_localforage4.default.setItem("settings_theme", "wiiu");
+  }
+  const theme = await import_localforage4.default.getItem("settings_theme");
+  if (theme === null) {
+    await setSetting("theme", "default");
+  } else if (theme === "wiiu") {
+    await setSetting("theme", "default");
+  }
+  document.documentElement.dataset.theme = String(await import_localforage4.default.getItem("settings_theme"));
+  if (prevSetting["theme"] !== await import_localforage4.default.getItem("settings_theme") || force) {
+    setTimeout(async () => {
+      document.dispatchEvent(new CustomEvent("theme-change"));
+    }, 33.33);
+  }
+  if (prevSetting["resourceType"] !== await import_localforage4.default.getItem("settings_resourceType")) {
+    console.log("comparing", prevSetting["resourceType"], "to", await import_localforage4.default.getItem("settings_resourceType"), "FAILED");
+    resourceRefreshFlag = true;
+  }
+  if (prevSetting["shaderType"] !== await import_localforage4.default.getItem("settings_shaderType")) {
+    console.log("shaderType changed!!!");
+    askRefreshNotice();
+    let currentShader = await getSetting("shaderType");
+    document.dispatchEvent(new CustomEvent("library-shader-update"));
+    if (Html.qsa("img[data-src]") !== null)
+      Html.qsa("img[data-src]").forEach((img) => {
+        const image = img.elm;
+        const source = image.src.trim() || image.dataset.src;
+        let sourceToUpdate = image.src.trim() !== "" ? "src" : "data-src";
+        console.log(sourceToUpdate);
+        if (!source.includes("?"))
+          return;
+        const params = new URLSearchParams(source.split("?").pop());
+        params.delete("shaderType");
+        params.delete("lightEnable");
+        adjustShaderQuery(params, currentShader);
+        if (sourceToUpdate === "src") {
+          image.src = `${source.split("?")[0]}?${params.toString()}`;
+        } else if (sourceToUpdate === "data-src") {
+          image.dataset.src = `${source.split("?")[0]}?${params.toString()}`;
+        }
+      });
+  }
+  if (prevSetting["bodyModel"] !== await import_localforage4.default.getItem("settings_bodyModel")) {
+    console.log("bodyModel changed!!!");
+    askRefreshNotice();
+    let bodyType2 = await getSetting("bodyModel");
+    document.dispatchEvent(new CustomEvent("library-body-update"));
+    if (Html.qsa("img[data-src]") !== null)
+      Html.qsa("img[data-src]").forEach((img) => {
+        const image = img.elm;
+        const source = image.src.trim() || image.dataset.src;
+        let sourceToUpdate = image.src.trim() !== "" ? "src" : "data-src";
+        if (!source.includes("?"))
+          return;
+        const params = new URLSearchParams(source.split("?").pop());
+        params.delete("bodyType");
+        params.set("bodyType", bodyType2);
+        if (sourceToUpdate === "src") {
+          image.src = `${source.split("?")[0]}?${params.toString()}`;
+        } else if (sourceToUpdate === "data-src") {
+          image.dataset.src = `${source.split("?")[0]}?${params.toString()}`;
+        }
+      });
+  }
+  await updatePrevSettings();
+};
+var prevSetting = {};
+var prefix = "settings_";
+async function checkPrevSettings() {
+  for (const key2 in settingsInfo) {
+    let prefixedKey = prefix + key2;
+    if (prevSetting[key2] === undefined) {
+      prevSetting[key2] = await import_localforage4.default.getItem(prefixedKey);
+    }
+  }
+}
+async function updatePrevSettings() {
+  for (const key2 in settingsInfo) {
+    let prefixedKey = prefix + key2;
+    prevSetting[key2] = await import_localforage4.default.getItem(prefixedKey);
+  }
+}
+await updatePrevSettings();
+async function Settings2() {
+  const modal = Modal_default.modal(__4("Settings"), "", "body", {
+    text: "Cancel",
+    callback(e) {
+      if (resourceRefreshFlag) {
+        Modal_default.modal(__4("Notice"), __4("A refresh is required to apply resource changes."), "body", {
+          text: __4("OK"),
+          callback(e2) {
+            location.reload();
+          }
+        });
+      }
+    }
+  });
+  const modalBody = modal.qs(".modal-body").clear();
+  modalBody.elm.style.setProperty("align-items", "flex-start", "important");
+  modalBody.elm.style.setProperty("max-width", "600px");
+  async function checkConditions() {
+    const items = [...elements];
+    const allSettings = {};
+    for (const key2 in settingsInfo) {
+      allSettings[key2] = await getSetting(key2);
+    }
+    for (const [key2, element] of items) {
+      if (settingsInfo[key2].condition) {
+        let result = settingsInfo[key2].condition(allSettings);
+        if (result === true) {
+          element.style.display = "flex";
+        } else {
+          element.style.display = "none";
+        }
+      }
+    }
+  }
+  let elements = new Map;
+  for (const key2 in settingsInfo) {
+    let prefixedKey = prefix + key2;
+    if (await import_localforage4.default.getItem(prefixedKey) === null) {
+      await import_localforage4.default.setItem(prefixedKey, settingsInfo[key2].default);
+    }
+    prevSetting[key2] = await import_localforage4.default.getItem(prefixedKey);
+    switch (settingsInfo[key2].type) {
+      case 0 /* Checkbox */:
+        const checkboxDiv = new Html("div").class("col").appendMany(new Html("div").class("flex-group").style({ "justify-content": "flex-start" }).appendMany(AddButtonSounds(new Html("input").attr({
+          id: prefixedKey,
+          type: "checkbox",
+          checked: await import_localforage4.default.getItem(prefixedKey) === true ? true : undefined
+        }).on("input", async (e) => {
+          prevSetting[key2] = await import_localforage4.default.getItem(prefixedKey);
+          await import_localforage4.default.setItem(prefixedKey, e.target.checked);
+          updateSettings();
+          checkConditions();
+        }), "hover", "select_misc"), new Html("label").attr({ for: prefixedKey }).text(settingsInfo[key2].label)), new Html("small").text(settingsInfo[key2].description));
+        elements.set(key2, checkboxDiv.elm);
+        modalBody.append(checkboxDiv);
+        break;
+      case 1 /* Multi */:
+        const val2 = await import_localforage4.default.getItem(prefixedKey);
+        let options = await Promise.all(settingsInfo[key2].choices.map(async (c2) => {
+          let colorSpan = undefined;
+          let isActive = false;
+          if (typeof c2.isColor !== "undefined") {
+            colorSpan = new Html("span").style({
+              width: "1.2em",
+              height: "1.2em",
+              "border-radius": "6px"
+            });
+            colorSpan.style({
+              "background-color": "var(--hover)",
+              border: "1px solid var(--stroke)"
+            });
+            const value2 = await import_localforage4.default.getItem(prefixedKey);
+            if (typeof value2 === "string") {
+              if (value2.startsWith("#")) {
+                colorSpan.style({ "background-color": value2 });
+                isActive = true;
+              }
+            }
+          }
+          const multiButton = new Html("button").class(c2.value === val2 || isActive ? "selected-setting" : undefined).attr({ "data-setting": prefixedKey }).text(settingsInfo[key2].default === c2.value ? `${c2.label} ${__4("(Default)")}` : c2.label);
+          if (colorSpan !== undefined) {
+            colorSpan.prependTo(multiButton);
+          }
+          const button = AddButtonSounds(multiButton, "hover", "select_misc");
+          if (c2.disabled) {
+            button.attr({ disabled: true });
+          } else {
+            multiButton.on("click", async (e) => {
+              prevSetting[key2] = String(await import_localforage4.default.getItem(prefixedKey));
+              let isActive2 = false;
+              if (typeof c2.isColor !== "undefined") {
+                const color = new Html("input").attr({ type: "color" }).style({ position: "fixed", opacity: "0" }).appendTo("body");
+                if (prevSetting[key2].startsWith("#")) {
+                  color.val(prevSetting[key2]);
+                  isActive2 = true;
+                }
+                color.elm.click();
+                color.on("change", (e2) => {
+                  import_localforage4.default.setItem(prefixedKey, color.getValue());
+                  if (colorSpan)
+                    colorSpan.style({ "background-color": color.getValue() });
+                  color.cleanup();
+                  isActive2 = true;
+                });
+              } else {
+                await import_localforage4.default.setItem(prefixedKey, c2.value);
+              }
+              updateSettings();
+              checkConditions();
+              const t3 = e.target;
+              t3.parentElement.querySelectorAll(`[data-setting="${prefixedKey}"]`).forEach((p) => {
+                p.classList.remove("selected-setting");
+              });
+              if (c2.isColor !== undefined) {
+                if (isActive2) {
+                  t3.classList.add("selected-setting");
+                }
+                const color = String(await import_localforage4.default.getItem(prefixedKey));
+                if (colorSpan)
+                  colorSpan.style({ "background-color": color });
+              } else
+                t3.classList.add("selected-setting");
+            });
+          }
+          return button;
+        }));
+        let multiDiv = new Html("div").class("col").appendMany(new Html("label").text(settingsInfo[key2].label), new Html("small").text(settingsInfo[key2].description), new Html("div").class("flex-group").style({ "justify-content": "flex-start" }).appendMany(...options));
+        elements.set(key2, multiDiv.elm);
+        modalBody.append(multiDiv);
+        break;
+      case 2 /* NonConfigMulti */:
+        const nonSettingsMulti = new Html("div").class("col").appendMany(new Html("label").text(settingsInfo[key2].label), new Html("small").text(settingsInfo[key2].description), new Html("div").class("flex-group").style({ "justify-content": "flex-start" }).appendMany(...settingsInfo[key2].choices.map((c2) => {
+          const button = AddButtonSounds(new Html("button").attr({ disabled: c2.disabled }).class(c2.type).text(c2.label).on("click", async (e) => {
+            c2.select();
+          }), "hover", "select_misc");
+          if (c2.disabled) {
+            button.attr({ disabled: true });
+          }
+          return button;
+        })));
+        if (settingsInfo[key2].render) {
+          settingsInfo[key2].render(nonSettingsMulti);
+        }
+        elements.set(key2, nonSettingsMulti.elm);
+        modalBody.append(nonSettingsMulti);
+        break;
+    }
+  }
+  await checkConditions();
+}
+async function replayUpdateNotice() {
+  await setSetting(`has-seen-${Config.version.string}`, false);
+}
+
+// src/ui/pages/library/select.ts
+var import_localforage6 = __toESM(require_localforage(), 1);
+
+// src/ui/components/TabList.ts
+function TabList(tabs, type = 0 /* Square */) {
+  const tabList = new Html("div").class("tab-list");
+  const tabContent = new Html("div").class("tab-content");
+  function selectTab(tabElm, tabSelect, update = true) {
+    if (update !== false) {
+      tabList.qsa(".tab").forEach((tab) => tab?.classOff("active"));
+      tabElm.classOn("active");
+      tabContent.clear();
+    }
+    tabSelect(tabContent);
+  }
+  for (const tab of tabs) {
+    let tabElm = AddButtonSounds(new Html("div").classOn("tab").html(tab.icon).on("click", async () => {
+      selectTab(tabElm, tab.select, tab.update);
+    }).appendTo(tabList), "hover", "select_tab");
+    switch (type) {
+      case 0 /* Square */:
+        tabElm.classOn("tab-square");
+        break;
+      case 1 /* NotSquare */:
+        tabElm.classOn("tab-rectangle");
+        break;
+    }
+    if (typeof tab.type !== "undefined") {
+      tabElm.classOn(tab.type);
+    }
+  }
+  selectTab(Html.from(tabList.elm.children[0]), tabs[0].select);
+  return { list: tabList, content: tabContent };
+}
+
+// node_modules/camera-controls/dist/camera-controls.module.js
+/*!
+ * camera-controls
+ * https://github.com/yomotsu/camera-controls
+ * (c) 2017 @yomotsu
+ * Released under the MIT License.
+ */
+var MOUSE_BUTTON = {
+  LEFT: 1,
+  RIGHT: 2,
+  MIDDLE: 4
+};
+var ACTION = Object.freeze({
+  NONE: 0,
+  ROTATE: 1,
+  TRUCK: 2,
+  OFFSET: 4,
+  DOLLY: 8,
+  ZOOM: 16,
+  TOUCH_ROTATE: 32,
+  TOUCH_TRUCK: 64,
+  TOUCH_OFFSET: 128,
+  TOUCH_DOLLY: 256,
+  TOUCH_ZOOM: 512,
+  TOUCH_DOLLY_TRUCK: 1024,
+  TOUCH_DOLLY_OFFSET: 2048,
+  TOUCH_DOLLY_ROTATE: 4096,
+  TOUCH_ZOOM_TRUCK: 8192,
+  TOUCH_ZOOM_OFFSET: 16384,
+  TOUCH_ZOOM_ROTATE: 32768
+});
+var DOLLY_DIRECTION = {
+  NONE: 0,
+  IN: 1,
+  OUT: -1
+};
+function isPerspectiveCamera(camera) {
+  return camera.isPerspectiveCamera;
+}
+function isOrthographicCamera(camera) {
+  return camera.isOrthographicCamera;
+}
+var PI_2 = Math.PI * 2;
+var PI_HALF = Math.PI / 2;
+var EPSILON = 0.00001;
+var DEG2RAD2 = Math.PI / 180;
+function clamp3(value2, min, max) {
+  return Math.max(min, Math.min(max, value2));
+}
+function approxZero(number, error = EPSILON) {
+  return Math.abs(number) < error;
+}
+function approxEquals(a2, b2, error = EPSILON) {
+  return approxZero(a2 - b2, error);
+}
+function roundToStep(value2, step) {
+  return Math.round(value2 / step) * step;
+}
+function infinityToMaxNumber(value2) {
+  if (isFinite(value2))
+    return value2;
+  if (value2 < 0)
+    return -Number.MAX_VALUE;
+  return Number.MAX_VALUE;
+}
+function maxNumberToInfinity(value2) {
+  if (Math.abs(value2) < Number.MAX_VALUE)
+    return value2;
+  return value2 * Infinity;
+}
+function smoothDamp(current, target, currentVelocityRef, smoothTime, maxSpeed = Infinity, deltaTime) {
+  smoothTime = Math.max(0.0001, smoothTime);
+  const omega = 2 / smoothTime;
+  const x2 = omega * deltaTime;
+  const exp = 1 / (1 + x2 + 0.48 * x2 * x2 + 0.235 * x2 * x2 * x2);
+  let change = current - target;
+  const originalTo = target;
+  const maxChange = maxSpeed * smoothTime;
+  change = clamp3(change, -maxChange, maxChange);
+  target = current - change;
+  const temp = (currentVelocityRef.value + omega * change) * deltaTime;
+  currentVelocityRef.value = (currentVelocityRef.value - omega * temp) * exp;
+  let output = target + (change + temp) * exp;
+  if (originalTo - current > 0 === output > originalTo) {
+    output = originalTo;
+    currentVelocityRef.value = (output - originalTo) / deltaTime;
+  }
+  return output;
+}
+function smoothDampVec3(current, target, currentVelocityRef, smoothTime, maxSpeed = Infinity, deltaTime, out) {
+  smoothTime = Math.max(0.0001, smoothTime);
+  const omega = 2 / smoothTime;
+  const x2 = omega * deltaTime;
+  const exp = 1 / (1 + x2 + 0.48 * x2 * x2 + 0.235 * x2 * x2 * x2);
+  let targetX = target.x;
+  let targetY = target.y;
+  let targetZ = target.z;
+  let changeX = current.x - targetX;
+  let changeY = current.y - targetY;
+  let changeZ = current.z - targetZ;
+  const originalToX = targetX;
+  const originalToY = targetY;
+  const originalToZ = targetZ;
+  const maxChange = maxSpeed * smoothTime;
+  const maxChangeSq = maxChange * maxChange;
+  const magnitudeSq = changeX * changeX + changeY * changeY + changeZ * changeZ;
+  if (magnitudeSq > maxChangeSq) {
+    const magnitude = Math.sqrt(magnitudeSq);
+    changeX = changeX / magnitude * maxChange;
+    changeY = changeY / magnitude * maxChange;
+    changeZ = changeZ / magnitude * maxChange;
+  }
+  targetX = current.x - changeX;
+  targetY = current.y - changeY;
+  targetZ = current.z - changeZ;
+  const tempX = (currentVelocityRef.x + omega * changeX) * deltaTime;
+  const tempY = (currentVelocityRef.y + omega * changeY) * deltaTime;
+  const tempZ = (currentVelocityRef.z + omega * changeZ) * deltaTime;
+  currentVelocityRef.x = (currentVelocityRef.x - omega * tempX) * exp;
+  currentVelocityRef.y = (currentVelocityRef.y - omega * tempY) * exp;
+  currentVelocityRef.z = (currentVelocityRef.z - omega * tempZ) * exp;
+  out.x = targetX + (changeX + tempX) * exp;
+  out.y = targetY + (changeY + tempY) * exp;
+  out.z = targetZ + (changeZ + tempZ) * exp;
+  const origMinusCurrentX = originalToX - current.x;
+  const origMinusCurrentY = originalToY - current.y;
+  const origMinusCurrentZ = originalToZ - current.z;
+  const outMinusOrigX = out.x - originalToX;
+  const outMinusOrigY = out.y - originalToY;
+  const outMinusOrigZ = out.z - originalToZ;
+  if (origMinusCurrentX * outMinusOrigX + origMinusCurrentY * outMinusOrigY + origMinusCurrentZ * outMinusOrigZ > 0) {
+    out.x = originalToX;
+    out.y = originalToY;
+    out.z = originalToZ;
+    currentVelocityRef.x = (out.x - originalToX) / deltaTime;
+    currentVelocityRef.y = (out.y - originalToY) / deltaTime;
+    currentVelocityRef.z = (out.z - originalToZ) / deltaTime;
+  }
+  return out;
+}
+function extractClientCoordFromEvent(pointers, out) {
+  out.set(0, 0);
+  pointers.forEach((pointer) => {
+    out.x += pointer.clientX;
+    out.y += pointer.clientY;
+  });
+  out.x /= pointers.length;
+  out.y /= pointers.length;
+}
+function notSupportedInOrthographicCamera(camera, message) {
+  if (isOrthographicCamera(camera)) {
+    console.warn(`${message} is not supported in OrthographicCamera`);
+    return true;
+  }
+  return false;
+}
+
+class EventDispatcher2 {
+  constructor() {
+    this._listeners = {};
+  }
+  addEventListener(type, listener) {
+    const listeners = this._listeners;
+    if (listeners[type] === undefined)
+      listeners[type] = [];
+    if (listeners[type].indexOf(listener) === -1)
+      listeners[type].push(listener);
+  }
+  hasEventListener(type, listener) {
+    const listeners = this._listeners;
+    return listeners[type] !== undefined && listeners[type].indexOf(listener) !== -1;
+  }
+  removeEventListener(type, listener) {
+    const listeners = this._listeners;
+    const listenerArray = listeners[type];
+    if (listenerArray !== undefined) {
+      const index2 = listenerArray.indexOf(listener);
+      if (index2 !== -1)
+        listenerArray.splice(index2, 1);
+    }
+  }
+  removeAllEventListeners(type) {
+    if (!type) {
+      this._listeners = {};
+      return;
+    }
+    if (Array.isArray(this._listeners[type]))
+      this._listeners[type].length = 0;
+  }
+  dispatchEvent(event) {
+    const listeners = this._listeners;
+    const listenerArray = listeners[event.type];
+    if (listenerArray !== undefined) {
+      event.target = this;
+      const array = listenerArray.slice(0);
+      for (let i = 0, l2 = array.length;i < l2; i++) {
+        array[i].call(this, event);
+      }
+    }
+  }
+}
+var _a3;
+var VERSION = "2.9.0";
+var TOUCH_DOLLY_FACTOR = 1 / 8;
+var isMac = /Mac/.test((_a3 = globalThis === null || globalThis === undefined ? undefined : globalThis.navigator) === null || _a3 === undefined ? undefined : _a3.platform);
+var THREE11;
+var _ORIGIN;
+var _AXIS_Y;
+var _AXIS_Z;
+var _v27;
+var _v3A;
+var _v3B;
+var _v3C;
+var _cameraDirection;
+var _xColumn;
+var _yColumn;
+var _zColumn;
+var _deltaTarget;
+var _deltaOffset;
+var _sphericalA;
+var _sphericalB;
+var _box3A;
+var _box3B;
+var _sphere4;
+var _quaternionA;
+var _quaternionB;
+var _rotationMatrix;
+var _raycaster4;
+
+class CameraControls extends EventDispatcher2 {
+  static install(libs) {
+    THREE11 = libs.THREE;
+    _ORIGIN = Object.freeze(new THREE11.Vector3(0, 0, 0));
+    _AXIS_Y = Object.freeze(new THREE11.Vector3(0, 1, 0));
+    _AXIS_Z = Object.freeze(new THREE11.Vector3(0, 0, 1));
+    _v27 = new THREE11.Vector2;
+    _v3A = new THREE11.Vector3;
+    _v3B = new THREE11.Vector3;
+    _v3C = new THREE11.Vector3;
+    _cameraDirection = new THREE11.Vector3;
+    _xColumn = new THREE11.Vector3;
+    _yColumn = new THREE11.Vector3;
+    _zColumn = new THREE11.Vector3;
+    _deltaTarget = new THREE11.Vector3;
+    _deltaOffset = new THREE11.Vector3;
+    _sphericalA = new THREE11.Spherical;
+    _sphericalB = new THREE11.Spherical;
+    _box3A = new THREE11.Box3;
+    _box3B = new THREE11.Box3;
+    _sphere4 = new THREE11.Sphere;
+    _quaternionA = new THREE11.Quaternion;
+    _quaternionB = new THREE11.Quaternion;
+    _rotationMatrix = new THREE11.Matrix4;
+    _raycaster4 = new THREE11.Raycaster;
+  }
+  static get ACTION() {
+    return ACTION;
+  }
+  constructor(camera, domElement) {
+    super();
+    this.minPolarAngle = 0;
+    this.maxPolarAngle = Math.PI;
+    this.minAzimuthAngle = -Infinity;
+    this.maxAzimuthAngle = Infinity;
+    this.minDistance = Number.EPSILON;
+    this.maxDistance = Infinity;
+    this.infinityDolly = false;
+    this.minZoom = 0.01;
+    this.maxZoom = Infinity;
+    this.smoothTime = 0.25;
+    this.draggingSmoothTime = 0.125;
+    this.maxSpeed = Infinity;
+    this.azimuthRotateSpeed = 1;
+    this.polarRotateSpeed = 1;
+    this.dollySpeed = 1;
+    this.dollyDragInverted = false;
+    this.truckSpeed = 2;
+    this.dollyToCursor = false;
+    this.dragToOffset = false;
+    this.verticalDragToForward = false;
+    this.boundaryFriction = 0;
+    this.restThreshold = 0.01;
+    this.colliderMeshes = [];
+    this.cancel = () => {
+    };
+    this._enabled = true;
+    this._state = ACTION.NONE;
+    this._viewport = null;
+    this._changedDolly = 0;
+    this._changedZoom = 0;
+    this._hasRested = true;
+    this._boundaryEnclosesCamera = false;
+    this._needsUpdate = true;
+    this._updatedLastTime = false;
+    this._elementRect = new DOMRect;
+    this._isDragging = false;
+    this._dragNeedsUpdate = true;
+    this._activePointers = [];
+    this._lockedPointer = null;
+    this._interactiveArea = new DOMRect(0, 0, 1, 1);
+    this._isUserControllingRotate = false;
+    this._isUserControllingDolly = false;
+    this._isUserControllingTruck = false;
+    this._isUserControllingOffset = false;
+    this._isUserControllingZoom = false;
+    this._lastDollyDirection = DOLLY_DIRECTION.NONE;
+    this._thetaVelocity = { value: 0 };
+    this._phiVelocity = { value: 0 };
+    this._radiusVelocity = { value: 0 };
+    this._targetVelocity = new THREE11.Vector3;
+    this._focalOffsetVelocity = new THREE11.Vector3;
+    this._zoomVelocity = { value: 0 };
+    this._truckInternal = (deltaX, deltaY, dragToOffset) => {
+      let truckX;
+      let pedestalY;
+      if (isPerspectiveCamera(this._camera)) {
+        const offset = _v3A.copy(this._camera.position).sub(this._target);
+        const fov2 = this._camera.getEffectiveFOV() * DEG2RAD2;
+        const targetDistance = offset.length() * Math.tan(fov2 * 0.5);
+        truckX = this.truckSpeed * deltaX * targetDistance / this._elementRect.height;
+        pedestalY = this.truckSpeed * deltaY * targetDistance / this._elementRect.height;
+      } else if (isOrthographicCamera(this._camera)) {
+        const camera2 = this._camera;
+        truckX = deltaX * (camera2.right - camera2.left) / camera2.zoom / this._elementRect.width;
+        pedestalY = deltaY * (camera2.top - camera2.bottom) / camera2.zoom / this._elementRect.height;
+      } else {
+        return;
+      }
+      if (this.verticalDragToForward) {
+        dragToOffset ? this.setFocalOffset(this._focalOffsetEnd.x + truckX, this._focalOffsetEnd.y, this._focalOffsetEnd.z, true) : this.truck(truckX, 0, true);
+        this.forward(-pedestalY, true);
+      } else {
+        dragToOffset ? this.setFocalOffset(this._focalOffsetEnd.x + truckX, this._focalOffsetEnd.y + pedestalY, this._focalOffsetEnd.z, true) : this.truck(truckX, pedestalY, true);
+      }
+    };
+    this._rotateInternal = (deltaX, deltaY) => {
+      const theta = PI_2 * this.azimuthRotateSpeed * deltaX / this._elementRect.height;
+      const phi = PI_2 * this.polarRotateSpeed * deltaY / this._elementRect.height;
+      this.rotate(theta, phi, true);
+    };
+    this._dollyInternal = (delta, x2, y) => {
+      const dollyScale = Math.pow(0.95, -delta * this.dollySpeed);
+      const lastDistance = this._sphericalEnd.radius;
+      const distance = this._sphericalEnd.radius * dollyScale;
+      const clampedDistance = clamp3(distance, this.minDistance, this.maxDistance);
+      const overflowedDistance = clampedDistance - distance;
+      if (this.infinityDolly && this.dollyToCursor) {
+        this._dollyToNoClamp(distance, true);
+      } else if (this.infinityDolly && !this.dollyToCursor) {
+        this.dollyInFixed(overflowedDistance, true);
+        this._dollyToNoClamp(clampedDistance, true);
+      } else {
+        this._dollyToNoClamp(clampedDistance, true);
+      }
+      if (this.dollyToCursor) {
+        this._changedDolly += (this.infinityDolly ? distance : clampedDistance) - lastDistance;
+        this._dollyControlCoord.set(x2, y);
+      }
+      this._lastDollyDirection = Math.sign(-delta);
+    };
+    this._zoomInternal = (delta, x2, y) => {
+      const zoomScale = Math.pow(0.95, delta * this.dollySpeed);
+      const lastZoom = this._zoom;
+      const zoom = this._zoom * zoomScale;
+      this.zoomTo(zoom, true);
+      if (this.dollyToCursor) {
+        this._changedZoom += zoom - lastZoom;
+        this._dollyControlCoord.set(x2, y);
+      }
+    };
+    if (typeof THREE11 === "undefined") {
+      console.error("camera-controls: `THREE` is undefined. You must first run `CameraControls.install( { THREE: THREE } )`. Check the docs for further information.");
+    }
+    this._camera = camera;
+    this._yAxisUpSpace = new THREE11.Quaternion().setFromUnitVectors(this._camera.up, _AXIS_Y);
+    this._yAxisUpSpaceInverse = this._yAxisUpSpace.clone().invert();
+    this._state = ACTION.NONE;
+    this._target = new THREE11.Vector3;
+    this._targetEnd = this._target.clone();
+    this._focalOffset = new THREE11.Vector3;
+    this._focalOffsetEnd = this._focalOffset.clone();
+    this._spherical = new THREE11.Spherical().setFromVector3(_v3A.copy(this._camera.position).applyQuaternion(this._yAxisUpSpace));
+    this._sphericalEnd = this._spherical.clone();
+    this._lastDistance = this._spherical.radius;
+    this._zoom = this._camera.zoom;
+    this._zoomEnd = this._zoom;
+    this._lastZoom = this._zoom;
+    this._nearPlaneCorners = [
+      new THREE11.Vector3,
+      new THREE11.Vector3,
+      new THREE11.Vector3,
+      new THREE11.Vector3
+    ];
+    this._updateNearPlaneCorners();
+    this._boundary = new THREE11.Box3(new THREE11.Vector3(-Infinity, -Infinity, -Infinity), new THREE11.Vector3(Infinity, Infinity, Infinity));
+    this._cameraUp0 = this._camera.up.clone();
+    this._target0 = this._target.clone();
+    this._position0 = this._camera.position.clone();
+    this._zoom0 = this._zoom;
+    this._focalOffset0 = this._focalOffset.clone();
+    this._dollyControlCoord = new THREE11.Vector2;
+    this.mouseButtons = {
+      left: ACTION.ROTATE,
+      middle: ACTION.DOLLY,
+      right: ACTION.TRUCK,
+      wheel: isPerspectiveCamera(this._camera) ? ACTION.DOLLY : isOrthographicCamera(this._camera) ? ACTION.ZOOM : ACTION.NONE
+    };
+    this.touches = {
+      one: ACTION.TOUCH_ROTATE,
+      two: isPerspectiveCamera(this._camera) ? ACTION.TOUCH_DOLLY_TRUCK : isOrthographicCamera(this._camera) ? ACTION.TOUCH_ZOOM_TRUCK : ACTION.NONE,
+      three: ACTION.TOUCH_TRUCK
+    };
+    const dragStartPosition = new THREE11.Vector2;
+    const lastDragPosition = new THREE11.Vector2;
+    const dollyStart = new THREE11.Vector2;
+    const onPointerDown = (event) => {
+      if (!this._enabled || !this._domElement)
+        return;
+      if (this._interactiveArea.left !== 0 || this._interactiveArea.top !== 0 || this._interactiveArea.width !== 1 || this._interactiveArea.height !== 1) {
+        const elRect = this._domElement.getBoundingClientRect();
+        const left = event.clientX / elRect.width;
+        const top = event.clientY / elRect.height;
+        if (left < this._interactiveArea.left || left > this._interactiveArea.right || top < this._interactiveArea.top || top > this._interactiveArea.bottom)
+          return;
+      }
+      const mouseButton = event.pointerType !== "mouse" ? null : (event.buttons & MOUSE_BUTTON.LEFT) === MOUSE_BUTTON.LEFT ? MOUSE_BUTTON.LEFT : (event.buttons & MOUSE_BUTTON.MIDDLE) === MOUSE_BUTTON.MIDDLE ? MOUSE_BUTTON.MIDDLE : (event.buttons & MOUSE_BUTTON.RIGHT) === MOUSE_BUTTON.RIGHT ? MOUSE_BUTTON.RIGHT : null;
+      if (mouseButton !== null) {
+        const zombiePointer = this._findPointerByMouseButton(mouseButton);
+        zombiePointer && this._disposePointer(zombiePointer);
+      }
+      if ((event.buttons & MOUSE_BUTTON.LEFT) === MOUSE_BUTTON.LEFT && this._lockedPointer)
+        return;
+      const pointer = {
+        pointerId: event.pointerId,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        deltaX: 0,
+        deltaY: 0,
+        mouseButton
+      };
+      this._activePointers.push(pointer);
+      this._domElement.ownerDocument.removeEventListener("pointermove", onPointerMove, { passive: false });
+      this._domElement.ownerDocument.removeEventListener("pointerup", onPointerUp);
+      this._domElement.ownerDocument.addEventListener("pointermove", onPointerMove, { passive: false });
+      this._domElement.ownerDocument.addEventListener("pointerup", onPointerUp);
+      this._isDragging = true;
+      startDragging(event);
+    };
+    const onPointerMove = (event) => {
+      if (event.cancelable)
+        event.preventDefault();
+      const pointerId = event.pointerId;
+      const pointer = this._lockedPointer || this._findPointerById(pointerId);
+      if (!pointer)
+        return;
+      pointer.clientX = event.clientX;
+      pointer.clientY = event.clientY;
+      pointer.deltaX = event.movementX;
+      pointer.deltaY = event.movementY;
+      this._state = 0;
+      if (event.pointerType === "touch") {
+        switch (this._activePointers.length) {
+          case 1:
+            this._state = this.touches.one;
+            break;
+          case 2:
+            this._state = this.touches.two;
+            break;
+          case 3:
+            this._state = this.touches.three;
+            break;
+        }
+      } else {
+        if (!this._isDragging && this._lockedPointer || this._isDragging && (event.buttons & MOUSE_BUTTON.LEFT) === MOUSE_BUTTON.LEFT) {
+          this._state = this._state | this.mouseButtons.left;
+        }
+        if (this._isDragging && (event.buttons & MOUSE_BUTTON.MIDDLE) === MOUSE_BUTTON.MIDDLE) {
+          this._state = this._state | this.mouseButtons.middle;
+        }
+        if (this._isDragging && (event.buttons & MOUSE_BUTTON.RIGHT) === MOUSE_BUTTON.RIGHT) {
+          this._state = this._state | this.mouseButtons.right;
+        }
+      }
+      dragging();
+    };
+    const onPointerUp = (event) => {
+      const pointer = this._findPointerById(event.pointerId);
+      if (pointer && pointer === this._lockedPointer)
+        return;
+      pointer && this._disposePointer(pointer);
+      if (event.pointerType === "touch") {
+        switch (this._activePointers.length) {
+          case 0:
+            this._state = ACTION.NONE;
+            break;
+          case 1:
+            this._state = this.touches.one;
+            break;
+          case 2:
+            this._state = this.touches.two;
+            break;
+          case 3:
+            this._state = this.touches.three;
+            break;
+        }
+      } else {
+        this._state = ACTION.NONE;
+      }
+      endDragging();
+    };
+    let lastScrollTimeStamp = -1;
+    const onMouseWheel = (event) => {
+      if (!this._domElement)
+        return;
+      if (!this._enabled || this.mouseButtons.wheel === ACTION.NONE)
+        return;
+      if (this._interactiveArea.left !== 0 || this._interactiveArea.top !== 0 || this._interactiveArea.width !== 1 || this._interactiveArea.height !== 1) {
+        const elRect = this._domElement.getBoundingClientRect();
+        const left = event.clientX / elRect.width;
+        const top = event.clientY / elRect.height;
+        if (left < this._interactiveArea.left || left > this._interactiveArea.right || top < this._interactiveArea.top || top > this._interactiveArea.bottom)
+          return;
+      }
+      event.preventDefault();
+      if (this.dollyToCursor || this.mouseButtons.wheel === ACTION.ROTATE || this.mouseButtons.wheel === ACTION.TRUCK) {
+        const now2 = performance.now();
+        if (lastScrollTimeStamp - now2 < 1000)
+          this._getClientRect(this._elementRect);
+        lastScrollTimeStamp = now2;
+      }
+      const deltaYFactor = isMac ? -1 : -3;
+      const delta = event.deltaMode === 1 ? event.deltaY / deltaYFactor : event.deltaY / (deltaYFactor * 10);
+      const x2 = this.dollyToCursor ? (event.clientX - this._elementRect.x) / this._elementRect.width * 2 - 1 : 0;
+      const y = this.dollyToCursor ? (event.clientY - this._elementRect.y) / this._elementRect.height * -2 + 1 : 0;
+      switch (this.mouseButtons.wheel) {
+        case ACTION.ROTATE: {
+          this._rotateInternal(event.deltaX, event.deltaY);
+          this._isUserControllingRotate = true;
+          break;
+        }
+        case ACTION.TRUCK: {
+          this._truckInternal(event.deltaX, event.deltaY, false);
+          this._isUserControllingTruck = true;
+          break;
+        }
+        case ACTION.OFFSET: {
+          this._truckInternal(event.deltaX, event.deltaY, true);
+          this._isUserControllingOffset = true;
+          break;
+        }
+        case ACTION.DOLLY: {
+          this._dollyInternal(-delta, x2, y);
+          this._isUserControllingDolly = true;
+          break;
+        }
+        case ACTION.ZOOM: {
+          this._zoomInternal(-delta, x2, y);
+          this._isUserControllingZoom = true;
+          break;
+        }
+      }
+      this.dispatchEvent({ type: "control" });
+    };
+    const onContextMenu = (event) => {
+      if (!this._domElement || !this._enabled)
+        return;
+      if (this.mouseButtons.right === CameraControls.ACTION.NONE) {
+        const pointerId = event instanceof PointerEvent ? event.pointerId : 0;
+        const pointer = this._findPointerById(pointerId);
+        pointer && this._disposePointer(pointer);
+        this._domElement.ownerDocument.removeEventListener("pointermove", onPointerMove, { passive: false });
+        this._domElement.ownerDocument.removeEventListener("pointerup", onPointerUp);
+        return;
+      }
+      event.preventDefault();
+    };
+    const startDragging = (event) => {
+      if (!this._enabled)
+        return;
+      extractClientCoordFromEvent(this._activePointers, _v27);
+      this._getClientRect(this._elementRect);
+      dragStartPosition.copy(_v27);
+      lastDragPosition.copy(_v27);
+      const isMultiTouch = this._activePointers.length >= 2;
+      if (isMultiTouch) {
+        const dx = _v27.x - this._activePointers[1].clientX;
+        const dy = _v27.y - this._activePointers[1].clientY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        dollyStart.set(0, distance);
+        const x2 = (this._activePointers[0].clientX + this._activePointers[1].clientX) * 0.5;
+        const y = (this._activePointers[0].clientY + this._activePointers[1].clientY) * 0.5;
+        lastDragPosition.set(x2, y);
+      }
+      this._state = 0;
+      if (!event) {
+        if (this._lockedPointer)
+          this._state = this._state | this.mouseButtons.left;
+      } else if ("pointerType" in event && event.pointerType === "touch") {
+        switch (this._activePointers.length) {
+          case 1:
+            this._state = this.touches.one;
+            break;
+          case 2:
+            this._state = this.touches.two;
+            break;
+          case 3:
+            this._state = this.touches.three;
+            break;
+        }
+      } else {
+        if (!this._lockedPointer && (event.buttons & MOUSE_BUTTON.LEFT) === MOUSE_BUTTON.LEFT) {
+          this._state = this._state | this.mouseButtons.left;
+        }
+        if ((event.buttons & MOUSE_BUTTON.MIDDLE) === MOUSE_BUTTON.MIDDLE) {
+          this._state = this._state | this.mouseButtons.middle;
+        }
+        if ((event.buttons & MOUSE_BUTTON.RIGHT) === MOUSE_BUTTON.RIGHT) {
+          this._state = this._state | this.mouseButtons.right;
+        }
+      }
+      if ((this._state & ACTION.ROTATE) === ACTION.ROTATE || (this._state & ACTION.TOUCH_ROTATE) === ACTION.TOUCH_ROTATE || (this._state & ACTION.TOUCH_DOLLY_ROTATE) === ACTION.TOUCH_DOLLY_ROTATE || (this._state & ACTION.TOUCH_ZOOM_ROTATE) === ACTION.TOUCH_ZOOM_ROTATE) {
+        this._sphericalEnd.theta = this._spherical.theta;
+        this._sphericalEnd.phi = this._spherical.phi;
+        this._thetaVelocity.value = 0;
+        this._phiVelocity.value = 0;
+      }
+      if ((this._state & ACTION.TRUCK) === ACTION.TRUCK || (this._state & ACTION.TOUCH_TRUCK) === ACTION.TOUCH_TRUCK || (this._state & ACTION.TOUCH_DOLLY_TRUCK) === ACTION.TOUCH_DOLLY_TRUCK || (this._state & ACTION.TOUCH_ZOOM_TRUCK) === ACTION.TOUCH_ZOOM_TRUCK) {
+        this._targetEnd.copy(this._target);
+        this._targetVelocity.set(0, 0, 0);
+      }
+      if ((this._state & ACTION.DOLLY) === ACTION.DOLLY || (this._state & ACTION.TOUCH_DOLLY) === ACTION.TOUCH_DOLLY || (this._state & ACTION.TOUCH_DOLLY_TRUCK) === ACTION.TOUCH_DOLLY_TRUCK || (this._state & ACTION.TOUCH_DOLLY_OFFSET) === ACTION.TOUCH_DOLLY_OFFSET || (this._state & ACTION.TOUCH_DOLLY_ROTATE) === ACTION.TOUCH_DOLLY_ROTATE) {
+        this._sphericalEnd.radius = this._spherical.radius;
+        this._radiusVelocity.value = 0;
+      }
+      if ((this._state & ACTION.ZOOM) === ACTION.ZOOM || (this._state & ACTION.TOUCH_ZOOM) === ACTION.TOUCH_ZOOM || (this._state & ACTION.TOUCH_ZOOM_TRUCK) === ACTION.TOUCH_ZOOM_TRUCK || (this._state & ACTION.TOUCH_ZOOM_OFFSET) === ACTION.TOUCH_ZOOM_OFFSET || (this._state & ACTION.TOUCH_ZOOM_ROTATE) === ACTION.TOUCH_ZOOM_ROTATE) {
+        this._zoomEnd = this._zoom;
+        this._zoomVelocity.value = 0;
+      }
+      if ((this._state & ACTION.OFFSET) === ACTION.OFFSET || (this._state & ACTION.TOUCH_OFFSET) === ACTION.TOUCH_OFFSET || (this._state & ACTION.TOUCH_DOLLY_OFFSET) === ACTION.TOUCH_DOLLY_OFFSET || (this._state & ACTION.TOUCH_ZOOM_OFFSET) === ACTION.TOUCH_ZOOM_OFFSET) {
+        this._focalOffsetEnd.copy(this._focalOffset);
+        this._focalOffsetVelocity.set(0, 0, 0);
+      }
+      this.dispatchEvent({ type: "controlstart" });
+    };
+    const dragging = () => {
+      if (!this._enabled || !this._dragNeedsUpdate)
+        return;
+      this._dragNeedsUpdate = false;
+      extractClientCoordFromEvent(this._activePointers, _v27);
+      const isPointerLockActive = this._domElement && this._domElement.ownerDocument.pointerLockElement === this._domElement;
+      const lockedPointer = isPointerLockActive ? this._lockedPointer || this._activePointers[0] : null;
+      const deltaX = lockedPointer ? -lockedPointer.deltaX : lastDragPosition.x - _v27.x;
+      const deltaY = lockedPointer ? -lockedPointer.deltaY : lastDragPosition.y - _v27.y;
+      lastDragPosition.copy(_v27);
+      if ((this._state & ACTION.ROTATE) === ACTION.ROTATE || (this._state & ACTION.TOUCH_ROTATE) === ACTION.TOUCH_ROTATE || (this._state & ACTION.TOUCH_DOLLY_ROTATE) === ACTION.TOUCH_DOLLY_ROTATE || (this._state & ACTION.TOUCH_ZOOM_ROTATE) === ACTION.TOUCH_ZOOM_ROTATE) {
+        this._rotateInternal(deltaX, deltaY);
+        this._isUserControllingRotate = true;
+      }
+      if ((this._state & ACTION.DOLLY) === ACTION.DOLLY || (this._state & ACTION.ZOOM) === ACTION.ZOOM) {
+        const dollyX = this.dollyToCursor ? (dragStartPosition.x - this._elementRect.x) / this._elementRect.width * 2 - 1 : 0;
+        const dollyY = this.dollyToCursor ? (dragStartPosition.y - this._elementRect.y) / this._elementRect.height * -2 + 1 : 0;
+        const dollyDirection = this.dollyDragInverted ? -1 : 1;
+        if ((this._state & ACTION.DOLLY) === ACTION.DOLLY) {
+          this._dollyInternal(dollyDirection * deltaY * TOUCH_DOLLY_FACTOR, dollyX, dollyY);
+          this._isUserControllingDolly = true;
+        } else {
+          this._zoomInternal(dollyDirection * deltaY * TOUCH_DOLLY_FACTOR, dollyX, dollyY);
+          this._isUserControllingZoom = true;
+        }
+      }
+      if ((this._state & ACTION.TOUCH_DOLLY) === ACTION.TOUCH_DOLLY || (this._state & ACTION.TOUCH_ZOOM) === ACTION.TOUCH_ZOOM || (this._state & ACTION.TOUCH_DOLLY_TRUCK) === ACTION.TOUCH_DOLLY_TRUCK || (this._state & ACTION.TOUCH_ZOOM_TRUCK) === ACTION.TOUCH_ZOOM_TRUCK || (this._state & ACTION.TOUCH_DOLLY_OFFSET) === ACTION.TOUCH_DOLLY_OFFSET || (this._state & ACTION.TOUCH_ZOOM_OFFSET) === ACTION.TOUCH_ZOOM_OFFSET || (this._state & ACTION.TOUCH_DOLLY_ROTATE) === ACTION.TOUCH_DOLLY_ROTATE || (this._state & ACTION.TOUCH_ZOOM_ROTATE) === ACTION.TOUCH_ZOOM_ROTATE) {
+        const dx = _v27.x - this._activePointers[1].clientX;
+        const dy = _v27.y - this._activePointers[1].clientY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const dollyDelta = dollyStart.y - distance;
+        dollyStart.set(0, distance);
+        const dollyX = this.dollyToCursor ? (lastDragPosition.x - this._elementRect.x) / this._elementRect.width * 2 - 1 : 0;
+        const dollyY = this.dollyToCursor ? (lastDragPosition.y - this._elementRect.y) / this._elementRect.height * -2 + 1 : 0;
+        if ((this._state & ACTION.TOUCH_DOLLY) === ACTION.TOUCH_DOLLY || (this._state & ACTION.TOUCH_DOLLY_ROTATE) === ACTION.TOUCH_DOLLY_ROTATE || (this._state & ACTION.TOUCH_DOLLY_TRUCK) === ACTION.TOUCH_DOLLY_TRUCK || (this._state & ACTION.TOUCH_DOLLY_OFFSET) === ACTION.TOUCH_DOLLY_OFFSET) {
+          this._dollyInternal(dollyDelta * TOUCH_DOLLY_FACTOR, dollyX, dollyY);
+          this._isUserControllingDolly = true;
+        } else {
+          this._zoomInternal(dollyDelta * TOUCH_DOLLY_FACTOR, dollyX, dollyY);
+          this._isUserControllingZoom = true;
+        }
+      }
+      if ((this._state & ACTION.TRUCK) === ACTION.TRUCK || (this._state & ACTION.TOUCH_TRUCK) === ACTION.TOUCH_TRUCK || (this._state & ACTION.TOUCH_DOLLY_TRUCK) === ACTION.TOUCH_DOLLY_TRUCK || (this._state & ACTION.TOUCH_ZOOM_TRUCK) === ACTION.TOUCH_ZOOM_TRUCK) {
+        this._truckInternal(deltaX, deltaY, false);
+        this._isUserControllingTruck = true;
+      }
+      if ((this._state & ACTION.OFFSET) === ACTION.OFFSET || (this._state & ACTION.TOUCH_OFFSET) === ACTION.TOUCH_OFFSET || (this._state & ACTION.TOUCH_DOLLY_OFFSET) === ACTION.TOUCH_DOLLY_OFFSET || (this._state & ACTION.TOUCH_ZOOM_OFFSET) === ACTION.TOUCH_ZOOM_OFFSET) {
+        this._truckInternal(deltaX, deltaY, true);
+        this._isUserControllingOffset = true;
+      }
+      this.dispatchEvent({ type: "control" });
+    };
+    const endDragging = () => {
+      extractClientCoordFromEvent(this._activePointers, _v27);
+      lastDragPosition.copy(_v27);
+      this._dragNeedsUpdate = false;
+      if (this._activePointers.length === 0 || this._activePointers.length === 1 && this._activePointers[0] === this._lockedPointer) {
+        this._isDragging = false;
+      }
+      if (this._activePointers.length === 0 && this._domElement) {
+        this._domElement.ownerDocument.removeEventListener("pointermove", onPointerMove, { passive: false });
+        this._domElement.ownerDocument.removeEventListener("pointerup", onPointerUp);
+        this.dispatchEvent({ type: "controlend" });
+      }
+    };
+    this.lockPointer = () => {
+      if (!this._enabled || !this._domElement)
+        return;
+      this.cancel();
+      this._lockedPointer = {
+        pointerId: -1,
+        clientX: 0,
+        clientY: 0,
+        deltaX: 0,
+        deltaY: 0,
+        mouseButton: null
+      };
+      this._activePointers.push(this._lockedPointer);
+      this._domElement.ownerDocument.removeEventListener("pointermove", onPointerMove, { passive: false });
+      this._domElement.ownerDocument.removeEventListener("pointerup", onPointerUp);
+      this._domElement.requestPointerLock();
+      this._domElement.ownerDocument.addEventListener("pointerlockchange", onPointerLockChange);
+      this._domElement.ownerDocument.addEventListener("pointerlockerror", onPointerLockError);
+      this._domElement.ownerDocument.addEventListener("pointermove", onPointerMove, { passive: false });
+      this._domElement.ownerDocument.addEventListener("pointerup", onPointerUp);
+      startDragging();
+    };
+    this.unlockPointer = () => {
+      var _a4, _b3, _c;
+      if (this._lockedPointer !== null) {
+        this._disposePointer(this._lockedPointer);
+        this._lockedPointer = null;
+      }
+      (_a4 = this._domElement) === null || _a4 === undefined || _a4.ownerDocument.exitPointerLock();
+      (_b3 = this._domElement) === null || _b3 === undefined || _b3.ownerDocument.removeEventListener("pointerlockchange", onPointerLockChange);
+      (_c = this._domElement) === null || _c === undefined || _c.ownerDocument.removeEventListener("pointerlockerror", onPointerLockError);
+      this.cancel();
+    };
+    const onPointerLockChange = () => {
+      const isPointerLockActive = this._domElement && this._domElement.ownerDocument.pointerLockElement === this._domElement;
+      if (!isPointerLockActive)
+        this.unlockPointer();
+    };
+    const onPointerLockError = () => {
+      this.unlockPointer();
+    };
+    this._addAllEventListeners = (domElement2) => {
+      this._domElement = domElement2;
+      this._domElement.style.touchAction = "none";
+      this._domElement.style.userSelect = "none";
+      this._domElement.style.webkitUserSelect = "none";
+      this._domElement.addEventListener("pointerdown", onPointerDown);
+      this._domElement.addEventListener("pointercancel", onPointerUp);
+      this._domElement.addEventListener("wheel", onMouseWheel, { passive: false });
+      this._domElement.addEventListener("contextmenu", onContextMenu);
+    };
+    this._removeAllEventListeners = () => {
+      if (!this._domElement)
+        return;
+      this._domElement.style.touchAction = "";
+      this._domElement.style.userSelect = "";
+      this._domElement.style.webkitUserSelect = "";
+      this._domElement.removeEventListener("pointerdown", onPointerDown);
+      this._domElement.removeEventListener("pointercancel", onPointerUp);
+      this._domElement.removeEventListener("wheel", onMouseWheel, { passive: false });
+      this._domElement.removeEventListener("contextmenu", onContextMenu);
+      this._domElement.ownerDocument.removeEventListener("pointermove", onPointerMove, { passive: false });
+      this._domElement.ownerDocument.removeEventListener("pointerup", onPointerUp);
+      this._domElement.ownerDocument.removeEventListener("pointerlockchange", onPointerLockChange);
+      this._domElement.ownerDocument.removeEventListener("pointerlockerror", onPointerLockError);
+    };
+    this.cancel = () => {
+      if (this._state === ACTION.NONE)
+        return;
+      this._state = ACTION.NONE;
+      this._activePointers.length = 0;
+      endDragging();
+    };
+    if (domElement)
+      this.connect(domElement);
+    this.update(0);
+  }
+  get camera() {
+    return this._camera;
+  }
+  set camera(camera) {
+    this._camera = camera;
+    this.updateCameraUp();
+    this._camera.updateProjectionMatrix();
+    this._updateNearPlaneCorners();
+    this._needsUpdate = true;
+  }
+  get enabled() {
+    return this._enabled;
+  }
+  set enabled(enabled) {
+    this._enabled = enabled;
+    if (!this._domElement)
+      return;
+    if (enabled) {
+      this._domElement.style.touchAction = "none";
+      this._domElement.style.userSelect = "none";
+      this._domElement.style.webkitUserSelect = "none";
+    } else {
+      this.cancel();
+      this._domElement.style.touchAction = "";
+      this._domElement.style.userSelect = "";
+      this._domElement.style.webkitUserSelect = "";
+    }
+  }
+  get active() {
+    return !this._hasRested;
+  }
+  get currentAction() {
+    return this._state;
+  }
+  get distance() {
+    return this._spherical.radius;
+  }
+  set distance(distance) {
+    if (this._spherical.radius === distance && this._sphericalEnd.radius === distance)
+      return;
+    this._spherical.radius = distance;
+    this._sphericalEnd.radius = distance;
+    this._needsUpdate = true;
+  }
+  get azimuthAngle() {
+    return this._spherical.theta;
+  }
+  set azimuthAngle(azimuthAngle) {
+    if (this._spherical.theta === azimuthAngle && this._sphericalEnd.theta === azimuthAngle)
+      return;
+    this._spherical.theta = azimuthAngle;
+    this._sphericalEnd.theta = azimuthAngle;
+    this._needsUpdate = true;
+  }
+  get polarAngle() {
+    return this._spherical.phi;
+  }
+  set polarAngle(polarAngle) {
+    if (this._spherical.phi === polarAngle && this._sphericalEnd.phi === polarAngle)
+      return;
+    this._spherical.phi = polarAngle;
+    this._sphericalEnd.phi = polarAngle;
+    this._needsUpdate = true;
+  }
+  get boundaryEnclosesCamera() {
+    return this._boundaryEnclosesCamera;
+  }
+  set boundaryEnclosesCamera(boundaryEnclosesCamera) {
+    this._boundaryEnclosesCamera = boundaryEnclosesCamera;
+    this._needsUpdate = true;
+  }
+  set interactiveArea(interactiveArea) {
+    this._interactiveArea.width = clamp3(interactiveArea.width, 0, 1);
+    this._interactiveArea.height = clamp3(interactiveArea.height, 0, 1);
+    this._interactiveArea.x = clamp3(interactiveArea.x, 0, 1 - this._interactiveArea.width);
+    this._interactiveArea.y = clamp3(interactiveArea.y, 0, 1 - this._interactiveArea.height);
+  }
+  addEventListener(type, listener) {
+    super.addEventListener(type, listener);
+  }
+  removeEventListener(type, listener) {
+    super.removeEventListener(type, listener);
+  }
+  rotate(azimuthAngle, polarAngle, enableTransition = false) {
+    return this.rotateTo(this._sphericalEnd.theta + azimuthAngle, this._sphericalEnd.phi + polarAngle, enableTransition);
+  }
+  rotateAzimuthTo(azimuthAngle, enableTransition = false) {
+    return this.rotateTo(azimuthAngle, this._sphericalEnd.phi, enableTransition);
+  }
+  rotatePolarTo(polarAngle, enableTransition = false) {
+    return this.rotateTo(this._sphericalEnd.theta, polarAngle, enableTransition);
+  }
+  rotateTo(azimuthAngle, polarAngle, enableTransition = false) {
+    this._isUserControllingRotate = false;
+    const theta = clamp3(azimuthAngle, this.minAzimuthAngle, this.maxAzimuthAngle);
+    const phi = clamp3(polarAngle, this.minPolarAngle, this.maxPolarAngle);
+    this._sphericalEnd.theta = theta;
+    this._sphericalEnd.phi = phi;
+    this._sphericalEnd.makeSafe();
+    this._needsUpdate = true;
+    if (!enableTransition) {
+      this._spherical.theta = this._sphericalEnd.theta;
+      this._spherical.phi = this._sphericalEnd.phi;
+    }
+    const resolveImmediately = !enableTransition || approxEquals(this._spherical.theta, this._sphericalEnd.theta, this.restThreshold) && approxEquals(this._spherical.phi, this._sphericalEnd.phi, this.restThreshold);
+    return this._createOnRestPromise(resolveImmediately);
+  }
+  dolly(distance, enableTransition = false) {
+    return this.dollyTo(this._sphericalEnd.radius - distance, enableTransition);
+  }
+  dollyTo(distance, enableTransition = false) {
+    this._isUserControllingDolly = false;
+    this._lastDollyDirection = DOLLY_DIRECTION.NONE;
+    this._changedDolly = 0;
+    return this._dollyToNoClamp(clamp3(distance, this.minDistance, this.maxDistance), enableTransition);
+  }
+  _dollyToNoClamp(distance, enableTransition = false) {
+    const lastRadius = this._sphericalEnd.radius;
+    const hasCollider = this.colliderMeshes.length >= 1;
+    if (hasCollider) {
+      const maxDistanceByCollisionTest = this._collisionTest();
+      const isCollided = approxEquals(maxDistanceByCollisionTest, this._spherical.radius);
+      const isDollyIn = lastRadius > distance;
+      if (!isDollyIn && isCollided)
+        return Promise.resolve();
+      this._sphericalEnd.radius = Math.min(distance, maxDistanceByCollisionTest);
+    } else {
+      this._sphericalEnd.radius = distance;
+    }
+    this._needsUpdate = true;
+    if (!enableTransition) {
+      this._spherical.radius = this._sphericalEnd.radius;
+    }
+    const resolveImmediately = !enableTransition || approxEquals(this._spherical.radius, this._sphericalEnd.radius, this.restThreshold);
+    return this._createOnRestPromise(resolveImmediately);
+  }
+  dollyInFixed(distance, enableTransition = false) {
+    this._targetEnd.add(this._getCameraDirection(_cameraDirection).multiplyScalar(distance));
+    if (!enableTransition) {
+      this._target.copy(this._targetEnd);
+    }
+    const resolveImmediately = !enableTransition || approxEquals(this._target.x, this._targetEnd.x, this.restThreshold) && approxEquals(this._target.y, this._targetEnd.y, this.restThreshold) && approxEquals(this._target.z, this._targetEnd.z, this.restThreshold);
+    return this._createOnRestPromise(resolveImmediately);
+  }
+  zoom(zoomStep, enableTransition = false) {
+    return this.zoomTo(this._zoomEnd + zoomStep, enableTransition);
+  }
+  zoomTo(zoom, enableTransition = false) {
+    this._isUserControllingZoom = false;
+    this._zoomEnd = clamp3(zoom, this.minZoom, this.maxZoom);
+    this._needsUpdate = true;
+    if (!enableTransition) {
+      this._zoom = this._zoomEnd;
+    }
+    const resolveImmediately = !enableTransition || approxEquals(this._zoom, this._zoomEnd, this.restThreshold);
+    this._changedZoom = 0;
+    return this._createOnRestPromise(resolveImmediately);
+  }
+  pan(x2, y, enableTransition = false) {
+    console.warn("`pan` has been renamed to `truck`");
+    return this.truck(x2, y, enableTransition);
+  }
+  truck(x2, y, enableTransition = false) {
+    this._camera.updateMatrix();
+    _xColumn.setFromMatrixColumn(this._camera.matrix, 0);
+    _yColumn.setFromMatrixColumn(this._camera.matrix, 1);
+    _xColumn.multiplyScalar(x2);
+    _yColumn.multiplyScalar(-y);
+    const offset = _v3A.copy(_xColumn).add(_yColumn);
+    const to = _v3B.copy(this._targetEnd).add(offset);
+    return this.moveTo(to.x, to.y, to.z, enableTransition);
+  }
+  forward(distance, enableTransition = false) {
+    _v3A.setFromMatrixColumn(this._camera.matrix, 0);
+    _v3A.crossVectors(this._camera.up, _v3A);
+    _v3A.multiplyScalar(distance);
+    const to = _v3B.copy(this._targetEnd).add(_v3A);
+    return this.moveTo(to.x, to.y, to.z, enableTransition);
+  }
+  elevate(height2, enableTransition = false) {
+    _v3A.copy(this._camera.up).multiplyScalar(height2);
+    return this.moveTo(this._targetEnd.x + _v3A.x, this._targetEnd.y + _v3A.y, this._targetEnd.z + _v3A.z, enableTransition);
+  }
+  moveTo(x2, y, z, enableTransition = false) {
+    this._isUserControllingTruck = false;
+    const offset = _v3A.set(x2, y, z).sub(this._targetEnd);
+    this._encloseToBoundary(this._targetEnd, offset, this.boundaryFriction);
+    this._needsUpdate = true;
+    if (!enableTransition) {
+      this._target.copy(this._targetEnd);
+    }
+    const resolveImmediately = !enableTransition || approxEquals(this._target.x, this._targetEnd.x, this.restThreshold) && approxEquals(this._target.y, this._targetEnd.y, this.restThreshold) && approxEquals(this._target.z, this._targetEnd.z, this.restThreshold);
+    return this._createOnRestPromise(resolveImmediately);
+  }
+  lookInDirectionOf(x2, y, z, enableTransition = false) {
+    const point = _v3A.set(x2, y, z);
+    const direction = point.sub(this._targetEnd).normalize();
+    const position2 = direction.multiplyScalar(-this._sphericalEnd.radius).add(this._targetEnd);
+    return this.setPosition(position2.x, position2.y, position2.z, enableTransition);
+  }
+  fitToBox(box3OrObject, enableTransition, { cover: cover2 = false, paddingLeft = 0, paddingRight = 0, paddingBottom = 0, paddingTop = 0 } = {}) {
+    const promises = [];
+    const aabb2 = box3OrObject.isBox3 ? _box3A.copy(box3OrObject) : _box3A.setFromObject(box3OrObject);
+    if (aabb2.isEmpty()) {
+      console.warn("camera-controls: fitTo() cannot be used with an empty box. Aborting");
+      Promise.resolve();
+    }
+    const theta = roundToStep(this._sphericalEnd.theta, PI_HALF);
+    const phi = roundToStep(this._sphericalEnd.phi, PI_HALF);
+    promises.push(this.rotateTo(theta, phi, enableTransition));
+    const normal = _v3A.setFromSpherical(this._sphericalEnd).normalize();
+    const rotation2 = _quaternionA.setFromUnitVectors(normal, _AXIS_Z);
+    const viewFromPolar = approxEquals(Math.abs(normal.y), 1);
+    if (viewFromPolar) {
+      rotation2.multiply(_quaternionB.setFromAxisAngle(_AXIS_Y, theta));
+    }
+    rotation2.multiply(this._yAxisUpSpaceInverse);
+    const bb = _box3B.makeEmpty();
+    _v3B.copy(aabb2.min).applyQuaternion(rotation2);
+    bb.expandByPoint(_v3B);
+    _v3B.copy(aabb2.min).setX(aabb2.max.x).applyQuaternion(rotation2);
+    bb.expandByPoint(_v3B);
+    _v3B.copy(aabb2.min).setY(aabb2.max.y).applyQuaternion(rotation2);
+    bb.expandByPoint(_v3B);
+    _v3B.copy(aabb2.max).setZ(aabb2.min.z).applyQuaternion(rotation2);
+    bb.expandByPoint(_v3B);
+    _v3B.copy(aabb2.min).setZ(aabb2.max.z).applyQuaternion(rotation2);
+    bb.expandByPoint(_v3B);
+    _v3B.copy(aabb2.max).setY(aabb2.min.y).applyQuaternion(rotation2);
+    bb.expandByPoint(_v3B);
+    _v3B.copy(aabb2.max).setX(aabb2.min.x).applyQuaternion(rotation2);
+    bb.expandByPoint(_v3B);
+    _v3B.copy(aabb2.max).applyQuaternion(rotation2);
+    bb.expandByPoint(_v3B);
+    bb.min.x -= paddingLeft;
+    bb.min.y -= paddingBottom;
+    bb.max.x += paddingRight;
+    bb.max.y += paddingTop;
+    rotation2.setFromUnitVectors(_AXIS_Z, normal);
+    if (viewFromPolar) {
+      rotation2.premultiply(_quaternionB.invert());
+    }
+    rotation2.premultiply(this._yAxisUpSpace);
+    const bbSize = bb.getSize(_v3A);
+    const center = bb.getCenter(_v3B).applyQuaternion(rotation2);
+    if (isPerspectiveCamera(this._camera)) {
+      const distance = this.getDistanceToFitBox(bbSize.x, bbSize.y, bbSize.z, cover2);
+      promises.push(this.moveTo(center.x, center.y, center.z, enableTransition));
+      promises.push(this.dollyTo(distance, enableTransition));
+      promises.push(this.setFocalOffset(0, 0, 0, enableTransition));
+    } else if (isOrthographicCamera(this._camera)) {
+      const camera = this._camera;
+      const width2 = camera.right - camera.left;
+      const height2 = camera.top - camera.bottom;
+      const zoom = cover2 ? Math.max(width2 / bbSize.x, height2 / bbSize.y) : Math.min(width2 / bbSize.x, height2 / bbSize.y);
+      promises.push(this.moveTo(center.x, center.y, center.z, enableTransition));
+      promises.push(this.zoomTo(zoom, enableTransition));
+      promises.push(this.setFocalOffset(0, 0, 0, enableTransition));
+    }
+    return Promise.all(promises);
+  }
+  fitToSphere(sphereOrMesh, enableTransition) {
+    const promises = [];
+    const isObject3D = "isObject3D" in sphereOrMesh;
+    const boundingSphere = isObject3D ? CameraControls.createBoundingSphere(sphereOrMesh, _sphere4) : _sphere4.copy(sphereOrMesh);
+    promises.push(this.moveTo(boundingSphere.center.x, boundingSphere.center.y, boundingSphere.center.z, enableTransition));
+    if (isPerspectiveCamera(this._camera)) {
+      const distanceToFit = this.getDistanceToFitSphere(boundingSphere.radius);
+      promises.push(this.dollyTo(distanceToFit, enableTransition));
+    } else if (isOrthographicCamera(this._camera)) {
+      const width2 = this._camera.right - this._camera.left;
+      const height2 = this._camera.top - this._camera.bottom;
+      const diameter = 2 * boundingSphere.radius;
+      const zoom = Math.min(width2 / diameter, height2 / diameter);
+      promises.push(this.zoomTo(zoom, enableTransition));
+    }
+    promises.push(this.setFocalOffset(0, 0, 0, enableTransition));
+    return Promise.all(promises);
+  }
+  setLookAt(positionX, positionY, positionZ, targetX, targetY, targetZ, enableTransition = false) {
+    this._isUserControllingRotate = false;
+    this._isUserControllingDolly = false;
+    this._isUserControllingTruck = false;
+    this._lastDollyDirection = DOLLY_DIRECTION.NONE;
+    this._changedDolly = 0;
+    const target = _v3B.set(targetX, targetY, targetZ);
+    const position2 = _v3A.set(positionX, positionY, positionZ);
+    this._targetEnd.copy(target);
+    this._sphericalEnd.setFromVector3(position2.sub(target).applyQuaternion(this._yAxisUpSpace));
+    this.normalizeRotations();
+    this._needsUpdate = true;
+    if (!enableTransition) {
+      this._target.copy(this._targetEnd);
+      this._spherical.copy(this._sphericalEnd);
+    }
+    const resolveImmediately = !enableTransition || approxEquals(this._target.x, this._targetEnd.x, this.restThreshold) && approxEquals(this._target.y, this._targetEnd.y, this.restThreshold) && approxEquals(this._target.z, this._targetEnd.z, this.restThreshold) && approxEquals(this._spherical.theta, this._sphericalEnd.theta, this.restThreshold) && approxEquals(this._spherical.phi, this._sphericalEnd.phi, this.restThreshold) && approxEquals(this._spherical.radius, this._sphericalEnd.radius, this.restThreshold);
+    return this._createOnRestPromise(resolveImmediately);
+  }
+  lerpLookAt(positionAX, positionAY, positionAZ, targetAX, targetAY, targetAZ, positionBX, positionBY, positionBZ, targetBX, targetBY, targetBZ, t3, enableTransition = false) {
+    this._isUserControllingRotate = false;
+    this._isUserControllingDolly = false;
+    this._isUserControllingTruck = false;
+    this._lastDollyDirection = DOLLY_DIRECTION.NONE;
+    this._changedDolly = 0;
+    const targetA = _v3A.set(targetAX, targetAY, targetAZ);
+    const positionA = _v3B.set(positionAX, positionAY, positionAZ);
+    _sphericalA.setFromVector3(positionA.sub(targetA).applyQuaternion(this._yAxisUpSpace));
+    const targetB = _v3C.set(targetBX, targetBY, targetBZ);
+    const positionB = _v3B.set(positionBX, positionBY, positionBZ);
+    _sphericalB.setFromVector3(positionB.sub(targetB).applyQuaternion(this._yAxisUpSpace));
+    this._targetEnd.copy(targetA.lerp(targetB, t3));
+    const deltaTheta = _sphericalB.theta - _sphericalA.theta;
+    const deltaPhi = _sphericalB.phi - _sphericalA.phi;
+    const deltaRadius = _sphericalB.radius - _sphericalA.radius;
+    this._sphericalEnd.set(_sphericalA.radius + deltaRadius * t3, _sphericalA.phi + deltaPhi * t3, _sphericalA.theta + deltaTheta * t3);
+    this.normalizeRotations();
+    this._needsUpdate = true;
+    if (!enableTransition) {
+      this._target.copy(this._targetEnd);
+      this._spherical.copy(this._sphericalEnd);
+    }
+    const resolveImmediately = !enableTransition || approxEquals(this._target.x, this._targetEnd.x, this.restThreshold) && approxEquals(this._target.y, this._targetEnd.y, this.restThreshold) && approxEquals(this._target.z, this._targetEnd.z, this.restThreshold) && approxEquals(this._spherical.theta, this._sphericalEnd.theta, this.restThreshold) && approxEquals(this._spherical.phi, this._sphericalEnd.phi, this.restThreshold) && approxEquals(this._spherical.radius, this._sphericalEnd.radius, this.restThreshold);
+    return this._createOnRestPromise(resolveImmediately);
+  }
+  setPosition(positionX, positionY, positionZ, enableTransition = false) {
+    return this.setLookAt(positionX, positionY, positionZ, this._targetEnd.x, this._targetEnd.y, this._targetEnd.z, enableTransition);
+  }
+  setTarget(targetX, targetY, targetZ, enableTransition = false) {
+    const pos = this.getPosition(_v3A);
+    const promise = this.setLookAt(pos.x, pos.y, pos.z, targetX, targetY, targetZ, enableTransition);
+    this._sphericalEnd.phi = clamp3(this._sphericalEnd.phi, this.minPolarAngle, this.maxPolarAngle);
+    return promise;
+  }
+  setFocalOffset(x2, y, z, enableTransition = false) {
+    this._isUserControllingOffset = false;
+    this._focalOffsetEnd.set(x2, y, z);
+    this._needsUpdate = true;
+    if (!enableTransition)
+      this._focalOffset.copy(this._focalOffsetEnd);
+    const resolveImmediately = !enableTransition || approxEquals(this._focalOffset.x, this._focalOffsetEnd.x, this.restThreshold) && approxEquals(this._focalOffset.y, this._focalOffsetEnd.y, this.restThreshold) && approxEquals(this._focalOffset.z, this._focalOffsetEnd.z, this.restThreshold);
+    return this._createOnRestPromise(resolveImmediately);
+  }
+  setOrbitPoint(targetX, targetY, targetZ) {
+    this._camera.updateMatrixWorld();
+    _xColumn.setFromMatrixColumn(this._camera.matrixWorldInverse, 0);
+    _yColumn.setFromMatrixColumn(this._camera.matrixWorldInverse, 1);
+    _zColumn.setFromMatrixColumn(this._camera.matrixWorldInverse, 2);
+    const position2 = _v3A.set(targetX, targetY, targetZ);
+    const distance = position2.distanceTo(this._camera.position);
+    const cameraToPoint = position2.sub(this._camera.position);
+    _xColumn.multiplyScalar(cameraToPoint.x);
+    _yColumn.multiplyScalar(cameraToPoint.y);
+    _zColumn.multiplyScalar(cameraToPoint.z);
+    _v3A.copy(_xColumn).add(_yColumn).add(_zColumn);
+    _v3A.z = _v3A.z + distance;
+    this.dollyTo(distance, false);
+    this.setFocalOffset(-_v3A.x, _v3A.y, -_v3A.z, false);
+    this.moveTo(targetX, targetY, targetZ, false);
+  }
+  setBoundary(box3) {
+    if (!box3) {
+      this._boundary.min.set(-Infinity, -Infinity, -Infinity);
+      this._boundary.max.set(Infinity, Infinity, Infinity);
+      this._needsUpdate = true;
+      return;
+    }
+    this._boundary.copy(box3);
+    this._boundary.clampPoint(this._targetEnd, this._targetEnd);
+    this._needsUpdate = true;
+  }
+  setViewport(viewportOrX, y, width2, height2) {
+    if (viewportOrX === null) {
+      this._viewport = null;
+      return;
+    }
+    this._viewport = this._viewport || new THREE11.Vector4;
+    if (typeof viewportOrX === "number") {
+      this._viewport.set(viewportOrX, y, width2, height2);
+    } else {
+      this._viewport.copy(viewportOrX);
+    }
+  }
+  getDistanceToFitBox(width2, height2, depth, cover2 = false) {
+    if (notSupportedInOrthographicCamera(this._camera, "getDistanceToFitBox"))
+      return this._spherical.radius;
+    const boundingRectAspect = width2 / height2;
+    const fov2 = this._camera.getEffectiveFOV() * DEG2RAD2;
+    const aspect2 = this._camera.aspect;
+    const heightToFit = (cover2 ? boundingRectAspect > aspect2 : boundingRectAspect < aspect2) ? height2 : width2 / aspect2;
+    return heightToFit * 0.5 / Math.tan(fov2 * 0.5) + depth * 0.5;
+  }
+  getDistanceToFitSphere(radius) {
+    if (notSupportedInOrthographicCamera(this._camera, "getDistanceToFitSphere"))
+      return this._spherical.radius;
+    const vFOV = this._camera.getEffectiveFOV() * DEG2RAD2;
+    const hFOV = Math.atan(Math.tan(vFOV * 0.5) * this._camera.aspect) * 2;
+    const fov2 = 1 < this._camera.aspect ? vFOV : hFOV;
+    return radius / Math.sin(fov2 * 0.5);
+  }
+  getTarget(out, receiveEndValue = true) {
+    const _out = !!out && out.isVector3 ? out : new THREE11.Vector3;
+    return _out.copy(receiveEndValue ? this._targetEnd : this._target);
+  }
+  getPosition(out, receiveEndValue = true) {
+    const _out = !!out && out.isVector3 ? out : new THREE11.Vector3;
+    return _out.setFromSpherical(receiveEndValue ? this._sphericalEnd : this._spherical).applyQuaternion(this._yAxisUpSpaceInverse).add(receiveEndValue ? this._targetEnd : this._target);
+  }
+  getSpherical(out, receiveEndValue = true) {
+    const _out = out || new THREE11.Spherical;
+    return _out.copy(receiveEndValue ? this._sphericalEnd : this._spherical);
+  }
+  getFocalOffset(out, receiveEndValue = true) {
+    const _out = !!out && out.isVector3 ? out : new THREE11.Vector3;
+    return _out.copy(receiveEndValue ? this._focalOffsetEnd : this._focalOffset);
+  }
+  normalizeRotations() {
+    this._sphericalEnd.theta = this._sphericalEnd.theta % PI_2;
+    if (this._sphericalEnd.theta < 0)
+      this._sphericalEnd.theta += PI_2;
+    this._spherical.theta += PI_2 * Math.round((this._sphericalEnd.theta - this._spherical.theta) / PI_2);
+  }
+  stop() {
+    this._focalOffset.copy(this._focalOffsetEnd);
+    this._target.copy(this._targetEnd);
+    this._spherical.copy(this._sphericalEnd);
+    this._zoom = this._zoomEnd;
+  }
+  reset(enableTransition = false) {
+    if (!approxEquals(this._camera.up.x, this._cameraUp0.x) || !approxEquals(this._camera.up.y, this._cameraUp0.y) || !approxEquals(this._camera.up.z, this._cameraUp0.z)) {
+      this._camera.up.copy(this._cameraUp0);
+      const position2 = this.getPosition(_v3A);
+      this.updateCameraUp();
+      this.setPosition(position2.x, position2.y, position2.z);
+    }
+    const promises = [
+      this.setLookAt(this._position0.x, this._position0.y, this._position0.z, this._target0.x, this._target0.y, this._target0.z, enableTransition),
+      this.setFocalOffset(this._focalOffset0.x, this._focalOffset0.y, this._focalOffset0.z, enableTransition),
+      this.zoomTo(this._zoom0, enableTransition)
+    ];
+    return Promise.all(promises);
+  }
+  saveState() {
+    this._cameraUp0.copy(this._camera.up);
+    this.getTarget(this._target0);
+    this.getPosition(this._position0);
+    this._zoom0 = this._zoom;
+    this._focalOffset0.copy(this._focalOffset);
+  }
+  updateCameraUp() {
+    this._yAxisUpSpace.setFromUnitVectors(this._camera.up, _AXIS_Y);
+    this._yAxisUpSpaceInverse.copy(this._yAxisUpSpace).invert();
+  }
+  applyCameraUp() {
+    const cameraDirection = _v3A.subVectors(this._target, this._camera.position).normalize();
+    const side = _v3B.crossVectors(cameraDirection, this._camera.up);
+    this._camera.up.crossVectors(side, cameraDirection).normalize();
+    this._camera.updateMatrixWorld();
+    const position2 = this.getPosition(_v3A);
+    this.updateCameraUp();
+    this.setPosition(position2.x, position2.y, position2.z);
+  }
+  update(delta) {
+    const deltaTheta = this._sphericalEnd.theta - this._spherical.theta;
+    const deltaPhi = this._sphericalEnd.phi - this._spherical.phi;
+    const deltaRadius = this._sphericalEnd.radius - this._spherical.radius;
+    const deltaTarget = _deltaTarget.subVectors(this._targetEnd, this._target);
+    const deltaOffset = _deltaOffset.subVectors(this._focalOffsetEnd, this._focalOffset);
+    const deltaZoom = this._zoomEnd - this._zoom;
+    if (approxZero(deltaTheta)) {
+      this._thetaVelocity.value = 0;
+      this._spherical.theta = this._sphericalEnd.theta;
+    } else {
+      const smoothTime = this._isUserControllingRotate ? this.draggingSmoothTime : this.smoothTime;
+      this._spherical.theta = smoothDamp(this._spherical.theta, this._sphericalEnd.theta, this._thetaVelocity, smoothTime, Infinity, delta);
+      this._needsUpdate = true;
+    }
+    if (approxZero(deltaPhi)) {
+      this._phiVelocity.value = 0;
+      this._spherical.phi = this._sphericalEnd.phi;
+    } else {
+      const smoothTime = this._isUserControllingRotate ? this.draggingSmoothTime : this.smoothTime;
+      this._spherical.phi = smoothDamp(this._spherical.phi, this._sphericalEnd.phi, this._phiVelocity, smoothTime, Infinity, delta);
+      this._needsUpdate = true;
+    }
+    if (approxZero(deltaRadius)) {
+      this._radiusVelocity.value = 0;
+      this._spherical.radius = this._sphericalEnd.radius;
+    } else {
+      const smoothTime = this._isUserControllingDolly ? this.draggingSmoothTime : this.smoothTime;
+      this._spherical.radius = smoothDamp(this._spherical.radius, this._sphericalEnd.radius, this._radiusVelocity, smoothTime, this.maxSpeed, delta);
+      this._needsUpdate = true;
+    }
+    if (approxZero(deltaTarget.x) && approxZero(deltaTarget.y) && approxZero(deltaTarget.z)) {
+      this._targetVelocity.set(0, 0, 0);
+      this._target.copy(this._targetEnd);
+    } else {
+      const smoothTime = this._isUserControllingTruck ? this.draggingSmoothTime : this.smoothTime;
+      smoothDampVec3(this._target, this._targetEnd, this._targetVelocity, smoothTime, this.maxSpeed, delta, this._target);
+      this._needsUpdate = true;
+    }
+    if (approxZero(deltaOffset.x) && approxZero(deltaOffset.y) && approxZero(deltaOffset.z)) {
+      this._focalOffsetVelocity.set(0, 0, 0);
+      this._focalOffset.copy(this._focalOffsetEnd);
+    } else {
+      const smoothTime = this._isUserControllingOffset ? this.draggingSmoothTime : this.smoothTime;
+      smoothDampVec3(this._focalOffset, this._focalOffsetEnd, this._focalOffsetVelocity, smoothTime, this.maxSpeed, delta, this._focalOffset);
+      this._needsUpdate = true;
+    }
+    if (approxZero(deltaZoom)) {
+      this._zoomVelocity.value = 0;
+      this._zoom = this._zoomEnd;
+    } else {
+      const smoothTime = this._isUserControllingZoom ? this.draggingSmoothTime : this.smoothTime;
+      this._zoom = smoothDamp(this._zoom, this._zoomEnd, this._zoomVelocity, smoothTime, Infinity, delta);
+    }
+    if (this.dollyToCursor) {
+      if (isPerspectiveCamera(this._camera) && this._changedDolly !== 0) {
+        const dollyControlAmount = this._spherical.radius - this._lastDistance;
+        const camera = this._camera;
+        const cameraDirection = this._getCameraDirection(_cameraDirection);
+        const planeX = _v3A.copy(cameraDirection).cross(camera.up).normalize();
+        if (planeX.lengthSq() === 0)
+          planeX.x = 1;
+        const planeY = _v3B.crossVectors(planeX, cameraDirection);
+        const worldToScreen = this._sphericalEnd.radius * Math.tan(camera.getEffectiveFOV() * DEG2RAD2 * 0.5);
+        const prevRadius = this._sphericalEnd.radius - dollyControlAmount;
+        const lerpRatio = (prevRadius - this._sphericalEnd.radius) / this._sphericalEnd.radius;
+        const cursor = _v3C.copy(this._targetEnd).add(planeX.multiplyScalar(this._dollyControlCoord.x * worldToScreen * camera.aspect)).add(planeY.multiplyScalar(this._dollyControlCoord.y * worldToScreen));
+        const newTargetEnd = _v3A.copy(this._targetEnd).lerp(cursor, lerpRatio);
+        const isMin = this._lastDollyDirection === DOLLY_DIRECTION.IN && this._spherical.radius <= this.minDistance;
+        const isMax = this._lastDollyDirection === DOLLY_DIRECTION.OUT && this.maxDistance <= this._spherical.radius;
+        if (this.infinityDolly && (isMin || isMax)) {
+          this._sphericalEnd.radius -= dollyControlAmount;
+          this._spherical.radius -= dollyControlAmount;
+          const dollyAmount = _v3B.copy(cameraDirection).multiplyScalar(-dollyControlAmount);
+          newTargetEnd.add(dollyAmount);
+        }
+        this._boundary.clampPoint(newTargetEnd, newTargetEnd);
+        const targetEndDiff = _v3B.subVectors(newTargetEnd, this._targetEnd);
+        this._targetEnd.copy(newTargetEnd);
+        this._target.add(targetEndDiff);
+        this._changedDolly -= dollyControlAmount;
+        if (approxZero(this._changedDolly))
+          this._changedDolly = 0;
+      } else if (isOrthographicCamera(this._camera) && this._changedZoom !== 0) {
+        const dollyControlAmount = this._zoom - this._lastZoom;
+        const camera = this._camera;
+        const worldCursorPosition = _v3A.set(this._dollyControlCoord.x, this._dollyControlCoord.y, (camera.near + camera.far) / (camera.near - camera.far)).unproject(camera);
+        const quaternion = _v3B.set(0, 0, -1).applyQuaternion(camera.quaternion);
+        const cursor = _v3C.copy(worldCursorPosition).add(quaternion.multiplyScalar(-worldCursorPosition.dot(camera.up)));
+        const prevZoom = this._zoom - dollyControlAmount;
+        const lerpRatio = -(prevZoom - this._zoom) / this._zoom;
+        const cameraDirection = this._getCameraDirection(_cameraDirection);
+        const prevPlaneConstant = this._targetEnd.dot(cameraDirection);
+        const newTargetEnd = _v3A.copy(this._targetEnd).lerp(cursor, lerpRatio);
+        const newPlaneConstant = newTargetEnd.dot(cameraDirection);
+        const pullBack = cameraDirection.multiplyScalar(newPlaneConstant - prevPlaneConstant);
+        newTargetEnd.sub(pullBack);
+        this._boundary.clampPoint(newTargetEnd, newTargetEnd);
+        const targetEndDiff = _v3B.subVectors(newTargetEnd, this._targetEnd);
+        this._targetEnd.copy(newTargetEnd);
+        this._target.add(targetEndDiff);
+        this._changedZoom -= dollyControlAmount;
+        if (approxZero(this._changedZoom))
+          this._changedZoom = 0;
+      }
+    }
+    if (this._camera.zoom !== this._zoom) {
+      this._camera.zoom = this._zoom;
+      this._camera.updateProjectionMatrix();
+      this._updateNearPlaneCorners();
+      this._needsUpdate = true;
+    }
+    this._dragNeedsUpdate = true;
+    const maxDistance = this._collisionTest();
+    this._spherical.radius = Math.min(this._spherical.radius, maxDistance);
+    this._spherical.makeSafe();
+    this._camera.position.setFromSpherical(this._spherical).applyQuaternion(this._yAxisUpSpaceInverse).add(this._target);
+    this._camera.lookAt(this._target);
+    const affectOffset = !approxZero(this._focalOffset.x) || !approxZero(this._focalOffset.y) || !approxZero(this._focalOffset.z);
+    if (affectOffset) {
+      this._camera.updateMatrixWorld();
+      _xColumn.setFromMatrixColumn(this._camera.matrix, 0);
+      _yColumn.setFromMatrixColumn(this._camera.matrix, 1);
+      _zColumn.setFromMatrixColumn(this._camera.matrix, 2);
+      _xColumn.multiplyScalar(this._focalOffset.x);
+      _yColumn.multiplyScalar(-this._focalOffset.y);
+      _zColumn.multiplyScalar(this._focalOffset.z);
+      _v3A.copy(_xColumn).add(_yColumn).add(_zColumn);
+      this._camera.position.add(_v3A);
+    }
+    if (this._boundaryEnclosesCamera) {
+      this._encloseToBoundary(this._camera.position.copy(this._target), _v3A.setFromSpherical(this._spherical).applyQuaternion(this._yAxisUpSpaceInverse), 1);
+    }
+    const updated = this._needsUpdate;
+    if (updated && !this._updatedLastTime) {
+      this._hasRested = false;
+      this.dispatchEvent({ type: "wake" });
+      this.dispatchEvent({ type: "update" });
+    } else if (updated) {
+      this.dispatchEvent({ type: "update" });
+      if (approxZero(deltaTheta, this.restThreshold) && approxZero(deltaPhi, this.restThreshold) && approxZero(deltaRadius, this.restThreshold) && approxZero(deltaTarget.x, this.restThreshold) && approxZero(deltaTarget.y, this.restThreshold) && approxZero(deltaTarget.z, this.restThreshold) && approxZero(deltaOffset.x, this.restThreshold) && approxZero(deltaOffset.y, this.restThreshold) && approxZero(deltaOffset.z, this.restThreshold) && approxZero(deltaZoom, this.restThreshold) && !this._hasRested) {
+        this._hasRested = true;
+        this.dispatchEvent({ type: "rest" });
+      }
+    } else if (!updated && this._updatedLastTime) {
+      this.dispatchEvent({ type: "sleep" });
+    }
+    this._lastDistance = this._spherical.radius;
+    this._lastZoom = this._zoom;
+    this._updatedLastTime = updated;
+    this._needsUpdate = false;
+    return updated;
+  }
+  toJSON() {
+    return JSON.stringify({
+      enabled: this._enabled,
+      minDistance: this.minDistance,
+      maxDistance: infinityToMaxNumber(this.maxDistance),
+      minZoom: this.minZoom,
+      maxZoom: infinityToMaxNumber(this.maxZoom),
+      minPolarAngle: this.minPolarAngle,
+      maxPolarAngle: infinityToMaxNumber(this.maxPolarAngle),
+      minAzimuthAngle: infinityToMaxNumber(this.minAzimuthAngle),
+      maxAzimuthAngle: infinityToMaxNumber(this.maxAzimuthAngle),
+      smoothTime: this.smoothTime,
+      draggingSmoothTime: this.draggingSmoothTime,
+      dollySpeed: this.dollySpeed,
+      truckSpeed: this.truckSpeed,
+      dollyToCursor: this.dollyToCursor,
+      verticalDragToForward: this.verticalDragToForward,
+      target: this._targetEnd.toArray(),
+      position: _v3A.setFromSpherical(this._sphericalEnd).add(this._targetEnd).toArray(),
+      zoom: this._zoomEnd,
+      focalOffset: this._focalOffsetEnd.toArray(),
+      target0: this._target0.toArray(),
+      position0: this._position0.toArray(),
+      zoom0: this._zoom0,
+      focalOffset0: this._focalOffset0.toArray()
+    });
+  }
+  fromJSON(json, enableTransition = false) {
+    const obj = JSON.parse(json);
+    this.enabled = obj.enabled;
+    this.minDistance = obj.minDistance;
+    this.maxDistance = maxNumberToInfinity(obj.maxDistance);
+    this.minZoom = obj.minZoom;
+    this.maxZoom = maxNumberToInfinity(obj.maxZoom);
+    this.minPolarAngle = obj.minPolarAngle;
+    this.maxPolarAngle = maxNumberToInfinity(obj.maxPolarAngle);
+    this.minAzimuthAngle = maxNumberToInfinity(obj.minAzimuthAngle);
+    this.maxAzimuthAngle = maxNumberToInfinity(obj.maxAzimuthAngle);
+    this.smoothTime = obj.smoothTime;
+    this.draggingSmoothTime = obj.draggingSmoothTime;
+    this.dollySpeed = obj.dollySpeed;
+    this.truckSpeed = obj.truckSpeed;
+    this.dollyToCursor = obj.dollyToCursor;
+    this.verticalDragToForward = obj.verticalDragToForward;
+    this._target0.fromArray(obj.target0);
+    this._position0.fromArray(obj.position0);
+    this._zoom0 = obj.zoom0;
+    this._focalOffset0.fromArray(obj.focalOffset0);
+    this.moveTo(obj.target[0], obj.target[1], obj.target[2], enableTransition);
+    _sphericalA.setFromVector3(_v3A.fromArray(obj.position).sub(this._targetEnd).applyQuaternion(this._yAxisUpSpace));
+    this.rotateTo(_sphericalA.theta, _sphericalA.phi, enableTransition);
+    this.dollyTo(_sphericalA.radius, enableTransition);
+    this.zoomTo(obj.zoom, enableTransition);
+    this.setFocalOffset(obj.focalOffset[0], obj.focalOffset[1], obj.focalOffset[2], enableTransition);
+    this._needsUpdate = true;
+  }
+  connect(domElement) {
+    if (this._domElement) {
+      console.warn("camera-controls is already connected.");
+      return;
+    }
+    domElement.setAttribute("data-camera-controls-version", VERSION);
+    this._addAllEventListeners(domElement);
+    this._getClientRect(this._elementRect);
+  }
+  disconnect() {
+    this.cancel();
+    this._removeAllEventListeners();
+    if (this._domElement) {
+      this._domElement.removeAttribute("data-camera-controls-version");
+      this._domElement = undefined;
+    }
+  }
+  dispose() {
+    this.removeAllEventListeners();
+    this.disconnect();
+  }
+  _getTargetDirection(out) {
+    return out.setFromSpherical(this._spherical).divideScalar(this._spherical.radius).applyQuaternion(this._yAxisUpSpaceInverse);
+  }
+  _getCameraDirection(out) {
+    return this._getTargetDirection(out).negate();
+  }
+  _findPointerById(pointerId) {
+    return this._activePointers.find((activePointer) => activePointer.pointerId === pointerId);
+  }
+  _findPointerByMouseButton(mouseButton) {
+    return this._activePointers.find((activePointer) => activePointer.mouseButton === mouseButton);
+  }
+  _disposePointer(pointer) {
+    this._activePointers.splice(this._activePointers.indexOf(pointer), 1);
+  }
+  _encloseToBoundary(position2, offset, friction) {
+    const offsetLength2 = offset.lengthSq();
+    if (offsetLength2 === 0) {
+      return position2;
+    }
+    const newTarget = _v3B.copy(offset).add(position2);
+    const clampedTarget = this._boundary.clampPoint(newTarget, _v3C);
+    const deltaClampedTarget = clampedTarget.sub(newTarget);
+    const deltaClampedTargetLength2 = deltaClampedTarget.lengthSq();
+    if (deltaClampedTargetLength2 === 0) {
+      return position2.add(offset);
+    } else if (deltaClampedTargetLength2 === offsetLength2) {
+      return position2;
+    } else if (friction === 0) {
+      return position2.add(offset).add(deltaClampedTarget);
+    } else {
+      const offsetFactor = 1 + friction * deltaClampedTargetLength2 / offset.dot(deltaClampedTarget);
+      return position2.add(_v3B.copy(offset).multiplyScalar(offsetFactor)).add(deltaClampedTarget.multiplyScalar(1 - friction));
+    }
+  }
+  _updateNearPlaneCorners() {
+    if (isPerspectiveCamera(this._camera)) {
+      const camera = this._camera;
+      const near = camera.near;
+      const fov2 = camera.getEffectiveFOV() * DEG2RAD2;
+      const heightHalf = Math.tan(fov2 * 0.5) * near;
+      const widthHalf = heightHalf * camera.aspect;
+      this._nearPlaneCorners[0].set(-widthHalf, -heightHalf, 0);
+      this._nearPlaneCorners[1].set(widthHalf, -heightHalf, 0);
+      this._nearPlaneCorners[2].set(widthHalf, heightHalf, 0);
+      this._nearPlaneCorners[3].set(-widthHalf, heightHalf, 0);
+    } else if (isOrthographicCamera(this._camera)) {
+      const camera = this._camera;
+      const zoomInv = 1 / camera.zoom;
+      const left = camera.left * zoomInv;
+      const right = camera.right * zoomInv;
+      const top = camera.top * zoomInv;
+      const bottom = camera.bottom * zoomInv;
+      this._nearPlaneCorners[0].set(left, top, 0);
+      this._nearPlaneCorners[1].set(right, top, 0);
+      this._nearPlaneCorners[2].set(right, bottom, 0);
+      this._nearPlaneCorners[3].set(left, bottom, 0);
+    }
+  }
+  _collisionTest() {
+    let distance = Infinity;
+    const hasCollider = this.colliderMeshes.length >= 1;
+    if (!hasCollider)
+      return distance;
+    if (notSupportedInOrthographicCamera(this._camera, "_collisionTest"))
+      return distance;
+    const rayDirection = this._getTargetDirection(_cameraDirection);
+    _rotationMatrix.lookAt(_ORIGIN, rayDirection, this._camera.up);
+    for (let i = 0;i < 4; i++) {
+      const nearPlaneCorner = _v3B.copy(this._nearPlaneCorners[i]);
+      nearPlaneCorner.applyMatrix4(_rotationMatrix);
+      const origin = _v3C.addVectors(this._target, nearPlaneCorner);
+      _raycaster4.set(origin, rayDirection);
+      _raycaster4.far = this._spherical.radius + 1;
+      const intersects2 = _raycaster4.intersectObjects(this.colliderMeshes);
+      if (intersects2.length !== 0 && intersects2[0].distance < distance) {
+        distance = intersects2[0].distance;
+      }
+    }
+    return distance;
+  }
+  _getClientRect(target) {
+    if (!this._domElement)
+      return;
+    const rect = this._domElement.getBoundingClientRect();
+    target.x = rect.left;
+    target.y = rect.top;
+    if (this._viewport) {
+      target.x += this._viewport.x;
+      target.y += rect.height - this._viewport.w - this._viewport.y;
+      target.width = this._viewport.z;
+      target.height = this._viewport.w;
+    } else {
+      target.width = rect.width;
+      target.height = rect.height;
+    }
+    return target;
+  }
+  _createOnRestPromise(resolveImmediately) {
+    if (resolveImmediately)
+      return Promise.resolve();
+    this._hasRested = false;
+    this.dispatchEvent({ type: "transitionstart" });
+    return new Promise((resolve) => {
+      const onResolve = () => {
+        this.removeEventListener("rest", onResolve);
+        resolve();
+      };
+      this.addEventListener("rest", onResolve);
+    });
+  }
+  _addAllEventListeners(_domElement) {
+  }
+  _removeAllEventListeners() {
+  }
+  get dampingFactor() {
+    console.warn(".dampingFactor has been deprecated. use smoothTime (in seconds) instead.");
+    return 0;
+  }
+  set dampingFactor(_9) {
+    console.warn(".dampingFactor has been deprecated. use smoothTime (in seconds) instead.");
+  }
+  get draggingDampingFactor() {
+    console.warn(".draggingDampingFactor has been deprecated. use draggingSmoothTime (in seconds) instead.");
+    return 0;
+  }
+  set draggingDampingFactor(_9) {
+    console.warn(".draggingDampingFactor has been deprecated. use draggingSmoothTime (in seconds) instead.");
+  }
+  static createBoundingSphere(object3d, out = new THREE11.Sphere) {
+    const boundingSphere = out;
+    const center = boundingSphere.center;
+    _box3A.makeEmpty();
+    object3d.traverseVisible((object) => {
+      if (!object.isMesh)
+        return;
+      _box3A.expandByObject(object);
+    });
+    _box3A.getCenter(center);
+    let maxRadiusSq = 0;
+    object3d.traverseVisible((object) => {
+      if (!object.isMesh)
+        return;
+      const mesh = object;
+      const geometry = mesh.geometry.clone();
+      geometry.applyMatrix4(mesh.matrixWorld);
+      const bufferGeometry = geometry;
+      const position2 = bufferGeometry.attributes.position;
+      for (let i = 0, l2 = position2.count;i < l2; i++) {
+        _v3A.fromBufferAttribute(position2, i);
+        maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(_v3A));
+      }
+    });
+    boundingSphere.radius = Math.sqrt(maxRadiusSq);
+    return boundingSphere;
+  }
+}
+
+// src/class/3d/effect/SparkleParticle.ts
+var THREE12 = _THREE();
+
+class SparkleParticle {
+  scene;
+  position;
+  texture;
+  duration;
+  particleCount;
+  timeElapsed;
+  geometry;
+  material;
+  particles;
+  constructor(scene, position2, texture, duration2 = 0.2, particleCount = 6) {
+    this.scene = scene;
+    this.position = position2;
+    this.texture = texture;
+    this.duration = duration2;
+    this.particleCount = particleCount;
+    this.timeElapsed = 0;
+    this.initParticles();
+  }
+  initParticles() {
+    this.geometry = new THREE12.BufferGeometry;
+    const positions = [];
+    const sizes = [];
+    const minDistance = 1;
+    for (let i = 0;i < this.particleCount; i++) {
+      let validPosition = false;
+      let x2, y, z;
+      while (!validPosition) {
+        x2 = this.position.x + Math.random() * 5 - 2.5;
+        y = this.position.y + Math.random() * 6.5 - 2.5;
+        z = this.position.z + Math.random() * 5 - 2.5;
+        validPosition = true;
+        for (let j2 = 0;j2 < i; j2++) {
+          const dx = x2 - positions[j2 * 3];
+          const dy = y - positions[j2 * 3 + 1];
+          const dz = z - positions[j2 * 3 + 2];
+          const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+          if (distance < minDistance) {
+            validPosition = false;
+            break;
+          }
+        }
+      }
+      positions.push(x2, y, z);
+      sizes.push(Math.random() * 5 + 0.1);
+    }
+    this.geometry.setAttribute("position", new THREE12.Float32BufferAttribute(positions, 3));
+    this.geometry.setAttribute("size", new THREE12.Float32BufferAttribute(sizes, 1));
+    this.material = new THREE12.PointsMaterial({
+      size: 4,
+      map: this.texture,
+      transparent: true,
+      blending: THREE12.AdditiveBlending,
+      depthWrite: false
+    });
+    this.particles = new THREE12.Points(this.geometry, this.material);
+    this.scene.add(this.particles);
+  }
+  update(deltaTime) {
+    this.timeElapsed += deltaTime;
+    this.material.opacity = 1 - this.timeElapsed / this.duration;
+    if (this.timeElapsed >= this.duration) {
+      this.dispose();
+    }
+    return true;
+  }
+  dispose() {
+    this.scene.remove(this.particles);
+    this.particles.geometry.dispose();
+    this.particles.material.dispose();
+    return false;
+  }
+}
+
+// src/util/FFLLoader.ts
+var __5 = _8();
+var FFLModule2;
+var getFFL = () => FFLModule2;
+var currentLoadingModal;
+var getCurrentLoadingModal = () => currentLoadingModal;
+var FFLReadyPromise = null;
+function ensureFFLReady() {
+  if (FFLReadyPromise)
+    return FFLReadyPromise;
+  return Promise.reject(new Error("Face Library is not loaded yet. Either the resource is still downloading, or it failed to load. TODO make this error message better."));
+}
+async function prepareFFLAsync() {
+  if (FFLReadyPromise)
+    return;
+  FFLReadyPromise = (async () => {
+    if (Config.renderer.useRendererServer !== false) {
+      return console.log("why do you");
+    }
+    FFLModule2 = (await Promise.resolve().then(() => __toESM(require_ffl_emscripten(), 1))).default;
+    FFLModule2 = await FFLModule2({
+      locateFile: (path) => {
+        return "/dist/" + path;
+      }
+    });
+    console.log(FFLModule2);
+    console.log("We've got FFL!");
+    await loadBodyModels();
+    await loadHatModels();
+    await loadClothesTextures();
+    const fflResourceFile = await fetch(Config.renderer.fflResourcePath[await getSetting("resourceType")]);
+    let { module: module2 } = await initializeFFL(fflResourceFile, FFLModule2);
+    FFLModule2 = module2;
+    console.log("Ready!");
+  })();
+}
+
+// src/util/MiiRendering.ts
+var THREE13 = _THREE();
+async function getHeadModel(mii, rendererRef, modelFlag, texResolution) {
+  const dataU8 = mii.export("studioData");
+  const modelDesc = FFLCharModelDescDefault;
+  modelDesc.resolution = 512;
+  modelDesc.allExpressionFlag = new Uint32Array([1, 0, 0]);
+  if (modelFlag)
+    modelDesc.modelFlag = FFLModelFlag[modelFlag];
+  if (texResolution)
+    modelDesc.resolution = texResolution;
+  let currentCharModel;
+  try {
+    currentCharModel = createCharModel(dataU8, modelDesc, await getShaderMaterialFromShaderType(), getFFL(), false);
+    if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+      window.eyeScleraHack = true;
+    }
+    currentCharModel._materialTextureClass = FFLShaderMaterial_default;
+    initCharModelTextures(currentCharModel, rendererRef, FFLShaderMaterial_default);
+    if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+      window.eyeScleraHack = false;
+    }
+  } catch (err) {
+    currentCharModel = null;
+    alert(`Error creating/updating CharModel: ${err}`);
+    console.error("Error creating/updating CharModel:", err);
+    throw err;
+  }
+  const asset = {
+    extras: {
+      partsTransform: currentCharModel.partsTransform
+    }
+  };
+  let scene = new THREE13.Group;
+  scene.add(currentCharModel.meshes);
+  return {
+    animations: [],
+    asset,
+    cameras: [],
+    parser: {},
+    scene,
+    scenes: [scene],
+    userData: {},
+    CharModel: currentCharModel
+  };
+}
+async function getMaskTex(mii, rendererRef, expressionFlag = new Uint32Array([1, 0, 0])) {
+  const dataU8 = mii.export("studioData");
+  const modelDesc = FFLCharModelDescDefault;
+  modelDesc.resolution = 1024;
+  modelDesc.allExpressionFlag = expressionFlag;
+  let currentCharModel;
+  var img;
+  const shaderMaterial = await getShaderMaterialFromShaderType();
+  try {
+    currentCharModel = createCharModel(dataU8, modelDesc, shaderMaterial, getFFL(), false);
+    img = await new Promise((resolve) => {
+      if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+        window.eyeScleraHack = true;
+      }
+      initCharModelTextures(currentCharModel, rendererRef, FFLShaderMaterial_default);
+      if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
+        window.eyeScleraHack = false;
+      }
+      const target = currentCharModel._maskTargets[currentCharModel.expression];
+      renderTargetToDataTexture(target, rendererRef).then((r) => {
+        resolve(r);
+      });
+    });
+  } catch (err) {
+    currentCharModel = null;
+    alert(`Error creating/updating CharModel: ${err}`);
+    console.error("Error creating/updating CharModel:", err);
+    throw err;
+  }
+  return { img, model: currentCharModel };
+}
+
+// src/class/3DScene.ts
+var import_jszip3 = __toESM(require_lib(), 1);
+
+// src/util/scaling.ts
+var THREE14 = _THREE();
+function streetpassHandScaling(body, scaleMul = 1) {
+  const k3 = 0.2;
+  var scaleVec = new THREE14.Vector3;
+  body.getWorldScale(scaleVec);
+  const baseHandScaleX = 1 / scaleVec.x;
+  const baseHandScaleY = 1 / scaleVec.y;
+  const adjustmentFactor = 1 + k3 * (scaleVec.y - 1);
+  const adjustedHandScaleY = baseHandScaleY * adjustmentFactor;
+  body.getObjectByName("handLPs").scale.set(baseHandScaleX, adjustedHandScaleY, baseHandScaleX);
+  body.getObjectByName("handRPs").scale.set(baseHandScaleX, adjustedHandScaleY, baseHandScaleX);
+}
+
+// src/class/3DScene.ts
+var THREE15 = _THREE();
+class Mii3DScene {
+  #camera;
+  #controls;
+  #textureLoader;
+  #gltfLoader;
+  #scene;
+  #renderer;
+  #parent;
+  charModel;
+  mii;
+  ready;
+  headReady;
+  mixer;
+  animators;
+  animations;
+  setupType;
+  #initCallback;
+  type;
+  cameraPan;
+  shaderOverride;
+  bodyModel;
+  handColor;
+  shaderType;
+  simpleShaderLegacyColors;
+  hatModels;
+  clothingTextures;
+  editor;
+  camSetup;
+  texResolution;
+  constructor(mii, parent2, setupType = 0 /* Normal */, initCallback, shaderOverride = false, editor) {
+    this.animations = new Map;
+    this.animators = new Map;
+    this.anim = new Map;
+    this.#parent = parent2;
+    this.#scene = new THREE15.Scene;
+    this.#camera = new THREE15.PerspectiveCamera(45, parent2.offsetWidth / parent2.offsetHeight, 0.1, 1000);
+    this.ready = false;
+    this.headReady = false;
+    this.texResolution = 512;
+    if (initCallback)
+      this.#initCallback = initCallback;
+    this.shaderOverride = shaderOverride;
+    this.editor = editor;
+    if (setupType === 1 /* Screenshot */) {
+      this.#renderer = new THREE15.WebGLRenderer({
+        alpha: true,
+        antialias: true,
+        preserveDrawingBuffer: true
+      });
+      this.texResolution = 1024;
+    } else {
+      this.#renderer = new THREE15.WebGLRenderer({
+        alpha: true,
+        antialias: true
+      });
+    }
+    this.#renderer.outputColorSpace = THREE15.LinearSRGBColorSpace;
+    this.getRendererElement().classList.add("scene");
+    this.setupType = setupType;
+    getSetting("bodyModel").then((type) => {
+      this.bodyModel = type;
+    });
+    getSetting("shaderType").then((type) => {
+      this.shaderType = type;
+      getSetting("simpleShaderLegacyColors").then((val2) => {
+        this.simpleShaderLegacyColors = val2;
+      });
+      this.#gltfLoader = new GLTFLoader;
+      this.#gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+      if (type === "none") {
+        const cubeTextureLoader = new THREE15.CubeTextureLoader;
+        const environmentMap = cubeTextureLoader.load([
+          "./cube_map.png",
+          "./cube_map.png",
+          "./cube_map.png",
+          "./cube_map.png",
+          "./cube_map.png",
+          "./cube_map.png"
+        ]);
+        this.#scene.environment = environmentMap;
+        this.#scene.environmentIntensity = 1.25;
+        const directionalLight = new THREE15.DirectionalLight(15466239, Math.PI);
+        directionalLight.position.set(1, 0.1, 1);
+        this.#scene.add(directionalLight);
+        const ambientLight = new THREE15.AmbientLight(6710886, Math.PI / 16);
+        this.#scene.add(ambientLight);
+      } else if (type !== "lightDisabled") {
+        this.#scene.environmentIntensity = 0;
+      }
+      this.focusCamera(0 /* MiiHead */, true);
+    });
+    this.#renderer.setSize(512, 512);
+    this.#renderer.setPixelRatio(window.devicePixelRatio);
+    CameraControls.install({ THREE: THREE15 });
+    this.#controls = new CameraControls(this.#camera, this.#renderer.domElement);
+    if (setupType === 0 /* Normal */) {
+      this.camSetup = async () => {
+        const canPan = this.cameraPan !== undefined ? this.cameraPan : false;
+        this.#controls.minAzimuthAngle = -Math.PI;
+        this.#controls.maxAzimuthAngle = Math.PI;
+        this.#controls.minPolarAngle = 0.98;
+        this.#controls.maxPolarAngle = 1.8;
+        if (canPan !== true) {
+          console.log("canPan is not false:", canPan);
+          this.#controls.mouseButtons.left = CameraControls.ACTION.ROTATE;
+          this.#controls.mouseButtons.right = CameraControls.ACTION.NONE;
+          this.#controls.mouseButtons.wheel = CameraControls.ACTION.DOLLY;
+          this.#controls.touches.one = CameraControls.ACTION.TOUCH_ROTATE;
+          this.#controls.touches.two = CameraControls.ACTION.TOUCH_DOLLY;
+          this.#controls.touches.three = CameraControls.ACTION.NONE;
+          this.#controls.enabled = true;
+          this.#controls.minDistance = 10;
+          this.#controls.maxDistance = 35;
+          this.#controls.zoomTo(1);
+          this.cameraPan = true;
+        } else {
+          console.log("canPan is True:", canPan);
+          this.#controls.enabled = false;
+          this.#controls.minDistance = 60;
+          this.#controls.maxDistance = 140;
+          this.#controls.dollyTo(380 / 10);
+          this.#controls.zoomTo(2.5);
+          this.cameraPan = false;
+        }
+      };
+      this.camSetup();
+    }
+    if (setupType === 1 /* Screenshot */) {
+      this.#controls.dollyTo(40);
+      this.#camera.fov = 30;
+      this.#controls.minDistance = 8;
+      this.#controls.maxDistance = 300;
+    } else {
+      setTimeout(() => {
+        this.focusCamera(0 /* MiiHead */, true);
+      }, 200);
+    }
+    this.animators.set("cameraControls", (time2, delta) => {
+      this.#controls.update(delta);
+    });
+    this.#textureLoader = new THREE15.TextureLoader;
+    this.mii = mii;
+    this.type = this.mii.gender === 0 ? "m" : "f";
+    const clock = new THREE15.Clock;
+    const animate = (time2) => {
+      const delta = clock.getDelta();
+      try {
+        this.#renderer.render(this.#scene, this.#camera);
+      } catch (e) {
+        console.error(e);
+      }
+      this.animators.forEach(function(f) {
+        f(time2, delta);
+      });
+    };
+    this.#renderer.setClearAlpha(0);
+    this.#renderer.setAnimationLoop(animate);
+    this.#camera.aspect = this.#parent.offsetWidth / this.#parent.offsetHeight;
+    this.#camera.updateProjectionMatrix();
+    this.resize();
+  }
+  async#loadZip(path, out, useKeys, type) {
+    this[out] = [];
+    const data2 = await fetch(path).then((j2) => j2.blob());
+    const zip = await import_jszip3.default.loadAsync(data2);
+    let promises = [];
+    const fileList = Object.keys(zip.files);
+    for (const file of fileList) {
+      promises.push(zip.files[file].async("blob"));
+    }
+    const resolves = await Promise.all(promises);
+    for (let i = 0;i < fileList.length; i++) {
+      const url = URL.createObjectURL(resolves[i]);
+      let result;
+      if (type === "gltf") {
+        result = await this.#gltfLoader.loadAsync(url);
+      } else {
+        result = await this.#textureLoader.loadAsync(url);
+        result.flipY = false;
+      }
+      if (useKeys) {
+        const fileName = fileList[i].split(".");
+        fileName.pop();
+        this[out][fileName.join(".")] = result;
+      } else {
+        this[out][i] = result;
+      }
+      URL.revokeObjectURL(url);
+    }
+  }
+  currentPosition;
+  focusCamera(part, force = false, transition = true, onlyReturn = false) {
+    this.#controls.smoothTime = 0.2;
+    if (this.currentPosition === part && force === false)
+      return;
+    this.currentPosition = part;
+    const pos = new THREE15.Vector3;
+    let body = this.#scene.getObjectByName(this.type), head2 = this.#scene.getObjectByName("MiiHead");
+    const rotation2 = 0;
+    if (part === 1 /* MiiFullBody */) {
+      if (body !== undefined && head2 !== undefined) {
+        const box = new THREE15.Box3().setFromObject(head2);
+        pos.y = box.max.y / 2;
+      }
+      if (onlyReturn === false) {
+        let minInput = 0, maxInput = 127, minOutput = 38, maxOutput = 40;
+        this.#controls.moveTo(pos.x, pos.y, pos.z, transition);
+        this.#controls.rotateTo(rotation2, Math.PI / 2, transition);
+        if (this.cameraPan === false) {
+          minOutput = 80;
+          maxOutput = 96;
+        }
+        this.#controls.dollyTo(minOutput + (this.mii.height - minInput) / (maxInput - minInput) * (maxOutput - minOutput), transition);
+      }
+      return pos;
+    } else if (part === 0 /* MiiHead */) {
+      switch (this.setupType) {
+        case 0 /* Normal */:
+          if (body !== undefined) {
+            const box = new THREE15.Box3().setFromObject(body);
+            pos.y = box.max.y - box.min.y;
+          }
+          if (onlyReturn === false) {
+            this.#controls.moveTo(pos.x, pos.y + 2, pos.z, transition);
+            this.#controls.rotateTo(rotation2, Math.PI / 2, transition);
+            this.#controls.dollyTo(25, transition);
+            if (this.cameraPan === false) {
+              this.#controls.moveTo(pos.x, pos.y + 1.75, pos.z, transition);
+              this.#controls.dollyTo(65, transition);
+            }
+          }
+          return pos;
+        case 1 /* Screenshot */:
+          if (this.getHead() !== undefined) {
+            const box = new THREE15.Box3().setFromObject(this.getHead());
+            pos.y = box.max.y - box.min.y;
+          }
+          this.#controls.moveTo(pos.x, pos.y + 1.75, pos.z, transition);
+          this.#controls.rotateTo(rotation2, Math.PI / 2, transition);
+          this.#controls.dollyTo(30, transition);
+          break;
+      }
+    }
+  }
+  focusCameraUpdate() {
+    if (this.ready)
+      this.camSetup();
+    if (this.anim)
+      switch (this.cameraPan) {
+        case true:
+          for (const [_9, anim] of this.anim) {
+            anim.timeScale = 0.5;
+          }
+          break;
+        case false:
+          for (const [_9, anim] of this.anim) {
+            anim.reset();
+            anim.timeScale = 0;
+          }
+          break;
+      }
+    this.focusCamera(this.currentPosition, true, false);
+  }
+  playEndingAnimation() {
+    this.#controls.enabled = false;
+    this.focusCamera(1 /* MiiFullBody */, true);
+    let heads = this.#scene.getObjectsByProperty("name", "MiiHead");
+    for (const head2 of heads) {
+      if (Config.renderer.useRendererServer) {
+      }
+      this.traverseAddFaceMaterial(head2, `&data=${encodeURIComponent(this.mii.exportHex("studioData"))}&expression=1&width=512`);
+    }
+    const type = this.mii.gender == 0 ? "m" : "f";
+    this.animators.delete(`animation-${type}`);
+    this.swapAnimation("Finish");
+    getSoundManager().playSound("finish");
+  }
+  resize(width2 = this.#parent.offsetWidth, height2 = this.#parent.offsetHeight) {
+    this.resizeRendererToDisplaySize(width2, height2);
+    let zoomValue = 1, widescreen = window.innerWidth > 960, is2DMode = !this.cameraPan;
+    switch (this.currentPosition) {
+      case 0 /* MiiHead */:
+        if (is2DMode)
+          zoomValue = widescreen ? 2.5 : 3.25;
+        else
+          zoomValue = widescreen ? 1 : 1.25;
+        break;
+      case 1 /* MiiFullBody */:
+        if (is2DMode)
+          zoomValue = widescreen ? 2.5 : 3.25;
+        else
+          zoomValue = 1;
+        break;
+    }
+    if (this.setupType !== 1 /* Screenshot */) {
+      this.#controls.zoomTo(zoomValue, true);
+    } else
+      this.#controls.zoomTo(1);
+  }
+  resizeRendererToDisplaySize(width2, height2) {
+    this.#camera.aspect = width2 / height2;
+    this.#camera.updateProjectionMatrix();
+    const canvas = this.#renderer.domElement;
+    const pixelRatio = window.devicePixelRatio;
+    const w = Math.floor(canvas.clientWidth * pixelRatio);
+    const h = Math.floor(canvas.clientHeight * pixelRatio);
+    this.#renderer.setSize(w, h, false);
+  }
+  preparing;
+  async init() {
+    if (this.ready)
+      return;
+    if (this.preparing)
+      return;
+    this.preparing = true;
+    this.ready = false;
+    this.getRendererElement().style.opacity = "0";
+    await this.#addBody();
+    this.updateBody(1 /* ClothingUpdate */);
+    this.swapAnimation("Wait", true);
+    await this.#loadZip("./assets/models/hat_models_bundle.zip", "hatModels", false, "gltf");
+    await this.#loadZip("./assets/images/mii_clothes_textures_bundle.zip", "clothingTextures", true, "texture");
+    this.ready = true;
+    this.preparing = false;
+    this.resize();
+    this.updateBody(1 /* ClothingUpdate */);
+    if (this.setupType === 1 /* Screenshot */) {
+      this.#initCallback && this.#initCallback(this.#renderer);
+      this.resize();
+      requestAnimationFrame(() => {
+        this.resize();
+      });
+      setTimeout(() => {
+        this.resize();
+      }, 0);
+    } else {
+      this.resize();
+      setTimeout(() => {
+        this.resize();
+        this.focusCamera(0 /* MiiHead */, true, false);
+      }, 500);
+    }
+  }
+  getRendererElement() {
+    return this.#renderer.domElement;
+  }
+  anim;
+  currentAnim;
+  initAnimation(mesh, id) {
+    console.debug("playAnimation() called:", mesh, id);
+    if (this.mixer === undefined)
+      this.mixer = new THREE15.AnimationMixer(this.#scene.getObjectByName("m"));
+    this.animators.set(id, (_time, delta) => {
+      try {
+        this.mixer.update(delta);
+      } catch (e) {
+        console.warn(e);
+      }
+    });
+  }
+  swapAnimation(newAnim, force = false) {
+    if (newAnim === this.currentAnim)
+      return;
+    console.debug("swapAnimation() called:", newAnim);
+    if (force !== true) {
+      for (const [_9, anim] of this.anim) {
+        anim.fadeOut(0.2);
+      }
+    } else {
+      for (const [_9, anim] of this.anim) {
+        anim.fadeOut(0).reset().stop();
+      }
+    }
+    this.currentAnim = newAnim;
+    let x2 = ["m", "f"];
+    for (const key2 of x2) {
+      let clip;
+      try {
+        clip = this.mixer.clipAction(this.animations.get(`${key2}-${newAnim}`), this.#scene.getObjectByName(key2));
+      } catch (e) {
+        return;
+      }
+      this.anim.set(key2, clip);
+      this.anim.get(key2).reset().setEffectiveTimeScale(1).setEffectiveWeight(1);
+      if (newAnim === "Wait") {
+        setTimeout(() => {
+          this.anim.get(key2).timeScale = 0.5;
+        }, 33.33);
+      }
+      if (newAnim === "Finish") {
+        setTimeout(() => {
+          this.anim.get(key2).timeScale = 0.8;
+        }, 33.33);
+      }
+      if (force === false) {
+        this.anim.get(key2).fadeIn(0.2).play();
+      } else {
+        this.anim.get(key2).play();
+      }
+      this.anim.get(key2).timeScale = 1;
+    }
+  }
+  async#addBody() {
+    console.log("addBody()");
+    const setupMiiBody = async (path, type) => {
+      const glb = await this.#gltfLoader.loadAsync(path);
+      const clips = glb.animations;
+      let armature = glb.scene.getObjectByName(type);
+      this.mixer = new THREE15.AnimationMixer(armature);
+      for (const anim of clips) {
+        this.animations.set(`${type}-${anim.name}`, anim);
+      }
+      glb.scene.name = `${type}-body-root`;
+      this.#scene.add(glb.scene);
+      this.initAnimation(glb.scene.getObjectByName(type), `animation-${type}`);
+      const gBodyMesh = glb.scene.getObjectByName(`body_${type}`);
+      gBodyMesh.geometry.userData = {
+        cullMode: 1,
+        modulateColor: MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor],
+        modulateMode: 0,
+        modulateType: 9
+      };
+      if (this.shaderOverride)
+        gBodyMesh.material = new THREE15.MeshStandardMaterial({
+          roughness: 1,
+          metalness: 1,
+          color: MiiFavoriteColorLookupTable[this.mii.favoriteColor]
+        });
+      else
+        traverseMesh(gBodyMesh, this.shaderType);
+      const gHandsMesh = glb.scene.getObjectByName(`hands_${type}`);
+      if (gHandsMesh) {
+        gHandsMesh.geometry.userData = {
+          cullMode: 1,
+          modulateColor: MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor],
+          modulateMode: 0,
+          modulateType: 9
+        };
+        if (this.shaderOverride)
+          gHandsMesh.material = new THREE15.MeshStandardMaterial({
+            roughness: 1,
+            metalness: 1,
+            color: MiiFavoriteColorLookupTable[this.mii.favoriteColor]
+          });
+        else {
+          traverseMesh(gHandsMesh, this.shaderType);
+        }
+      }
+      const gLegsMesh = glb.scene.getObjectByName(`legs_${type}`);
+      gLegsMesh.geometry.userData = {
+        cullMode: 1,
+        modulateColor: cPantsColorGray,
+        modulateMode: 0,
+        modulateType: 10
+      };
+      if (this.shaderOverride)
+        gLegsMesh.material = new THREE15.MeshStandardMaterial({
+          metalness: 1,
+          roughness: 1,
+          color: new THREE15.Color(this.getPantsColor()[0], this.getPantsColor()[1], this.getPantsColor()[2])
+        });
+      else
+        traverseMesh(gLegsMesh, this.shaderType);
+      if (this.#scene.getObjectByName("m"))
+        this.#scene.getObjectByName("m").visible = false;
+      if (this.#scene.getObjectByName("f"))
+        this.#scene.getObjectByName("f").visible = false;
+      glb.scene.rotation.set(0, 0, 0);
+      console.log(`setupBody("${path}", "${type}")`);
+    };
+    const bodyModel = await getSetting("bodyModel");
+    const loaders = [
+      setupMiiBody(`./assets/models/miiBodyM_${bodyModel}.glb`, "m"),
+      setupMiiBody(`./assets/models/miiBodyF_${bodyModel}.glb`, "f")
+    ];
+    await Promise.all(loaders);
+    console.log("READY");
+  }
+  getShirtColor() {
+    return this.mii.shirtColor !== -1 && this.mii.shirtColor < 100 ? SwitchMiiColorTableSRGB[this.mii.shirtColor] : MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor];
+  }
+  getShoesColor() {
+    return this.mii.shoesColor !== -1 && this.mii.shoesColor < 100 ? SwitchMiiColorTableSRGB[this.mii.shoesColor] : [1, 1, 1];
+  }
+  getPantsColor() {
+    if (this.mii.pantsColor !== -1 && this.mii.pantsColor < 100 && !ForbiddenShirtPantColors.includes(this.mii.pantsColor)) {
+      return SwitchMiiColorTableSRGB[this.mii.pantsColor];
+    }
+    if (this.mii.special) {
+      return cPantsColorGold;
+    }
+    if (this.mii.favorite) {
+      return cPantsColorRed;
+    }
+    if (this.mii.temporary) {
+      return cPantsColorBlue;
+    }
+    return cPantsColorGray;
+  }
+  async updateBody(updateType = 0 /* None */) {
+    if (!this.ready)
+      return;
+    this.resize();
+    this.type = this.mii.gender === 0 ? "m" : "f";
+    const bodyM = this.#scene.getObjectByName("m-body-root");
+    const bodyF = this.#scene.getObjectByName("f-body-root");
+    if (!bodyM)
+      return;
+    if (!bodyF)
+      return;
+    const build = this.mii.build;
+    const height2 = this.mii.height;
+    let scaleFactors = { x: 0, y: 0, z: 0 };
+    switch (Config.mii.scalingMode) {
+      case "scaleLimit":
+        let heightFactor = height2 / 128;
+        scaleFactors.y = heightFactor * 0.55 + 0.6;
+        scaleFactors.x = heightFactor * 0.3 + 0.6;
+        scaleFactors.x = (heightFactor * 0.6 + 0.8 - scaleFactors.x) * (build / 128) + scaleFactors.x;
+        break;
+      case "scaleLimitClampY":
+        heightFactor = height2 / 128;
+        scaleFactors.y = heightFactor * 0.55 + 0.6;
+        scaleFactors.x = heightFactor * 0.3 + 0.6;
+        scaleFactors.x = (heightFactor * 0.6 + 0.8 - scaleFactors.x) * (build / 128) + scaleFactors.x;
+        scaleFactors.y = Math.min(scaleFactors.y, 1);
+        break;
+      case "scaleApply":
+        scaleFactors.x = build * (height2 * 0.003671875 + 0.4) / 128 + height2 * 0.001796875 + 0.4;
+        scaleFactors.y = height2 * 0.006015625 + 0.5;
+        break;
+    }
+    scaleFactors.z = scaleFactors.x;
+    let body = this.type === "m" ? bodyM : bodyF;
+    const traverseBones = (object) => {
+      object.scale.set(scaleFactors.x, scaleFactors.y, scaleFactors.z);
+      if (this.bodyModel === "streetpass") {
+        streetpassHandScaling(body);
+      }
+    };
+    const shaderSetting = await getSetting("shaderType");
+    const bodyModel = await getSetting("bodyModel");
+    const makeHeadBoneUpdate = (body2) => {
+      const quaternion = new THREE15.Quaternion;
+      const scale2 = new THREE15.Vector3;
+      return () => {
+        let headBone = body2.getObjectByName("head");
+        if (headBone === undefined)
+          headBone = body2.getObjectByName("Head");
+        if (!headBone)
+          return;
+        headBone.updateMatrixWorld(true);
+        const position2 = new THREE15.Vector3;
+        headBone.matrixWorld.decompose(position2, quaternion, scale2);
+        if (this.#scene.getObjectByName("MiiHead")) {
+          this.#scene.getObjectByName("MiiHead").position.copy(position2);
+          this.#scene.getObjectByName("MiiHead").setRotationFromQuaternion(quaternion);
+          if (bodyModel === "miitomo") {
+            this.#scene.getObjectByName("MiiHead").rotation.z -= Math.PI / 2;
+          } else {
+            this.#scene.getObjectByName("MiiHead").position.y += 0.1;
+          }
+        }
+      };
+    };
+    const assignMaterial = async (bodyN, type) => {
+      const hasShaderApplied = this.shaderOverride === false;
+      const nBody = bodyN.getObjectByName(type).getObjectByName("body_" + type);
+      const nLegs = bodyN.getObjectByName(type).getObjectByName("legs_" + type);
+      if (updateType === 1 /* ClothingUpdate */) {
+        if (hasShaderApplied) {
+          nBody.material.color = new THREE15.Color(...this.getShirtColor());
+        }
+        if (hasShaderApplied)
+          nLegs.material.color = new THREE15.Color(...this.getPantsColor());
+        if (this.mii.clothesType === -1) {
+          const isUsingShader = await isShaderMaterial();
+          let shirtModulate = isUsingShader ? { modulateMode: 0, modulateType: 9 } : {};
+          let pantsModulate = isUsingShader ? { modulateMode: 0, modulateType: 10 } : {};
+          nBody.material = new (await getShaderMaterialFromShaderType())({
+            color: new THREE15.Color(this.getShirtColor()[0], this.getShirtColor()[1], this.getShirtColor()[2]),
+            ...shirtModulate
+          });
+          nLegs.material = new (await getShaderMaterialFromShaderType())({
+            color: new THREE15.Color(this.getPantsColor()[0], this.getPantsColor()[1], this.getPantsColor()[2]),
+            ...pantsModulate
+          });
+        }
+        await clothingUpdate({
+          gender: this.mii.gender,
+          clothesType: this.mii.clothesType,
+          renderer: this.#renderer,
+          bodyModel: this.bodyModel,
+          shirtColor: this.getShirtColor(),
+          pantsColor: this.getPantsColor(),
+          shoesColor: this.getShoesColor(),
+          facelineColor: this.charModel.facelineColor,
+          nBody,
+          nLegs,
+          bodyGroup: this.#scene.getObjectByName(this.type),
+          clothesTextures: getClothesTextures(),
+          originalMaterial: await getShaderMaterialFromShaderType()
+        });
+      }
+    };
+    switch (this.mii.gender) {
+      case 0:
+        bodyM.getObjectByName("m").visible = true;
+        bodyF.getObjectByName("f").visible = false;
+        this.animators.set("head_bone", makeHeadBoneUpdate(bodyM));
+        traverseBones(bodyM);
+        assignMaterial(bodyM, "m");
+        break;
+      case 1:
+        bodyM.getObjectByName("m").visible = false;
+        bodyF.getObjectByName("f").visible = true;
+        this.animators.set("head_bone", makeHeadBoneUpdate(bodyF));
+        traverseBones(bodyF);
+        assignMaterial(bodyF, "f");
+        break;
+    }
+    if (updateType === 2 /* RepositionCamera */)
+      requestAnimationFrame(() => {
+        this.focusCamera(this.currentPosition, true, true, false);
+      });
+    else
+      requestAnimationFrame(() => {
+        this.resize();
+      });
+  }
+  debugGetScene() {
+    return this.#scene;
+  }
+  fadeIn() {
+    if (this.setupType === 0 /* Normal */) {
+      this.getRendererElement().style.opacity = "0";
+      setTimeout(() => {
+        this.getRendererElement().style.opacity = "1";
+      }, 500);
+    } else {
+      this.getRendererElement().style.opacity = "1";
+    }
+  }
+  async updateMiiHead(renderPart = 0 /* Head */) {
+    if (!this.ready) {
+      console.log("first time loading head");
+    }
+    let head2 = this.#scene.getObjectsByProperty("name", "MiiHead");
+    switch (renderPart) {
+      case 0 /* Head */:
+        try {
+          const tmpMii = new Mii(this.mii.export("miic"));
+          let params = {};
+          if (this.mii.hatType !== -1) {
+            switch (HatTypeList[this.mii.hatType]) {
+              case 1 /* HAT */:
+                params["modelType"] = "hat";
+                break;
+              case 2 /* FACE_ONLY */:
+                params["modelType"] = "face_only";
+                break;
+              case 6 /* BALD */:
+                tmpMii.hairType = 30;
+                break;
+            }
+          }
+          params["verifyCharInfo"] = "0";
+          let GLB;
+          if (Config.renderer.useRendererServer) {
+            GLB = null;
+          } else {
+            let modelType = "NORMAL";
+            switch (params.modelType) {
+              case "hat":
+                modelType = "HAT";
+                break;
+              case "face_only":
+                modelType = "FACE_ONLY";
+                break;
+            }
+            GLB = await getHeadModel(tmpMii, this.getRenderer(), modelType, this.texResolution);
+          }
+          GLB.scene.name = "MiiHead";
+          var headScale = 0.14;
+          GLB.scene.scale.set(headScale, headScale, headScale);
+          if (head2) {
+            this.#scene.remove(...head2);
+            this.#scene.getObjectsByProperty("name", "MiiHead").forEach((obj) => {
+              obj.parent.remove(obj);
+            });
+          }
+          console.debug("Adding head to scene");
+          this.resize();
+          this.#scene.add(GLB.scene);
+          if (Config.renderer.useRendererServer)
+            traverseAddShader(GLB.scene, this.shaderType);
+          let lights = await getSimpleMaterialAddLights(this.shaderType);
+          cleanupLights(this.#scene);
+          if (lights) {
+            lights(this.#scene);
+          }
+          console.debug("Traversing shader now");
+          const body = this.#scene.getObjectByName(this.type);
+          let headBone = body.getObjectByName("head");
+          if (headBone === undefined)
+            headBone = body.getObjectByName("Head");
+          if (!headBone)
+            return;
+          headBone.updateMatrixWorld(true);
+          const position2 = new THREE15.Vector3;
+          const quaternion = new THREE15.Quaternion;
+          const scale2 = new THREE15.Vector3;
+          headBone.matrixWorld.decompose(position2, quaternion, scale2);
+          if (GLB.scene) {
+            GLB.scene.position.copy(position2);
+            GLB.scene.setRotationFromQuaternion(quaternion);
+            console.debug("Positioning head to body");
+          }
+          const bodyModelType = this.bodyModel;
+          if (Config.renderer.useRendererServer === false) {
+            if (this.charModel) {
+              if (this.charModel.dispose) {
+                this.charModel.dispose();
+                this.charModel = null;
+              }
+            }
+            this.charModel = GLB.CharModel;
+          }
+          if (bodyModelType === "miitomo") {
+            GLB.scene.rotation.z -= Math.PI / 2;
+          }
+          try {
+            if (this.mii.hatType !== -1) {
+              let hatModel = this.hatModels[this.mii.hatType].scene.clone(true);
+              hatModel.name = "HatScene";
+              let i = 0;
+              if (GLB.asset.extras.partsTransform.hatTranslate) {
+                const vec = GLB.asset.extras.partsTransform.hatTranslate;
+                hatModel.position.add(vec);
+                switch (HatTypeList[this.mii.hatType]) {
+                  case 4 /* SIDE */:
+                    break;
+                  case 3 /* FRONT */:
+                    break;
+                  case 5 /* TOP */:
+                    break;
+                }
+              }
+              let shaderSetting = await getSetting("shaderType");
+              hatModel.traverse((o) => {
+                if (o.name === "HatScene" || o.name === "HatRoot")
+                  return;
+                if (o.isMesh) {
+                  let m = o;
+                  const mat = m.material;
+                  m.material = new THREE15.MeshBasicMaterial({
+                    color: 16777215,
+                    map: mat.map
+                  });
+                  m.material.needsUpdate = true;
+                  m.geometry.userData = {
+                    cullMode: 0,
+                    modulateColor: this.mii.hatCommonColor !== -1 && this.mii.hatCommonColor < 100 ? SwitchMiiColorTableSRGB[this.mii.hatCommonColor] : MiiFavoriteColorVec3Table[this.mii.hatFavoriteColor !== -1 ? this.mii.hatFavoriteColor : this.mii.favoriteColor],
+                    modulateMode: 5,
+                    modulateType: 5
+                  };
+                  i++;
+                  if (Config.renderer.useRendererServer === false) {
+                    traverseMesh(m, this.shaderType);
+                  }
+                }
+              });
+              GLB.scene.add(hatModel);
+            }
+          } catch (e) {
+            console.error("Hat type resulted in an error, but we're not going to let that stop the head from rendering!", e);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+        break;
+      case 1 /* Face */:
+        if (head2.length > 0) {
+          head2.forEach((h) => {
+            this.traverseAddFaceMaterial(h, `&data=${encodeURIComponent(this.mii.exportHex("studioData"))}&width=512`);
+          });
+        }
+        break;
+    }
+    const traverseHierarchy = (tree) => {
+      tree.traverse((n2) => {
+        if (!n2.isMesh)
+          return;
+        const modulateType = n2.geometry.userData.modulateType;
+        if (modulateType !== undefined && (modulateType === FFLModulateType.SHAPE_MASK || modulateType === FFLModulateType.SHAPE_GLASS))
+          return;
+      });
+    };
+    traverseHierarchy(this.getHead());
+    traverseHierarchy(this.#scene.getObjectByName("m"));
+    traverseHierarchy(this.#scene.getObjectByName("f"));
+    if (this.headReady === false)
+      this.fadeIn();
+    this.headReady = true;
+    this.resize();
+  }
+  particles;
+  lastSparkleTime;
+  sparkle() {
+    if (!this.particles)
+      this.particles = [];
+    if (!this.lastSparkleTime)
+      this.lastSparkleTime = 0;
+    if (performance.now() - this.lastSparkleTime < 150) {
+      return;
+    }
+    this.lastSparkleTime = performance.now();
+    this.#textureLoader.load("./assets/images/star.png", (texture) => {
+      const pos = new THREE15.Vector3;
+      const box = new THREE15.Box3;
+      if (this.#scene.getObjectByName("MiiHead") !== undefined) {
+        this.#scene.getObjectByName("MiiHead").getWorldPosition(pos);
+        box.setFromObject(this.#scene.getObjectByName("MiiHead"));
+      }
+      let particle = new SparkleParticle(this.#scene, new THREE15.Vector3(0, pos.y + box.min.y / 2, 2), texture);
+      this.particles.push(particle);
+      this.animators.set("particle_" + performance.now(), (_t, delta) => particle.update(delta));
+      setTimeout(() => {
+        this.particles.forEach((p, i) => {
+          p.dispose();
+        });
+        this.particles = [];
+        Array.from(this.animators.keys()).filter((p) => p.startsWith("particle_")).forEach((key2) => {
+          this.animators.delete(key2);
+        });
+      }, 1000);
+    });
+  }
+  getHead() {
+    return this.#scene.getObjectByName("MiiHead");
+  }
+  traverseAddFaceMaterial(node, urlParams) {
+    node.traverse((c2) => {
+      let child = c2;
+      if (child.isMesh) {
+        if (child.geometry.userData) {
+          const data2 = child.geometry.userData;
+          if (data2.modulateMode) {
+            if (data2.modulateType === 6) {
+              (async () => {
+                const mat = child.material;
+                const oldMat = mat;
+                var loadUrl = Config.renderer.renderFaceURL + urlParams;
+                let tex;
+                if (Config.renderer.useRendererServer === false) {
+                  console.log("READY");
+                  const params = new URLSearchParams(urlParams);
+                  let expressionFlag = new Uint32Array([
+                    1,
+                    0,
+                    0
+                  ]);
+                  if (params.has("expression")) {
+                    expressionFlag = makeExpressionFlag(Number(params.get("expression")));
+                  }
+                  console.log("Expression:", params.get("expression"), expressionFlag);
+                  const { img, model } = await getMaskTex(this.mii, this.getRenderer(), expressionFlag);
+                  console.log("DONE");
+                  loadUrl = null;
+                  tex = img;
+                  model.dispose();
+                } else {
+                  tex = await this.#textureLoader.loadAsync(loadUrl);
+                }
+                if (tex) {
+                  tex.flipY = false;
+                  this.#renderer.initTexture(tex);
+                  child.material.map = tex;
+                  child.material.transparent = true;
+                  oldMat.dispose();
+                }
+              })();
+            }
+          }
+        }
+      }
+    });
+  }
+  getCamera() {
+    return this.#camera;
+  }
+  getControls() {
+    return this.#controls;
+  }
+  getScene() {
+    return this.#scene;
+  }
+  getRenderer() {
+    return this.#renderer;
+  }
+  shutdown() {
+    Array.from(this.animators.keys()).forEach((k3) => {
+      this.animators.delete(k3);
+    });
+  }
+}
+
+// src/ui/components/MiiPagedFeatureSet.ts
+var import_md5 = __toESM(require_md5(), 1);
+var playHoverSound = () => playSound("hover");
+function MiiPagedFeatureSet(set) {
+  let tmpMii;
+  if (set.mii)
+    if (set.miiIsNotMii === undefined || set.miiIsNotMii === false)
+      tmpMii = new Mii(set.mii.export());
+    else
+      tmpMii = set.mii;
+  else
+    tmpMii = {};
+  let setContainer = new Html("div").class("feature-set-container");
+  const tabListInit = [];
+  for (const key2 in set.entries) {
+    const entry = set.entries[key2];
+    let property2 = key2;
+    tabListInit.push({
+      icon: entry.label,
+      async select(content2) {
+        let setList = new Html("div").class("feature-set-group").appendTo(content2);
+        if (entry.header) {
+          const header = new Html("div").class("feature-set-header");
+          if (entry.headerIsHtml !== undefined) {
+            header.append(entry.header);
+          } else {
+            header.text(entry.header);
+          }
+          setList.append(header);
+        }
+        if ("items" in entry) {
+          for (const item of entry.items) {
+            const id = import_md5.default(String(Math.random() * 21412855));
+            let forceRender = true, updateType = 0 /* None */;
+            if (item.forceRender !== undefined) {
+              if (item.forceRender === false) {
+                forceRender = false;
+              }
+            }
+            if (item.bodyUpdateType !== undefined) {
+              if (item.bodyUpdateType !== 0 /* None */) {
+                updateType = item.bodyUpdateType;
+              }
+            }
+            const update = () => set.onChange(tmpMii, forceRender, item.part || 0 /* Head */, updateType);
+            let value2 = tmpMii[property2];
+            switch (item.type) {
+              case 0 /* Icon */:
+                let iconSelected = false;
+                if (item.selectedCondition)
+                  if (item.selectedCondition() === true)
+                    iconSelected = true;
+                  else
+                    iconSelected = false;
+                if (item.property) {
+                  if (Array.isArray(item.property)) {
+                    let tmpValue = tmpMii[item.property[0]];
+                    if (item.property.map((i) => tmpMii[i]).every((i) => i === tmpValue))
+                      value2 = tmpValue;
+                    else {
+                      value2 = false;
+                      iconSelected = false;
+                    }
+                  } else
+                    value2 = tmpMii[item.property];
+                }
+                let featureItem = new Html("div").class("feature-item").on("pointerenter", playHoverSound).on("click", async () => {
+                  let value3;
+                  if (MiiEditor2.getCurrentEditor() !== null) {
+                    tmpMii = MiiEditor2.getCurrentEditor().mii;
+                  }
+                  value3 = tmpMii[property2];
+                  const newValue = item.value;
+                  if (item.selectedCondition)
+                    if (item.selectedCondition() === true)
+                      iconSelected = true;
+                    else
+                      iconSelected = false;
+                  console.log(`condition check: value (${value3}) === newValue (${newValue}), iconSelected (${iconSelected})`);
+                  if (value3 === newValue || iconSelected)
+                    return;
+                  if (item.preSelectCallback)
+                    item.preSelectCallback(tmpMii);
+                  if (item.property) {
+                    if (Array.isArray(item.property)) {
+                      for (const prop of item.property) {
+                        tmpMii[prop] = newValue;
+                      }
+                    } else {
+                      tmpMii[item.property] = newValue;
+                    }
+                  } else {
+                    tmpMii[key2] = newValue;
+                  }
+                  update();
+                  if (item.sound)
+                    playSound(item.sound);
+                  else if (item.color)
+                    playSound("select_color");
+                  else if (item.icon)
+                    playSound("select_part");
+                  setList.qsa(".feature-item").forEach((i) => i.classOff("active"));
+                  featureItem.classOn("active");
+                }).appendTo(setList);
+                if (item.icon) {
+                  featureItem.html(item.icon);
+                }
+                if (item.color) {
+                  featureItem.classOn("is-color").style({ "--color": item.color });
+                }
+                if (value2 === item.value || iconSelected) {
+                  if (item.property) {
+                    if (Array.isArray(item.property)) {
+                      if (item.property.map((i) => tmpMii[i]).every((i) => i === value2) === false) {
+                        console.log("FAILED CHECK, skipping");
+                        debugger;
+                        continue;
+                      }
+                    }
+                  }
+                  featureItem.classOn("active");
+                }
+                break;
+              case 3 /* Slider */:
+                if (item.label !== undefined) {
+                  new Html("span").text(item.label).appendTo(setList);
+                }
+                let featureSliderItem = new Html("div").class("feature-slider").on("pointerenter", playHoverSound).appendTo(setList);
+                if (item.iconStart) {
+                  let frontIcon = new Html("span").html(item.iconStart).on("click", () => {
+                    if (MiiEditor2.getCurrentEditor() !== null) {
+                      tmpMii = MiiEditor2.getCurrentEditor().mii;
+                    }
+                    featureSlider.val(Number(featureSlider.getValue()) - 1);
+                    tmpMii[item.property] = Number(featureSlider.getValue());
+                    if (item.soundStart)
+                      playSound(item.soundStart);
+                    else
+                      playSound("select");
+                    update();
+                  });
+                  featureSliderItem.append(frontIcon);
+                }
+                let featureSlider = new Html("input").attr({
+                  type: "range",
+                  min: item.min,
+                  max: item.max
+                }).id(id).appendTo(featureSliderItem);
+                if (item.iconEnd) {
+                  let backIcon = new Html("span").html(item.iconEnd).on("click", () => {
+                    if (MiiEditor2.getCurrentEditor() !== null) {
+                      tmpMii = MiiEditor2.getCurrentEditor().mii;
+                    }
+                    featureSlider.val(Number(featureSlider.getValue()) + 1);
+                    tmpMii[item.property] = Number(featureSlider.getValue());
+                    if (item.soundEnd)
+                      playSound(item.soundEnd);
+                    else
+                      playSound("select");
+                    update();
+                  });
+                  featureSliderItem.append(backIcon);
+                }
+                featureSlider.val(tmpMii[item.property]);
+                featureSlider.on("input", () => {
+                  if (MiiEditor2.getCurrentEditor() !== null) {
+                    tmpMii = MiiEditor2.getCurrentEditor().mii;
+                  }
+                  playSound("slider_tick");
+                  tmpMii[item.property] = Number(featureSlider.getValue());
+                  update();
+                });
+                break;
+              case 2 /* Range */:
+                let featureRangeGroup = new Html("div").class("col").style({ width: "100%", gap: "0", "align-items": "center" }).appendTo(setList);
+                if (item.label !== undefined) {
+                  new Html("span").text(item.label).appendTo(featureRangeGroup);
+                }
+                let featureRangeItem = new Html("div").class("feature-slider").appendTo(featureRangeGroup);
+                if (item.iconStart) {
+                  let frontIcon = new Html("span").html(item.iconStart).on("click", () => {
+                    if (MiiEditor2.getCurrentEditor() !== null) {
+                      tmpMii = MiiEditor2.getCurrentEditor().mii;
+                    }
+                    featureRange.val(Number(featureRange.getValue()) + (item.inverse ? 1 : -1));
+                    tmpMii[item.property] = item.inverse ? item.max + item.min - Number(featureRange.getValue()) : Number(featureRange.getValue());
+                    if (item.soundStart)
+                      playSound(item.soundStart);
+                    else
+                      playSound("select");
+                    update();
+                  });
+                  if (item.inverse)
+                    featureRangeItem.prepend(frontIcon);
+                  else
+                    featureRangeItem.append(frontIcon);
+                }
+                let featureRange = new Html("input").attr({
+                  type: "range",
+                  min: item.min,
+                  max: item.max
+                }).id(id);
+                if (item.inverse)
+                  featureRangeItem.prepend(featureRange);
+                else
+                  featureRangeItem.append(featureRange);
+                if (item.iconEnd) {
+                  let backIcon = new Html("span").html(item.iconEnd).on("click", () => {
+                    if (MiiEditor2.getCurrentEditor() !== null) {
+                      tmpMii = MiiEditor2.getCurrentEditor().mii;
+                    }
+                    featureRange.val(Number(featureRange.getValue()) + (item.inverse ? -1 : 1));
+                    tmpMii[item.property] = item.inverse ? item.max + item.min - Number(featureRange.getValue()) : Number(featureRange.getValue());
+                    if (item.soundEnd)
+                      playSound(item.soundEnd);
+                    else
+                      playSound("select");
+                    update();
+                  });
+                  if (item.inverse)
+                    featureRangeItem.prepend(backIcon);
+                  else
+                    featureRangeItem.append(backIcon);
+                }
+                featureRange.val(item.inverse ? item.max - tmpMii[item.property] + item.min : tmpMii[item.property]);
+                featureRange.on("change", () => {
+                  if (MiiEditor2.getCurrentEditor() !== null) {
+                    tmpMii = MiiEditor2.getCurrentEditor().mii;
+                  }
+                  const newValue = item.inverse ? item.max + item.min - Number(featureRange.getValue()) : Number(featureRange.getValue());
+                  const current = tmpMii[item.property];
+                  if (item.soundStart !== undefined && item.soundEnd !== undefined) {
+                    if (newValue < current) {
+                      playSound(item.soundStart);
+                    } else {
+                      playSound(item.soundEnd);
+                    }
+                  }
+                  tmpMii[item.property] = newValue;
+                  update();
+                });
+                featureRange.on("input", () => {
+                  playSound("slider_tick");
+                });
+                break;
+              case 4 /* Switch */:
+                let featureSwitchItem = new Html("div").class("feature-switch-group").appendTo(setList);
+                let featureSwitch = new Html("div").class("feature-switch").id(id).appendTo(featureSwitchItem);
+                let buttonLeft = new Html("button").class("feature-switch-left").html(item.iconOff).appendTo(featureSwitch);
+                let buttonRight = new Html("button").class("feature-switch-right").html(item.iconOn).appendTo(featureSwitch);
+                const switchToggle = (value3) => {
+                  if (MiiEditor2.getCurrentEditor() !== null) {
+                    tmpMii = MiiEditor2.getCurrentEditor().mii;
+                  }
+                  let valueToSet = value3;
+                  if (item.isNumber) {
+                    valueToSet = Number(valueToSet);
+                  }
+                  tmpMii[item.property] = valueToSet;
+                  if (value3 === false) {
+                    if (item.soundOff)
+                      playSound(item.soundOff);
+                    else
+                      playSound("select");
+                  }
+                  if (value3 === true) {
+                    if (item.soundOn)
+                      playSound(item.soundOn);
+                    else
+                      playSound("select");
+                  }
+                  update();
+                };
+                buttonLeft.on("click", () => {
+                  switchToggle(false);
+                  buttonLeft.classOn("active");
+                  buttonRight.classOff("active");
+                });
+                buttonRight.on("click", () => {
+                  switchToggle(true);
+                  buttonLeft.classOff("active");
+                  buttonRight.classOn("active");
+                });
+                buttonLeft.on("pointerenter", playHoverSound);
+                buttonRight.on("pointerenter", playHoverSound);
+                if (tmpMii[item.property] == true) {
+                  buttonLeft.classOff("active");
+                  buttonRight.classOn("active");
+                } else {
+                  buttonLeft.classOn("active");
+                  buttonRight.classOff("active");
+                }
+                break;
+              case 5 /* Misc */:
+                let featureMiscItem = item.html.appendTo(setList);
+                featureMiscItem.on("click", item.select);
+                break;
+            }
+          }
+        }
+        window.LazyLoad.update();
+      }
+    });
+  }
+  if (Object.keys(set.entries).length === 1) {
+    let tabs = TabList(tabListInit, 1 /* NotSquare */);
+    tabs.list.appendTo(setContainer);
+    tabs.content.appendTo(setContainer);
+  } else {
+    let tabs = TabList(tabListInit, 1 /* NotSquare */);
+    tabs.list.appendTo(setContainer);
+    tabs.content.appendTo(setContainer);
+  }
+  return setContainer;
+}
+
+// src/constants/MiiFeatureTable.ts
+var MiiEyeTable = [
+  [2, 4, 0, 8, 39, 17, 1, 26, 16, 15, 27, 20],
+  [33, 11, 19, 32, 9, 12, 23, 34, 21, 25, 40, 35],
+  [5, 41, 13, 36, 37, 6, 24, 30, 31, 18, 28, 46],
+  [7, 44, 38, 42, 45, 29, 3, 43, 22, 10, 14, 47],
+  [48, 49, 50, 53, 59, 56, 54, 58, 57, 55, 51, 52]
+];
+var MiiEyebrowTable = [
+  [6, 0, 12, 1, 9, 19, 7, 21, 8, 17, 5, 4],
+  [11, 10, 2, 3, 14, 20, 15, 13, 22, 18, 16, 23]
+];
+var MiiMouthTable = [
+  [23, 1, 19, 21, 22, 5, 0, 8, 10, 16, 6, 13],
+  [7, 9, 2, 17, 3, 4, 15, 11, 20, 18, 14, 12],
+  [27, 30, 24, 25, 29, 28, 26, 35, 31, 34, 33, 32]
+];
+var MiiNoseTable = [
+  [1, 10, 2, 3, 6, 0, 5, 4, 8, 9, 7, 11],
+  [13, 14, 12, 17, 16, 15]
+];
+var MiiHairTable = [
+  [33, 47, 40, 37, 32, 107, 48, 51, 55, 70, 44, 66],
+  [52, 50, 38, 49, 43, 31, 56, 68, 62, 115, 76, 119],
+  [64, 81, 116, 121, 22, 58, 60, 87, 125, 117, 73, 75],
+  [42, 89, 57, 54, 80, 34, 23, 86, 88, 118, 39, 36],
+  [45, 67, 59, 65, 41, 30, 12, 16, 10, 82, 128, 129],
+  [14, 95, 105, 100, 6, 20, 93, 102, 27, 4, 17, 110],
+  [123, 8, 106, 72, 3, 21, 0, 98, 63, 90, 11, 120],
+  [5, 74, 108, 94, 124, 25, 99, 69, 35, 13, 122, 113],
+  [53, 24, 85, 83, 71, 131, 96, 101, 29, 7, 15, 112],
+  [79, 1, 109, 127, 91, 26, 61, 103, 2, 77, 18, 92],
+  [84, 9, 19, 130, 97, 104, 46, 78, 28, 114, 126, 111]
+];
+var MiiSwitchColorTable = [
+  [2, 24, 10, 23, 15, 20, 21, 25, 26, 27],
+  [28, 29, 30, 31, 32, 33, 34, 35, 36, 37],
+  [38, 39, 40, 41, 42, 43, 44, 45, 46, 47],
+  [48, 16, 49, 12, 50, 51, 52, 53, 54, 55],
+  [56, 57, 58, 59, 13, 60, 61, 62, 63, 64],
+  [65, 66, 67, 68, 69, 70, 71, 72, 73, 74],
+  [5, 11, 75, 76, 77, 78, 79, 80, 81, 82],
+  [14, 83, 6, 17, 7, 84, 85, 86, 87, 88],
+  [1, 3, 89, 19, 90, 91, 22, 92, 93, 94],
+  [8, 0, 95, 9, 18, 4, 96, 97, 98, 99]
+];
+var MiiSwitchSkinColorTable = [
+  [0, 7, 1, 4, 5],
+  [6, 3, 2, 8, 9]
+];
+var MiiEyeRotationGroups = [
+  -1,
+  0,
+  0,
+  0,
+  -1,
+  0,
+  0,
+  0,
+  -1,
+  0,
+  0,
+  0,
+  0,
+  -1,
+  -1,
+  0,
+  0,
+  0,
+  -1,
+  -1,
+  0,
+  -1,
+  0,
+  -1,
+  -1,
+  0,
+  -1,
+  0,
+  0,
+  -1,
+  0,
+  0,
+  0,
+  -1,
+  -1,
+  -1,
+  0,
+  0,
+  -1,
+  -1,
+  -1,
+  0,
+  0,
+  -1,
+  -1,
+  -1,
+  -1,
+  -1,
+  -1,
+  -1,
+  -1,
+  -1,
+  0,
+  0,
+  0,
+  0,
+  -1,
+  0,
+  0,
+  -1
+];
+var MiiEyebrowRotationGroups = [
+  0,
+  0,
+  -1,
+  1,
+  0,
+  1,
+  0,
+  1,
+  -2,
+  1,
+  0,
+  2,
+  -1,
+  -1,
+  0,
+  0,
+  1,
+  1,
+  0,
+  0,
+  -1,
+  0,
+  1,
+  0
+];
+function rearrangeArray(array, lookupTable, separator = makeSeparatorGapThinDesktop) {
+  let rearrangedArray = [];
+  if (Array.isArray(lookupTable) && Array.isArray(lookupTable[0])) {
+    for (const page of lookupTable) {
+      let pageItems = page.map((index2) => array[index2]).filter((i) => i !== undefined);
+      if (rearrangedArray.length > 0 && pageItems.length > 0) {
+        rearrangedArray.push(separator());
+      }
+      rearrangedArray.push(...pageItems);
+    }
+  } else {
+    for (const realIndex in lookupTable) {
+      const lookupIndex = lookupTable[realIndex];
+      rearrangedArray[parseInt(realIndex)] = array[lookupIndex];
+    }
+    rearrangedArray = rearrangedArray.filter((i) => i !== undefined);
+  }
+  return rearrangedArray;
+}
+var makeSeparatorFSI = () => ({
+  type: 5 /* Misc */,
+  html: new Html("div").class("separator"),
+  select() {
+  }
+});
+var makeSeparatorGapThinFSI = () => ({
+  type: 5 /* Misc */,
+  html: new Html("div").class("separator-gap-thin"),
+  select() {
+  }
+});
+var makeSeparatorGapThinDesktop = () => ({
+  type: 5 /* Misc */,
+  html: new Html("div").class("separator-gap-thin-desktop"),
+  select() {
+  }
+});
+var makeSeparatorGapThinLaptop = () => ({
+  type: 5 /* Misc */,
+  html: new Html("div").class("separator-gap-thin-laptop"),
+  select() {
+  }
+});
+
+// src/ui/tabs/Eye.ts
+var __6 = _8();
+function EyeTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: data2.callback,
+    entries: {
+      eyeType: {
+        label: __6("Type"),
+        items: rearrangeArray(ArrayNum(60).map((k3) => ({
+          type: 0 /* Icon */,
+          value: k3,
+          icon: data2.icons.eyes[k3],
+          part: 1 /* Face */,
+          preSelectCallback(tmpMii) {
+            tmpMii.eyeRotate += MiiEyeRotationGroups[k3] - MiiEyeRotationGroups[tmpMii.eyeType];
+          }
+        })), MiiEyeTable, makeSeparatorGapThinDesktop)
+      },
+      eyeColor: {
+        label: data2.useAccessibility ? __6("Color") : EditorIcons_default.color,
+        items: [
+          ...ArrayNum(6).map((k3) => ({
+            type: 0 /* Icon */,
+            value: Ver3EyeColorTable[k3],
+            color: SwitchMiiColorTable[Ver3EyeColorTable[k3]],
+            part: 1 /* Face */
+          })),
+          makeSeparatorFSI(),
+          ...rearrangeArray(ArrayNum(100).map((k3) => ({
+            type: 0 /* Icon */,
+            value: k3,
+            color: SwitchMiiColorTable[k3],
+            part: 1 /* Face */
+          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
+        ]
+      },
+      eyeSclera: {
+        label: __6("Sclera"),
+        items: [
+          {
+            type: 4 /* Switch */,
+            part: 1 /* Face */,
+            iconOff: __6("Disabled"),
+            iconOn: __6("Enabled"),
+            property: "eyeSclera",
+            isNumber: true
+          }
+        ],
+        header: __6("%1 is a CUSTOM property, and will not transfer to any other data formats.", __6("Sclera fill"))
+      },
+      eyePosition: {
+        label: __6("Position"),
+        items: [
+          {
+            type: 2 /* Range */,
+            property: "eyeY",
+            iconStart: EditorIcons_default.positionMoveUp,
+            iconEnd: EditorIcons_default.positionMoveDown,
+            soundStart: "position_down",
+            soundEnd: "position_up",
+            min: 0,
+            max: 18,
+            part: 1 /* Face */,
+            inverse: true,
+            label: data2.useAccessibility ? __6("Position") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "eyeX",
+            iconStart: EditorIcons_default.positionPushIn,
+            iconEnd: EditorIcons_default.positionPushOut,
+            soundStart: "move_together",
+            soundEnd: "move_apart",
+            min: 0,
+            max: 12,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __6("Spacing") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "eyeRotate",
+            iconStart: EditorIcons_default.positionRotateCW,
+            iconEnd: EditorIcons_default.positionRotateCCW,
+            soundStart: "rotate_cw",
+            soundEnd: "rotate_ccw",
+            min: 0,
+            max: 7,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __6("Rotation") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "eyeScale",
+            iconStart: EditorIcons_default.positionSizeDown,
+            iconEnd: EditorIcons_default.positionSizeUp,
+            soundStart: "scale_down",
+            soundEnd: "scale_up",
+            min: 0,
+            max: 7,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __6("Scale") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "eyeAspect",
+            iconStart: EditorIcons_default.positionStretchIn,
+            iconEnd: EditorIcons_default.positionStretchOut,
+            soundStart: "vert_stretch_down",
+            soundEnd: "vert_stretch_up",
+            min: 0,
+            max: 6,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __6("Stretch") : undefined
+          }
+        ]
+      }
+    }
+  }));
+}
+
+// src/ui/tabs/Head.ts
+var __7 = _8();
+function HeadTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: data2.callback,
+    entries: {
+      facelineType: {
+        label: data2.useAccessibility ? __7("Shape") : EditorIcons_default.face,
+        items: ArrayNum(12).map((k3) => ({
+          type: 0 /* Icon */,
+          value: k3,
+          icon: data2.icons.face[k3],
+          part: 0 /* Head */,
+          bodyUpdateType: 0 /* None */
+        }))
+      },
+      facelineMake: {
+        label: data2.useAccessibility ? __7("Makeup") : EditorIcons_default.face_makeup,
+        items: ArrayNum(12).map((k3) => ({
+          type: 0 /* Icon */,
+          value: k3,
+          icon: data2.icons.makeup[k3],
+          part: 0 /* Head */,
+          bodyUpdateType: 0 /* None */
+        }))
+      },
+      facelineWrinkle: {
+        label: data2.useAccessibility ? __7("Wrinkles") : EditorIcons_default.face_wrinkles,
+        items: ArrayNum(12).map((k3) => ({
+          type: 0 /* Icon */,
+          value: k3,
+          icon: data2.icons.wrinkles[k3],
+          part: 0 /* Head */,
+          bodyUpdateType: 0 /* None */
+        }))
+      },
+      facelineColor: {
+        label: data2.useAccessibility ? __7("Color") : EditorIcons_default.color,
+        items: [
+          ...ArrayNum(6).map((k3) => ({
+            type: 0 /* Icon */,
+            value: k3,
+            color: MiiSkinColorTable[k3],
+            part: 0 /* Head */,
+            bodyUpdateType: 1 /* ClothingUpdate */
+          })),
+          makeSeparatorFSI(),
+          ...rearrangeArray(ArrayNum(10).map((k3) => ({
+            type: 0 /* Icon */,
+            value: k3,
+            color: MiiSwitchSkinColorList[k3],
+            part: 0 /* Head */,
+            bodyUpdateType: 1 /* ClothingUpdate */
+          })), MiiSwitchSkinColorTable, makeSeparatorGapThinFSI)
+        ]
+      },
+      facePaintColor: {
+        label: data2.useAccessibility ? __7("Face Paint") : EditorIcons_default.face_paint,
+        header: __7("%1 is a CUSTOM property, and will not transfer to any other data formats.", __7("Face paint")),
+        items: [
+          {
+            type: 0 /* Icon */,
+            forceRender: true,
+            value: -1,
+            icon: `<span class="disable-item">${__7("Disabled")}</span>`,
+            part: 0 /* Head */,
+            bodyUpdateType: 1 /* ClothingUpdate */
+          },
+          makeSeparatorGapThinFSI(),
+          ...rearrangeArray(ArrayNum(100).map((k3) => ({
+            type: 0 /* Icon */,
+            value: k3,
+            color: SwitchMiiColorTable[k3],
+            part: 0 /* Head */,
+            bodyUpdateType: 1 /* ClothingUpdate */
+          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
+        ]
+      }
+    }
+  }));
+}
+
+// src/ui/components/Input.ts
+function Input(label, value2, callback, validate2, editor) {
+  let id = String(performance.now());
+  function checkValidity(value3) {
+    if (editor) {
+      editor.dirty = true;
+      if (validate2) {
+        const result = validate2(value3);
+        if (result === true) {
+          input.classOff("invalid");
+          if (editor)
+            editor.errors.set(label, {
+              valid: true,
+              reason: "Valid"
+            });
+          callback(value3);
+        } else {
+          input.classOn("invalid");
+          if (editor)
+            editor.errors.set(label, {
+              valid: false,
+              reason: String(result)
+            });
+        }
+      }
+    }
+  }
+  let input = new Html("input").id(id).attr({ type: "text", value: value2 }).on("input", (e) => {
+    const target = e.target;
+    checkValidity(target.value);
+  });
+  if (validate2)
+    validate2(value2);
+  return new Html("div").class("input-group").appendMany(new Html("label").attr({ for: id }).text(label), input);
+}
+
+// src/ui/tabs/Misc.ts
+var __8 = _8();
+function MiscTab(data2) {
+  let tmpMii = new Mii(data2.mii.export());
+  const setProp = (prop, val2) => {
+    if (MiiEditor2.getCurrentEditor() !== null) {
+      tmpMii = MiiEditor2.getCurrentEditor().mii;
+    }
+    tmpMii[prop] = val2;
+    data2.callback(tmpMii, false, 0 /* Head */, 0 /* None */);
+    return true;
+  };
+  data2.container.appendMany(new Html("div").style({
+    padding: "1rem",
+    display: "flex",
+    "flex-direction": "column",
+    gap: "1rem"
+  }).appendMany(Input(__8("Name"), data2.mii.nickname, (name2) => setProp("nickname", name2.trim()), (name2) => {
+    const nameBuffer = encodeUTF16LE(name2);
+    let nameStr = decodeUTF16LE(nameBuffer);
+    if (nameStr.trim() === "")
+      return __8("Name is empty");
+    if (nameBuffer.length > 20)
+      return __8("Name is too long");
+    if (nameBuffer.length === 0)
+      return __8("Name is too short");
+    return true;
+  }, data2.editor), Input(__8("Creator"), data2.mii.creator, (creator) => setProp("creator", creator.trim()), (name2) => {
+    const nameBuffer = encodeUTF16LE(name2);
+    let nameStr = decodeUTF16LE(nameBuffer);
+    if (nameStr.length === 0)
+      return true;
+    if (nameStr.trim() === "")
+      return __8("Creator name is empty");
+    if (nameBuffer.length > 20)
+      return __8("Creator name is too long");
+    return true;
+  }, data2.editor)), new Html("div").class("input-group").style({
+    height: "max-content"
+  }).appendMany(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: data2.callback,
+    entries: {
+      gender: {
+        label: __8("Gender"),
+        items: [
+          {
+            type: 4 /* Switch */,
+            iconOff: data2.useAccessibility ? __8("Male") : EditorIcons_default.genderMale,
+            iconOn: data2.useAccessibility ? __8("Female") : EditorIcons_default.genderFemale,
+            property: "gender",
+            isNumber: true,
+            forceRender: true,
+            part: 2 /* Body */,
+            bodyUpdateType: 1 /* ClothingUpdate */,
+            soundOff: "select_misc",
+            soundOn: "select_misc"
+          }
+        ]
+      },
+      favorite: {
+        label: __8("Favorite/Special"),
+        items: [
+          {
+            type: 4 /* Switch */,
+            iconOff: __8("Normal"),
+            iconOn: __8("Favorite"),
+            property: "favorite",
+            isNumber: true,
+            forceRender: false,
+            part: 2 /* Body */,
+            bodyUpdateType: 1 /* ClothingUpdate */,
+            soundOff: "select_color",
+            soundOn: "select_color"
+          },
+          makeSeparatorGapThinFSI(),
+          {
+            type: 4 /* Switch */,
+            iconOff: __8("Normal"),
+            iconOn: __8("Special"),
+            property: "special",
+            isNumber: true,
+            forceRender: false,
+            part: 2 /* Body */,
+            bodyUpdateType: 1 /* ClothingUpdate */,
+            soundOff: "select_color",
+            soundOn: "select_color"
+          }
+        ]
+      }
+    }
+  })));
+}
+
+// src/ui/tabs/Nose.ts
+var __9 = _8();
+function NoseTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: data2.callback,
+    entries: {
+      noseType: {
+        label: __9("Type"),
+        items: rearrangeArray(ArrayNum(18).map((k3) => ({
+          type: 0 /* Icon */,
+          value: k3,
+          icon: data2.icons.nose[k3],
+          part: 0 /* Head */
+        })), MiiNoseTable, makeSeparatorGapThinDesktop)
+      },
+      nosePosition: {
+        label: __9("Position"),
+        items: [
+          {
+            type: 2 /* Range */,
+            property: "noseY",
+            iconStart: EditorIcons_default.positionMoveUp,
+            iconEnd: EditorIcons_default.positionMoveDown,
+            soundStart: "position_down",
+            soundEnd: "position_up",
+            min: 0,
+            max: 18,
+            part: 0 /* Head */,
+            inverse: true,
+            label: data2.useAccessibility ? __9("Position") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "noseScale",
+            iconStart: EditorIcons_default.positionSizeDown,
+            iconEnd: EditorIcons_default.positionSizeUp,
+            soundStart: "scale_down",
+            soundEnd: "scale_up",
+            min: 0,
+            max: 8,
+            part: 0 /* Head */,
+            label: data2.useAccessibility ? __9("Scale") : undefined
+          }
+        ]
+      }
+    }
+  }));
+}
+
+// src/ui/tabs/FavoriteColor.ts
+var __10 = _8();
+function FavoriteColorTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: data2.callback,
+    entries: {
+      favoriteColor: {
+        label: __10("Favorite Color"),
+        items: ArrayNum(12).map((k3) => ({
+          type: 0 /* Icon */,
+          forceRender: true,
+          value: k3,
+          color: numToHex(MiiFavoriteColorLookupTable[k3]),
+          part: 0 /* Head */,
+          bodyUpdateType: 1 /* ClothingUpdate */
+        }))
+      }
+    }
+  }));
+}
+
+// src/ui/tabs/Mouth.ts
+var __11 = _8();
+function MouthTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: (newMii, forceRender, renderPart, updateType) => {
+      data2.callback(newMii, forceRender, renderPart, updateType);
+    },
+    entries: {
+      mouthType: {
+        label: __11("Type"),
+        items: rearrangeArray(ArrayNum(36).map((k3) => ({
+          type: 0 /* Icon */,
+          value: k3,
+          icon: data2.icons.mouth[k3],
+          part: 1 /* Face */
+        })), MiiMouthTable, makeSeparatorGapThinDesktop)
+      },
+      mouthColor: {
+        label: data2.useAccessibility ? __11("Color") : EditorIcons_default.color,
+        items: [
+          ...ArrayNum(5).map((k3) => ({
+            type: 0 /* Icon */,
+            value: Ver3MouthColorTable[k3],
+            color: SwitchMiiColorTable[Ver3MouthColorTable[k3]],
+            part: 1 /* Face */,
+            property: "mouthColor"
+          })),
+          makeSeparatorFSI(),
+          ...rearrangeArray(ArrayNum(100).map((k3) => ({
+            type: 0 /* Icon */,
+            value: k3,
+            color: SwitchMiiColorTable[k3],
+            part: 1 /* Face */,
+            property: "mouthColor"
+          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
+        ]
+      },
+      mouthPosition: {
+        label: __11("Position"),
+        items: [
+          {
+            type: 2 /* Range */,
+            property: "mouthY",
+            iconStart: EditorIcons_default.positionMoveUp,
+            iconEnd: EditorIcons_default.positionMoveDown,
+            soundStart: "position_down",
+            soundEnd: "position_up",
+            min: 0,
+            max: 18,
+            part: 1 /* Face */,
+            inverse: true,
+            label: data2.useAccessibility ? __11("Position") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "mouthScale",
+            iconStart: EditorIcons_default.positionSizeDown,
+            iconEnd: EditorIcons_default.positionSizeUp,
+            soundStart: "scale_down",
+            soundEnd: "scale_up",
+            min: 0,
+            max: 8,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __11("Scale") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "mouthAspect",
+            iconStart: EditorIcons_default.positionStretchIn,
+            iconEnd: EditorIcons_default.positionStretchOut,
+            soundStart: "vert_stretch_down",
+            soundEnd: "vert_stretch_up",
+            min: 0,
+            max: 6,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __11("Stretch") : undefined
+          }
+        ]
+      }
+    }
+  }));
+}
+
+// src/ui/tabs/Hair.ts
+var __12 = _8();
+function HairTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: (newMii, forceRender, renderPart, updateType) => {
+      data2.callback(newMii, forceRender, renderPart, updateType);
+    },
+    entries: {
+      hairType: {
+        label: __12("Type"),
+        items: rearrangeArray(ArrayNum(132).map((k3) => ({
+          type: 0 /* Icon */,
+          value: k3,
+          icon: data2.icons.hair[k3],
+          part: 0 /* Head */
+        })), MiiHairTable, makeSeparatorGapThinDesktop)
+      },
+      hairColor: {
+        label: data2.useAccessibility ? __12("Color") : EditorIcons_default.color,
+        items: [
+          ...ArrayNum(8).map((k3) => ({
+            type: 0 /* Icon */,
+            value: Ver3HairColorTable[k3],
+            color: SwitchMiiColorTable[Ver3HairColorTable[k3]],
+            part: 0 /* Head */
+          })),
+          makeSeparatorFSI(),
+          ...rearrangeArray(ArrayNum(100).map((k3) => ({
+            type: 0 /* Icon */,
+            value: k3,
+            color: SwitchMiiColorTable[k3],
+            part: 0 /* Head */
+          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
+        ]
+      },
+      hairPosition: {
+        label: __12("Hair Flip"),
+        items: [
+          {
+            type: 4 /* Switch */,
+            iconOff: data2.useAccessibility ? __12("Unflipped") : EditorIcons_default.positionHairFlip,
+            iconOn: data2.useAccessibility ? __12("Flipped") : EditorIcons_default.positionHairFlipped,
+            property: "hairFlip",
+            part: 0 /* Head */
+          }
+        ]
+      }
+    }
+  }));
+}
+
+// src/ui/tabs/Scale.ts
+var __13 = _8();
+function ScaleTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: data2.callback,
+    entries: {
+      bodySize: {
+        label: __13("Scale"),
+        items: [
+          {
+            type: 3 /* Slider */,
+            property: "height",
+            iconStart: EditorIcons_default.scaleShort,
+            iconEnd: EditorIcons_default.scaleTall,
+            min: 0,
+            max: 127,
+            forceRender: false,
+            part: 2 /* Body */,
+            bodyUpdateType: 2 /* RepositionCamera */,
+            soundStart: "vert_stretch_down",
+            soundEnd: "vert_stretch_up",
+            label: data2.useAccessibility ? __13("Height") : undefined
+          },
+          {
+            type: 3 /* Slider */,
+            property: "build",
+            iconStart: EditorIcons_default.scaleThin,
+            iconEnd: EditorIcons_default.scaleFat,
+            min: 0,
+            max: 127,
+            forceRender: false,
+            part: 2 /* Body */,
+            bodyUpdateType: 2 /* RepositionCamera */,
+            soundStart: "vert_stretch_down",
+            soundEnd: "vert_stretch_up",
+            label: data2.useAccessibility ? __13("Build") : undefined
+          }
+        ]
+      }
+    }
+  }));
+}
+
+// src/ui/tabs/FacialHair.ts
+var __14 = _8();
+function FacialHairTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: data2.callback,
+    entries: {
+      mustacheType: {
+        label: __14("Mustache"),
+        items: ArrayNum(6).map((k3) => ({
+          type: 0 /* Icon */,
+          value: k3,
+          icon: data2.icons.mustache[k3],
+          part: 1 /* Face */
+        }))
+      },
+      mustachePosition: {
+        label: __14("Position"),
+        items: [
+          {
+            type: 2 /* Range */,
+            property: "mustacheY",
+            iconStart: EditorIcons_default.positionMoveUp,
+            iconEnd: EditorIcons_default.positionMoveDown,
+            soundStart: "position_down",
+            soundEnd: "position_up",
+            min: 0,
+            max: 16,
+            part: 1 /* Face */,
+            inverse: true,
+            label: data2.useAccessibility ? "Position" : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "mustacheScale",
+            iconStart: EditorIcons_default.positionSizeDown,
+            iconEnd: EditorIcons_default.positionSizeUp,
+            soundStart: "scale_down",
+            soundEnd: "scale_up",
+            min: 0,
+            max: 8,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? "Scale" : undefined
+          }
+        ]
+      },
+      beardType: {
+        label: __14("Beard"),
+        items: ArrayNum(6).map((k3) => ({
+          type: 0 /* Icon */,
+          value: k3,
+          icon: data2.icons.goatee[k3],
+          part: 0 /* Head */
+        }))
+      },
+      beardColor: {
+        label: data2.useAccessibility ? __14("Color") : EditorIcons_default.color,
+        items: [
+          ...ArrayNum(8).map((k3) => ({
+            type: 0 /* Icon */,
+            value: Ver3HairColorTable[k3],
+            color: SwitchMiiColorTable[Ver3HairColorTable[k3]],
+            part: 0 /* Head */,
+            property: "beardColor"
+          })),
+          makeSeparatorFSI(),
+          ...rearrangeArray(ArrayNum(100).map((k3) => ({
+            type: 0 /* Icon */,
+            value: k3,
+            color: SwitchMiiColorTable[k3],
+            part: 0 /* Head */,
+            property: "beardColor"
+          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
+        ]
+      }
+    }
+  }));
+}
+
+// src/ui/tabs/Mole.ts
+var __15 = _8();
+function MoleTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: data2.callback,
+    entries: {
+      mole: {
+        label: __15("Mole"),
+        items: [
+          {
+            type: 4 /* Switch */,
+            iconOff: __15("Disable"),
+            iconOn: __15("Enable"),
+            property: "moleType",
+            part: 1 /* Face */,
+            isNumber: true
+          },
+          {
+            type: 2 /* Range */,
+            property: "moleY",
+            iconStart: EditorIcons_default.positionMoveUp,
+            iconEnd: EditorIcons_default.positionMoveDown,
+            soundStart: "position_down",
+            soundEnd: "position_up",
+            min: 0,
+            max: 30,
+            part: 1 /* Face */,
+            inverse: true,
+            label: data2.useAccessibility ? __15("Position") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "moleX",
+            iconStart: EditorIcons_default.positionPushIn,
+            iconEnd: EditorIcons_default.positionPushOut,
+            soundStart: "move_together",
+            soundEnd: "move_apart",
+            min: 0,
+            max: 16,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __15("Spacing") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "moleScale",
+            iconStart: EditorIcons_default.positionSizeDown,
+            iconEnd: EditorIcons_default.positionSizeUp,
+            soundStart: "scale_down",
+            soundEnd: "scale_up",
+            min: 0,
+            max: 7,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __15("Scale") : undefined
+          }
+        ]
+      }
+    }
+  }));
+}
+
+// src/ui/tabs/Eyebrow.ts
+var __16 = _8();
+function EyebrowTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: data2.callback,
+    entries: {
+      eyebrowType: {
+        label: __16("Type"),
+        items: rearrangeArray(ArrayNum(24).map((k3) => ({
+          type: 0 /* Icon */,
+          value: k3,
+          icon: data2.icons.eyebrows[k3],
+          part: 1 /* Face */,
+          preSelectCallback(tmpMii) {
+            tmpMii.eyebrowRotate += MiiEyebrowRotationGroups[k3] - MiiEyebrowRotationGroups[tmpMii.eyebrowType];
+          }
+        })), MiiEyebrowTable, makeSeparatorGapThinDesktop)
+      },
+      eyebrowColor: {
+        label: data2.useAccessibility ? __16("Color") : EditorIcons_default.color,
+        items: [
+          ...ArrayNum(8).map((k3) => ({
+            type: 0 /* Icon */,
+            value: Ver3HairColorTable[k3],
+            color: SwitchMiiColorTable[Ver3HairColorTable[k3]],
+            part: 1 /* Face */
+          })),
+          makeSeparatorFSI(),
+          ...rearrangeArray(ArrayNum(100).map((k3) => ({
+            type: 0 /* Icon */,
+            value: k3,
+            color: SwitchMiiColorTable[k3],
+            part: 1 /* Face */
+          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
+        ]
+      },
+      eyebrowPosition: {
+        label: __16("Position"),
+        items: [
+          {
+            type: 2 /* Range */,
+            property: "eyebrowY",
+            iconStart: EditorIcons_default.positionMoveUp,
+            iconEnd: EditorIcons_default.positionMoveDown,
+            soundStart: "position_down",
+            soundEnd: "position_up",
+            min: 3,
+            max: 18,
+            part: 1 /* Face */,
+            inverse: true,
+            label: data2.useAccessibility ? __16("Position") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "eyebrowX",
+            iconStart: EditorIcons_default.positionPushIn,
+            iconEnd: EditorIcons_default.positionPushOut,
+            soundStart: "move_together",
+            soundEnd: "move_apart",
+            min: 0,
+            max: 12,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __16("Spacing") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "eyebrowRotate",
+            iconStart: EditorIcons_default.positionRotateCW,
+            iconEnd: EditorIcons_default.positionRotateCCW,
+            soundStart: "rotate_cw",
+            soundEnd: "rotate_ccw",
+            min: 0,
+            max: 11,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __16("Rotation") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "eyebrowScale",
+            iconStart: EditorIcons_default.positionSizeDown,
+            iconEnd: EditorIcons_default.positionSizeUp,
+            soundStart: "scale_down",
+            soundEnd: "scale_up",
+            min: 0,
+            max: 8,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __16("Scale") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "eyebrowAspect",
+            iconStart: EditorIcons_default.positionStretchIn,
+            iconEnd: EditorIcons_default.positionStretchOut,
+            soundStart: "vert_stretch_down",
+            soundEnd: "vert_stretch_up",
+            min: 0,
+            max: 6,
+            part: 1 /* Face */,
+            label: data2.useAccessibility ? __16("Stretch") : undefined
+          }
+        ]
+      }
+    }
+  }));
+}
+
+// src/ui/tabs/Glasses.ts
+var __17 = _8();
+function GlassesTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: (newMii, forceRender, renderPart, updateType) => {
+      data2.callback(newMii, forceRender, renderPart, updateType);
+    },
+    entries: {
+      glassType: {
+        label: __17("Type"),
+        items: ArrayNum(20).map((k3) => ({
+          type: 0 /* Icon */,
+          value: k3,
+          icon: data2.icons.glasses[k3],
+          part: 0 /* Head */
+        }))
+      },
+      glassesColor: {
+        label: data2.useAccessibility ? __17("Color") : EditorIcons_default.color,
+        items: [
+          ...ArrayNum(6).map((k3) => ({
+            type: 0 /* Icon */,
+            value: Ver3GlassColorTable[k3],
+            color: SwitchMiiColorTable[Ver3GlassColorTable[k3]],
+            part: 0 /* Head */,
+            property: "glassColor"
+          })),
+          makeSeparatorFSI(),
+          ...rearrangeArray(ArrayNum(100).map((k3) => ({
+            type: 0 /* Icon */,
+            value: k3,
+            color: SwitchMiiColorTable[k3],
+            part: 0 /* Head */,
+            property: "glassColor"
+          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
+        ]
+      },
+      glassesPosition: {
+        label: __17("Position"),
+        items: [
+          {
+            type: 2 /* Range */,
+            property: "glassY",
+            iconStart: EditorIcons_default.positionMoveUp,
+            iconEnd: EditorIcons_default.positionMoveDown,
+            soundStart: "position_down",
+            soundEnd: "position_up",
+            min: 0,
+            max: 20,
+            part: 0 /* Head */,
+            inverse: true,
+            label: data2.useAccessibility ? __17("Position") : undefined
+          },
+          {
+            type: 2 /* Range */,
+            property: "glassScale",
+            iconStart: EditorIcons_default.positionSizeDown,
+            iconEnd: EditorIcons_default.positionSizeUp,
+            soundStart: "scale_down",
+            soundEnd: "scale_up",
+            min: 0,
+            max: 7,
+            part: 0 /* Head */,
+            label: data2.useAccessibility ? __17("Scale") : undefined
+          }
+        ]
+      }
+    }
+  }));
+}
+
+// src/ui/tabs/ExtHat.ts
+var __18 = _8();
+function ExtHatTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: data2.callback,
+    entries: {
+      hatType: {
+        label: __18("Hat"),
+        header: __18("%1 is a CUSTOM property, and will not transfer to any other data formats.", __18("Hat type")),
+        items: [
+          {
+            type: 0 /* Icon */,
+            forceRender: true,
+            value: -1,
+            icon: `<span class="disable-item">${__18("Disabled")}</span>`,
+            part: 0 /* Head */
+          },
+          makeSeparatorGapThinFSI(),
+          ...ArrayNum(10).slice(1).map((k3) => ({
+            type: 0 /* Icon */,
+            forceRender: true,
+            value: k3 - 1,
+            icon: data2.icons.hat[k3 - 1],
+            part: 0 /* Head */
+          }))
+        ]
+      },
+      hatColor: {
+        label: __18("Hat Color"),
+        header: __18("%1 is a CUSTOM property, and will not transfer to any other data formats.", __18("Hat color")),
+        items: [
+          {
+            type: 0 /* Icon */,
+            forceRender: true,
+            value: -1,
+            icon: `<span class="disable-item">${__18("Disabled")}</span>`,
+            part: 0 /* Head */,
+            property: ["hatFavoriteColor", "hatCommonColor"],
+            selectedCondition: () => data2.mii.hatCommonColor === -1 && data2.mii.hatFavoriteColor === -1
+          },
+          makeSeparatorGapThinFSI(),
+          ...ArrayNum(12).map((k3) => ({
+            type: 0 /* Icon */,
+            forceRender: true,
+            value: k3,
+            color: numToHex(MiiFavoriteColorLookupTable[k3]),
+            part: 0 /* Head */,
+            property: "hatFavoriteColor",
+            preSelectCallback: (mii) => {
+              mii.hatFavoriteColor = k3;
+              mii.hatCommonColor = -1;
+            }
+          })),
+          makeSeparatorFSI(),
+          ...rearrangeArray(ArrayNum(100).map((k3) => ({
+            type: 0 /* Icon */,
+            value: k3,
+            color: SwitchMiiColorTable[k3],
+            part: 0 /* Head */,
+            property: "hatCommonColor",
+            preSelectCallback: (mii) => {
+              mii.hatFavoriteColor = -1;
+              mii.hatCommonColor = k3;
+            }
+          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
+        ]
+      }
+    }
+  }));
+}
+
+// src/ui/tabs/ExtClothes.ts
+var __19 = _8();
+function ExtClothesTab(data2) {
+  data2.container.append(MiiPagedFeatureSet({
+    mii: data2.mii,
+    onChange: data2.callback,
+    entries: {
+      clothesType: {
+        label: __19("Clothes"),
+        header: __19("%1 is a CUSTOM property, and will not transfer to any other data formats.", __19("Clothes type")),
+        items: [
+          {
+            type: 0 /* Icon */,
+            forceRender: true,
+            value: -1,
+            icon: `<span class="disable-item">${__19("Disabled")}</span>`,
+            part: 0 /* Head */,
+            bodyUpdateType: 1 /* ClothingUpdate */
+          },
+          makeSeparatorGapThinFSI(),
+          ...ArrayNum(4).map((k3) => ({
+            type: 0 /* Icon */,
+            forceRender: true,
+            bodyUpdateType: 1 /* ClothingUpdate */,
+            value: k3,
+            icon: k3 + 1,
+            part: 0 /* Head */
+          }))
+        ]
+      },
+      shirtColor: {
+        label: __19("Shirt Color"),
+        header: __19("%1 is a CUSTOM property, and will not transfer to any other data formats.", __19("Shirt color")),
+        items: [
+          {
+            type: 0 /* Icon */,
+            forceRender: true,
+            value: -1,
+            icon: `<span class="disable-item">${__19("Disabled")}</span>`,
+            part: 2 /* Body */,
+            bodyUpdateType: 1 /* ClothingUpdate */,
+            property: "shirtColor",
+            sound: "select_color"
+          },
+          makeSeparatorGapThinFSI(),
+          ...rearrangeArray(ArrayNum(100).map((k3) => ({
+            type: 0 /* Icon */,
+            forceRender: true,
+            value: k3,
+            color: SwitchMiiColorTable[k3],
+            part: 2 /* Body */,
+            bodyUpdateType: 1 /* ClothingUpdate */,
+            property: "shirtColor"
+          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop).filter((n2) => !ForbiddenShirtPantColors.includes(n2.value))
+        ]
+      },
+      pantsColor: {
+        label: __19("Pants Color"),
+        header: __19("%1 is a CUSTOM property, and will not transfer to any other data formats.", __19("Pants color")),
+        items: [
+          {
+            type: 0 /* Icon */,
+            forceRender: false,
+            value: -1,
+            icon: `<span class="disable-item">${__19("Disabled")}</span>`,
+            part: 2 /* Body */,
+            bodyUpdateType: 1 /* ClothingUpdate */,
+            property: "pantsColor",
+            sound: "select_color"
+          },
+          makeSeparatorGapThinFSI(),
+          ...rearrangeArray(ArrayNum(100).map((k3) => ({
+            type: 0 /* Icon */,
+            forceRender: false,
+            value: k3,
+            color: SwitchMiiColorTable[k3],
+            part: 2 /* Body */,
+            bodyUpdateType: 1 /* ClothingUpdate */,
+            property: "pantsColor"
+          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop).filter((n2) => !ForbiddenShirtPantColors.includes(n2.value))
+        ]
+      },
+      shoesColor: {
+        label: __19("Shoes Color"),
+        header: __19("%1 is a CUSTOM property, and will not transfer to any other data formats.", __19("Shoes color")),
+        items: [
+          {
+            type: 0 /* Icon */,
+            forceRender: false,
+            value: -1,
+            icon: `<span class="disable-item">${__19("Disabled")}</span>`,
+            part: 2 /* Body */,
+            bodyUpdateType: 1 /* ClothingUpdate */,
+            property: "shoesColor",
+            sound: "select_color"
+          },
+          makeSeparatorGapThinFSI(),
+          ...rearrangeArray(ArrayNum(100).map((k3) => ({
+            type: 0 /* Icon */,
+            forceRender: false,
+            value: k3,
+            color: SwitchMiiColorTable[k3],
+            part: 2 /* Body */,
+            bodyUpdateType: 1 /* ClothingUpdate */,
+            property: "shoesColor"
+          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop).filter((n2) => !ForbiddenShirtPantColors.includes(n2.value))
+        ]
+      }
+    }
+  }));
+}
+
+// src/class/MiiEditor.ts
+var activeMii;
+var currentEditor = null;
+var __20 = _8();
+
+class MiiEditor2 {
+  mii;
+  icons;
+  ui;
+  dirty;
+  ready;
+  renderingMode;
+  onShutdown;
+  errors;
+  useAccessibility;
+  static getCurrentEditor() {
+    return currentEditor;
+  }
+  constructor(gender, onShutdown, init) {
+    window.editor = this;
+    currentEditor = this;
+    document.dispatchEvent(new CustomEvent("editor-launch"));
+    this.showLoadIndicator();
+    this.dirty = false;
+    this.ready = false;
+    this.errors = new Map;
+    let initString = "BAXGigDvV8wSNID/cJl869TJwxYAAAAAAAAAAAAAAAAAAAAAAAAAAE0AaQBpAAAAAAAAAAAAAAAAAAAACAAAAAAAQAMDAQYEBgIKCAQEAgIMAAAAAP8AAAAACAQACgEAIf///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAP//";
+    if (gender === 1 /* Female */) {
+      initString = "BACnywgm6RFTRIDfGZqVDHu5NhQAAAAAAAAAAAAAAAAAAAAAAAAAAE0AaQBpAAAAAAAAAAAAAAAAAAAACAAAAAAAQAMDAQYEAAIKCAMEBAIMAAAAAP8AAAABCAQACgEADP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAP//";
+    }
+    if (init)
+      initString = init;
+    if (onShutdown) {
+      this.onShutdown = onShutdown;
+    }
+    this.mii = new Mii(initString);
+    activeMii = this.mii;
+    this.#setupUi();
+  }
+  #loadInterval;
+  showLoadIndicator() {
+    const check2 = () => {
+      if (this.ready) {
+        this.hideLoadIndicator();
+        return;
+      } else {
+        if (this.ui) {
+          if (this.ui.mii) {
+            if (this.ui.mii.qs(".loader"))
+              this.ui.mii.qs(".loader").classOn("active");
+          }
+        }
+      }
+      playSound("wait");
+    };
+    check2();
+    this.#loadInterval = setInterval(check2, 1000);
+  }
+  hideLoadIndicator() {
+    clearInterval(this.#loadInterval);
+    if (this.ui.mii.qs(".loader")) {
+      this.ui.mii.qs(".loader").classOff("active");
+    }
+  }
+  async#setupUi() {
+    const editMode = await getSetting("editMode");
+    if (editMode === "2d") {
+      this.renderingMode = 0 /* Canvas2DRenderer */;
+    } else if (editMode === "3d") {
+      if (Config.renderer.allow3DMode === true)
+        this.renderingMode = 1 /* Canvas3DScene */;
+      else
+        this.renderingMode = 0 /* Canvas2DRenderer */;
+    }
+    const useAccessibility = await getSetting("accessibilityFeature");
+    this.useAccessibility = useAccessibility;
+    this.icons = await fetch("./dist/icons.json?t=" + Date.now()).then((j2) => j2.json());
+    this.ui = {};
+    this.#setupBase();
+    this.#updateCssVars();
+    await this.#setupMii();
+    this.#setupTabs();
+    await this.render();
+    this.ready = true;
+  }
+  #setupBase() {
+    this.ui.base = new Html("div").class("ui-base").appendTo("body");
+  }
+  #renderModeText(RM) {
+    switch (RM) {
+      case 0 /* Canvas2DRenderer */:
+        return "2D";
+      case 1 /* Canvas3DScene */:
+        return "3D";
+    }
+  }
+  async#setupMii() {
+    this.ui.mii = new Html("div").class("mii-holder").appendTo(this.ui.base);
+    this.ui.mii.append(new Html("div").html(EditorIcons_default.loading).class("loader", "active"));
+    let nextRenderMode = 0;
+    switch (this.renderingMode) {
+      case 0 /* Canvas2DRenderer */:
+        if (Config.renderer.useRendererServer === true)
+          this.#setup2D();
+        else {
+          await this.#setup3D();
+          this.ui.scene.cameraPan = true;
+          this.ui.scene.focusCameraUpdate();
+        }
+        nextRenderMode = 1 /* Canvas3DScene */;
+        break;
+      case 1 /* Canvas3DScene */:
+        this.#setup3D();
+        nextRenderMode = 0 /* Canvas2DRenderer */;
+        break;
+    }
+    const renderModeToggle = AddButtonSounds(new Html("button").class("render-mode-toggle").style({ "z-index": "1" }).text(this.#renderModeText(nextRenderMode)).on("click", () => {
+      if (Config.renderer.allow3DMode === false)
+        return Modal_default.alert(__20("You can't use this feature"), __20("Sorry, but you can't use this feature because 3D mode is disabled at the moment."));
+      renderModeToggle.text(this.#renderModeText(this.renderingMode));
+      switch (this.renderingMode) {
+        case 0 /* Canvas2DRenderer */:
+          this.renderingMode = 1 /* Canvas3DScene */;
+          break;
+        case 1 /* Canvas3DScene */:
+          this.renderingMode = 0 /* Canvas2DRenderer */;
+      }
+      if (this.ui.scene && Config.renderer.useRendererServer === false) {
+        this.ui.scene.cameraPan = !Boolean(this.renderingMode);
+        this.ui.scene.focusCameraUpdate();
+        console.log("why this Really not work :(", this.renderingMode);
+        return;
+      }
+      this.render();
+    }).appendTo(this.ui.mii));
+  }
+  #setup2D() {
+    new Html("img").attr({ crossorigin: "anonymous" }).appendTo(this.ui.mii);
+  }
+  async#setup3D() {
+    this.ui.scene = new Mii3DScene(this.mii, this.ui.mii.elm, undefined, undefined, undefined, this);
+    if (this.ui.scene && Config.renderer.useRendererServer === false) {
+      this.ui.scene.cameraPan = Boolean(this.renderingMode);
+      this.ui.scene.focusCameraUpdate();
+    }
+    await this.ui.scene.init();
+    this.ui.mii.append(this.ui.scene.getRendererElement());
+    window.addEventListener("resize", () => {
+      this.ui.scene.resize();
+    });
+    this.ui.scene.focusCamera(0 /* MiiHead */);
+    this.ui.scene.getRendererElement().classList.add("ready");
+    this.ui.mii.qs(".loader").classOff("active");
+  }
+  async#updateCssVars() {
+    let glassesColor = SwitchMiiColorTable[this.mii.glassColor];
+    let eyeColor = SwitchMiiColorTable[this.mii.eyeColor];
+    let mouthColor = {
+      top: SwitchMiiColorTableLip[this.mii.mouthColor],
+      bottom: SwitchMiiColorTable[this.mii.mouthColor]
+    };
+    if (this.useAccessibility) {
+      this.ui.base.style({
+        "--eye-color": "#787880",
+        "--icon-lip-color-top": "#780c0c",
+        "--icon-lip-color-bottom": "#f00c08",
+        "--icon-hair-tie": "#" + MiiFavoriteColorLookupTable[this.mii.favoriteColor].toString(16).padStart(6, "0"),
+        "--icon-eyebrow-fill": "var(--text)",
+        "--icon-hair-fill": "var(--text)",
+        "--icon-facial-hair-fill": "#9b9b9b",
+        "--icon-hat-fill": MiiFavoriteColorIconTable[0].top,
+        "--icon-hat-stroke": MiiFavoriteColorIconTable[0].bottom,
+        "--icon-custom-hat-fill": MiiFavoriteColorIconTable[0].top,
+        "--icon-custom-hat-stroke": MiiFavoriteColorIconTable[0].bottom,
+        "--icon-glasses-fill": "#787880",
+        "--icon-glasses-shade": "#78788077"
+      });
+    } else {
+      this.ui.base.style({
+        "--eye-color": eyeColor,
+        "--icon-lip-color-top": mouthColor.top,
+        "--icon-lip-color-bottom": mouthColor.bottom,
+        "--icon-hair-tie": "#" + MiiFavoriteColorLookupTable[this.mii.favoriteColor].toString(16).padStart(6, "0"),
+        "--icon-eyebrow-fill": SwitchMiiColorTable[this.mii.eyebrowColor],
+        "--icon-hair-fill": SwitchMiiColorTable[this.mii.hairColor],
+        "--icon-facial-hair-fill": SwitchMiiColorTable[this.mii.beardColor],
+        "--icon-hat-fill": MiiFavoriteColorIconTable[this.mii.favoriteColor].top,
+        "--icon-hat-stroke": MiiFavoriteColorIconTable[this.mii.favoriteColor].bottom,
+        "--icon-glasses-fill": glassesColor,
+        "--icon-glasses-shade": glassesColor + "77"
+      });
+    }
+  }
+  #setupTabs() {
+    const TabInit = (Tab, CameraFocusPart) => {
+      return async (content2) => {
+        if (this.ui.scene)
+          this.ui.scene.focusCamera(CameraFocusPart);
+        await Tab({
+          container: content2,
+          callback: (mii, forceRender, renderPart, bodyUpdateType) => {
+            this.mii = mii;
+            activeMii = mii;
+            this.render(forceRender, renderPart, bodyUpdateType);
+            this.#updateCssVars();
+            this.dirty = true;
+          },
+          icons: this.icons,
+          mii: this.mii,
+          editor: this,
+          useAccessibility: this.useAccessibility
+        });
+        if (this.ui.scene)
+          this.ui.scene.resize();
+      };
+    };
+    const tabs = TabList([
+      {
+        icon: EditorIcons_default.head,
+        select: TabInit(HeadTab, 0 /* MiiHead */)
+      },
+      {
+        icon: EditorIcons_default.hair,
+        select: TabInit(HairTab, 0 /* MiiHead */)
+      },
+      {
+        icon: EditorIcons_default.hat,
+        select: TabInit(ExtHatTab, 0 /* MiiHead */)
+      },
+      {
+        icon: EditorIcons_default.eyebrows,
+        select: TabInit(EyebrowTab, 0 /* MiiHead */)
+      },
+      {
+        icon: EditorIcons_default.eyes,
+        select: TabInit(EyeTab, 0 /* MiiHead */)
+      },
+      {
+        icon: EditorIcons_default.nose,
+        select: TabInit(NoseTab, 0 /* MiiHead */)
+      },
+      {
+        icon: EditorIcons_default.mouth,
+        select: TabInit(MouthTab, 0 /* MiiHead */)
+      },
+      {
+        icon: EditorIcons_default.facialHair,
+        select: TabInit(FacialHairTab, 0 /* MiiHead */)
+      },
+      {
+        icon: EditorIcons_default.mole,
+        select: TabInit(MoleTab, 0 /* MiiHead */)
+      },
+      {
+        icon: EditorIcons_default.glasses,
+        select: TabInit(GlassesTab, 0 /* MiiHead */)
+      },
+      {
+        icon: EditorIcons_default.scale,
+        select: TabInit(ScaleTab, 1 /* MiiFullBody */)
+      },
+      {
+        icon: EditorIcons_default.favoriteColor,
+        select: TabInit(FavoriteColorTab, 1 /* MiiFullBody */)
+      },
+      {
+        icon: EditorIcons_default.clothes,
+        select: TabInit(ExtClothesTab, 1 /* MiiFullBody */)
+      },
+      {
+        icon: EditorIcons_default.details,
+        select: TabInit(MiscTab, 1 /* MiiFullBody */)
+      },
+      {
+        icon: EditorIcons_default.save + "<span>Save</span>",
+        type: "tab-save",
+        select: () => {
+          if (this.dirty === true)
+            Modal_default.modal("Save Mii", "Would you like to save?", "body", {
+              text: "Save & Exit",
+              callback: () => {
+                this.shutdown();
+              }
+            }, {
+              text: "Exit without Saving",
+              callback: () => {
+                this.shutdown(false);
+              }
+            }, {
+              text: "Cancel"
+            });
+          else
+            Modal_default.modal("Quitting Editor", "No changes were made. Are you sure you want to exit?", "body", {
+              text: "Save & Exit",
+              callback: () => {
+                this.shutdown();
+              }
+            }, {
+              text: "Exit without Saving",
+              callback: () => {
+                this.shutdown(false);
+              }
+            }, {
+              text: "Cancel"
+            });
+        },
+        update: false
+      }
+    ]);
+    this.ui.tabList = tabs.list;
+    this.ui.tabContent = tabs.content;
+    this.ui.base.appendMany(tabs.list, tabs.content);
+  }
+  async render(forceReloadHead = true, renderPart = 0 /* Head */, bodyUpdateType = 0 /* None */) {
+    if (Config.renderer.allow3DMode === false)
+      this.renderingMode = 0 /* Canvas2DRenderer */;
+    switch (this.renderingMode) {
+      case 0 /* Canvas2DRenderer */:
+        if (Config.renderer.useRendererServer === false) {
+          if (this.ui.mii.qs("canvas.scene") === null) {
+            await this.#setup3D();
+          }
+          this.ui.mii.qs("canvas.scene")?.style({ display: "block" });
+          this.ui.scene.mii = this.mii;
+          if (renderPart === 2 /* Body */) {
+            this.ui.scene.updateBody(bodyUpdateType);
+            this.ui.scene.resize();
+          } else if (forceReloadHead) {
+            if (bodyUpdateType !== 0 /* None */) {
+              this.ui.scene.updateBody(bodyUpdateType);
+            }
+            this.ui.scene.updateMiiHead(renderPart);
+            this.ui.scene.sparkle();
+            this.ui.scene.resize();
+          }
+          return;
+        }
+        if (this.ui.mii.qs("img") === null) {
+          this.#setup2D();
+        }
+        if (this.ui.mii.qs("canvas.scene")) {
+          this.ui.mii.qs("canvas.scene")?.style({ display: "none" });
+        }
+        this.ui.mii.qs("img")?.style({ display: "block" });
+        let pantsColor = "gray";
+        if (this.mii.special === 1) {
+          pantsColor = "gold";
+        }
+        if (this.mii.favorite) {
+          pantsColor = "red";
+        }
+        this.ui.mii.qs("img")?.style({ display: "block" }).attr({
+          src: `${Config.renderer.renderFullBodyURL}&data=${encodeURIComponent(this.mii.exportHex("studioData"))}&${Config.renderer.hatTypeParam}=${this.mii.hatType + Config.renderer.hatTypeAdd}&${Config.renderer.hatColorParam}=${(this.mii.hatFavoriteColor !== -1 ? this.mii.hatFavoriteColor - 1 : -1) + Config.renderer.hatColorAdd}&miic=${encodeURIComponent(dataToBase64(this.mii.export("miic")))}&pantsColor=${pantsColor}`
+        });
+        break;
+      case 1 /* Canvas3DScene */:
+        if (this.ui.mii.qs("canvas.scene") === null) {
+          await this.#setup3D();
+        }
+        if (this.ui.mii.qs("img")) {
+          this.ui.mii.qs("img")?.style({ display: "none" });
+        }
+        this.ui.mii.qs("canvas.scene")?.style({ display: "block" });
+        this.ui.scene.mii = this.mii;
+        if (renderPart === 2 /* Body */) {
+          this.ui.scene.updateBody(bodyUpdateType);
+        } else if (forceReloadHead) {
+          if (bodyUpdateType !== 0 /* None */) {
+            this.ui.scene.updateBody(bodyUpdateType);
+          }
+          this.ui.scene.updateMiiHead(renderPart);
+          this.ui.scene.sparkle();
+        }
+        break;
+    }
+  }
+  #disableUI() {
+    this.ui.mii.qs("button").classOn("disabled");
+    this.ui.tabList.classOn("disabled");
+    this.ui.tabContent.classOn("disabled");
+  }
+  async shutdown(shouldSave = true) {
+    if (shouldSave) {
+      if (Array.from(this.errors.values()).find((i) => i.valid === false)) {
+        let errorList = [];
+        for (const value2 of this.errors.values()) {
+          if (value2.valid === false)
+            errorList.push(value2.reason);
+        }
+        Modal_default.alert("Notice", `You need to fix the following issues before you can save:
+
+` + errorList.map((e) => `• ${e}`).join(`
+`));
+        return;
+      }
+      if (this.renderingMode === 1 /* Canvas3DScene */) {
+        await new Promise((resolve, reject2) => {
+          this.#disableUI();
+          this.ui.scene.playEndingAnimation();
+          setTimeout(() => {
+            resolve(null);
+          }, 1500);
+        });
+      }
+      if (Config.syncAPIBase) {
+        await fetch(Config.syncAPIBase + "/archive", {
+          body: JSON.stringify({
+            nickname: this.mii.nickname,
+            creator: this.mii.creator,
+            ffsd: this.mii.exportBase64("ffsd"),
+            data: this.mii.exportBase64("miic"),
+            studio: this.mii.exportBase64("studioData")
+          }),
+          method: "POST",
+          headers: { "content-type": "application/json" }
+        }).catch(undefined);
+      }
+    }
+    if (this.#loadInterval) {
+      clearInterval(this.#loadInterval);
+    }
+    this.ui.base.classOn("closing");
+    setTimeout(() => {
+      if (this.ui.scene) {
+        this.ui.scene.shutdown();
+      }
+      this.ui.base.cleanup();
+      if (this.onShutdown) {
+        this.onShutdown(dataToBase64(this.mii.export("miic")), shouldSave);
+      }
+      document.dispatchEvent(new CustomEvent("editor-shutdown"));
+      window.editor = null;
+      currentEditor = null;
+    }, 500);
+  }
+}
+
+// src/ui/pages/library/importDialog.ts
+var import_localforage5 = __toESM(require_localforage(), 1);
+async function importMiiConfirmation(mii, source, title = "Mii Import") {
+  var m2 = Modal_default.modal(title, "", "body", {
+    text: "Cancel"
+  }, {
+    text: "Don't Save"
+  }, {
+    text: "Save",
+    async callback(e) {
+      const id = await newMiiId();
+      await import_localforage5.default.setItem(id, dataToBase64(mii.export()));
+      await pushToServer();
+      _shutdown()();
+      Library(id);
+    }
+  });
+  m2.qs(".modal-content").styleJs({ maxWidth: "100%", maxHeight: "100%" });
+  m2.qs(".modal-body span").cleanup();
+  const icon = await getMiiIcon(mii, "import", "all_body_sugar", 260);
+  m2.qs(".modal-body").style({ "align-items": "center", gap: "1.5rem" }).prependMany(new Html("span").text(`Do you want to save this Mii?`), new Html("small").text(source), new Html("span").style({ "font-size": "20px" }).text(`${mii.nickname} has arrived!`), new Html("img").attr({
+    src: icon.url
+  }).on("load", (await icon).dispose).style({
+    width: "260px",
+    height: "260px",
+    "object-fit": "contain"
+  }));
+}
+
+// src/ui/pages/library/render/customRender.ts
+var __21 = _8();
+var expressionTable = [
+  { name: "Normal", id: 0 },
+  { name: "Smile", id: 1 },
+  { name: "Anger", id: 2 },
+  { name: "Sorrow", id: 3 },
+  { name: "Surprise", id: 4 },
+  { name: "Blink", id: 5 },
+  { name: "Normal (open mouth)", id: 6 },
+  { name: "Smile (open mouth)", id: 7 },
+  { name: "Anger (open mouth)", id: 8 },
+  { name: "Surprise (open mouth)", id: 9 },
+  { name: "Sorrow (open mouth)", id: 10 },
+  { name: "Blink (open mouth)", id: 11 },
+  { name: "Wink (left eye open)", id: 12 },
+  { name: "Wink (right eye open)", id: 13 },
+  { name: "Wink (left eye and mouth open)", id: 14 },
+  { name: "Wink (right eye and mouth open)", id: 15 },
+  { name: "Wink (left eye open and smiling)", id: 16 },
+  { name: "Wink (right eye open and smiling)", id: 17 },
+  { name: "Frustrated", id: 18 },
+  { name: "Bored", id: 19 },
+  { name: "Bored open mouth", id: 20 },
+  { name: "Sigh mouth straight", id: 21 },
+  { name: "Sigh", id: 22 },
+  { name: "Disgusted mouth straight", id: 23 },
+  { name: "Disgusted", id: 24 },
+  { name: "Love", id: 25 },
+  { name: "Love mouth open", id: 26 },
+  { name: "Determined mouth straight", id: 27 },
+  { name: "Determined", id: 28 },
+  { name: "Cry mouth straight", id: 29 },
+  { name: "Cry", id: 30 },
+  { name: "Big smile mouth straight", id: 31 },
+  { name: "Big smile", id: 32 },
+  { name: "Cheeky", id: 33 },
+  { name: "Resolve eyes funny mouth", id: 35 },
+  { name: "Resolve eyes funny mouth open", id: 36 },
+  { name: "Smug", id: 37 },
+  { name: "Smug mouth open", id: 38 },
+  { name: "Resolve", id: 39 },
+  { name: "Resolve mouth open", id: 40 },
+  { name: "Unbelievable", id: 41 },
+  { name: "Cunning", id: 43 },
+  { name: "Raspberry", id: 45 },
+  { name: "Innocent", id: 47 },
+  { name: "Cat", id: 49, modifier: 0 /* HideNose */ },
+  { name: "Dog", id: 51, modifier: 0 /* HideNose */ },
+  { name: "Tasty", id: 53 },
+  { name: "Money mouth straight", id: 55 },
+  { name: "Money", id: 56 },
+  { name: "Confused mouth straight", id: 57 },
+  { name: "Confused", id: 58 },
+  { name: "Cheerful mouth straight", id: 59 },
+  { name: "Cheerful", id: 60 },
+  { name: "Blank", id: 61, modifier: 1 /* HideNoseAndMask */ },
+  { name: "Grumble mouth straight", id: 63 },
+  { name: "Grumble", id: 64 },
+  { name: "Moved mouth straight", id: 65 },
+  { name: "Moved (aka pleading face)", id: 66 },
+  { name: "Singing mouth small", id: 67 },
+  { name: "Singing", id: 68 },
+  { name: "Stunned", id: 69 }
+];
+async function customRender(miiData) {
+  const modal = Modal_default.modal("Custom Render", "", "body", {
+    text: "Cancel",
+    callback(e2) {
+      scene.shutdown();
+      icons.forEach((i) => URL.revokeObjectURL(i));
+      parent2.cleanup();
+    }
+  });
+  const body = modal.qs(".modal-body").classOn("responsive-row-lg").clear();
+  modal.qs(".modal-content").styleJs({
+    width: "100%",
+    height: "100%",
+    maxWidth: "100%",
+    maxHeight: "100%",
+    backgroundColor: "var(--container-solid)"
+  });
+  let parent2 = new Html("div").style({
+    display: "flex",
+    flex: "1",
+    background: "var(--container-solid)",
+    "border-radius": "12px",
+    "flex-shrink": "0",
+    height: "100%",
+    overflow: "hidden",
+    "justify-content": "center",
+    "align-items": "center"
+  }).appendTo(body);
+  let parentBox = new Html("div").style({ "aspect-ratio": "1 / 1", height: "100%" }).appendTo(parent2);
+  let tabsContent = new Html("div").classOn("tab-content").style({ flex: "1", height: "100%", overflow: "auto", gap: "0.5rem" }).appendTo(body);
+  const scene = new Mii3DScene(miiData, parentBox.elm, 1 /* Screenshot */, (renderer4) => {
+  });
+  let configuration = {
+    fov: 30,
+    pose: 0,
+    expression: "0",
+    renderWidth: 720,
+    renderHeight: 720,
+    animSpeed: 100
+  };
+  const miiDataHex = miiData.exportHex("studioData");
+  let poseListPerBodyModel = {
+    wii: 4,
+    wiiu: 14,
+    switch: 5,
+    miitomo: 16
+  };
+  let bodyModelSetting = await getSetting("bodyModel");
+  let poseCount = 0;
+  if (bodyModelSetting in poseListPerBodyModel) {
+    poseCount = poseListPerBodyModel[bodyModelSetting] + 1;
+  }
+  console.log(bodyModelSetting);
+  let controls, rotationFactor = Math.PI / 8;
+  const e = {
+    camera: {
+      label: __21("Camera"),
+      header: new Html("span").html(__21(`Use mouse or touch to move the camera around.
+Using touch, rotate the camera around with one finger, and drag with two fingers to pan. Pinch with two fingers to zoom.
+If you like this site, <b>PLEASE</b> consider sharing it with others by <b>crediting the site</b> when you post your renders! \uD83D\uDE09`)),
+      headerIsHtml: true,
+      items: [
+        {
+          type: 3 /* Slider */,
+          property: "fov",
+          iconStart: "FOV",
+          iconEnd: "",
+          min: 5,
+          max: 90,
+          part: 1 /* Face */
+        },
+        {
+          type: 5 /* Misc */,
+          html: new Html("div").class("flex-group", "col").appendMany(new Html("label").text(__21("Position")), new Html("div").class("flex-group").appendMany(new Html("button").text(__21("Center X")).on("click", () => {
+            const newPosition = scene.focusCamera(1 /* MiiFullBody */, true, false, true);
+            let target = new Vector3;
+            controls.getTarget(target);
+            target.x = newPosition.x;
+            controls.moveTo(target.x, target.y, target.z);
+          }), new Html("button").text(__21("Center Y")).on("click", () => {
+            const newPosition = scene.focusCamera(1 /* MiiFullBody */, true, false, true);
+            let target = new Vector3;
+            controls.getTarget(target);
+            target.y = newPosition.y;
+            controls.moveTo(target.x, target.y, target.z);
+          }), new Html("button").text(__21("Center to body")).on("click", () => {
+            scene.focusCamera(1 /* MiiFullBody */, true, false);
+          }), new Html("button").text(__21("Center to head")).on("click", () => {
+            scene.focusCamera(0 /* MiiHead */, true, false);
+          })), new Html("label").text(__21("Rotate")), new Html("div").class("flex-group").appendMany(new Html("button").text(__21("Up")).on("click", () => {
+            scene.getControls().rotateTo(controls.azimuthAngle, controls.polarAngle - rotationFactor);
+          }), new Html("button").text(__21("Down")).on("click", () => {
+            scene.getControls().rotateTo(controls.azimuthAngle, controls.polarAngle + rotationFactor);
+          }), new Html("button").text(__21("Left")).on("click", () => {
+            scene.getControls().rotateTo(controls.azimuthAngle - rotationFactor, controls.polarAngle);
+          }), new Html("button").text(__21("Right")).on("click", () => {
+            scene.getControls().rotateTo(controls.azimuthAngle + rotationFactor, controls.polarAngle);
+          }), new Html("button").text(__21("Reset")).on("click", () => {
+            controls.rotateTo(0, Math.PI / 2);
+          }))),
+          select() {
+          }
+        }
+      ]
+    },
+    pose: {
+      label: __21("Pose"),
+      header: new Html("div").appendMany(new Html("span").html(__21("Change the Body Model option in Settings to get many different options of poses!") + "<br/><br/>" + __21('Do you like the Mii that does the poses? His name is "dummy".') + "&nbsp;"), new Html("a").text(__21("Click here")).on("click", (e2) => {
+        scene.shutdown();
+        icons.forEach((i) => URL.revokeObjectURL(i));
+        parent2.cleanup();
+        modal.qs("button")?.elm.click();
+        const mii = new Mii(parseHexOrB64ToUint8Array("BAUajXYYt5uiVoD/cJkq8RYY+sFNAGkAaQBDAHIAZQBhAHQAbwByAGQAdQBtAG0AeQAAAAAAAAAAAAAACAAAAAAAQAMACAYDBwMLCAMEEgMNAAAJAGMAAAAACAQACgEAHv///0AABAACFAMTAxMMBAAAAQEKX/8A/wEA"));
+        importMiiConfirmation(mii, __21("Mii Creator (Special Mii)"));
+      }), new Html("span").html("&nbsp;" + __21("to obtain him in your library :)"))),
+      headerIsHtml: true,
+      items: ArrayNum(poseCount).map((k3) => ({
+        type: 0 /* Icon */,
+        value: k3,
+        icon: k3 === 0 ? "None" : `<img src="assets/images/poses/${bodyModelSetting}/${String(k3).padStart(2, "0")}.png" height=120>`,
+        part: 0 /* Head */
+      }))
+    },
+    expression: {
+      label: __21("Expression"),
+      items: []
+    },
+    animation: {
+      label: __21("Animation"),
+      header: __21("Control the animation speed."),
+      items: [
+        {
+          type: 3 /* Slider */,
+          property: "animSpeed",
+          part: 1 /* Face */,
+          iconStart: "0x",
+          iconEnd: "2x",
+          min: 0,
+          max: 200
+        }
+      ]
+    }
+  };
+  let icons = [];
+  expressionTable.forEach(async (k3) => {
+    let iconTag;
+    if (Config.renderer.useRendererServer) {
+      iconTag = `<img class="lazy" width=128 height=128 data-src="${Config.renderer.renderHeadshotURLNoParams}?width=128&scale=1&data=${encodeURIComponent(miiDataHex)}&expression=${k3.id}&type=fflmakeicon&verifyCharInfo=0" title="${k3.name}">`;
+    } else {
+      const icon = await createMiiRender({
+        data: miiData.export("studioData"),
+        drawBody: false,
+        type: ViewType.MakeIcon,
+        expression: k3.id,
+        module: getFFL(),
+        renderer: scene.getRenderer(),
+        size: 96,
+        additionalInfo: getAdditionalInfoFromMii(miiData)
+      });
+      const iconURL = URL.createObjectURL(icon.result);
+      icons.push(iconURL);
+      iconTag = `<img class="lazy" width=128 height=128 data-src="${iconURL}" title="${k3.name}">`;
+    }
+    const expressionItem = {
+      type: 0 /* Icon */,
+      value: String(k3.id),
+      icon: iconTag,
+      part: 0 /* Head */
+    };
+    e["expression"].items.push(expressionItem);
+  });
+  MiiPagedFeatureSet({
+    mii: configuration,
+    miiIsNotMii: true,
+    entries: e,
+    onChange(mii, forceRender, part) {
+      configuration = mii;
+      updateConfiguration();
+      oldConfiguration = Object.assign({}, configuration);
+    }
+  }).style({ height: "auto" }).appendTo(tabsContent);
+  let playing = true;
+  if (bodyModelSetting === "wiiu")
+    playing = false;
+  let pauseButton = AddButtonSounds(new Html("button").text(playing ? __21("Pause Animation") : __21("Pause Animation")).on("click", () => {
+    if (playing === true) {
+      playing = false;
+    } else {
+      playing = true;
+    }
+    scene.anim.forEach((anim) => {
+      if (playing === true) {
+        anim.paused = false;
+        pauseButton.text(__21("Pause Animation"));
+      } else {
+        anim.paused = true;
+        pauseButton.text(__21("Play Animation"));
+      }
+    });
+  }).appendTo(tabsContent));
+  new Html("button").text(__21("Save Render")).on("click", finalizeRender).appendTo(tabsContent);
+  function resize() {
+    let { width: width2, height: height2 } = parentBox.elm.getBoundingClientRect();
+    if (width2 < 1024) {
+      width2 = 1024;
+    }
+    if (height2 < 1024) {
+      height2 = 1024;
+    }
+    scene.resize(width2, height2);
+    scene.getRendererElement().style.height = "100%";
+    scene.getRendererElement().style.width = "unset";
+  }
+  window.addEventListener("resize", () => {
+    resize();
+  });
+  controls = scene.getControls();
+  window.scene = scene;
+  const useGreenScreen = await getSetting("customRenderGreenScreen");
+  if (useGreenScreen !== "off") {
+    let color = useGreenScreen;
+    switch (useGreenScreen) {
+      case "green":
+        color = "#00ff00";
+        break;
+      case "blue":
+        color = "#0000ff";
+        break;
+      case "white":
+        color = "#ffffff";
+        break;
+      case "black":
+        color = "#000000";
+        break;
+    }
+    scene.getScene().background = new Color(color);
+  }
+  let oldConfiguration = {
+    fov: 30,
+    pose: 0,
+    expression: "0",
+    renderWidth: 720,
+    renderHeight: 720,
+    animSpeed: 1
+  };
+  function updateConfiguration() {
+    scene.getCamera().fov = configuration.fov;
+    scene.getCamera().updateProjectionMatrix();
+    if (oldConfiguration.expression !== configuration.expression) {
+      scene.traverseAddFaceMaterial(scene.getHead(), `&data=${encodeURIComponent(miiDataHex)}&expression=${configuration.expression}&width=896&verifyCharInfo=0`);
+    }
+    const expr = expressionTable.find((e2) => e2.id === parseInt(configuration.expression));
+    if (expr) {
+      if (typeof expr.modifier !== "undefined") {
+        switch (expr.modifier) {
+          case 0 /* HideNose */:
+            scene.getHead().traverse((o) => {
+              if (o.isMesh !== true)
+                return;
+              const m = o;
+              const modulateType = m.geometry.userData.modulateType;
+              if (modulateType === 2 /* FFL_MODULATE_TYPE_SHAPE_NOSE */ || modulateType === 7 /* FFL_MODULATE_TYPE_SHAPE_NOSELINE */) {
+                m.visible = false;
+              } else {
+                m.visible = true;
+              }
+            });
+            break;
+          case 1 /* HideNoseAndMask */:
+            scene.getHead().traverse((o) => {
+              if (o.isMesh !== true)
+                return;
+              const m = o;
+              const modulateType = m.geometry.userData.modulateType;
+              if (modulateType === 6 /* FFL_MODULATE_TYPE_SHAPE_MASK */ || modulateType === 2 /* FFL_MODULATE_TYPE_SHAPE_NOSE */ || modulateType === 7 /* FFL_MODULATE_TYPE_SHAPE_NOSELINE */) {
+                m.visible = false;
+              } else {
+                m.visible = true;
+              }
+            });
+            break;
+        }
+      } else {
+        scene.getHead().traverse((o) => {
+          if (o.isMesh !== true)
+            return;
+          const m = o;
+          m.visible = true;
+        });
+      }
+    }
+    const pose = "Pose." + String(configuration.pose).padStart(2, "0");
+    if (scene.animations.get(`${scene.type}-${pose}`)) {
+      scene.swapAnimation(pose);
+      if (playing === false) {
+        scene.anim.forEach((a2) => a2.paused = true);
+      }
+    } else {
+      scene.swapAnimation("Wait");
+      if (playing === false) {
+        scene.anim.forEach((a2) => a2.paused = true);
+      }
+    }
+    scene.anim.forEach((a2) => {
+      a2.timeScale = configuration.animSpeed / 100;
+    });
+    scene.anim.get(scene.type).timeScale *= 0.5;
+  }
+  window.scene = scene;
+  scene.init().then(async () => {
+    await scene.updateMiiHead();
+    if (playing === false) {
+      scene.anim.forEach((anim) => {
+        if (playing === true) {
+          anim.paused = false;
+          pauseButton.text(__21("Pause Animation"));
+        } else {
+          anim.paused = true;
+          pauseButton.text(__21("Play Animation"));
+        }
+      });
+    }
+    scene.focusCamera(1 /* MiiFullBody */, true, false);
+    parentBox.append(scene.getRendererElement());
+    scene.resize();
+  });
+  let shouldClose = await getSetting("autoCloseCustomRender");
+  const rendererElm = scene.getRendererElement();
+  function finalizeRender() {
+    rendererElm.toBlob((blob) => {
+      const image = new Image(rendererElm.width, rendererElm.height);
+      image.src = URL.createObjectURL(blob);
+      image.onload = () => {
+        downloadLink(image.src, __21("%1_custom_render_%2.png", miiData.nickname, new Date().toJSON()));
+        if (shouldClose) {
+          scene.shutdown();
+          icons.forEach((i) => URL.revokeObjectURL(i));
+          parent2.cleanup();
+          modal.qs("button")?.elm.click();
+        }
+      };
+    });
+  }
+  async function save3DModel() {
+    alert("This option is only available when using Simple or Toon shader.");
+  }
+}
+
+// src/ui/pages/library/render/renderPresets.ts
+var __22 = _8();
+var { WebGLRenderer: WebGLRenderer2 } = _THREE();
+var miiRenderPresets = async (mii, miiData) => {
+  const renderer4 = new WebGLRenderer2({ alpha: true });
+  const miiRenderInfo = {
+    data: miiData.export("studioData"),
+    module: getFFL(),
+    renderer: renderer4,
+    characterYRotate: 0,
+    expression: 0,
+    modelFlag: 0,
+    size: 1440,
+    additionalInfo: {
+      favorite: miiData.favorite,
+      hatCommonColor: miiData.hatCommonColor,
+      hatFavoriteColor: miiData.hatFavoriteColor,
+      hatType: miiData.hatType,
+      pantsColor: miiData.pantsColor,
+      shirtColor: miiData.shirtColor,
+      special: miiData.special,
+      temporary: miiData.temporary,
+      eyeSclera: miiData.eyeSclera,
+      wigType: miiData.wigType,
+      clothesType: miiData.clothesType,
+      shoesColor: miiData.shoesColor
+    }
+  };
+  Modal_default.modal(__22("Render options: %1", miiData.nickname), __22("Choose a way to render this Mii"), "body", {
+    text: "Focus on head",
+    async callback() {
+      const renderImage = await createMiiRender({
+        ...miiRenderInfo,
+        type: ViewType.Face,
+        drawBody: true
+      });
+      saveBlob(renderImage.result, __22("%1_render_headshot_%2.png", miiData.nickname, new Date().toJSON()));
+      renderer4.dispose();
+    }
+  }, {
+    text: "Focus on full body",
+    async callback() {
+      const renderImage = await createMiiRender({
+        ...miiRenderInfo,
+        type: ViewType.AllBodySugar,
+        drawBody: true
+      });
+      saveBlob(renderImage.result, __22("%1_render_body_%2.png", miiData.nickname, new Date().toJSON()));
+      renderer4.dispose();
+    }
+  }, {
+    text: "Head only",
+    async callback() {
+      const renderImage = await createMiiRender({
+        ...miiRenderInfo,
+        type: ViewType.MakeIcon,
+        drawBody: false
+      });
+      saveBlob(renderImage.result, __22("%1_render_head_only_%2.png", miiData.nickname, new Date().toJSON()));
+      renderer4.dispose();
+    }
+  }, {
+    text: "Cancel"
+  });
+};
+
+// src/ui/pages/library/render/renderMenu.ts
+var __23 = _8();
+var miiRender = (mii, miiData) => {
+  Modal_default.modal(__23("Render Mii"), __23("What would you like to do?"), "body", {
+    text: __23("Download 3D head model"),
+    async callback() {
+      Modal_default.modal(__23("Warning"), __23(`3D model download has been disabled due to some buggy normals exporting going on at the moment.
+In the meantime, you can use Arian's Mii Renderer to get head models.
+Sorry about that.`), "body", ...buttonsOkCancel);
+    }
+  }, {
+    text: __23("Render presets"),
+    async callback() {
+      miiRenderPresets(mii, miiData);
+    }
+  }, {
+    text: __23("Custom render"),
+    async callback() {
+      customRender(miiData);
+    }
+  }, {
+    text: "Cancel"
+  });
+};
 
 // src/util/miiImageUtils.ts
 var import_qrjs_min = __toESM(require_qrjs_min(), 1);
@@ -132859,114 +138612,6 @@ var encryptAndEncodeVer3StoreDataToQRCodeFormat = (data2) => {
   return result;
 };
 
-// src/config.ts
-var useRendererServer = false;
-var fflResourcePath = [
-  "/FFLResLow.dat",
-  "/FFLResMiddle.dat",
-  "/FFLResHigh.dat"
-];
-var fflResourcesNames = ["Low", "Middle", "High"];
-var baseURL = "https://mii-renderer.nxw.pw/miis/image";
-var newApiParams = true;
-var nnidFetchOrigin = "https://mii-unsecure.ariankordi.net";
-var __2 = _8();
-var Config = {
-  renderer: {
-    baseURL,
-    useRendererServer,
-    fflResourcePath,
-    fflResourcesNames,
-    renderFFLMakeIcon: `${baseURL}.png?shaderType=miitomo&type=fflmakeicon&width=360&verifyCharInfo=0`,
-    renderHeadshotURL: `${baseURL}.png?shaderType=wiiu&type=face&width=260&verifyCharInfo=0`,
-    renderHeadshotURLNoParams: `${baseURL}.png`,
-    renderFullBodyURL: `${baseURL}.png?shaderType=wiiu&type=all_body_sugar&width=420&verifyCharInfo=0&scale=1`,
-    renderFullBodyAltURL: `${baseURL}.png?shaderType=wiiu&type=all_body_sugar&width=960&verifyCharInfo=0&scale=1`,
-    render3DHeadURL: `${baseURL}.glb?shaderType=wiiu&type=face&width=260&verifyCharInfo=0`,
-    renderFaceURL: `${baseURL}.png?scale=1&drawStageMode=mask_only&verifyCharInfo=0`,
-    hatTypeParam: newApiParams ? "headwearIndex" : "hatType",
-    hatTypeAdd: newApiParams ? 0 : 0,
-    hatColorParam: newApiParams ? "headwearColor" : "hatColor",
-    hatColorAdd: newApiParams ? -1 : 0,
-    allow3DMode: true
-  },
-  apis: {
-    nnidRandomURL: `${nnidFetchOrigin}/mii_data_random`,
-    nnidFetchURL: (nnid) => `${nnidFetchOrigin}/mii_data/${nnid}`,
-    pnidFetchURL: (pnid) => `${nnidFetchOrigin}/mii_data/${pnid}?api_id=1`,
-    useSentry: true,
-    sentryURL: "https://5671de45addd464980ccd49e08d6d108@app.glitchtip.com/10073"
-  },
-  mii: {
-    scalingMode: "scaleApply"
-  },
-  version: {
-    string: "v1.0.0 r1",
-    name: __2("BETA"),
-    changelog: `
-    <p style="text-align:center;margin-top:20px;margin-bottom:200px;font-size:32px;color:var(--error-color)">The update changelog hasn't been written yet, so just ignore this for now</p>
-    `
-  }
-};
-
-// src/constants/EditorIcons.ts
-var EditorIcons_default = {
-  loading: `<svg width="64" height="64" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24.5" cy="24.5" r="15.5" stroke="url(#paint0_linear_1094_34)" stroke-width="4"/><defs><linearGradient id="paint0_linear_1094_34" x1="24.5" y1="7" x2="29.5" y2="11.5" gradientUnits="userSpaceOnUse"><stop stop-color="currentColor"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs></svg>`,
-  error: `<svg width="66" height="66" viewBox="0 0 66 66" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.2929 26.1213L22.5858 26.8284L23.2929 27.5355L29.1716 33.4142L23.2929 39.2929L22.5858 40L23.2929 40.7071L26.1213 43.5355L26.8284 44.2426L27.5355 43.5355L33.4142 37.6569L39.2929 43.5355L40 44.2426L40.7071 43.5355L43.5355 40.7071L44.2426 40L43.5355 39.2929L37.6569 33.4142L43.5355 27.5355L44.2426 26.8284L43.5355 26.1213L40.7071 23.2929L40 22.5858L39.2929 23.2929L33.4142 29.1716L27.5355 23.2929L26.8284 22.5858L26.1213 23.2929L23.2929 26.1213Z" fill="black" stroke="white" stroke-width="2"/></svg>`,
-  eyes: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.7 17.27H10.57C8.78509 17.27 7.07329 17.9791 5.81117 19.2412C4.54905 20.5033 3.84 22.2151 3.84 24C3.84 25.7849 4.54905 27.4967 5.81117 28.7588C7.07329 30.021 8.78509 30.73 10.57 30.73H15.7C17.4849 30.73 19.1967 30.021 20.4588 28.7588C21.7209 27.4967 22.43 25.7849 22.43 24C22.43 22.2151 21.7209 20.5033 20.4588 19.2412C19.1967 17.9791 17.4849 17.27 15.7 17.27ZM6.32 24C6.32264 22.8737 6.77125 21.7942 7.56771 20.9977C8.36417 20.2013 9.44364 19.7527 10.57 19.75H11.48C10.762 20.197 10.1743 20.825 9.77584 21.571C9.37739 22.317 9.18224 23.1547 9.21 24C9.18224 24.8453 9.37739 25.683 9.77584 26.429C10.1743 27.175 10.762 27.803 11.48 28.25H10.57C9.44364 28.2474 8.36417 27.7988 7.56771 27.0023C6.77125 26.2058 6.32264 25.1264 6.32 24ZM15.7 28.25H14.79C15.508 27.803 16.0957 27.175 16.4941 26.429C16.8926 25.683 17.0877 24.8453 17.06 24C17.0877 23.1547 16.8926 22.317 16.4941 21.571C16.0957 20.825 15.508 20.197 14.79 19.75H15.7C16.2581 19.75 16.8108 19.8599 17.3264 20.0735C17.842 20.2871 18.3106 20.6002 18.7052 20.9948C19.0998 21.3895 19.4129 21.858 19.6265 22.3736C19.8401 22.8892 19.95 23.4419 19.95 24C19.95 24.5581 19.8401 25.1108 19.6265 25.6264C19.4129 26.1421 19.0998 26.6106 18.7052 27.0052C18.3106 27.3999 17.842 27.7129 17.3264 27.9265C16.8108 28.1401 16.2581 28.25 15.7 28.25ZM37.43 17.27H32.3C30.5151 17.27 28.8033 17.9791 27.5412 19.2412C26.279 20.5033 25.57 22.2151 25.57 24C25.57 25.7849 26.279 27.4967 27.5412 28.7588C28.8033 30.021 30.5151 30.73 32.3 30.73H37.43C39.2149 30.73 40.9267 30.021 42.1888 28.7588C43.4509 27.4967 44.16 25.7849 44.16 24C44.16 22.2151 43.4509 20.5033 42.1888 19.2412C40.9267 17.9791 39.2149 17.27 37.43 17.27ZM28.05 24C28.05 22.8728 28.4978 21.7918 29.2948 20.9948C30.0918 20.1978 31.1728 19.75 32.3 19.75H33.21C32.492 20.197 31.9043 20.825 31.5058 21.571C31.1074 22.317 30.9122 23.1547 30.94 24C30.9122 24.8453 31.1074 25.683 31.5058 26.429C31.9043 27.175 32.492 27.803 33.21 28.25H32.3C31.7419 28.25 31.1892 28.1401 30.6736 27.9265C30.158 27.7129 29.6894 27.3999 29.2948 27.0052C28.9001 26.6106 28.5871 26.1421 28.3735 25.6264C28.1599 25.1108 28.05 24.5581 28.05 24ZM37.43 28.25H36.52C37.238 27.803 37.8257 27.175 38.2241 26.429C38.6226 25.683 38.8177 24.8453 38.79 24C38.8177 23.1547 38.6226 22.317 38.2241 21.571C37.8257 20.825 37.238 20.197 36.52 19.75H37.43C38.5572 19.75 39.6382 20.1978 40.4352 20.9948C41.2322 21.7918 41.68 22.8728 41.68 24C41.68 25.1272 41.2322 26.2082 40.4352 27.0052C39.6382 27.8023 38.5572 28.25 37.43 28.25Z" fill="currentColor"/></svg>`,
-  eyebrows: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26.57 26.1701V28.4401L43.79 23.4601L40.09 19.5601L26.57 26.1701ZM21.43 26.1701V28.4401L4.20999 23.4601L7.90999 19.5601L21.43 26.1701Z" fill="currentColor"/></svg>`,
-  details: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M24 34H35.25" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M29.47 13.5277C29.9676 13.03 30.6425 12.7505 31.3462 12.7505C32.05 12.7505 32.7249 13.03 33.2225 13.5277C33.7201 14.0253 33.9996 14.7002 33.9996 15.4039C33.9996 16.1076 33.7201 16.7825 33.2225 17.2802L18.21 32.2939C17.9126 32.5913 17.545 32.8088 17.1412 32.9264L13.5512 33.9739C13.4437 34.0053 13.3296 34.0072 13.2211 33.9794C13.1126 33.9515 13.0135 33.8951 12.9343 33.8158C12.8551 33.7366 12.7986 33.6376 12.7708 33.529C12.743 33.4205 12.7448 33.3065 12.7762 33.1989L13.8237 29.6089C13.9415 29.2056 14.159 28.8384 14.4562 28.5414L29.47 13.5277Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M27.75 15.25L31.5 19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`,
-  save: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19 3.75C19.6594 3.75939 20.2884 4.02896 20.75 4.5L25.5 9.25C25.971 9.71158 26.2406 10.3406 26.25 11V23.75C26.25 24.413 25.9866 25.0489 25.5178 25.5178C25.0489 25.9866 24.413 26.25 23.75 26.25H6.25C5.58696 26.25 4.95107 25.9866 4.48223 25.5178C4.01339 25.0489 3.75 24.413 3.75 23.75V6.25C3.75 5.58696 4.01339 4.95107 4.48223 4.48223C4.95107 4.01339 5.58696 3.75 6.25 3.75H19Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.25 26.25V17.5C21.25 17.1685 21.1183 16.8505 20.8839 16.6161C20.6495 16.3817 20.3315 16.25 20 16.25H10C9.66848 16.25 9.35054 16.3817 9.11612 16.6161C8.8817 16.8505 8.75 17.1685 8.75 17.5V26.25" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.75 3.75V8.75C8.75 9.08152 8.8817 9.39946 9.11612 9.63388C9.35054 9.8683 9.66848 10 10 10H18.75" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  scale: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M33.47 17.9299C32.39 18.7099 32.47 20.4499 32.47 23.0199V38.7399C32.2054 38.7656 31.9597 38.8889 31.781 39.0857C31.6023 39.2826 31.5033 39.539 31.5033 39.8049C31.5033 40.0708 31.6023 40.3271 31.781 40.524C31.9597 40.7209 32.2054 40.8442 32.47 40.8699H33.82C34.0127 40.8668 34.2009 40.8113 34.3644 40.7093C34.5279 40.6073 34.6605 40.4626 34.7479 40.2908C34.8353 40.1191 34.8742 39.9268 34.8605 39.7345C34.8468 39.5423 34.7809 39.3575 34.67 39.1999V31.3199C34.67 31.1528 34.7364 30.9926 34.8545 30.8744C34.9727 30.7563 35.1329 30.6899 35.3 30.6899C35.4671 30.6899 35.6273 30.7563 35.7455 30.8744C35.8636 30.9926 35.93 31.1528 35.93 31.3199V39.1999C35.8195 39.3568 35.7537 39.5407 35.7395 39.7321C35.7254 39.9235 35.7635 40.1151 35.8497 40.2865C35.9359 40.458 36.0671 40.6028 36.2292 40.7055C36.3912 40.8083 36.5782 40.8651 36.77 40.8699H38.13C38.3947 40.8442 38.6403 40.7209 38.819 40.524C38.9977 40.3271 39.0967 40.0708 39.0967 39.8049C39.0967 39.539 38.9977 39.2826 38.819 39.0857C38.6403 38.8889 38.3947 38.7656 38.13 38.7399V22.9999C38.13 20.4299 38.2 18.6899 37.13 17.9099C36.5429 18.1039 35.9283 18.2019 35.31 18.1999C34.6862 18.2087 34.065 18.1176 33.47 17.9299ZM40.53 12.3599C40.53 11.3255 40.2233 10.3143 39.6486 9.45425C39.0739 8.59418 38.2571 7.92384 37.3014 7.528C36.3458 7.13215 35.2942 7.02858 34.2797 7.23038C33.2652 7.43218 32.3333 7.93029 31.6018 8.66172C30.8704 9.39315 30.3723 10.325 30.1705 11.3396C29.9687 12.3541 30.0723 13.4057 30.4681 14.3613C30.864 15.317 31.5343 16.1338 32.3944 16.7085C33.2544 17.2832 34.2656 17.5899 35.3 17.5899C35.9868 17.5899 36.6669 17.4546 37.3014 17.1918C37.936 16.9289 38.5125 16.5437 38.9982 16.0581C39.4838 15.5724 39.8691 14.9959 40.1319 14.3613C40.3947 13.7268 40.53 13.0467 40.53 12.3599ZM10.89 27.3099C9.79 28.0799 9.89 29.8199 9.89 32.3999V38.7499C9.60887 38.7578 9.34242 38.8772 9.14926 39.0816C8.95609 39.286 8.85205 39.5588 8.86 39.8399C8.86796 40.121 8.98727 40.3875 9.19168 40.5806C9.3961 40.7738 9.66887 40.8778 9.95 40.8699H11.31C11.5106 40.8653 11.7058 40.8038 11.8729 40.6926C12.04 40.5814 12.1721 40.425 12.2538 40.2417C12.3355 40.0584 12.3634 39.8557 12.3345 39.6571C12.3055 39.4585 12.2207 39.2722 12.09 39.1199V35.6199C12.09 35.4528 12.1564 35.2926 12.2745 35.1744C12.3927 35.0563 12.5529 34.9899 12.72 34.9899C12.8871 34.9899 13.0473 35.0563 13.1655 35.1744C13.2836 35.2926 13.35 35.4528 13.35 35.6199V39.1199C13.1901 39.3145 13.1019 39.558 13.1 39.8099C13.0918 39.9462 13.1116 40.0827 13.1582 40.211C13.2048 40.3394 13.2771 40.4568 13.3708 40.5561C13.4645 40.6554 13.5775 40.7345 13.7029 40.7885C13.8283 40.8424 13.9635 40.8701 14.1 40.8699H15.45C15.5892 40.8738 15.7278 40.8503 15.8579 40.8007C15.988 40.751 16.1071 40.6763 16.2083 40.5806C16.3095 40.485 16.3909 40.3703 16.4478 40.2432C16.5047 40.1162 16.5361 39.9791 16.54 39.8399C16.5439 39.7007 16.5204 39.5621 16.4708 39.432C16.4212 39.3018 16.3464 39.1828 16.2507 39.0816C16.1551 38.9803 16.0405 38.899 15.9134 38.8421C15.7863 38.7851 15.6492 38.7538 15.51 38.7499V32.3999C15.51 29.8199 15.59 28.0799 14.51 27.3099C13.3344 27.6968 12.0657 27.6968 10.89 27.3099ZM17.93 21.7299C17.9221 20.6972 17.6087 19.69 17.0292 18.8352C16.4497 17.9804 15.6302 17.3163 14.6739 16.9266C13.7176 16.5369 12.6673 16.439 11.6554 16.6453C10.6435 16.8516 9.71536 17.3528 8.98793 18.0858C8.26049 18.8188 7.76634 19.7508 7.56776 20.7642C7.36918 21.7776 7.47506 22.8271 7.87206 23.7804C8.26905 24.7338 8.93939 25.5482 9.79857 26.1212C10.6578 26.6941 11.6673 26.9999 12.7 26.9999C13.3902 26.9999 14.0736 26.8633 14.7107 26.598C15.3479 26.3327 15.9262 25.9438 16.4124 25.4539C16.8986 24.964 17.283 24.3828 17.5434 23.7436C17.8039 23.1044 17.9353 22.4201 17.93 21.7299Z" fill="currentColor"/></svg>`,
-  nose: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28.12 34.7999C24.87 34.7999 20.03 33.69 19.25 29.41C18.9957 28.2616 19.002 27.0708 19.2685 25.9251C19.535 24.7795 20.0549 23.7082 20.79 22.79C21.2648 22.1159 21.6702 21.3956 22 20.64C22.9075 18.2233 23.61 15.7345 24.1 13.2L27.73 13.88C27.2024 16.6802 26.426 19.4277 25.41 22.09C24.9817 23.0557 24.4591 23.9768 23.85 24.84C22.96 26.17 22.52 26.84 22.85 28.74C23.31 31.27 28.61 31.09 28.66 31.08L28.88 34.77H28.08L28.12 34.7999Z" fill="currentColor"/></svg>`,
-  mouth: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.28 25.71C11.7 28.47 17.73 34.16 24 34.16C30.27 34.16 36.3 28.47 36.72 25.71H11.28ZM30.88 14.44C28.15 13.15 24.61 13.86 24 17.27C23.39 13.86 19.85 13.15 17.12 14.44C13.97 15.94 11.28 22.37 11.28 22.76H36.72C36.72 22.37 34 15.94 30.88 14.44Z" fill="currentColor"/></svg>`,
-  glasses: `<svg width="48" height="48" viewBox="0 0 48 48" class="_31GRkaKLLh07JK-xJvjUvH_0"><path d="M34.34 14.34a9.67 9.67 0 0 0-9.55 8.28h-1.58a9.65 9.65 0 1 0 0 2.85h1.6a9.66 9.66 0 1 0 9.54-11.13zM13.66 30.81A6.81 6.81 0 1 1 20.48 24a6.81 6.81 0 0 1-6.82 6.81zm20.68 0A6.81 6.81 0 1 1 41.16 24a6.81 6.81 0 0 1-6.82 6.81z" fill="currentColor"></path></svg>`,
-  mole: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 11.8C29.79 11.8 34.51 17.27 34.51 24C34.51 30.73 29.79 36.2001 24 36.2001C18.21 36.2001 13.49 30.73 13.49 24C13.49 17.27 18.21 11.8 24 11.8ZM24 8.80005C16.54 8.80005 10.49 15.6 10.49 24C10.49 32.4 16.49 39.2001 24 39.2001C31.51 39.2001 37.51 32.4 37.51 24C37.51 15.6 31.46 8.80005 24 8.80005Z" fill="currentColor"/><path d="M30.22 29.3501C30.22 29.7457 30.1027 30.1323 29.8829 30.4612C29.6631 30.7901 29.3508 31.0465 28.9853 31.1979C28.6199 31.3492 28.2178 31.3888 27.8298 31.3117C27.4418 31.2345 27.0855 31.044 26.8058 30.7643C26.5261 30.4846 26.3356 30.1282 26.2584 29.7403C26.1812 29.3523 26.2208 28.9502 26.3722 28.5847C26.5236 28.2193 26.7799 27.9069 27.1088 27.6872C27.4377 27.4674 27.8244 27.3501 28.22 27.3501C28.7464 27.3628 29.2478 27.5776 29.6201 27.9499C29.9925 28.3223 30.2073 28.8237 30.22 29.3501Z" fill="currentColor"/></svg>`,
-  head: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 38.6701C21.53 38.6701 11.52 30.6701 11.09 23.3801C10.954 21.5451 11.1982 19.7019 11.8074 17.9657C12.4165 16.2296 13.3774 14.6378 14.63 13.2901C15.8315 12.0131 17.2841 10.9985 18.8967 10.3101C20.5092 9.62175 22.2467 9.27444 24 9.29005C25.7546 9.27547 27.4933 9.6232 29.1073 10.3115C30.7213 10.9998 32.1759 12.0138 33.38 13.2901C34.6308 14.6386 35.5899 16.2308 36.1973 17.9669C36.8047 19.7031 37.0473 21.5459 36.91 23.3801C36.44 30.7001 26.42 38.6701 24 38.6701ZM24 12.0001C22.6082 11.9813 21.2275 12.2495 19.944 12.788C18.6605 13.3265 17.5017 14.1238 16.54 15.1301C15.5369 16.2189 14.7688 17.5027 14.2836 18.9015C13.7984 20.3002 13.6066 21.7839 13.72 23.2601C14 29.0001 22.15 35.3701 24 36.0001C25.8 35.3601 34 29.0001 34.28 23.2201C34.3958 21.7437 34.2051 20.2594 33.7198 18.8603C33.2345 17.4612 32.4651 16.1776 31.46 15.0901C30.4959 14.0896 29.3358 13.2988 28.0522 12.7671C26.7686 12.2354 25.3891 11.9743 24 12.0001Z" fill="currentColor"/><path d="M23.83 31.08C22.4375 31.078 21.0909 30.5819 20.03 29.68C19.8231 29.493 19.699 29.2315 19.6849 28.953C19.6709 28.6745 19.768 28.4018 19.955 28.195C20.142 27.9881 20.4035 27.864 20.682 27.8499C20.9604 27.8358 21.2331 27.933 21.44 28.12C22.1393 28.6888 23.0164 28.9935 23.9177 28.9807C24.819 28.9679 25.6871 28.6384 26.37 28.05C26.5963 27.9151 26.8647 27.8694 27.1228 27.9217C27.381 27.9739 27.6105 28.1204 27.7665 28.3327C27.9226 28.5449 27.994 28.8076 27.9669 29.0696C27.9398 29.3316 27.8161 29.5742 27.62 29.75C26.5331 30.5904 25.2037 31.0569 23.83 31.08ZM19.71 21.43C19.3742 21.4319 19.0465 21.5333 18.7683 21.7213C18.49 21.9093 18.2737 22.1755 18.1465 22.4863C18.0194 22.7971 17.9872 23.1386 18.0539 23.4677C18.1206 23.7968 18.2833 24.0988 18.5214 24.3355C18.7596 24.5723 19.0625 24.7332 19.392 24.798C19.7215 24.8628 20.0628 24.8285 20.3728 24.6996C20.6829 24.5706 20.9478 24.3527 21.1342 24.0734C21.3205 23.794 21.42 23.4658 21.42 23.13C21.42 22.9059 21.3757 22.684 21.2896 22.4771C21.2036 22.2702 21.0775 22.0823 20.9185 21.9243C20.7596 21.7663 20.571 21.6413 20.3636 21.5565C20.1562 21.4716 19.9341 21.4286 19.71 21.43ZM28 21.43C27.6638 21.43 27.3351 21.5297 27.0555 21.7165C26.776 21.9033 26.5581 22.1688 26.4294 22.4794C26.3007 22.79 26.2671 23.1318 26.3327 23.4616C26.3982 23.7914 26.5602 24.0943 26.7979 24.332C27.0357 24.5698 27.3386 24.7317 27.6683 24.7973C27.9981 24.8629 28.3399 24.8292 28.6506 24.7006C28.9612 24.5719 29.2267 24.354 29.4135 24.0744C29.6003 23.7949 29.7 23.4662 29.7 23.13C29.7 22.6791 29.5209 22.2467 29.2021 21.9279C28.8833 21.6091 28.4509 21.43 28 21.43Z" fill="currentColor"/></svg>`,
-  hair: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 8.80005C16.55 8.80005 10.49 15.62 10.49 24C10.49 32.38 16.55 39.2001 24 39.2001C31.45 39.2001 37.51 32.38 37.51 24C37.51 15.62 31.45 8.80005 24 8.80005ZM24 36.4701C18.55 36.4701 14 31.71 13.38 25.56C15.78 25.66 21.69 22.89 23.91 19.49C24.5468 18.463 25.0286 17.3477 25.34 16.18C25.6853 17.3077 26.1868 18.3815 26.83 19.37C28.39 21.63 32.36 23.82 34.7 24.31C34.56 31 29.81 36.4701 24 36.4701Z" fill="currentColor"/></svg>`,
-  hat: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23.8365 27.9617C32.7547 27.9617 36.9954 31.5831 38.8155 33.9331C39.3558 33.7001 39.7817 33.2624 40 32.7159C40 32.7159 37.0356 24.7859 23.8402 24.7859C10.6448 24.7859 7.67798 32.7159 7.67798 32.7159C7.89708 33.2627 8.32389 33.7004 8.86497 33.9331C10.6763 31.5831 14.9183 27.9617 23.8365 27.9617Z" fill="currentColor" fill-opacity="0.31"/><path d="M26.8813 14.2441C24.8709 13.8464 22.802 13.8464 20.7915 14.2441C17.4584 15.9371 12.2711 20.0343 11.862 29.1766H11.901C12.4121 28.7215 12.9566 28.3054 13.5298 27.9317C14.484 18.7101 20.7424 15.7219 23.0573 14.9326V25.2317C23.309 25.2241 23.5696 25.2141 23.8364 25.2141C24.1033 25.2141 24.3576 25.2241 24.6143 25.2317V14.9352C26.9292 15.7244 33.1876 18.7114 34.1418 27.9342C34.7152 28.3076 35.2597 28.7238 35.7706 29.1791H35.8096C35.4005 20.0293 30.2132 15.9371 26.8813 14.2441Z" fill="currentColor" fill-opacity="0.31"/><path fill-rule="evenodd" clip-rule="evenodd" d="M24.0004 13.9463C24.9656 13.9564 25.93 14.0556 26.8813 14.2438C30.0528 15.8553 34.9052 19.6404 35.718 27.8917C38.6379 29.8528 39.7386 32.1083 39.9573 32.6123V30.07C39.9576 25.794 38.2594 21.6931 35.2362 18.6692C32.2517 15.684 28.2172 13.9898 24.0004 13.9463ZM23.7331 13.9458C21.651 13.9593 19.5908 14.376 17.6666 15.1733C15.7105 15.9837 13.9332 17.1715 12.4361 18.6688C10.939 20.166 9.75154 21.9436 8.94143 23.8998C8.13131 25.856 7.71443 27.9526 7.7146 30.07V32.6189H7.71781C7.92956 32.1289 9.02574 29.866 11.9529 27.8975C12.7636 19.6472 17.618 15.8557 20.7915 14.2438C21.7628 14.0516 22.7477 13.9523 23.7331 13.9458ZM13.6617 26.9028C15.9246 25.7689 18.9779 24.8946 23.0573 24.795V14.9323C20.8308 15.6914 14.9558 18.485 13.6617 26.9028ZM24.6143 24.7948C28.6926 24.8932 31.7456 25.7657 34.0088 26.8982C32.7125 18.4848 26.8402 15.6937 24.6143 14.9348V24.7948Z" fill="currentColor"/></svg>`,
-  clothes: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.4211 9C18.4211 13.2857 21.8947 15 24.5 15C27.1053 15 30.5789 13.2857 30.5789 9C33.0593 9 34.9575 11.037 36.4923 12.9854C37.4566 14.2097 38.9026 15.3195 41 16.7143C39.8156 19.8352 38.5315 21.1545 34.9211 22.7143V38C34.9211 38.5523 34.4733 39 33.9211 39H24.5H15.0789C14.5267 39 14.0789 38.5523 14.0789 38V22.7143C10.4685 21.1545 9.18437 19.8352 8 16.7143C10.0974 15.3195 11.5434 14.2097 12.5077 12.9854C14.0425 11.037 15.9407 9 18.4211 9Z" fill="currentColor"/></svg>`,
-  favoriteColor: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M29.2 18.7701L35.86 19.7101C36.1622 19.7534 36.4464 19.8802 36.6805 20.0763C36.9145 20.2724 37.0892 20.5299 37.1848 20.8199C37.2804 21.1099 37.2932 21.4208 37.2217 21.7176C37.1502 22.0145 36.9972 22.2855 36.78 22.5001L32 27.2101C31.8812 27.3245 31.7925 27.4666 31.7419 27.6236C31.6913 27.7807 31.6803 27.9478 31.71 28.1101L32.88 34.7401C32.9307 35.0405 32.8968 35.3491 32.7819 35.6313C32.6671 35.9135 32.4759 36.1581 32.2298 36.3377C31.9837 36.5174 31.6925 36.6249 31.3887 36.6483C31.0849 36.6717 30.7807 36.6099 30.51 36.4701L24.51 33.3701C24.3641 33.2913 24.2008 33.2501 24.035 33.2501C23.8692 33.2501 23.7059 33.2913 23.56 33.3701L17.62 36.5201C17.351 36.6651 17.0467 36.7315 16.7418 36.7119C16.4369 36.6922 16.1436 36.5873 15.8955 36.409C15.6474 36.2307 15.4543 35.9863 15.3384 35.7036C15.2225 35.4208 15.1884 35.1112 15.24 34.8101L16.35 28.1701C16.3784 28.007 16.3659 27.8393 16.3135 27.6822C16.2612 27.5252 16.1706 27.3835 16.05 27.2701L11.22 22.5901C10.9994 22.3784 10.8428 22.1089 10.768 21.8125C10.6933 21.516 10.7034 21.2045 10.7973 20.9136C10.8911 20.6226 11.0649 20.3639 11.2988 20.167C11.5327 19.9701 11.8173 19.843 12.12 19.8001L18.77 18.8001C18.934 18.7755 19.0893 18.7106 19.222 18.6111C19.3547 18.5116 19.4605 18.3807 19.53 18.2301L22.53 12.2301C22.6639 11.9556 22.8722 11.7242 23.1313 11.5624C23.3903 11.4005 23.6896 11.3147 23.995 11.3147C24.3004 11.3147 24.5997 11.4005 24.8587 11.5624C25.1178 11.7242 25.3261 11.9556 25.46 12.2301L28.46 18.2301C28.5314 18.3725 28.6358 18.4959 28.7645 18.5898C28.8932 18.6837 29.0425 18.7455 29.2 18.7701Z" fill="currentColor"/></svg>`,
-  facialHair: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28.43 24.8399C27.1502 23.8855 25.5965 23.3699 24 23.3699C22.4035 23.3699 20.8497 23.8855 19.57 24.8399C18.0384 26.127 17.0316 27.9307 16.74 29.9099L19.1 28.9099L20.1 30.8199L22.03 29.2299L23.95 31.2299L25.87 29.2299L27.8 30.8199L28.8 28.9099L31.16 29.9099C30.8946 27.9449 29.9244 26.1432 28.43 24.8399Z" fill="currentColor"/><path d="M27.91 36.8L26.91 35L25.86 33.2001L24.91 33.85L23.97 34.4901L23 33.85L22 33.2001L21 34.84L20 36.4701L23.91 36.6301L27.91 36.8ZM24 11.8C25.4233 11.8204 26.8251 12.1503 28.1082 12.7668C29.3912 13.3833 30.5247 14.2716 31.43 15.37C33.4504 17.7889 34.5424 20.8486 34.51 24C34.5424 27.1515 33.4504 30.2112 31.43 32.6301C30.5247 33.7285 29.3912 34.6168 28.1082 35.2333C26.8251 35.8498 25.4233 36.1797 24 36.2001C22.5767 36.1797 21.1749 35.8498 19.8918 35.2333C18.6088 34.6168 17.4753 33.7285 16.57 32.6301C14.5497 30.2112 13.4577 27.1515 13.49 24C13.4577 20.8486 14.5497 17.7889 16.57 15.37C17.4753 14.2716 18.6088 13.3833 19.8918 12.7668C21.1749 12.1503 22.5767 11.8204 24 11.8ZM24 8.80005C22.183 8.81844 20.3909 9.22499 18.7439 9.99247C17.0968 10.7599 15.6328 11.8706 14.45 13.25C11.8446 16.2223 10.4212 20.0477 10.45 24C10.4212 27.9524 11.8446 31.7778 14.45 34.75C15.6328 36.1295 17.0968 37.2401 18.7439 38.0076C20.3909 38.7751 22.183 39.1817 24 39.2001C25.817 39.1817 27.6091 38.7751 29.2562 38.0076C30.9032 37.2401 32.3672 36.1295 33.55 34.75C36.1554 31.7778 37.5788 27.9524 37.55 24C37.5788 20.0477 36.1554 16.2223 33.55 13.25C32.3672 11.8706 30.9032 10.7599 29.2562 9.99247C27.6091 9.22499 25.817 8.81844 24 8.80005Z" fill="currentColor"/></svg>`,
-  gender: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.5172 12.0993C18.5172 14.9156 16.1852 17.1987 13.3084 17.1987C10.4317 17.1987 8.09965 14.9156 8.09965 12.0993C8.09965 9.28305 10.4317 7 13.3084 7C16.1852 7 18.5172 9.28305 18.5172 12.0993Z" fill="#3587F5"/><path d="M10.6712 17.5464H10.112C7.27087 19.7483 4.90324 25.7748 4.07457 28.0927C3.60115 29.4172 5.49526 30.7583 6.56058 28.7881L9.52023 24.0364V40.7252C9.44131 41.1501 9.63861 42 11.0592 42C12.4798 42 12.756 41.1501 12.7165 40.7252V31.6854C12.7165 31.4294 12.9285 31.2219 13.1901 31.2219H13.4266C13.6881 31.2219 13.9001 31.4294 13.9001 31.6854V40.7252C13.8607 41.1501 14.1369 42 15.5575 42C16.978 42 17.1753 41.1501 17.0964 40.7252V24.0364L20.0561 28.7881C21.1214 30.7583 23.0155 29.4172 22.5421 28.0927C21.7134 25.7748 19.3458 19.7483 16.5046 17.5464H15.9456C15.1463 17.9179 14.2522 18.1258 13.3084 18.1258C12.3647 18.1258 11.4706 17.9179 10.6712 17.5464Z" fill="#3587F5"/><path d="M39.9006 12.0993C39.9006 14.9156 37.5685 17.1987 34.6918 17.1987C31.8151 17.1987 29.483 14.9156 29.483 12.0993C29.483 9.28305 31.8151 7 34.6918 7C37.5685 7 39.9006 9.28305 39.9006 12.0993Z" fill="#FF4585"/><path d="M31.4954 17.5464H32.0546C32.8539 17.9179 33.7481 18.1258 34.6918 18.1258C35.6355 18.1258 36.5296 17.9179 37.329 17.5464H37.888C40.7291 19.7483 43.0968 25.7748 43.9254 28.0927C44.3988 29.4172 42.5047 30.7583 41.4394 28.7881L38.4798 24.0364L40.4349 30.9197C40.5608 31.3628 40.2204 31.8013 39.7506 31.8013H38.4798V40.7252C38.5587 41.1501 38.3614 42 36.9408 42C35.5202 42 35.244 41.1501 35.2835 40.7252V31.8013H34.0999V40.7252C34.1393 41.1501 33.8631 42 32.4425 42C31.022 42 30.8247 41.1501 30.9036 40.7252V31.8013H29.6328C29.163 31.8013 28.8226 31.3628 28.9485 30.9197L30.9036 24.0364L27.9439 28.7881C26.8786 30.7583 24.9845 29.4172 25.4579 28.0927C26.2866 25.7748 28.6542 19.7483 31.4954 17.5464Z" fill="#FF4585"/></svg>`,
-  genderMale: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.3697 5.07947C19.3697 7.3325 17.5433 9.15894 15.2903 9.15894C13.0372 9.15894 11.2108 7.3325 11.2108 5.07947C11.2108 2.82644 13.0372 1 15.2903 1C17.5433 1 19.3697 2.82644 19.3697 5.07947Z" fill="#3587F5"/><path d="M13.2249 9.43709H12.7869C10.5617 11.1987 8.70741 16.0199 8.0584 17.8742C7.68763 18.9338 9.17107 20.0066 10.0054 18.4305L12.3234 14.6291V27.9801C12.2616 28.3201 12.4161 29 13.5287 29C14.6413 29 14.8576 28.3201 14.8267 27.9801V20.7483C14.8267 20.5435 14.9927 20.3775 15.1976 20.3775H15.3828C15.5876 20.3775 15.7537 20.5435 15.7537 20.7483V27.9801C15.7228 28.3201 15.9391 29 17.0517 29C18.1643 29 18.3188 28.3201 18.257 27.9801V14.6291L20.575 18.4305C21.4093 20.0066 22.8928 18.9338 22.522 17.8742C21.873 16.0199 20.0187 11.1987 17.7935 9.43709H17.3557C16.7297 9.73434 16.0294 9.90066 15.2903 9.90066C14.5512 9.90066 13.8509 9.73434 13.2249 9.43709Z" fill="#3587F5"/></svg>`,
-  genderFemale: `<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.3947 5.07947C19.3947 7.3325 17.5682 9.15894 15.3152 9.15894C13.0622 9.15894 11.2357 7.3325 11.2357 5.07947C11.2357 2.82644 13.0622 1 15.3152 1C17.5682 1 19.3947 2.82644 19.3947 5.07947Z" fill="#FF4585"/><path d="M12.8118 9.43709H13.2498C13.8758 9.73434 14.5761 9.90066 15.3152 9.90066C16.0543 9.90066 16.7546 9.73434 17.3806 9.43709H17.8184C20.0436 11.1987 21.8979 16.0199 22.5469 17.8742C22.9177 18.9338 21.4342 20.0066 20.5999 18.4305L18.2819 14.6291L19.8131 20.1357C19.9117 20.4902 19.6451 20.8411 19.2772 20.8411H18.2819V27.9801C18.3437 28.3201 18.1892 29 17.0766 29C15.964 29 15.7477 28.3201 15.7786 27.9801V20.8411H14.8516V27.9801C14.8825 28.3201 14.6662 29 13.5536 29C12.441 29 12.2865 28.3201 12.3483 27.9801V20.8411H11.353C10.9851 20.8411 10.7185 20.4902 10.8171 20.1357L12.3483 14.6291L10.0303 18.4305C9.19598 20.0066 7.71253 18.9338 8.0833 17.8742C8.73231 16.0199 10.5866 11.1987 12.8118 9.43709Z" fill="#FF4585"/></svg>`,
-  genderMaleLg: `<svg width="80" height="80" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.3697 5.07947C19.3697 7.3325 17.5433 9.15894 15.2903 9.15894C13.0372 9.15894 11.2108 7.3325 11.2108 5.07947C11.2108 2.82644 13.0372 1 15.2903 1C17.5433 1 19.3697 2.82644 19.3697 5.07947Z" fill="#3587F5"/><path d="M13.2249 9.43709H12.7869C10.5617 11.1987 8.70741 16.0199 8.0584 17.8742C7.68763 18.9338 9.17107 20.0066 10.0054 18.4305L12.3234 14.6291V27.9801C12.2616 28.3201 12.4161 29 13.5287 29C14.6413 29 14.8576 28.3201 14.8267 27.9801V20.7483C14.8267 20.5435 14.9927 20.3775 15.1976 20.3775H15.3828C15.5876 20.3775 15.7537 20.5435 15.7537 20.7483V27.9801C15.7228 28.3201 15.9391 29 17.0517 29C18.1643 29 18.3188 28.3201 18.257 27.9801V14.6291L20.575 18.4305C21.4093 20.0066 22.8928 18.9338 22.522 17.8742C21.873 16.0199 20.0187 11.1987 17.7935 9.43709H17.3557C16.7297 9.73434 16.0294 9.90066 15.2903 9.90066C14.5512 9.90066 13.8509 9.73434 13.2249 9.43709Z" fill="#3587F5"/></svg>`,
-  genderFemaleLg: `<svg width="80" height="80" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M19.3947 5.07947C19.3947 7.3325 17.5682 9.15894 15.3152 9.15894C13.0622 9.15894 11.2357 7.3325 11.2357 5.07947C11.2357 2.82644 13.0622 1 15.3152 1C17.5682 1 19.3947 2.82644 19.3947 5.07947Z" fill="#FF4585"/><path d="M12.8118 9.43709H13.2498C13.8758 9.73434 14.5761 9.90066 15.3152 9.90066C16.0543 9.90066 16.7546 9.73434 17.3806 9.43709H17.8184C20.0436 11.1987 21.8979 16.0199 22.5469 17.8742C22.9177 18.9338 21.4342 20.0066 20.5999 18.4305L18.2819 14.6291L19.8131 20.1357C19.9117 20.4902 19.6451 20.8411 19.2772 20.8411H18.2819V27.9801C18.3437 28.3201 18.1892 29 17.0766 29C15.964 29 15.7477 28.3201 15.7786 27.9801V20.8411H14.8516V27.9801C14.8825 28.3201 14.6662 29 13.5536 29C12.441 29 12.2865 28.3201 12.3483 27.9801V20.8411H11.353C10.9851 20.8411 10.7185 20.4902 10.8171 20.1357L12.3483 14.6291L10.0303 18.4305C9.19598 20.0066 7.71253 18.9338 8.0833 17.8742C8.73231 16.0199 10.5866 11.1987 12.8118 9.43709Z" fill="#FF4585"/></svg>`,
-  favorite: `<svg width="49" height="48" viewBox="0 0 49 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M39.3884 15.9453L39.636 14.8448L38.6714 15.4295L31.0959 20.0206L24.6414 12.6439L24.2677 12.2169L23.9086 12.6561L17.8861 20.021L9.87914 15.4237L8.93213 14.88L9.17184 15.9453L11.3207 25.4956C11.3414 26.5901 11.9723 27.4324 12.8675 28.0586C13.7703 28.6899 14.991 29.1411 16.3056 29.4641C18.9374 30.1108 22.0979 30.2798 24.2801 30.24C26.4624 30.2798 29.6229 30.1108 32.2547 29.4641C33.5692 29.1411 34.79 28.6899 35.6927 28.0586C36.588 27.4324 37.2189 26.5901 37.2396 25.4956L39.3884 15.9453ZM12.7447 28.6157L11.9534 28.1968L12.0425 29.0877L12.2804 31.4661C12.2944 32.3073 12.9852 32.9508 13.7746 33.4207C14.6088 33.9172 15.7367 34.3315 16.9561 34.6577C19.3834 35.307 22.2989 35.6395 24.2801 35.5209C26.2612 35.6396 29.1178 35.3069 31.4871 34.6569C32.6773 34.3303 33.7761 33.9153 34.5885 33.4175C35.3606 32.9443 36.0263 32.3002 36.0399 31.466L36.2778 29.0877L36.3668 28.1968L35.5756 28.6157C31.6139 30.7131 27.4083 30.72 24.2801 30.72C21.1482 30.72 16.7051 30.7124 12.7447 28.6157Z" fill="url(#paint0_linear_1196_50)" stroke="white" stroke-width="0.96"/><defs><linearGradient id="paint0_linear_1196_50" x1="24.2801" y1="12.96" x2="39.1601" y2="35.04" gradientUnits="userSpaceOnUse"><stop stop-color="#EC0000"/><stop offset="0.955263" stop-color="#B50400"/></linearGradient></defs></svg>`,
-  special: `<svg width="49" height="48" viewBox="0 0 49 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M39.8284 20.2654L40.0693 19.1948L39.1196 19.7446L31.1139 24.3794L25.0924 16.9771L24.7325 16.5347L24.358 16.9649L17.9042 24.3789L10.3304 19.7505L9.36289 19.1592L9.61179 20.2654L11.7606 29.8157C11.7813 30.9102 12.4123 31.7525 13.3075 32.3786C14.2102 33.01 15.431 33.4611 16.7455 33.7842C19.3774 34.4309 22.5378 34.5999 24.7201 34.5601C26.9023 34.5999 30.0628 34.4309 32.6946 33.7842C34.0092 33.4611 35.2299 33.01 36.1327 32.3786C37.0279 31.7525 37.6588 30.9102 37.6796 29.8157L39.8284 20.2654ZM13.1847 32.9358L12.3934 32.5169L12.4825 33.4078L12.7203 35.7861C12.7343 36.6274 13.4252 37.2709 14.2146 37.7407C15.0488 38.2372 16.1766 38.6515 17.396 38.9777C19.8234 39.627 22.7389 39.9596 24.7201 39.8409C26.7011 39.9596 29.5578 39.627 31.9271 38.9769C33.1173 38.6504 34.216 38.2354 35.0284 37.7375C35.8005 37.2643 36.4663 36.6203 36.4799 35.7861L36.7177 33.4078L36.8068 32.5169L36.0155 32.9358C32.0538 35.0332 27.8483 35.04 24.7201 35.04C21.5882 35.04 17.1451 35.0325 13.1847 32.9358Z" fill="url(#paint0_linear_1196_45)" stroke="white" stroke-width="0.96"/><circle cx="9.36001" cy="15.12" r="4.08" fill="#F48700" stroke="white" stroke-width="0.96"/><circle cx="24.7199" cy="12.2399" r="4.08" fill="#F79400" stroke="white" stroke-width="0.96"/><circle cx="40.08" cy="15.12" r="4.08" fill="#FCC000" stroke="white" stroke-width="0.96"/><defs><linearGradient id="paint0_linear_1196_45" x1="20.1601" y1="24" x2="37.9201" y2="41.76" gradientUnits="userSpaceOnUse"><stop stop-color="#F78E00"/><stop offset="0.11" stop-color="#FCBA00"/><stop offset="0.42" stop-color="#FCBA00"/><stop offset="0.63" stop-color="#EF4D00"/></linearGradient></defs></svg>`,
-  personal: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.7159 23.8225L12.7245 23.7571L20.1936 27.3133L20.6969 27.5529L20.8592 27.0196L22.5392 21.4997L22.6353 21.1837L22.3747 20.981L13.7347 14.261L13.0734 13.7467L12.9641 14.5773L11.8588 22.9773L11.8133 23.3233L11.7641 23.6973L12.7159 23.8225ZM35.2759 23.6973L35.2267 23.3233L35.1812 22.9773L34.0759 14.5773L33.9666 13.7467L33.3053 14.261L24.6653 20.981L24.4046 21.1837L24.5008 21.4997L26.1808 27.0196L26.3431 27.5529L26.8463 27.3133L34.3155 23.7571L34.3241 23.8225L35.2759 23.6973Z" fill="url(#paint0_linear_1966_21)" stroke="white" stroke-width="0.96"/><path d="M41.2621 19.0968L41.6142 17.8433L40.5327 18.5683L30.7313 25.1386H30.3405L24.1568 16.0501L23.76 15.4668L23.3631 16.0501L17.1794 25.1386H16.7886L6.98724 18.5683L5.90574 17.8433L6.25786 19.0968L9.57319 30.899C9.599 32.0679 10.2815 32.9687 11.254 33.641C12.2385 34.3217 13.5725 34.8096 15.0136 35.1597C17.8986 35.8605 21.3655 36.0439 23.76 36.0007C26.1544 36.0439 29.6213 35.8605 32.5064 35.1597C33.9475 34.8096 35.2815 34.3217 36.2659 33.641C37.2384 32.9687 37.9209 32.0679 37.9468 30.899L41.2621 19.0968ZM11.0658 34.3136L10.276 33.9002L10.3657 34.7872L10.6271 37.3709C10.6414 38.2643 11.3834 38.9527 12.2474 39.4611C13.1581 39.9969 14.3919 40.4452 15.7291 40.7988C18.3922 41.503 21.5906 41.8632 23.76 41.7342C25.9292 41.8632 29.0628 41.503 31.662 40.798C32.967 40.4441 34.1688 39.9951 35.0554 39.4579C35.9 38.9462 36.6154 38.2572 36.6293 37.3709L36.8906 34.7872L36.9804 33.9002L36.1905 34.3136C31.8267 36.5973 27.1951 36.6041 23.76 36.6041C20.3211 36.6041 15.4284 36.5966 11.0658 34.3136Z" fill="url(#paint1_linear_1966_21)" stroke="white" stroke-width="0.96"/><circle cx="5.5199" cy="14.64" r="3.6" fill="#F48700" stroke="white" stroke-width="0.96"/><circle cx="23.7599" cy="12.2401" r="3.6" fill="#F79400" stroke="white" stroke-width="0.96"/><circle cx="13.68" cy="12.7201" r="2.64" fill="#EF9600" stroke="white" stroke-width="0.96"/><circle cx="34.3199" cy="12.7201" r="2.64" fill="#EF9600" stroke="white" stroke-width="0.96"/><circle cx="41.9999" cy="15.12" r="3.6" fill="#EF9600" stroke="white" stroke-width="0.96"/><defs><linearGradient id="paint0_linear_1966_21" x1="20.2045" y1="18.6886" x2="29.2193" y2="30.9992" gradientUnits="userSpaceOnUse"><stop stop-color="#EF9600"/><stop offset="0.63" stop-color="#EF9600"/></linearGradient><linearGradient id="paint1_linear_1966_21" x1="16.32" y1="22.0801" x2="32.4548" y2="38.1065" gradientUnits="userSpaceOnUse"><stop stop-color="#F4AD00"/><stop offset="0.29" stop-color="#FADF00"/><stop offset="0.665" stop-color="#FCE200"/><stop offset="1" stop-color="#EC7900"/></linearGradient></defs></svg>`,
-  sparkle: `<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21.5933 28.0833C21.4891 27.6795 21.2787 27.3111 20.9838 27.0162C20.689 26.7214 20.3205 26.511 19.9168 26.4068L12.7593 24.5611C12.6371 24.5265 12.5297 24.4529 12.4531 24.3517C12.3766 24.2504 12.3352 24.1269 12.3352 24C12.3352 23.873 12.3766 23.7496 12.4531 23.6483C12.5297 23.547 12.6371 23.4735 12.7593 23.4388L19.9168 21.592C20.3204 21.4879 20.6887 21.2776 20.9836 20.983C21.2784 20.6884 21.4889 20.3202 21.5933 19.9166L23.4389 12.7591C23.4732 12.6365 23.5467 12.5285 23.6481 12.4516C23.7496 12.3747 23.8734 12.333 24.0007 12.333C24.128 12.333 24.2518 12.3747 24.3532 12.4516C24.4546 12.5285 24.5281 12.6365 24.5624 12.7591L26.4069 19.9166C26.5111 20.3204 26.7215 20.6888 27.0164 20.9837C27.3112 21.2785 27.6797 21.489 28.0834 21.5931L35.2409 23.4376C35.364 23.4716 35.4726 23.545 35.5499 23.6466C35.6273 23.7481 35.6691 23.8723 35.6691 24C35.6691 24.1276 35.6273 24.2518 35.5499 24.3534C35.4726 24.455 35.364 24.5283 35.2409 24.5623L28.0834 26.4068C27.6797 26.511 27.3112 26.7214 27.0164 27.0162C26.7215 27.3111 26.5111 27.6795 26.4069 28.0833L24.5613 35.2408C24.5269 35.3634 24.4535 35.4714 24.3521 35.5483C24.2506 35.6253 24.1268 35.6669 23.9995 35.6669C23.8722 35.6669 23.7484 35.6253 23.647 35.5483C23.5455 35.4714 23.4721 35.3634 23.4378 35.2408L21.5933 28.0833Z" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M33.3333 13.5V18.1667" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M35.6667 15.8333H31" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14.6667 29.8333V32.1666" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.8333 31H13.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  positionMoveDown: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M45.88 25.0702H43.44V16.7202C43.44 16.455 43.3346 16.2006 43.1471 16.0131C42.9595 15.8256 42.7052 15.7202 42.44 15.7202H33C32.7348 15.7202 32.4804 15.8256 32.2929 16.0131C32.1053 16.2006 32 16.455 32 16.7202V25.0702H29.53C29.3545 25.0716 29.1831 25.1232 29.036 25.2188C28.8889 25.3144 28.7722 25.4501 28.6996 25.6099C28.6271 25.7697 28.6018 25.9469 28.6267 26.1205C28.6515 26.2942 28.7255 26.4572 28.84 26.5902L37 36.0002C37.0854 36.0996 37.1913 36.1793 37.3104 36.234C37.4295 36.2886 37.5589 36.3169 37.69 36.3169C37.821 36.3169 37.9505 36.2886 38.0696 36.234C38.1887 36.1793 38.2945 36.0996 38.38 36.0002L46.53 26.5902C46.6425 26.4598 46.7162 26.3004 46.7427 26.1302C46.7691 25.9599 46.7472 25.7857 46.6795 25.6273C46.6117 25.4689 46.5009 25.3327 46.3595 25.2342C46.2182 25.1357 46.052 25.0789 45.88 25.0702Z" fill="currentColor"/><path d="M15.61 36.4001C21.3538 36.4001 26.01 31.7439 26.01 26.0001C26.01 20.2563 21.3538 15.6001 15.61 15.6001C9.86626 15.6001 5.21002 20.2563 5.21002 26.0001C5.21002 31.7439 9.86626 36.4001 15.61 36.4001Z" fill="currentColor"/></svg>`,
-  positionMoveUp: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M45.88 26.9298H43.44V35.2798C43.44 35.545 43.3346 35.7994 43.1471 35.9869C42.9595 36.1745 42.7052 36.2798 42.44 36.2798H33C32.7348 36.2798 32.4804 36.1745 32.2929 35.9869C32.1053 35.7994 32 35.545 32 35.2798V26.9298H29.53C29.3545 26.9284 29.1831 26.8768 29.036 26.7812C28.8889 26.6856 28.7722 26.5499 28.6996 26.3901C28.6271 26.2304 28.6018 26.0532 28.6267 25.8795C28.6515 25.7058 28.7255 25.5428 28.84 25.4098L37 15.9998C37.0854 15.9005 37.1913 15.8207 37.3104 15.7661C37.4295 15.7114 37.5589 15.6831 37.69 15.6831C37.821 15.6831 37.9505 15.7114 38.0696 15.7661C38.1887 15.8207 38.2945 15.9005 38.38 15.9998L46.53 25.4098C46.6425 25.5402 46.7162 25.6996 46.7427 25.8698C46.7691 26.0401 46.7472 26.2143 46.6795 26.3727C46.6117 26.5311 46.5009 26.6673 46.3595 26.7658C46.2182 26.8643 46.052 26.9211 45.88 26.9298Z" fill="currentColor"/><path d="M15.61 36.4001C21.3538 36.4001 26.01 31.7439 26.01 26.0001C26.01 20.2563 21.3538 15.6001 15.61 15.6001C9.86626 15.6001 5.21002 20.2563 5.21002 26.0001C5.21002 31.7439 9.86626 36.4001 15.61 36.4001Z" fill="currentColor"/></svg>`,
-  positionPushIn: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.99998 21.8799V23.1199H5.77998C5.7117 23.1199 5.64408 23.1334 5.58099 23.1595C5.5179 23.1856 5.46057 23.2239 5.41229 23.2722C5.364 23.3205 5.3257 23.3778 5.29957 23.4409C5.27343 23.504 5.25998 23.5716 5.25998 23.6399V28.3599C5.25865 28.429 5.27112 28.4977 5.29666 28.562C5.3222 28.6262 5.36029 28.6847 5.40871 28.7341C5.45713 28.7834 5.5149 28.8226 5.57865 28.8494C5.6424 28.8762 5.71085 28.8899 5.77998 28.8899H9.99998V30.1199C9.99974 30.2081 10.0248 30.2944 10.0723 30.3687C10.1197 30.443 10.1875 30.5022 10.2676 30.539C10.3476 30.5759 10.4366 30.589 10.5239 30.5767C10.6112 30.5645 10.6932 30.5274 10.76 30.4699L15.51 26.3299C15.5589 26.2868 15.5981 26.2337 15.625 26.1742C15.6518 26.1147 15.6657 26.0502 15.6657 25.9849C15.6657 25.9197 15.6518 25.8551 15.625 25.7957C15.5981 25.7362 15.5589 25.6831 15.51 25.6399L10.77 21.5299C10.7035 21.4692 10.6206 21.4293 10.5316 21.4153C10.4426 21.4013 10.3515 21.4136 10.2695 21.4509C10.1875 21.4882 10.1183 21.5487 10.0704 21.625C10.0224 21.7012 9.99798 21.7899 9.99998 21.8799ZM42 30.1199V28.8799H46.21C46.3479 28.8799 46.4802 28.8251 46.5777 28.7276C46.6752 28.6301 46.73 28.4978 46.73 28.3599V23.6399C46.7313 23.5708 46.7188 23.5021 46.6933 23.4379C46.6678 23.3736 46.6297 23.3151 46.5813 23.2657C46.5328 23.2164 46.4751 23.1772 46.4113 23.1504C46.3476 23.1237 46.2791 23.1099 46.21 23.1099H42V21.8799C42.0002 21.7918 41.9751 21.7054 41.9277 21.6311C41.8803 21.5568 41.8125 21.4977 41.7324 21.4608C41.6523 21.4239 41.5634 21.4108 41.4761 21.4231C41.3888 21.4353 41.3068 21.4724 41.24 21.5299L36.5 25.6699C36.451 25.7131 36.4118 25.7662 36.385 25.8257C36.3581 25.8851 36.3442 25.9497 36.3442 26.0149C36.3442 26.0802 36.3581 26.1447 36.385 26.2042C36.4118 26.2637 36.451 26.3168 36.5 26.3599L41.24 30.4699C41.3068 30.5274 41.3888 30.5645 41.4761 30.5767C41.5634 30.589 41.6523 30.5759 41.7324 30.539C41.8125 30.5022 41.8803 30.443 41.9277 30.3687C41.9751 30.2944 42.0002 30.2081 42 30.1199Z" fill="currentColor"/><path d="M21.06 30.6798C23.6447 30.6798 25.74 28.5845 25.74 25.9998C25.74 23.4151 23.6447 21.3198 21.06 21.3198C18.4753 21.3198 16.38 23.4151 16.38 25.9998C16.38 28.5845 18.4753 30.6798 21.06 30.6798Z" fill="currentColor"/><path d="M30.94 30.6798C33.5247 30.6798 35.62 28.5845 35.62 25.9998C35.62 23.4151 33.5247 21.3198 30.94 21.3198C28.3553 21.3198 26.26 23.4151 26.26 25.9998C26.26 28.5845 28.3553 30.6798 30.94 30.6798Z" fill="currentColor"/></svg>`,
-  positionPushOut: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M36.5 25.6402L31.76 21.5302C31.6921 21.4738 31.6097 21.4377 31.5222 21.426C31.4347 21.4143 31.3457 21.4275 31.2654 21.464C31.1851 21.5005 31.1166 21.5589 31.0679 21.6325C31.0192 21.7061 30.9922 21.792 30.99 21.8802V23.1202H21V21.8802C20.9978 21.792 20.9708 21.7061 20.9221 21.6325C20.8734 21.5589 20.805 21.5005 20.7247 21.464C20.6443 21.4275 20.5553 21.4143 20.4678 21.426C20.3804 21.4377 20.2979 21.4738 20.23 21.5302C18.96 22.6402 16.45 24.8202 15.49 25.6702C15.4411 25.7134 15.4019 25.7665 15.375 25.8259C15.3482 25.8854 15.3343 25.9499 15.3343 26.0152C15.3343 26.0805 15.3482 26.145 15.375 26.2045C15.4019 26.2639 15.4411 26.317 15.49 26.3602L20.23 30.4702C20.2979 30.5266 20.3804 30.5627 20.4678 30.5744C20.5553 30.5861 20.6443 30.5729 20.7247 30.5364C20.805 30.4999 20.8734 30.4415 20.9221 30.3679C20.9708 30.2943 20.9978 30.2084 21 30.1202V28.8802H31V30.1102C31.0022 30.1984 31.0292 30.2843 31.0779 30.3579C31.1266 30.4315 31.1951 30.4899 31.2754 30.5264C31.3557 30.5629 31.4447 30.5761 31.5322 30.5644C31.6197 30.5527 31.7021 30.5166 31.77 30.4602C33.04 29.3502 35.55 27.1702 36.51 26.3202C36.5567 26.2764 36.5937 26.2233 36.6187 26.1644C36.6437 26.1055 36.6562 26.042 36.6552 25.978C36.6543 25.914 36.64 25.8509 36.6133 25.7927C36.5865 25.7346 36.548 25.6826 36.5 25.6402Z" fill="currentColor"/><path d="M9.93 30.6798C12.5147 30.6798 14.61 28.5845 14.61 25.9998C14.61 23.4151 12.5147 21.3198 9.93 21.3198C7.34531 21.3198 5.25 23.4151 5.25 25.9998C5.25 28.5845 7.34531 30.6798 9.93 30.6798Z" fill="currentColor"/><path d="M42.07 30.6798C44.6547 30.6798 46.75 28.5845 46.75 25.9998C46.75 23.4151 44.6547 21.3198 42.07 21.3198C39.4853 21.3198 37.39 23.4151 37.39 25.9998C37.39 28.5845 39.4853 30.6798 42.07 30.6798Z" fill="currentColor"/></svg>`,
-  positionRotateCW: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M25.85 38.9298C28.7219 38.9298 31.05 36.6017 31.05 33.7298C31.05 30.8579 28.7219 28.5298 25.85 28.5298C22.9781 28.5298 20.65 30.8579 20.65 33.7298C20.65 36.6017 22.9781 38.9298 25.85 38.9298Z" fill="currentColor"/><path d="M30.44 28.0898L36.09 24.7398C34.3706 22.8055 32.1318 21.4059 29.6399 20.7072C27.148 20.0086 24.5079 20.0404 22.0336 20.7988C19.5592 21.5572 17.3548 23.0103 15.6824 24.9854C14.0101 26.9604 12.9402 29.3743 12.6 31.9398C12.4838 32.8483 12.457 33.766 12.52 34.6798C12.5386 34.8216 12.5266 34.9657 12.4847 35.1025C12.4428 35.2392 12.3721 35.3654 12.2774 35.4725C12.1826 35.5796 12.0659 35.6651 11.9353 35.7233C11.8046 35.7815 11.663 35.811 11.52 35.8098H6.42C6.15479 35.8098 5.90043 35.7044 5.7129 35.5169C5.52536 35.3293 5.42 35.075 5.42 34.8098C5.36697 33.7293 5.39371 32.6463 5.5 31.5698C6.04893 26.4088 8.51929 21.6433 12.4202 18.2199C16.3212 14.7966 21.3672 12.9661 26.5557 13.092C31.7443 13.218 36.6955 15.2912 40.4257 18.8998C44.156 22.5084 46.3922 27.3883 46.69 32.5698C46.6975 32.7106 46.6717 32.8513 46.6148 32.9803C46.558 33.1094 46.4715 33.2233 46.3625 33.3128C46.2535 33.4024 46.125 33.465 45.9874 33.4958C45.8497 33.5265 45.7067 33.5244 45.57 33.4898L30.68 29.7198C30.5084 29.6774 30.3534 29.585 30.2345 29.4542C30.1157 29.3234 30.0385 29.1602 30.0128 28.9853C29.987 28.8105 30.0139 28.632 30.09 28.4725C30.1661 28.313 30.2879 28.1798 30.44 28.0898Z" fill="currentColor"/></svg>`,
-  positionRotateCCW: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M25.85 23.4698C28.7219 23.4698 31.05 21.1417 31.05 18.2698C31.05 15.3979 28.7219 13.0698 25.85 13.0698C22.9781 13.0698 20.65 15.3979 20.65 18.2698C20.65 21.1417 22.9781 23.4698 25.85 23.4698Z" fill="currentColor"/><path d="M30.44 23.91L36.09 27.26C34.3706 29.1942 32.1318 30.5939 29.6399 31.2925C27.148 31.9912 24.5079 31.9594 22.0336 31.201C19.5592 30.4425 17.3548 28.9894 15.6824 27.0144C14.0101 25.0393 12.9402 22.6255 12.6 20.06C12.4838 19.1515 12.457 18.2337 12.52 17.32C12.5386 17.1782 12.5266 17.034 12.4847 16.8973C12.4428 16.7605 12.3721 16.6343 12.2774 16.5272C12.1826 16.4201 12.0659 16.3346 11.9353 16.2764C11.8046 16.2182 11.663 16.1888 11.52 16.19H6.42C6.15479 16.19 5.90043 16.2953 5.7129 16.4829C5.52536 16.6704 5.42 16.9248 5.42 17.19C5.36697 18.2705 5.39371 19.3534 5.5 20.43C6.04893 25.5909 8.51929 30.3565 12.4202 33.7798C16.3212 37.2031 21.3672 39.0337 26.5557 38.9077C31.7443 38.7817 36.6955 36.7085 40.4257 33.0999C44.156 29.4913 46.3922 24.6115 46.69 19.43C46.6975 19.2891 46.6717 19.1485 46.6148 19.0194C46.558 18.8903 46.4715 18.7764 46.3625 18.6869C46.2535 18.5974 46.125 18.5347 45.9874 18.504C45.8497 18.4732 45.7067 18.4753 45.57 18.51L30.68 22.28C30.5084 22.3223 30.3534 22.4148 30.2345 22.5456C30.1157 22.6764 30.0385 22.8396 30.0128 23.0144C29.987 23.1892 30.0139 23.3678 30.09 23.5273C30.1661 23.6867 30.2879 23.82 30.44 23.91Z" fill="currentColor"/></svg>`,
-  positionSizeDown: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26 32.5C29.5899 32.5 32.5 29.5899 32.5 26C32.5 22.4101 29.5899 19.5 26 19.5C22.4101 19.5 19.5 22.4101 19.5 26C19.5 29.5899 22.4101 32.5 26 32.5Z" fill="currentColor"/><path d="M39.23 18.59L38.36 17.72L41.36 14.72C41.4102 14.6723 41.4503 14.6149 41.4776 14.5513C41.5049 14.4877 41.519 14.4192 41.519 14.35C41.519 14.2807 41.5049 14.2122 41.4776 14.1486C41.4503 14.085 41.4102 14.0276 41.36 13.98L38 10.66C37.8994 10.5628 37.7649 10.5085 37.625 10.5085C37.4851 10.5085 37.3507 10.5628 37.25 10.66L34.25 13.66L33.38 12.79C33.3181 12.7258 33.2389 12.681 33.152 12.6611C33.0651 12.6412 32.9743 12.6469 32.8906 12.6776C32.8069 12.7083 32.7339 12.7627 32.6805 12.8342C32.6272 12.9056 32.5957 12.991 32.59 13.08C32.47 14.76 32.24 18.08 32.16 19.36C32.1556 19.4255 32.1652 19.4911 32.1883 19.5526C32.2113 19.614 32.2473 19.6699 32.2937 19.7163C32.3401 19.7627 32.3959 19.7986 32.4574 19.8217C32.5188 19.8448 32.5845 19.8544 32.65 19.85L38.91 19.4C39.006 19.4046 39.1009 19.3791 39.1816 19.327C39.2623 19.2749 39.3247 19.1988 39.36 19.1095C39.3953 19.0202 39.4017 18.922 39.3784 18.8289C39.3551 18.7357 39.3032 18.6522 39.23 18.59ZM12.77 33.41L13.64 34.28L10.64 37.28C10.5898 37.3276 10.5498 37.385 10.5225 37.4486C10.4951 37.5122 10.481 37.5807 10.481 37.65C10.481 37.7192 10.4951 37.7877 10.5225 37.8513C10.5498 37.9149 10.5898 37.9723 10.64 38.02L14 41.34C14.1007 41.4371 14.2351 41.4914 14.375 41.4914C14.5149 41.4914 14.6494 41.4371 14.75 41.34L17.75 38.34L18.62 39.21C18.6819 39.2741 18.7612 39.3189 18.8481 39.3388C18.935 39.3588 19.0258 39.353 19.1095 39.3223C19.1932 39.2916 19.2661 39.2372 19.3195 39.1658C19.3729 39.0943 19.4043 39.0089 19.41 38.92C19.53 37.24 19.76 33.92 19.84 32.64C19.8444 32.5745 19.8348 32.5088 19.8118 32.4473C19.7887 32.3859 19.7528 32.3301 19.7063 32.2836C19.6599 32.2372 19.6041 32.2013 19.5427 32.1782C19.4812 32.1552 19.4155 32.1455 19.35 32.15L13.09 32.6C12.9941 32.5953 12.8991 32.6209 12.8184 32.673C12.7377 32.725 12.6754 32.8011 12.6401 32.8904C12.6048 32.9797 12.5983 33.0779 12.6216 33.171C12.6449 33.2642 12.6968 33.3478 12.77 33.41ZM18.59 12.77L17.72 13.64L14.72 10.64C14.6724 10.5897 14.615 10.5497 14.5514 10.5224C14.4878 10.4951 14.4193 10.481 14.35 10.481C14.2808 10.481 14.2123 10.4951 14.1487 10.5224C14.085 10.5497 14.0277 10.5897 13.98 10.64L10.66 14C10.5629 14.1006 10.5086 14.2351 10.5086 14.375C10.5086 14.5149 10.5629 14.6493 10.66 14.75L13.66 17.75L12.79 18.62C12.7259 18.6819 12.6811 18.7611 12.6612 18.848C12.6412 18.9349 12.647 19.0257 12.6777 19.1094C12.7084 19.1931 12.7628 19.2661 12.8342 19.3194C12.9057 19.3728 12.991 19.4042 13.08 19.41L19.36 19.84C19.4255 19.8444 19.4912 19.8348 19.5527 19.8117C19.6141 19.7886 19.6699 19.7527 19.7163 19.7063C19.7628 19.6599 19.7987 19.604 19.8218 19.5426C19.8448 19.4811 19.8545 19.4155 19.85 19.35L19.4 13.09C19.4046 12.994 19.3791 12.899 19.327 12.8184C19.2749 12.7377 19.1989 12.6753 19.1096 12.64C19.0202 12.6047 18.9221 12.5983 18.8289 12.6216C18.7358 12.6449 18.6522 12.6968 18.59 12.77ZM33.41 39.23L34.28 38.36L37.28 41.36C37.3277 41.4102 37.3851 41.4502 37.4487 41.4775C37.5123 41.5049 37.5808 41.519 37.65 41.519C37.7193 41.519 37.7878 41.5049 37.8514 41.4775C37.915 41.4502 37.9724 41.4102 38.02 41.36L41.34 38C41.4372 37.8993 41.4915 37.7649 41.4915 37.625C41.4915 37.4851 41.4372 37.3506 41.34 37.25L38.34 34.25L39.21 33.38C39.2742 33.318 39.3189 33.2388 39.3389 33.1519C39.3588 33.065 39.3531 32.9742 39.3224 32.8905C39.2916 32.8068 39.2372 32.7338 39.1658 32.6805C39.0944 32.6271 39.009 32.5957 38.92 32.59L32.64 32.16C32.5745 32.1555 32.5088 32.1652 32.4474 32.1882C32.3859 32.2113 32.3301 32.2472 32.2837 32.2936C32.2373 32.3401 32.2013 32.3959 32.1783 32.4573C32.1552 32.5188 32.1456 32.5845 32.15 32.65L32.6 38.91C32.5954 39.0059 32.6209 39.1009 32.673 39.1816C32.7251 39.2623 32.8011 39.3246 32.8905 39.3599C32.9798 39.3952 33.0779 39.4016 33.1711 39.3783C33.2643 39.355 33.3478 39.3031 33.41 39.23Z" fill="currentColor"/></svg>`,
-  positionSizeUp: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M26 39.5902C33.5055 39.5902 39.59 33.5057 39.59 26.0002C39.59 18.4946 33.5055 12.4102 26 12.4102C18.4944 12.4102 12.41 18.4946 12.41 26.0002C12.41 33.5057 18.4944 39.5902 26 39.5902Z" fill="currentColor"/><path d="M38.07 7.16011L39.07 8.16011L35.61 11.6101C35.4958 11.7261 35.4318 11.8823 35.4318 12.0451C35.4318 12.2079 35.4958 12.3641 35.61 12.4801L39.49 16.3501C39.5459 16.4076 39.6128 16.4532 39.6866 16.4844C39.7605 16.5156 39.8398 16.5317 39.92 16.5317C40.0002 16.5317 40.0795 16.5156 40.1534 16.4844C40.2272 16.4532 40.2941 16.4076 40.35 16.3501L43.81 12.9001L44.81 13.9001C44.8817 13.9742 44.9735 14.0257 45.0741 14.0484C45.1747 14.0712 45.2797 14.064 45.3763 14.0279C45.4729 13.9918 45.5568 13.9284 45.6179 13.8453C45.6789 13.7622 45.7144 13.6631 45.72 13.5601C45.86 11.6101 46.13 7.75011 46.22 6.26011C46.226 6.18373 46.2154 6.10695 46.1889 6.03506C46.1624 5.96317 46.1206 5.89789 46.0664 5.84371C46.0122 5.78953 45.947 5.74774 45.8751 5.72123C45.8032 5.69471 45.7264 5.6841 45.65 5.69011L38.38 6.22011C38.2729 6.2252 38.1698 6.26266 38.0845 6.32754C37.9991 6.39243 37.9354 6.48168 37.9018 6.58353C37.8682 6.68537 37.8663 6.795 37.8963 6.89795C37.9264 7.00089 37.9869 7.09231 38.07 7.16011ZM13.93 44.8401L12.93 43.8401L16.39 40.3901C16.5042 40.2741 16.5682 40.1179 16.5682 39.9551C16.5682 39.7923 16.5042 39.6361 16.39 39.5201L12.51 35.6501C12.4541 35.5927 12.3872 35.547 12.3134 35.5158C12.2395 35.4846 12.1602 35.4686 12.08 35.4686C11.9998 35.4686 11.9205 35.4846 11.8466 35.5158C11.7728 35.547 11.7059 35.5927 11.65 35.6501L8.17001 39.0801L7.17001 38.0801C7.09829 38.006 7.00651 37.9545 6.90593 37.9318C6.80535 37.9091 6.70033 37.9162 6.60374 37.9523C6.50715 37.9884 6.42318 38.0519 6.36213 38.135C6.30108 38.2181 6.26559 38.3172 6.26001 38.4201C6.12001 40.4201 5.85001 44.2301 5.76001 45.7201C5.75399 45.7965 5.76461 45.8733 5.79112 45.9452C5.81764 46.0171 5.85943 46.0823 5.91361 46.1365C5.96779 46.1907 6.03307 46.2325 6.10496 46.259C6.17685 46.2855 6.25363 46.2961 6.33001 46.2901L13.6 45.7601C13.7043 45.7546 13.8046 45.7184 13.8883 45.6561C13.9721 45.5937 14.0356 45.5081 14.0708 45.4098C14.1061 45.3115 14.1115 45.205 14.0865 45.1037C14.0614 45.0023 14.007 44.9106 13.93 44.8401ZM7.16001 13.9301L8.16001 12.9301L11.61 16.3901C11.726 16.5043 11.8822 16.5683 12.045 16.5683C12.2078 16.5683 12.364 16.5043 12.48 16.3901L16.35 12.5101C16.4075 12.4542 16.4531 12.3873 16.4843 12.3135C16.5155 12.2396 16.5316 12.1603 16.5316 12.0801C16.5316 11.9999 16.5155 11.9206 16.4843 11.8467C16.4531 11.7729 16.4075 11.706 16.35 11.6501L12.92 8.17011L13.92 7.17011C13.9941 7.09839 14.0456 7.00662 14.0683 6.90603C14.091 6.80545 14.0839 6.70043 14.0478 6.60384C14.0117 6.50725 13.9483 6.42329 13.8652 6.36223C13.7821 6.30118 13.683 6.26569 13.58 6.26011C11.63 6.12011 7.77001 5.85011 6.28001 5.76011C6.20363 5.7541 6.12684 5.76471 6.05496 5.79123C5.98307 5.81774 5.91779 5.85953 5.86361 5.91371C5.80943 5.96789 5.76764 6.03317 5.74112 6.10506C5.71461 6.17695 5.70399 6.25373 5.71001 6.33011L6.24001 13.6001C6.24554 13.7044 6.28174 13.8047 6.34406 13.8884C6.40638 13.9722 6.49205 14.0357 6.59032 14.0709C6.68859 14.1062 6.79508 14.1116 6.89643 14.0866C6.99778 14.0615 7.08948 14.0071 7.16001 13.9301ZM44.84 38.0701L43.84 39.0701L40.39 35.6101C40.274 35.4959 40.1178 35.4319 39.955 35.4319C39.7922 35.4319 39.636 35.4959 39.52 35.6101L35.65 39.4901C35.5926 39.546 35.5469 39.6129 35.5157 39.6867C35.4845 39.7606 35.4685 39.8399 35.4685 39.9201C35.4685 40.0003 35.4845 40.0796 35.5157 40.1535C35.5469 40.2273 35.5926 40.2942 35.65 40.3501L39.1 43.8101L38.1 44.8101C38.0259 44.8818 37.9744 44.9736 37.9517 45.0742C37.929 45.1748 37.9361 45.2798 37.9722 45.3764C38.0083 45.473 38.0718 45.5569 38.1549 45.618C38.238 45.679 38.337 45.7145 38.44 45.7201C40.44 45.8601 44.25 46.1301 45.74 46.2201C45.8164 46.2261 45.8932 46.2155 45.9651 46.189C46.037 46.1625 46.1022 46.1207 46.1564 46.0665C46.2106 46.0123 46.2524 45.9471 46.2789 45.8752C46.3054 45.8033 46.316 45.7265 46.31 45.6501L45.78 38.3801C45.7749 38.273 45.7375 38.1699 45.6726 38.0846C45.6077 37.9992 45.5184 37.9355 45.4166 37.9019C45.3148 37.8683 45.2051 37.8664 45.1022 37.8965C44.9992 37.9265 44.9078 37.987 44.84 38.0701Z" fill="currentColor"/></svg>`,
-  positionStretchIn: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.3 31.1998C23.0438 31.1998 27.7 28.8717 27.7 25.9998C27.7 23.1279 23.0438 20.7998 17.3 20.7998C11.5563 20.7998 6.90002 23.1279 6.90002 25.9998C6.90002 28.8717 11.5563 31.1998 17.3 31.1998Z" fill="currentColor"/><path d="M44.49 15.8701H42.84V8.87012C42.84 8.6049 42.7347 8.35055 42.5471 8.16301C42.3596 7.97547 42.1052 7.87012 41.84 7.87012H36.19C35.9248 7.87012 35.6705 7.97547 35.4829 8.16301C35.2954 8.35055 35.19 8.6049 35.19 8.87012V15.8701H33.51C33.3949 15.8718 33.2826 15.9061 33.1861 15.9689C33.0897 16.0317 33.0129 16.1205 32.9648 16.2251C32.9167 16.3297 32.8992 16.4458 32.9143 16.5599C32.9293 16.6741 32.9764 16.7816 33.05 16.8701C34.52 18.5601 37.42 21.8701 38.56 23.1901C38.6173 23.2559 38.688 23.3086 38.7673 23.3447C38.8467 23.3808 38.9328 23.3995 39.02 23.3995C39.1072 23.3995 39.1934 23.3808 39.2727 23.3447C39.3521 23.3086 39.4228 23.2559 39.48 23.1901L45 16.8901C45.0786 16.7975 45.1283 16.6838 45.1428 16.5632C45.1573 16.4426 45.1361 16.3204 45.0818 16.2117C45.0275 16.1031 44.9424 16.0128 44.8372 15.952C44.732 15.8913 44.6113 15.8628 44.49 15.8701ZM33.51 36.1301H35.16V43.1301C35.16 43.3953 35.2654 43.6497 35.4529 43.8372C35.6404 44.0248 35.8948 44.1301 36.16 44.1301H41.8C42.0652 44.1301 42.3196 44.0248 42.5071 43.8372C42.6947 43.6497 42.8 43.3953 42.8 43.1301V36.1301H44.45C44.5635 36.1247 44.6733 36.0883 44.7674 36.0248C44.8616 35.9613 44.9365 35.8731 44.9839 35.7699C45.0314 35.6667 45.0496 35.5525 45.0366 35.4397C45.0235 35.3268 44.9798 35.2198 44.91 35.1301C43.44 33.4401 40.53 30.1301 39.4 28.8101C39.3428 28.7444 39.2721 28.6917 39.1927 28.6555C39.1134 28.6194 39.0272 28.6007 38.94 28.6007C38.8528 28.6007 38.7667 28.6194 38.6873 28.6555C38.608 28.6917 38.5373 28.7444 38.48 28.8101L33 35.1101C32.9214 35.2027 32.8718 35.3164 32.8572 35.437C32.8427 35.5576 32.8639 35.6799 32.9182 35.7885C32.9726 35.8972 33.0576 35.9875 33.1628 36.0482C33.268 36.1089 33.3888 36.1374 33.51 36.1301Z" fill="currentColor"/></svg>`,
-  positionStretchOut: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M30.91 12.7098H32.56V39.2898H30.91C30.7949 39.2915 30.6826 39.3257 30.5861 39.3885C30.4896 39.4514 30.4129 39.5402 30.3648 39.6448C30.3167 39.7494 30.2992 39.8655 30.3142 39.9796C30.3293 40.0937 30.3764 40.2013 30.45 40.2898C31.92 41.9898 34.82 45.2898 35.96 46.6198C36.0173 46.6855 36.0879 46.7382 36.1673 46.7744C36.2466 46.8105 36.3328 46.8292 36.42 46.8292C36.5072 46.8292 36.5933 46.8105 36.6727 46.7744C36.752 46.7382 36.8227 46.6855 36.88 46.6198L42.35 40.2998C42.4236 40.2113 42.4707 40.1037 42.4858 39.9896C42.5008 39.8755 42.4833 39.7594 42.4352 39.6548C42.3871 39.5502 42.3103 39.4614 42.2139 39.3985C42.1174 39.3357 42.0051 39.3015 41.89 39.2998H40.24V12.7098H41.89C42.0051 12.7081 42.1174 12.6739 42.2139 12.611C42.3103 12.5482 42.3871 12.4594 42.4352 12.3548C42.4833 12.2502 42.5008 12.1341 42.4858 12.02C42.4707 11.9058 42.4236 11.7983 42.35 11.7098C40.88 10.0098 37.97 6.70979 36.84 5.37979C36.7827 5.31404 36.7121 5.26133 36.6327 5.22522C36.5534 5.1891 36.4672 5.17041 36.38 5.17041C36.2928 5.17041 36.2066 5.1891 36.1273 5.22522C36.0479 5.26133 35.9773 5.31404 35.92 5.37979L30.45 11.6998C30.3733 11.7881 30.3236 11.8966 30.3068 12.0123C30.2901 12.1281 30.3069 12.2462 30.3554 12.3526C30.4039 12.4591 30.4819 12.5493 30.5803 12.6126C30.6786 12.676 30.793 12.7097 30.91 12.7098Z" fill="currentColor"/><path d="M14.7 44.1998C17.5719 44.1998 19.9 36.0514 19.9 25.9998C19.9 15.9482 17.5719 7.7998 14.7 7.7998C11.8281 7.7998 9.5 15.9482 9.5 25.9998C9.5 36.0514 11.8281 44.1998 14.7 44.1998Z" fill="currentColor"/></svg>`,
-  positionHairFlip: `<svg width="36" height="45" viewBox="0 0 36 45" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M34.6632 14.4036C34.0799 10.3327 32.031 6.61843 28.9049 3.96466C25.7788 1.31089 21.7927 -0.097907 17.7021 0.00529359C13.6158 -0.0917043 9.63571 1.31991 6.51485 3.97311C3.39399 6.62631 1.34872 10.3371 0.765934 14.4036C0.561997 15.7016 0.462197 17.014 0.467499 18.3281C0.165022 20.4216 0.0650764 22.5396 0.169064 24.6524C0.915151 36.626 8.10246 45 17.5778 45C27.0531 45 34.3399 36.626 34.9865 24.6524C35.1769 22.5987 35.1769 20.5318 34.9865 18.4781C34.9733 17.114 34.8653 15.7525 34.6632 14.4036ZM30.4353 24.4024C29.8633 33.7513 24.6407 40.2756 17.7021 40.2756C10.7635 40.2756 5.54089 33.7013 4.99376 24.3524C8.4395 22.7467 11.632 20.6412 14.4691 18.1032C17.4174 15.5334 19.8706 12.4407 21.7061 8.97924C24.2833 13.5086 27.2191 17.822 30.4851 21.8777C30.5099 22.6776 30.4851 23.5025 30.4353 24.3524V24.4024Z" fill="currentColor"/></svg>`,
-  positionHairFlipped: `<svg width="36" height="45" viewBox="0 0 36 45" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M35.3322 18.337C35.3375 17.0234 35.2381 15.7114 35.0348 14.4138C34.3654 10.3851 32.3013 6.72618 29.2092 4.08717C26.1172 1.44817 22.1974 0 18.1465 0C14.0956 0 10.1759 1.44817 7.08379 4.08717C3.99173 6.72618 1.9276 10.3851 1.25819 14.4138C1.05681 15.7623 0.949164 17.1233 0.936033 18.487C0.668253 20.5327 0.601842 22.6002 0.73778 24.6592C1.45643 36.6288 8.61818 45 18.2828 45C27.9475 45 34.9605 36.6288 35.6296 24.6592C35.7332 22.5471 35.6336 20.4298 35.3322 18.337ZM5.47098 24.3593C6.04095 33.7051 11.245 40.2272 18.1341 40.2272C25.0481 40.2272 30.2769 33.7051 30.8964 24.2594C27.4588 22.6794 24.2695 20.5999 21.43 18.0872C18.4921 15.5183 16.0477 12.4266 14.2187 8.96627C11.6507 13.4941 8.72533 17.8061 5.47098 21.8604V24.3593Z" fill="currentColor"/></svg>`,
-  scaleShort: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1090_2)"><path d="M23.84 24.13C22.6 25 22.68 27 22.68 29.85V37C22.3644 37.0093 22.0654 37.1436 21.8488 37.3733C21.6322 37.603 21.5157 37.9094 21.525 38.225C21.5343 38.5406 21.6686 38.8396 21.8983 39.0562C22.128 39.2728 22.4344 39.3893 22.75 39.38H24.27C24.5812 39.3747 24.8777 39.2467 25.095 39.0238C25.3123 38.801 25.4327 38.5013 25.43 38.19C25.4353 37.9075 25.3355 37.6331 25.15 37.42V33.46C25.15 33.2717 25.2248 33.0911 25.358 32.958C25.4911 32.8248 25.6717 32.75 25.86 32.75C26.0483 32.75 26.2289 32.8248 26.362 32.958C26.4952 33.0911 26.57 33.2717 26.57 33.46V37.4C26.4118 37.5702 26.307 37.783 26.2683 38.0121C26.2297 38.2412 26.259 38.4766 26.3525 38.6893C26.4461 38.902 26.5999 39.0826 26.7949 39.2089C26.9899 39.3352 27.2177 39.4016 27.45 39.4H29C29.1576 39.4039 29.3144 39.3768 29.4615 39.3201C29.6086 39.2635 29.7431 39.1784 29.8573 39.0697C29.9715 38.9611 30.0632 38.831 30.1272 38.6869C30.1911 38.5429 30.2261 38.3876 30.23 38.23C30.2339 38.0724 30.2068 37.9156 30.1501 37.7685C30.0935 37.6214 30.0084 37.4869 29.8997 37.3727C29.7911 37.2585 29.661 37.1668 29.5169 37.1028C29.3729 37.0389 29.2176 37.0039 29.06 37V29.85C29.06 26.96 29.14 24.99 27.91 24.13C27.2643 24.3423 26.5897 24.4536 25.91 24.46C25.2067 24.4629 24.5076 24.3514 23.84 24.13ZM31.74 17.87C31.74 16.709 31.3957 15.5741 30.7507 14.6088C30.1057 13.6435 29.189 12.8911 28.1164 12.4468C27.0438 12.0025 25.8635 11.8863 24.7248 12.1128C23.5862 12.3393 22.5402 12.8984 21.7193 13.7193C20.8984 14.5402 20.3393 15.5862 20.1128 16.7248C19.8863 17.8635 20.0025 19.0438 20.4468 20.1164C20.8911 21.189 21.6435 22.1057 22.6088 22.7507C23.5741 23.3957 24.709 23.74 25.87 23.74C27.4268 23.74 28.9199 23.1216 30.0207 22.0207C31.1216 20.9199 31.74 19.4268 31.74 17.87Z" fill="currentColor"/></g><defs><clipPath id="clip0_1090_2"><rect width="11.74" height="27.36" fill="white" transform="translate(20 12)"/></clipPath></defs></svg>`,
-  scaleTall: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1090_6)"><path d="M24.1 20.21C23.66 20.72 23.4 21.74 23.4 23.75V42.3H22.76C22.4444 42.3 22.1417 42.4254 21.9185 42.6485C21.6954 42.8717 21.57 43.1744 21.57 43.49C21.57 43.8056 21.6954 44.1083 21.9185 44.3315C22.1417 44.5546 22.4444 44.68 22.76 44.68H24.29C24.4445 44.6787 24.5972 44.6468 24.7393 44.5862C24.8814 44.5256 25.0101 44.4374 25.118 44.3267C25.2258 44.2161 25.3107 44.0852 25.3677 43.9416C25.4247 43.798 25.4526 43.6445 25.45 43.49C25.4484 43.2009 25.3458 42.9215 25.16 42.7V33.07C25.1638 32.9811 25.1853 32.8938 25.2232 32.8133C25.2611 32.7328 25.3147 32.6607 25.3808 32.6011C25.4469 32.5415 25.5242 32.4957 25.6082 32.4663C25.6922 32.437 25.7812 32.4246 25.87 32.43C25.9588 32.4246 26.0478 32.437 26.1318 32.4663C26.2158 32.4957 26.2931 32.5415 26.3592 32.6011C26.4253 32.6607 26.4789 32.7328 26.5168 32.8133C26.5547 32.8938 26.5762 32.9811 26.58 33.07V42.68C26.3913 42.9005 26.2853 43.1798 26.28 43.47C26.2787 43.625 26.3079 43.7787 26.366 43.9223C26.4241 44.066 26.5099 44.1968 26.6185 44.3073C26.7272 44.4178 26.8565 44.5059 26.9992 44.5664C27.1419 44.6269 27.295 44.6587 27.45 44.66H29C29.2865 44.6226 29.5496 44.4823 29.7403 44.2651C29.9309 44.048 30.0361 43.7689 30.0361 43.48C30.0361 43.1911 29.9309 42.912 29.7403 42.6949C29.5496 42.4777 29.2865 42.3374 29 42.3H28.35V23.75C28.35 21.75 28.09 20.75 27.64 20.21C27.0635 20.3706 26.4684 20.4547 25.87 20.46C25.2716 20.454 24.6766 20.37 24.1 20.21ZM31.74 13.87C31.74 12.709 31.3957 11.5741 30.7507 10.6088C30.1057 9.64349 29.189 8.89112 28.1164 8.44683C27.0438 8.00254 25.8635 7.8863 24.7248 8.11279C23.5862 8.33929 22.5402 8.89835 21.7193 9.71929C20.8984 10.5402 20.3393 11.5862 20.1128 12.7248C19.8863 13.8635 20.0025 15.0438 20.4468 16.1164C20.8911 17.189 21.6435 18.1057 22.6088 18.7507C23.5741 19.3957 24.709 19.74 25.87 19.74C27.4268 19.74 28.9199 19.1216 30.0207 18.0207C31.1216 16.9199 31.74 15.4268 31.74 13.87Z" fill="currentColor"/></g><defs><clipPath id="clip0_1090_6"><rect width="11.74" height="36.68" fill="white" transform="translate(20 8)"/></clipPath></defs></svg>`,
-  scaleThin: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1090_9)"><path d="M23.94 19.17C22.6 20 22.68 22 22.68 25V42.62C22.3644 42.62 22.0617 42.7454 21.8385 42.9685C21.6154 43.1917 21.49 43.4944 21.49 43.81C21.49 44.1256 21.6154 44.4283 21.8385 44.6515C22.0617 44.8746 22.3644 45 22.68 45H24.21C24.4296 45.0021 24.6456 44.9438 24.8344 44.8316C25.0232 44.7194 25.1776 44.5575 25.2807 44.3636C25.3839 44.1697 25.4318 43.9512 25.4194 43.7319C25.4069 43.5126 25.3345 43.301 25.21 43.12V34.28C25.2203 34.1014 25.3007 33.934 25.4336 33.8142C25.5665 33.6944 25.7413 33.6318 25.92 33.64C26.0088 33.6346 26.0978 33.647 26.1818 33.6763C26.2658 33.7057 26.3431 33.7515 26.4092 33.8111C26.4753 33.8707 26.5289 33.9428 26.5668 34.0233C26.6047 34.1038 26.6262 34.1911 26.63 34.28V43.12C26.4937 43.3244 26.4207 43.5644 26.42 43.81C26.4144 44.1136 26.5271 44.4075 26.7342 44.6296C26.9414 44.8517 27.2267 44.9845 27.53 45H29.05C29.3656 45 29.6683 44.8746 29.8915 44.6515C30.1146 44.4283 30.24 44.1256 30.24 43.81C30.24 43.4944 30.1146 43.1917 29.8915 42.9685C29.6683 42.7454 29.3656 42.62 29.05 42.62V25C29.05 22 29.13 20 27.79 19.22C27.1639 19.4086 26.5139 19.5062 25.86 19.51C25.207 19.4891 24.5604 19.3746 23.94 19.17ZM31.74 12.87C31.74 11.709 31.3957 10.5741 30.7507 9.60881C30.1057 8.64349 29.189 7.89112 28.1164 7.44683C27.0438 7.00254 25.8635 6.8863 24.7248 7.11279C23.5862 7.33929 22.5402 7.89835 21.7193 8.71929C20.8984 9.54022 20.3393 10.5862 20.1128 11.7248C19.8863 12.8635 20.0025 14.0438 20.4468 15.1164C20.8911 16.189 21.6435 17.1057 22.6088 17.7507C23.5741 18.3957 24.709 18.74 25.87 18.74C27.4268 18.74 28.9199 18.1216 30.0207 17.0207C31.1216 15.9199 31.74 14.4268 31.74 12.87Z" fill="currentColor"/></g><defs><clipPath id="clip0_1090_9"><rect width="11.74" height="38" fill="white" transform="translate(20 7)"/></clipPath></defs></svg>`,
-  scaleFat: `<svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1090_24)"><path d="M31.35 41.55H31.15L31.71 37.36C33.24 35.04 34.85 31.78 34.85 28.94C34.85 24.37 32.56 21.01 28.94 19.94C28.1488 20.2739 27.2988 20.4459 26.44 20.4459C25.5812 20.4459 24.7312 20.2739 23.94 19.94C20.29 21 18 24.37 18 28.94C18 31.94 19.77 35.33 21.35 37.66L21.88 41.55H21.68C21.2945 41.55 20.9247 41.7024 20.6511 41.9741C20.3776 42.2457 20.2226 42.6145 20.22 43V43.44C20.22 44.25 20.87 44.66 21.68 44.66H24.6C25.4 44.66 25.82 44.01 25.82 43.2V37.2C25.82 37.0117 25.8948 36.8311 26.028 36.698C26.1611 36.5648 26.3417 36.49 26.53 36.49C26.7183 36.49 26.8989 36.5648 27.032 36.698C27.1652 36.8311 27.24 37.0117 27.24 37.2V43.28C27.2653 43.6532 27.4309 44.003 27.7037 44.259C27.9764 44.5151 28.3359 44.6583 28.71 44.66H31.35C32.16 44.66 32.82 44.25 32.82 43.44V43C32.8147 42.6136 32.6576 42.2448 32.3824 41.9735C32.1073 41.7021 31.7364 41.55 31.35 41.55ZM32.3 13.87C32.3 12.709 31.9557 11.5741 31.3107 10.6088C30.6657 9.64349 29.749 8.89112 28.6764 8.44683C27.6037 8.00254 26.4235 7.8863 25.2848 8.11279C24.1462 8.33929 23.1002 8.89835 22.2793 9.71929C21.4583 10.5402 20.8993 11.5862 20.6728 12.7248C20.4463 13.8635 20.5625 15.0438 21.0068 16.1164C21.4511 17.189 22.2035 18.1057 23.1688 18.7507C24.1341 19.3957 25.269 19.74 26.43 19.74C27.9868 19.74 29.4799 19.1216 30.5807 18.0207C31.6816 16.9199 32.3 15.4268 32.3 13.87Z" fill="currentColor"/></g><defs><clipPath id="clip0_1090_24"><rect width="16.85" height="36.68" fill="white" transform="translate(18 8)"/></clipPath></defs></svg>`,
-  face: `<svg width="37" height="36" viewBox="0 0 37 36" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1061_108)"><path d="M18.8 34.6142C27.9756 34.6142 35.414 27.1759 35.414 18.0002C35.414 8.82457 27.9756 1.38623 18.8 1.38623C9.62431 1.38623 2.18597 8.82457 2.18597 18.0002C2.18597 27.1759 9.62431 34.6142 18.8 34.6142Z" fill="white"/><path d="M18.8 36C15.2399 36 11.7598 34.9443 8.79973 32.9665C5.83965 30.9886 3.53254 28.1774 2.17016 24.8883C0.807787 21.5992 0.451327 17.98 1.14586 14.4884C1.84039 10.9967 3.55473 7.78943 6.07207 5.27209C8.58942 2.75474 11.7967 1.04041 15.2884 0.345873C18.78 -0.348661 22.3992 0.00779911 25.6883 1.37018C28.9774 2.73255 31.7886 5.03966 33.7664 7.99974C35.7443 10.9598 36.8 14.4399 36.8 18C36.8 22.7739 34.9036 27.3523 31.5279 30.7279C28.1523 34.1036 23.5739 36 18.8 36ZM18.8 2.77201C15.7882 2.77201 12.844 3.66512 10.3398 5.33839C7.83554 7.01166 5.88373 9.38995 4.73116 12.1725C3.57859 14.9551 3.27702 18.0169 3.8646 20.9708C4.45217 23.9248 5.9025 26.6382 8.03217 28.7678C10.1618 30.8975 12.8752 32.3478 15.8292 32.9354C18.7831 33.523 21.8449 33.2214 24.6275 32.0688C27.4101 30.9163 29.7883 28.9645 31.4616 26.4602C33.1349 23.956 34.028 21.0118 34.028 18C34.028 13.9613 32.4236 10.088 29.5678 7.23219C26.712 4.37638 22.8387 2.77201 18.8 2.77201Z" fill="currentColor"/><path d="M14.552 17.2978C14.5556 17.7009 14.4393 18.0959 14.218 18.4327C13.9967 18.7696 13.6803 19.0331 13.3089 19.1898C12.9376 19.3465 12.5281 19.3893 12.1323 19.3129C11.7366 19.2365 11.3725 19.0442 11.0862 18.7605C10.8 18.4767 10.6044 18.1143 10.5245 17.7193C10.4445 17.3243 10.4838 16.9144 10.6372 16.5417C10.7906 16.1689 11.0512 15.8502 11.3861 15.6259C11.721 15.4016 12.1149 15.2818 12.518 15.2818C12.7842 15.2794 13.0483 15.3298 13.295 15.4301C13.5417 15.5303 13.7661 15.6784 13.9552 15.8659C14.1443 16.0533 14.2944 16.2764 14.3968 16.5221C14.4993 16.7679 14.552 17.0316 14.552 17.2978ZM27.026 17.2978C27.0296 17.7009 26.9133 18.0959 26.692 18.4327C26.4707 18.7696 26.1543 19.0331 25.7829 19.1898C25.4116 19.3465 25.0021 19.3893 24.6063 19.3129C24.2106 19.2365 23.8465 19.0442 23.5602 18.7605C23.274 18.4767 23.0784 18.1143 22.9985 17.7193C22.9185 17.3243 22.9578 16.9144 23.1112 16.5417C23.2646 16.1689 23.5252 15.8502 23.8601 15.6259C24.195 15.4016 24.5889 15.2818 24.992 15.2818C25.5283 15.2818 26.043 15.4936 26.4239 15.8712C26.8049 16.2487 27.0212 16.7615 27.026 17.2978ZM18.8 28.0258C16.7932 28.0297 14.8012 27.6824 12.914 26.9998L13.634 25.0558C16.9817 26.2078 20.6183 26.2078 23.966 25.0558L24.686 26.9998C22.7977 27.6763 20.8057 28.0174 18.8 28.0078V28.0258Z" fill="#BFBFBF"/></g><defs><clipPath id="clip0_1061_108"><rect width="36" height="36" fill="white" transform="translate(0.799988)"/></clipPath></defs></svg>`,
-  face_makeup: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1061_113)"><path d="M18 34.7218C27.2353 34.7218 34.722 27.2351 34.722 17.9998C34.722 8.76453 27.2353 1.27783 18 1.27783C8.76471 1.27783 1.27802 8.76453 1.27802 17.9998C1.27802 27.2351 8.76471 34.7218 18 34.7218Z" fill="white"/><path d="M18 36C14.4399 36 10.9598 34.9443 7.99974 32.9665C5.03966 30.9886 2.73255 28.1774 1.37018 24.8883C0.00779911 21.5992 -0.348661 17.98 0.345873 14.4884C1.04041 10.9967 2.75474 7.78943 5.27209 5.27209C7.78943 2.75474 10.9967 1.04041 14.4884 0.345873C17.98 -0.348661 21.5992 0.00779911 24.8883 1.37018C28.1774 2.73255 30.9886 5.03966 32.9665 7.99974C34.9443 10.9598 36 14.4399 36 18C36 22.7739 34.1036 27.3523 30.7279 30.7279C27.3523 34.1036 22.7739 36 18 36ZM18 2.57401C14.949 2.57401 11.9666 3.47873 9.42978 5.17376C6.89299 6.86879 4.9158 9.278 3.74824 12.0967C2.58069 14.9155 2.2752 18.0171 2.87041 21.0095C3.46563 24.0018 4.93481 26.7505 7.09218 28.9078C9.24954 31.0652 11.9982 32.5344 14.9905 33.1296C17.9829 33.7248 21.0846 33.4193 23.9033 32.2518C26.722 31.0842 29.1312 29.107 30.8263 26.5702C32.5213 24.0334 33.426 21.051 33.426 18C33.426 13.9088 31.8008 9.98512 28.9078 7.09218C26.0149 4.19924 22.0912 2.57401 18 2.57401Z" fill="#999999"/><path d="M14.076 22.4822C14.744 23.6893 14.9089 25.1111 14.5348 26.4389C14.1607 27.7668 13.2779 28.8934 12.078 29.5742C10.7814 30.0402 9.3535 29.9765 8.10354 29.397C6.85358 28.8175 5.88227 27.7688 5.40003 26.4782C4.73681 25.2702 4.57458 23.85 4.94829 22.5235C5.32199 21.197 6.20173 20.0704 7.39803 19.3862C8.69461 18.9203 10.1226 18.984 11.3725 19.5635C12.6225 20.143 13.5938 21.1916 14.076 22.4822ZM21.924 22.4822C21.256 23.6893 21.0912 25.1111 21.4653 26.4389C21.8394 27.7668 22.7222 28.8934 23.922 29.5742C25.2186 30.0402 26.6466 29.9765 27.8965 29.397C29.1465 28.8175 30.1178 27.7688 30.6 26.4782C31.2632 25.2702 31.4255 23.85 31.0518 22.5235C30.6781 21.197 29.7983 20.0704 28.602 19.3862C27.3054 18.9203 25.8775 18.984 24.6275 19.5635C23.3776 20.143 22.4063 21.1916 21.924 22.4822Z" fill="var(--icon-face-makeup)"/></g><defs><clipPath id="clip0_1061_113"><rect width="36" height="36" fill="white"/></clipPath></defs></svg>`,
-  face_wrinkles: `<svg width="37" height="36" viewBox="0 0 37 36" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1061_118)"><path d="M18.2 34.7218C27.4353 34.7218 34.922 27.2351 34.922 17.9998C34.922 8.76453 27.4353 1.27783 18.2 1.27783C8.96472 1.27783 1.47803 8.76453 1.47803 17.9998C1.47803 27.2351 8.96472 34.7218 18.2 34.7218Z" fill="white"/><path d="M18.2 36C14.64 36 11.1598 34.9443 8.19976 32.9665C5.23967 30.9886 2.93257 28.1774 1.57019 24.8883C0.207811 21.5992 -0.148649 17.98 0.545885 14.4884C1.24042 10.9967 2.95475 7.78943 5.4721 5.27209C7.98944 2.75474 11.1967 1.04041 14.6884 0.345873C18.1801 -0.348661 21.7993 0.00779911 25.0883 1.37018C28.3774 2.73255 31.1886 5.03966 33.1665 7.99974C35.1443 10.9598 36.2 14.4399 36.2 18C36.2 22.7739 34.3036 27.3523 30.9279 30.7279C27.5523 34.1036 22.9739 36 18.2 36ZM18.2 2.57401C15.149 2.57401 12.1666 3.47873 9.62979 5.17376C7.093 6.86879 5.11581 9.278 3.94825 12.0967C2.7807 14.9155 2.47521 18.0171 3.07043 21.0095C3.66564 24.0018 5.13483 26.7505 7.29219 28.9078C9.44956 31.0652 12.1982 32.5344 15.1906 33.1296C18.1829 33.7248 21.2846 33.4193 24.1033 32.2518C26.922 31.0842 29.3312 29.107 31.0263 26.5702C32.7213 24.0334 33.626 21.051 33.626 18C33.626 13.9088 32.0008 9.98512 29.1079 7.09218C26.2149 4.19924 22.2913 2.57401 18.2 2.57401Z" fill="#999999"/><path d="M11.126 21.6002L9.83002 20.1782C11.345 18.9244 12.7154 17.5056 13.916 15.9482C14.2539 15.3921 14.4972 14.7838 14.636 14.1482L16.526 14.4002C16.3598 15.3406 16.0112 16.2395 15.5 17.0462C14.2292 18.7334 12.7607 20.2623 11.126 21.6002ZM25.274 21.6002C23.6394 20.2623 22.1709 18.7334 20.9 17.0462C20.3888 16.2395 20.0403 15.3406 19.874 14.4002L21.8 14.0762C21.9389 14.7118 22.1822 15.3201 22.52 15.8762C23.7223 17.4213 25.0928 18.828 26.606 20.0702L25.274 21.6002Z" fill="var(--icon-face-wrinkles)"/></g><defs><clipPath id="clip0_1061_118"><rect width="36" height="36" fill="white" transform="translate(0.200012)"/></clipPath></defs></svg>`,
-  face_paint: `<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_560_2)"><mask id="mask0_560_2" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="36" height="36"><path d="M36 0H0V36H36V0Z" fill="white"/></mask><g mask="url(#mask0_560_2)"><path d="M18 34.6142C27.1756 34.6142 34.614 27.1759 34.614 18.0002C34.614 8.82457 27.1756 1.38623 18 1.38623C8.82433 1.38623 1.38599 8.82457 1.38599 18.0002C1.38599 27.1759 8.82433 34.6142 18 34.6142Z" fill="black"/><mask id="mask1_560_2" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="1" y="1" width="34" height="34"><path d="M18 34.6142C27.1756 34.6142 34.614 27.1759 34.614 18.0002C34.614 8.82457 27.1756 1.38623 18 1.38623C8.82433 1.38623 1.38599 8.82457 1.38599 18.0002C1.38599 27.1759 8.82433 34.6142 18 34.6142Z" fill="white"/></mask><g mask="url(#mask1_560_2)"><path d="M16.9999 37C9.9999 21 26.4999 14.0001 16.9999 2.00003C7.5 -10 23.9999 2.00003 23.9999 2.00003L31.9999 7.50002L34.4999 21L28.4999 32.5C28.4999 32.5 24 53 16.9999 37Z" fill="#801B1B"/><path d="M14.0679 18.2978C14.0715 18.7009 13.9552 19.0959 13.7339 19.4327C13.5126 19.7696 13.1962 20.0331 12.8249 20.1898C12.4535 20.3465 12.044 20.3893 11.6483 20.3129C11.2525 20.2365 10.8884 20.0442 10.6022 19.7605C10.3159 19.4767 10.1204 19.1143 10.0404 18.7193C9.96048 18.3243 9.99969 17.9144 10.1531 17.5417C10.3065 17.1689 10.5672 16.8502 10.902 16.6259C11.2369 16.4016 11.6309 16.2818 12.0339 16.2818C12.3002 16.2794 12.5643 16.3298 12.8109 16.4301C13.0576 16.5303 13.282 16.6784 13.4711 16.8659C13.6602 17.0533 13.8103 17.2764 13.9128 17.5221C14.0152 17.7679 14.0679 18.0316 14.0679 18.2978ZM26.5419 18.2978C26.5455 18.7009 26.4292 19.0959 26.2079 19.4327C25.9866 19.7696 25.6702 20.0331 25.2989 20.1898C24.9275 20.3465 24.518 20.3893 24.1223 20.3129C23.7265 20.2365 23.3624 20.0442 23.0762 19.7605C22.7899 19.4767 22.5944 19.1143 22.5144 18.7193C22.4345 18.3243 22.4737 17.9144 22.6271 17.5417C22.7805 17.1689 23.0412 16.8502 23.376 16.6259C23.7109 16.4016 24.1049 16.2818 24.5079 16.2818C25.0443 16.2818 25.5589 16.4936 25.9398 16.8712C26.3208 17.2487 26.5372 17.7615 26.5419 18.2978ZM18.3159 29.0258C16.3091 29.0297 14.3171 28.6824 12.4299 27.9998L13.1499 26.0558C16.4976 27.2078 20.1343 27.2078 23.4819 26.0558L24.2019 27.9998C22.3137 28.6763 20.3217 29.0174 18.3159 29.0078V29.0258Z" fill="white"/></g><path d="M18 36C14.4399 36 10.9598 34.9443 7.99974 32.9665C5.03966 30.9886 2.73255 28.1774 1.37018 24.8883C0.00779903 21.5992 -0.348661 17.98 0.345873 14.4884C1.04041 10.9967 2.75474 7.78943 5.27209 5.27209C7.78943 2.75474 10.9967 1.04041 14.4884 0.345873C17.98 -0.348661 21.5992 0.00779903 24.8883 1.37018C28.1774 2.73255 30.9886 5.03966 32.9665 7.99974C34.9443 10.9598 36 14.4399 36 18C36 22.7739 34.1036 27.3523 30.7279 30.7279C27.3523 34.1036 22.7739 36 18 36ZM18 2.77201C14.9882 2.77201 12.044 3.66512 9.53978 5.33839C7.03555 7.01166 5.08374 9.38995 3.93117 12.1725C2.7786 14.9551 2.47703 18.0169 3.06461 20.9708C3.65219 23.9248 5.10251 26.6382 7.23219 28.7678C9.36186 30.8975 12.0752 32.3478 15.0292 32.9354C17.9831 33.523 21.045 33.2214 23.8275 32.0688C26.6101 30.9163 28.9884 28.9645 30.6616 26.4602C32.3349 23.956 33.228 21.0118 33.228 18C33.228 13.9613 31.6236 10.088 28.7678 7.23219C25.912 4.37638 22.0387 2.77201 18 2.77201Z" fill="#999999"/></g><circle opacity="0.46" cx="13" cy="23" r="0.5" fill="#801B1B"/><circle opacity="0.78" cx="17" cy="16" r="1" fill="#801B1B"/><circle cx="10.5" cy="12.5" r="1.5" fill="#801B1B"/><circle opacity="0.46" cx="16.5" cy="5.5" r="0.75" fill="#801B1B"/></g><defs><clipPath id="clip0_560_2"><rect width="36" height="36" fill="white"/></clipPath></defs></svg>`,
-  color: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.66675 15.9998C2.66675 8.6665 8.66675 2.6665 16.0001 2.6665C23.2814 2.6665 29.2867 8.01584 29.3227 14.4532C29.3227 18.5212 25.9841 21.8585 21.9161 21.8585H19.2547C18.9613 21.8534 18.6698 21.9075 18.3977 22.0175C18.1256 22.1275 17.8784 22.2911 17.6709 22.4986C17.4633 22.7062 17.2997 22.9534 17.1897 23.2255C17.0798 23.4976 17.0257 23.7891 17.0307 24.0825C17.0307 24.7132 17.2281 25.1972 17.6147 25.5825C17.9574 25.9692 18.1974 26.4998 18.1974 27.0825C18.1974 28.3385 17.2347 29.3332 16.0001 29.3332C8.66675 29.3332 2.66675 23.3332 2.66675 15.9998ZM24 15.0001C24 16.1047 23.1046 16.9999 22 16.9999C20.8954 16.9999 20 16.1047 20 15.0001C20 13.8955 20.8954 13 22 13C23.1046 13 24 13.8955 24 15.0001Z" fill="#EBC585"/><path d="M16.0001 2.6665C8.66675 2.6665 2.66675 8.6665 2.66675 15.9998C2.66675 23.3332 8.66675 29.3332 16.0001 29.3332C17.2347 29.3332 18.1974 28.3385 18.1974 27.0825C18.1974 26.4998 17.9574 25.9692 17.6147 25.5825C17.2281 25.1972 17.0307 24.7132 17.0307 24.0825C17.0257 23.7891 17.0798 23.4976 17.1897 23.2255C17.2997 22.9534 17.4633 22.7062 17.6709 22.4986C17.8784 22.2911 18.1256 22.1275 18.3977 22.0175C18.6698 21.9075 18.9613 21.8534 19.2547 21.8585H21.9161C25.9841 21.8585 29.3227 18.5212 29.3227 14.4532C29.2867 8.01584 23.2814 2.6665 16.0001 2.6665Z" stroke="#895D44" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.6666 12.6667C13.7712 12.6667 14.6666 11.7713 14.6666 10.6668C14.6666 9.56219 13.7712 8.66675 12.6666 8.66675C11.562 8.66675 10.6667 9.56219 10.6667 10.6668C10.6667 11.7713 11.562 12.6667 12.6666 12.6667Z" fill="#54DD4A"/><path d="M18.6666 10.6666C19.7712 10.6666 20.6667 9.77145 20.6667 8.66685C20.6667 7.56216 19.7712 6.66675 18.6666 6.66675C17.562 6.66675 16.6665 7.56216 16.6665 8.66685C16.6665 9.77145 17.562 10.6666 18.6666 10.6666Z" fill="#6691FF"/><path d="M8.66676 18.6666C9.77133 18.6666 10.6667 17.7714 10.6667 16.6668C10.6667 15.5622 9.77133 14.6667 8.66676 14.6667C7.56219 14.6667 6.66675 15.5622 6.66675 16.6668C6.66675 17.7714 7.56219 18.6666 8.66676 18.6666Z" fill="#DD4A4A"/></svg>`,
-  contact_discord: `<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M68.8257 28.8084C64.8836 27.0036 60.7221 25.7233 56.4473 25C55.8623 26.0457 55.333 27.1216 54.8616 28.2232C50.3081 27.5371 45.6775 27.5371 41.124 28.2232C40.6524 27.1217 40.1231 26.0458 39.5384 25C35.2608 25.7294 31.0965 27.0128 27.1505 28.8178C19.3166 40.4082 17.193 51.7107 18.2548 62.8527C22.8425 66.2423 27.9775 68.8201 33.4364 70.4742C34.6657 68.821 35.7533 67.0671 36.688 65.2312C34.9128 64.5681 33.1994 63.7501 31.5676 62.7866C31.9971 62.4751 32.4171 62.1542 32.823 61.8428C37.5709 64.0756 42.7531 65.2333 47.9999 65.2333C53.2467 65.2333 58.4289 64.0756 63.1768 61.8428C63.5874 62.1778 64.0074 62.4987 64.4321 62.7866C62.7972 63.7517 61.0807 64.5713 59.3024 65.2359C60.2359 67.0709 61.3236 68.8234 62.5539 70.4742C68.0176 68.8268 73.1564 66.2501 77.745 62.8574C78.9909 49.9362 75.6166 38.7376 68.8257 28.8084ZM38.0329 56.0004C35.074 56.0004 32.6295 53.3152 32.6295 50.0117C32.6295 46.7083 34.9891 43.9995 38.0235 43.9995C41.058 43.9995 43.4836 46.7083 43.4317 50.0117C43.3798 53.3152 41.0485 56.0004 38.0329 56.0004ZM57.9668 56.0004C55.0032 56.0004 52.5681 53.3152 52.5681 50.0117C52.5681 46.7083 54.9277 43.9995 57.9668 43.9995C61.006 43.9995 63.4128 46.7083 63.3609 50.0117C63.309 53.3152 60.9824 56.0004 57.9668 56.0004Z" fill="currentColor"/></svg>`,
-  contact_email: `<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M68 28H28C25.2386 28 23 30.2386 23 33V63C23 65.7614 25.2386 68 28 68H68C70.7614 68 73 65.7614 73 63V33C73 30.2386 70.7614 28 68 28Z" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M73 35.5L50.575 49.75C49.8032 50.2336 48.9108 50.49 48 50.49C47.0892 50.49 46.1968 50.2336 45.425 49.75L23 35.5" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  contact_github: `<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1481_45)"><path fill-rule="evenodd" clip-rule="evenodd" d="M47.9106 19C31.3708 19 18 32.4694 18 49.1329C18 62.4529 26.5671 73.728 38.452 77.7186C39.938 78.0186 40.4822 77.0702 40.4822 76.2724C40.4822 75.5739 40.4333 73.1794 40.4333 70.6845C32.1129 72.4808 30.3802 67.0925 30.3802 67.0925C29.0431 63.6002 27.0618 62.7027 27.0618 62.7027C24.3386 60.8567 27.2602 60.8567 27.2602 60.8567C30.281 61.0563 31.8661 63.9498 31.8661 63.9498C34.5398 68.5392 38.8482 67.2424 40.5814 66.4441C40.8288 64.4984 41.6216 63.1514 42.4635 62.4033C35.8273 61.7047 28.8453 59.1106 28.8453 47.5361C28.8453 44.2435 30.0331 41.5496 31.9151 39.4545C31.6182 38.7063 30.578 35.6127 32.2127 31.472C32.2127 31.472 34.7382 30.6737 40.4327 34.5651C42.8707 33.9055 45.385 33.57 47.9106 33.5671C50.4361 33.5671 53.0106 33.9167 55.388 34.5651C61.0831 30.6737 63.6086 31.472 63.6086 31.472C65.2433 35.6127 64.2024 38.7063 63.9055 39.4545C65.8371 41.5496 66.9759 44.2435 66.9759 47.5361C66.9759 59.1106 59.9939 61.6545 53.3082 62.4033C54.398 63.351 55.3384 65.1467 55.3384 67.9906C55.3384 72.0314 55.2894 75.2745 55.2894 76.2718C55.2894 77.0702 55.8343 78.0186 57.3196 77.7192C69.2045 73.7273 77.7716 62.4529 77.7716 49.1329C77.8206 32.4694 64.4008 19 47.9106 19Z" fill="currentColor"/></g><defs><clipPath id="clip0_1481_45"><rect width="60" height="58.7755" fill="currentColor" transform="translate(18 19)"/></clipPath></defs></svg>`
-};
-
 // src/util/miiImageUtils.ts
 var makeQrCodeImage = async (mii) => {
   let convertedVer3Data, ver3QRData;
@@ -133101,5882 +138746,6 @@ var QRCodeCanvas = async (mii, extendedColors = true) => {
   const canvasPngImage = canvas.toDataURL("png", 100);
   return canvasPngImage;
 };
-async function createMiiCard(parent2, name2, username, link, message, studioData, extra = "") {
-  const creditIcon = await getMiiIcon(studioData, "creditIcon", "creditIcon", 128);
-  new Html("div").class("flex-group").style({
-    gap: "0",
-    "justify-content": "flex-start",
-    "text-align": "left"
-  }).appendMany(new Html("img").attr({
-    width: 96,
-    draggable: "false",
-    src: creditIcon.url
-  }).on("load", creditIcon.dispose).style({ width: "96px", height: "96px" }), new Html("div").class("col").style({ gap: "12px", flex: "1" }).appendMany(new Html("small").appendMany(new Html("span").text(name2).style({
-    display: "inline",
-    width: "max-content"
-  }), AddButtonSounds(new Html("a").text(`(@${username})`).attr({ target: "_blank", href: link }))).style({ display: "flex", gap: "8px" }), new Html("div").html(message))).appendTo(parent2);
-}
-function createIconCard(parent2, name2, link, message, icon) {
-  let msg;
-  if (link !== "") {
-    msg = new Html("a").attr({ href: link, target: "_blank" }).html(message);
-  } else {
-    msg = new Html("div").html(message);
-  }
-  new Html("div").class("flex-group").style({
-    gap: "0",
-    "justify-content": "flex-start",
-    "text-align": "left"
-  }).appendMany(new Html("div").html(icon).style({ width: "96px", height: "96px" }), new Html("div").class("col").style({ gap: "12px", flex: "1" }).appendMany(new Html("small").appendMany(new Html("span").text(name2).style({
-    display: "inline",
-    width: "max-content"
-  })).style({ display: "flex", gap: "8px" }), msg)).appendTo(parent2);
-}
-
-// src/util/downloadLink.ts
-function downloadLink(url, name2) {
-  const a2 = document.createElement("a");
-  a2.href = url;
-  a2.download = name2;
-  document.body.appendChild(a2);
-  a2.click();
-  setTimeout(() => {
-    a2.remove();
-  }, 1000);
-}
-var link = document.createElement("a");
-function saveBlob(blob, filename) {
-  if (link.href) {
-    URL.revokeObjectURL(link.href);
-  }
-  link.href = URL.createObjectURL(blob);
-  link.download = filename || "data.json";
-  link.dispatchEvent(new MouseEvent("click"));
-}
-function saveArrayBuffer(buffer, filename) {
-  saveBlob(new Blob([buffer], { type: "application/octet-stream" }), filename);
-}
-
-// src/ui/pages/Settings.ts
-var import_localforage5 = __toESM(require_localforage(), 1);
-
-// src/util/SettingsHelper.ts
-var import_localforage4 = __toESM(require_localforage(), 1);
-var __3 = _8();
-__3("Low");
-__3("Middle");
-__3("High");
-var settingsInfo = {
-  bgm: {
-    type: 0 /* Checkbox */,
-    label: __3("Enable background music"),
-    default: true,
-    description: __3("Toggle background music depending on the theme.")
-  },
-  sfx: {
-    type: 0 /* Checkbox */,
-    label: __3("Enable sound effects"),
-    default: true,
-    description: __3("Toggle sound effects for buttons and inputs.")
-  },
-  accessibilityFeature: {
-    type: 0 /* Checkbox */,
-    label: __3("Enable accessibility features"),
-    default: false,
-    description: __3("The editor UI will be tweaked to be more accessible.")
-  },
-  autoCloseCustomRender: {
-    type: 0 /* Checkbox */,
-    label: __3("Auto-close custom render menu"),
-    default: true,
-    description: __3("The custom render menu will automatically close when pressing save.")
-  },
-  autoCloseQrScan: {
-    type: 0 /* Checkbox */,
-    label: __3("Auto-close QR scan menu"),
-    default: true,
-    description: __3("The QR code scanner will disappear after a successful scan.")
-  },
-  allowQrCamera: {
-    type: 0 /* Checkbox */,
-    label: __3("Allow using camera in QR scanner"),
-    default: true,
-    description: __3("When this is disabled, the camera won't be used and some errors may not appear.")
-  },
-  editMode: {
-    type: 1 /* Multi */,
-    label: __3("Editing Mode"),
-    description: __3("Changes the default edit mode option."),
-    default: "3d",
-    choices: [
-      { label: __3("2D"), value: "2d" },
-      { label: __3("3D"), value: "3d" }
-    ]
-  },
-  theme: {
-    type: 1 /* Multi */,
-    label: __3("Theme"),
-    default: "default",
-    description: __3("When this is set to Normal, your device's color theme preferences will be used."),
-    choices: [
-      { label: __3("Normal"), value: "default" },
-      { label: __3("Wii U"), value: "wiiu", disabled: true }
-    ]
-  },
-  resourceType: {
-    type: 1 /* Multi */,
-    label: __3("Resource Type"),
-    default: String(Config.renderer.fflResourcePath.length - 1),
-    description: __3(`This changes model/texture quality.
-* Low resource cannot use some shader features.`),
-    choices: [
-      ...Config.renderer.fflResourcesNames.map((n2, i) => ({
-        label: __3(n2),
-        value: String(i)
-      }))
-    ]
-  },
-  shaderType: {
-    type: 1 /* Multi */,
-    label: __3("Shader Type"),
-    description: __3("Change the lighting used in icons, renders and the editor."),
-    default: "wiiu" /* WiiU */,
-    choices: [
-      { label: __3("No Lighting"), value: "lightDisabled" /* LightDisabled */ },
-      { label: __3("Simple"), value: "three_phong" /* ThreePhong */ },
-      { label: __3("Toon"), value: "three_toon" /* ThreeToon */ },
-      { label: __3("Wii U"), value: "wiiu" /* WiiU */ },
-      { label: __3("Wii U (Blinn)"), value: "wiiu_blinn" /* WiiUBlinn */ },
-      { label: __3("Wii U (Bright)"), value: "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */ },
-      { label: __3("Wii U (Toon)"), value: "wiiu_toon" /* WiiUToon */ },
-      { label: __3("Miitomo"), value: "miitomo" /* Miitomo */ },
-      { label: __3("Miitomo (Basic)"), value: "miitomo_basic" /* MiitomoBasic */ }
-    ]
-  },
-  toonShaderOutline: {
-    type: 0 /* Checkbox */,
-    label: __3("Toon shader uses outline"),
-    description: __3("Apply toon outline to renders and 3D scene."),
-    default: true,
-    condition(allSettings) {
-      return allSettings["shaderType"] === "three_toon" /* ThreeToon */ ? true : false;
-    }
-  },
-  bodyModel: {
-    type: 1 /* Multi */,
-    label: __3("Body Model"),
-    description: __3("Pose selections are different depending on the body model you use."),
-    default: "wiiu" /* WiiU */,
-    choices: [
-      { label: __3("Wii U"), value: "wiiu" /* WiiU */ },
-      { label: __3("Switch"), value: "switch" /* Switch */, disabled: true },
-      { label: __3("Miitomo"), value: "miitomo" /* Miitomo */ }
-    ]
-  },
-  customRenderGreenScreen: {
-    type: 1 /* Multi */,
-    label: __3("Use background in custom render"),
-    default: "off",
-    description: __3("The custom render will have a solid color background."),
-    choices: [
-      { label: __3("Disabled"), value: "off" },
-      { label: __3("Green"), value: "green" },
-      { label: __3("Blue"), value: "blue" },
-      { label: __3("Black"), value: "black" },
-      { label: __3("White"), value: "white" },
-      { label: __3("Custom"), value: "custom", isColor: true }
-    ]
-  },
-  personalMii: {
-    type: 2 /* NonConfigMulti */,
-    label: __3("Personal Mii"),
-    description: __3("Manage your choice of Personal Mii."),
-    choices: [
-      {
-        label: __3("Choose"),
-        async select() {
-          const miis = await getAllMiis();
-          await choosePersonalMii(miis, true);
-        }
-      }
-    ],
-    render(html) {
-      html.append(new Html("div").text("REAL"));
-    }
-  },
-  saveData: {
-    type: 2 /* NonConfigMulti */,
-    label: __3("Save Data"),
-    description: __3("Not implemented yet."),
-    choices: [
-      {
-        label: __3("Import"),
-        disabled: true
-      },
-      {
-        label: __3("Export"),
-        disabled: true
-      },
-      {
-        label: __3("Delete"),
-        type: "danger",
-        async select() {
-        },
-        disabled: true
-      }
-    ]
-  },
-  updateNotices: {
-    type: 2 /* NonConfigMulti */,
-    label: __3("Update Notices"),
-    description: __3("View the last update notice if you missed it."),
-    choices: [
-      {
-        label: __3("Review update notice"),
-        select() {
-          replayUpdateNotice();
-        }
-      }
-    ]
-  }
-};
-var getSetting = async (key2) => {
-  const result = await import_localforage4.default.getItem("settings_" + key2);
-  if (result === null) {
-    if (settingsInfo[key2])
-      return settingsInfo[key2].default;
-    else
-      return null;
-  } else
-    return result;
-};
-var setSetting = async (key2, value2) => {
-  return await import_localforage4.default.setItem("settings_" + key2, value2);
-};
-
-// src/ui/components/Notify.ts
-var notifyBox;
-var Notify_default = {
-  show: function(title, description, callback, callbackTitle = "") {
-    if (notifyBox === undefined)
-      notifyBox = new Html("div").class("notify-box").appendTo("body");
-    let notifyTitle = new Html("div").class("notify-title").text(title);
-    let notifyDescription = new Html("div").class("notify-text").text(description);
-    playSound("notice");
-    let notify = new Html("div").class("notify", "slideIn").appendMany(notifyTitle, notifyDescription).appendTo(notifyBox);
-    if (callback) {
-      notify.append(new Html("button").on("click", callback).text(callbackTitle));
-    }
-    setTimeout(() => {
-      notify.classOff("slideIn").classOn("slideOut");
-      setTimeout(() => {
-        notify.cleanup();
-      }, 500);
-    }, 5000);
-  }
-};
-
-// src/ui/pages/Settings.ts
-var needsToNotify = true;
-var __4 = _8();
-var resourceRefreshFlag = false;
-var updateSettings = async (force = false) => {
-  await checkPrevSettings();
-  function askRefreshNotice() {
-    if (needsToNotify && force === false) {
-      Notify_default.show(__4("Refresh to apply changes"), __4("Icons won't be affected until you reload."), () => {
-        location.reload();
-      }, "Refresh");
-      needsToNotify = false;
-      setTimeout(() => {
-        needsToNotify = true;
-      }, 5000);
-    }
-  }
-  let useBgm = await import_localforage5.default.getItem("settings_bgm");
-  if (useBgm === true)
-    getMusicManager().unmute();
-  else if (useBgm === false)
-    getMusicManager().mute();
-  let useSfx = await import_localforage5.default.getItem("settings_sfx");
-  if (useSfx === true)
-    getSoundManager().unmute();
-  else if (useSfx === false)
-    getSoundManager().mute();
-  const wiiu = await import_localforage5.default.getItem("settings_wiiu");
-  if (wiiu) {
-    await import_localforage5.default.removeItem("settings_wiiu");
-    await import_localforage5.default.setItem("settings_theme", "wiiu");
-  }
-  const theme = await import_localforage5.default.getItem("settings_theme");
-  if (theme === null) {
-    await setSetting("theme", "default");
-  } else if (theme === "wiiu") {
-    await setSetting("theme", "default");
-  }
-  document.documentElement.dataset.theme = String(await import_localforage5.default.getItem("settings_theme"));
-  if (prevSetting["theme"] !== await import_localforage5.default.getItem("settings_theme") || force) {
-    setTimeout(async () => {
-      document.dispatchEvent(new CustomEvent("theme-change"));
-    }, 33.33);
-  }
-  if (prevSetting["resourceType"] !== await import_localforage5.default.getItem("settings_resourceType")) {
-    console.log("comparing", prevSetting["resourceType"], "to", await import_localforage5.default.getItem("settings_resourceType"), "FAILED");
-    resourceRefreshFlag = true;
-  }
-  if (prevSetting["shaderType"] !== await import_localforage5.default.getItem("settings_shaderType")) {
-    console.log("shaderType changed!!!");
-    askRefreshNotice();
-    let currentShader = await getSetting("shaderType");
-    document.dispatchEvent(new CustomEvent("library-shader-update"));
-    if (Html.qsa("img[data-src]") !== null)
-      Html.qsa("img[data-src]").forEach((img) => {
-        const image = img.elm;
-        const source = image.src.trim() || image.dataset.src;
-        let sourceToUpdate = image.src.trim() !== "" ? "src" : "data-src";
-        console.log(sourceToUpdate);
-        if (!source.includes("?"))
-          return;
-        const params = new URLSearchParams(source.split("?").pop());
-        params.delete("shaderType");
-        params.delete("lightEnable");
-        adjustShaderQuery(params, currentShader);
-        if (sourceToUpdate === "src") {
-          image.src = `${source.split("?")[0]}?${params.toString()}`;
-        } else if (sourceToUpdate === "data-src") {
-          image.dataset.src = `${source.split("?")[0]}?${params.toString()}`;
-        }
-      });
-  }
-  if (prevSetting["bodyModel"] !== await import_localforage5.default.getItem("settings_bodyModel")) {
-    console.log("bodyModel changed!!!");
-    askRefreshNotice();
-    let bodyType2 = await getSetting("bodyModel");
-    document.dispatchEvent(new CustomEvent("library-body-update"));
-    if (Html.qsa("img[data-src]") !== null)
-      Html.qsa("img[data-src]").forEach((img) => {
-        const image = img.elm;
-        const source = image.src.trim() || image.dataset.src;
-        let sourceToUpdate = image.src.trim() !== "" ? "src" : "data-src";
-        if (!source.includes("?"))
-          return;
-        const params = new URLSearchParams(source.split("?").pop());
-        params.delete("bodyType");
-        params.set("bodyType", bodyType2);
-        if (sourceToUpdate === "src") {
-          image.src = `${source.split("?")[0]}?${params.toString()}`;
-        } else if (sourceToUpdate === "data-src") {
-          image.dataset.src = `${source.split("?")[0]}?${params.toString()}`;
-        }
-      });
-  }
-  await updatePrevSettings();
-};
-var prevSetting = {};
-var prefix = "settings_";
-async function checkPrevSettings() {
-  for (const key2 in settingsInfo) {
-    let prefixedKey = prefix + key2;
-    if (prevSetting[key2] === undefined) {
-      prevSetting[key2] = await import_localforage5.default.getItem(prefixedKey);
-    }
-  }
-}
-async function updatePrevSettings() {
-  for (const key2 in settingsInfo) {
-    let prefixedKey = prefix + key2;
-    prevSetting[key2] = await import_localforage5.default.getItem(prefixedKey);
-  }
-}
-await updatePrevSettings();
-async function Settings2() {
-  const modal = Modal_default.modal(__4("Settings"), "", "body", {
-    text: "Cancel",
-    callback(e) {
-      if (resourceRefreshFlag) {
-        Modal_default.modal(__4("Notice"), __4("A refresh is required to apply resource changes."), "body", {
-          text: __4("OK"),
-          callback(e2) {
-            location.reload();
-          }
-        });
-      }
-    }
-  });
-  const modalBody = modal.qs(".modal-body").clear();
-  modalBody.elm.style.setProperty("align-items", "flex-start", "important");
-  modalBody.elm.style.setProperty("max-width", "600px");
-  async function checkConditions() {
-    const items = [...elements];
-    const allSettings = {};
-    for (const key2 in settingsInfo) {
-      allSettings[key2] = await getSetting(key2);
-    }
-    for (const [key2, element] of items) {
-      if (settingsInfo[key2].condition) {
-        let result = settingsInfo[key2].condition(allSettings);
-        if (result === true) {
-          element.style.display = "flex";
-        } else {
-          element.style.display = "none";
-        }
-      }
-    }
-  }
-  let elements = new Map;
-  for (const key2 in settingsInfo) {
-    let prefixedKey = prefix + key2;
-    if (await import_localforage5.default.getItem(prefixedKey) === null) {
-      await import_localforage5.default.setItem(prefixedKey, settingsInfo[key2].default);
-    }
-    prevSetting[key2] = await import_localforage5.default.getItem(prefixedKey);
-    switch (settingsInfo[key2].type) {
-      case 0 /* Checkbox */:
-        const checkboxDiv = new Html("div").class("col").appendMany(new Html("div").class("flex-group").style({ "justify-content": "flex-start" }).appendMany(AddButtonSounds(new Html("input").attr({
-          id: prefixedKey,
-          type: "checkbox",
-          checked: await import_localforage5.default.getItem(prefixedKey) === true ? true : undefined
-        }).on("input", async (e) => {
-          prevSetting[key2] = await import_localforage5.default.getItem(prefixedKey);
-          await import_localforage5.default.setItem(prefixedKey, e.target.checked);
-          updateSettings();
-          checkConditions();
-        }), "hover", "select_misc"), new Html("label").attr({ for: prefixedKey }).text(settingsInfo[key2].label)), new Html("small").text(settingsInfo[key2].description));
-        elements.set(key2, checkboxDiv.elm);
-        modalBody.append(checkboxDiv);
-        break;
-      case 1 /* Multi */:
-        const val2 = await import_localforage5.default.getItem(prefixedKey);
-        let options = await Promise.all(settingsInfo[key2].choices.map(async (c2) => {
-          let colorSpan = undefined;
-          let isActive = false;
-          if (typeof c2.isColor !== "undefined") {
-            colorSpan = new Html("span").style({
-              width: "1.2em",
-              height: "1.2em",
-              "border-radius": "6px"
-            });
-            colorSpan.style({
-              "background-color": "var(--hover)",
-              border: "1px solid var(--stroke)"
-            });
-            const value2 = await import_localforage5.default.getItem(prefixedKey);
-            if (typeof value2 === "string") {
-              if (value2.startsWith("#")) {
-                colorSpan.style({ "background-color": value2 });
-                isActive = true;
-              }
-            }
-          }
-          const multiButton = new Html("button").class(c2.value === val2 || isActive ? "selected-setting" : undefined).attr({ "data-setting": prefixedKey }).text(settingsInfo[key2].default === c2.value ? `${c2.label} ${__4("(Default)")}` : c2.label);
-          if (colorSpan !== undefined) {
-            colorSpan.prependTo(multiButton);
-          }
-          const button = AddButtonSounds(multiButton, "hover", "select_misc");
-          if (c2.disabled) {
-            button.attr({ disabled: true });
-          } else {
-            multiButton.on("click", async (e) => {
-              prevSetting[key2] = String(await import_localforage5.default.getItem(prefixedKey));
-              let isActive2 = false;
-              if (typeof c2.isColor !== "undefined") {
-                const color = new Html("input").attr({ type: "color" }).style({ position: "fixed", opacity: "0" }).appendTo("body");
-                if (prevSetting[key2].startsWith("#")) {
-                  color.val(prevSetting[key2]);
-                  isActive2 = true;
-                }
-                color.elm.click();
-                color.on("change", (e2) => {
-                  import_localforage5.default.setItem(prefixedKey, color.getValue());
-                  if (colorSpan)
-                    colorSpan.style({ "background-color": color.getValue() });
-                  color.cleanup();
-                  isActive2 = true;
-                });
-              } else {
-                await import_localforage5.default.setItem(prefixedKey, c2.value);
-              }
-              updateSettings();
-              checkConditions();
-              const t4 = e.target;
-              t4.parentElement.querySelectorAll(`[data-setting="${prefixedKey}"]`).forEach((p) => {
-                p.classList.remove("selected-setting");
-              });
-              if (c2.isColor !== undefined) {
-                if (isActive2) {
-                  t4.classList.add("selected-setting");
-                }
-                const color = String(await import_localforage5.default.getItem(prefixedKey));
-                if (colorSpan)
-                  colorSpan.style({ "background-color": color });
-              } else
-                t4.classList.add("selected-setting");
-            });
-          }
-          return button;
-        }));
-        let multiDiv = new Html("div").class("col").appendMany(new Html("label").text(settingsInfo[key2].label), new Html("small").text(settingsInfo[key2].description), new Html("div").class("flex-group").style({ "justify-content": "flex-start" }).appendMany(...options));
-        elements.set(key2, multiDiv.elm);
-        modalBody.append(multiDiv);
-        break;
-      case 2 /* NonConfigMulti */:
-        const nonSettingsMulti = new Html("div").class("col").appendMany(new Html("label").text(settingsInfo[key2].label), new Html("small").text(settingsInfo[key2].description), new Html("div").class("flex-group").style({ "justify-content": "flex-start" }).appendMany(...settingsInfo[key2].choices.map((c2) => {
-          const button = AddButtonSounds(new Html("button").attr({ disabled: c2.disabled }).class(c2.type).text(c2.label).on("click", async (e) => {
-            c2.select();
-          }), "hover", "select_misc");
-          if (c2.disabled) {
-            button.attr({ disabled: true });
-          }
-          return button;
-        })));
-        if (settingsInfo[key2].render) {
-          settingsInfo[key2].render(nonSettingsMulti);
-        }
-        elements.set(key2, nonSettingsMulti.elm);
-        modalBody.append(nonSettingsMulti);
-        break;
-    }
-  }
-  await checkConditions();
-}
-async function replayUpdateNotice() {
-  await setSetting(`has-seen-${Config.version.string}`, false);
-}
-
-// src/ui/pages/library/select.ts
-var import_localforage7 = __toESM(require_localforage(), 1);
-
-// src/ui/components/TabList.ts
-function TabList(tabs, type = 0 /* Square */) {
-  const tabList = new Html("div").class("tab-list");
-  const tabContent = new Html("div").class("tab-content");
-  function selectTab(tabElm, tabSelect, update = true) {
-    if (update !== false) {
-      tabList.qsa(".tab").forEach((tab) => tab?.classOff("active"));
-      tabElm.classOn("active");
-      tabContent.clear();
-    }
-    tabSelect(tabContent);
-  }
-  for (const tab of tabs) {
-    let tabElm = AddButtonSounds(new Html("div").classOn("tab").html(tab.icon).on("click", async () => {
-      selectTab(tabElm, tab.select, tab.update);
-    }).appendTo(tabList), "hover", "select_tab");
-    switch (type) {
-      case 0 /* Square */:
-        tabElm.classOn("tab-square");
-        break;
-      case 1 /* NotSquare */:
-        tabElm.classOn("tab-rectangle");
-        break;
-    }
-    if (typeof tab.type !== "undefined") {
-      tabElm.classOn(tab.type);
-    }
-  }
-  selectTab(Html.from(tabList.elm.children[0]), tabs[0].select);
-  return { list: tabList, content: tabContent };
-}
-
-// node_modules/camera-controls/dist/camera-controls.module.js
-/*!
- * camera-controls
- * https://github.com/yomotsu/camera-controls
- * (c) 2017 @yomotsu
- * Released under the MIT License.
- */
-var MOUSE_BUTTON = {
-  LEFT: 1,
-  RIGHT: 2,
-  MIDDLE: 4
-};
-var ACTION = Object.freeze({
-  NONE: 0,
-  ROTATE: 1,
-  TRUCK: 2,
-  OFFSET: 4,
-  DOLLY: 8,
-  ZOOM: 16,
-  TOUCH_ROTATE: 32,
-  TOUCH_TRUCK: 64,
-  TOUCH_OFFSET: 128,
-  TOUCH_DOLLY: 256,
-  TOUCH_ZOOM: 512,
-  TOUCH_DOLLY_TRUCK: 1024,
-  TOUCH_DOLLY_OFFSET: 2048,
-  TOUCH_DOLLY_ROTATE: 4096,
-  TOUCH_ZOOM_TRUCK: 8192,
-  TOUCH_ZOOM_OFFSET: 16384,
-  TOUCH_ZOOM_ROTATE: 32768
-});
-var DOLLY_DIRECTION = {
-  NONE: 0,
-  IN: 1,
-  OUT: -1
-};
-function isPerspectiveCamera(camera) {
-  return camera.isPerspectiveCamera;
-}
-function isOrthographicCamera(camera) {
-  return camera.isOrthographicCamera;
-}
-var PI_2 = Math.PI * 2;
-var PI_HALF = Math.PI / 2;
-var EPSILON = 0.00001;
-var DEG2RAD2 = Math.PI / 180;
-function clamp3(value2, min, max) {
-  return Math.max(min, Math.min(max, value2));
-}
-function approxZero(number, error = EPSILON) {
-  return Math.abs(number) < error;
-}
-function approxEquals(a2, b3, error = EPSILON) {
-  return approxZero(a2 - b3, error);
-}
-function roundToStep(value2, step) {
-  return Math.round(value2 / step) * step;
-}
-function infinityToMaxNumber(value2) {
-  if (isFinite(value2))
-    return value2;
-  if (value2 < 0)
-    return -Number.MAX_VALUE;
-  return Number.MAX_VALUE;
-}
-function maxNumberToInfinity(value2) {
-  if (Math.abs(value2) < Number.MAX_VALUE)
-    return value2;
-  return value2 * Infinity;
-}
-function smoothDamp(current, target, currentVelocityRef, smoothTime, maxSpeed = Infinity, deltaTime) {
-  smoothTime = Math.max(0.0001, smoothTime);
-  const omega = 2 / smoothTime;
-  const x2 = omega * deltaTime;
-  const exp = 1 / (1 + x2 + 0.48 * x2 * x2 + 0.235 * x2 * x2 * x2);
-  let change = current - target;
-  const originalTo = target;
-  const maxChange = maxSpeed * smoothTime;
-  change = clamp3(change, -maxChange, maxChange);
-  target = current - change;
-  const temp = (currentVelocityRef.value + omega * change) * deltaTime;
-  currentVelocityRef.value = (currentVelocityRef.value - omega * temp) * exp;
-  let output = target + (change + temp) * exp;
-  if (originalTo - current > 0 === output > originalTo) {
-    output = originalTo;
-    currentVelocityRef.value = (output - originalTo) / deltaTime;
-  }
-  return output;
-}
-function smoothDampVec3(current, target, currentVelocityRef, smoothTime, maxSpeed = Infinity, deltaTime, out) {
-  smoothTime = Math.max(0.0001, smoothTime);
-  const omega = 2 / smoothTime;
-  const x2 = omega * deltaTime;
-  const exp = 1 / (1 + x2 + 0.48 * x2 * x2 + 0.235 * x2 * x2 * x2);
-  let targetX = target.x;
-  let targetY = target.y;
-  let targetZ = target.z;
-  let changeX = current.x - targetX;
-  let changeY = current.y - targetY;
-  let changeZ = current.z - targetZ;
-  const originalToX = targetX;
-  const originalToY = targetY;
-  const originalToZ = targetZ;
-  const maxChange = maxSpeed * smoothTime;
-  const maxChangeSq = maxChange * maxChange;
-  const magnitudeSq = changeX * changeX + changeY * changeY + changeZ * changeZ;
-  if (magnitudeSq > maxChangeSq) {
-    const magnitude = Math.sqrt(magnitudeSq);
-    changeX = changeX / magnitude * maxChange;
-    changeY = changeY / magnitude * maxChange;
-    changeZ = changeZ / magnitude * maxChange;
-  }
-  targetX = current.x - changeX;
-  targetY = current.y - changeY;
-  targetZ = current.z - changeZ;
-  const tempX = (currentVelocityRef.x + omega * changeX) * deltaTime;
-  const tempY = (currentVelocityRef.y + omega * changeY) * deltaTime;
-  const tempZ = (currentVelocityRef.z + omega * changeZ) * deltaTime;
-  currentVelocityRef.x = (currentVelocityRef.x - omega * tempX) * exp;
-  currentVelocityRef.y = (currentVelocityRef.y - omega * tempY) * exp;
-  currentVelocityRef.z = (currentVelocityRef.z - omega * tempZ) * exp;
-  out.x = targetX + (changeX + tempX) * exp;
-  out.y = targetY + (changeY + tempY) * exp;
-  out.z = targetZ + (changeZ + tempZ) * exp;
-  const origMinusCurrentX = originalToX - current.x;
-  const origMinusCurrentY = originalToY - current.y;
-  const origMinusCurrentZ = originalToZ - current.z;
-  const outMinusOrigX = out.x - originalToX;
-  const outMinusOrigY = out.y - originalToY;
-  const outMinusOrigZ = out.z - originalToZ;
-  if (origMinusCurrentX * outMinusOrigX + origMinusCurrentY * outMinusOrigY + origMinusCurrentZ * outMinusOrigZ > 0) {
-    out.x = originalToX;
-    out.y = originalToY;
-    out.z = originalToZ;
-    currentVelocityRef.x = (out.x - originalToX) / deltaTime;
-    currentVelocityRef.y = (out.y - originalToY) / deltaTime;
-    currentVelocityRef.z = (out.z - originalToZ) / deltaTime;
-  }
-  return out;
-}
-function extractClientCoordFromEvent(pointers, out) {
-  out.set(0, 0);
-  pointers.forEach((pointer) => {
-    out.x += pointer.clientX;
-    out.y += pointer.clientY;
-  });
-  out.x /= pointers.length;
-  out.y /= pointers.length;
-}
-function notSupportedInOrthographicCamera(camera, message) {
-  if (isOrthographicCamera(camera)) {
-    console.warn(`${message} is not supported in OrthographicCamera`);
-    return true;
-  }
-  return false;
-}
-
-class EventDispatcher2 {
-  constructor() {
-    this._listeners = {};
-  }
-  addEventListener(type, listener) {
-    const listeners = this._listeners;
-    if (listeners[type] === undefined)
-      listeners[type] = [];
-    if (listeners[type].indexOf(listener) === -1)
-      listeners[type].push(listener);
-  }
-  hasEventListener(type, listener) {
-    const listeners = this._listeners;
-    return listeners[type] !== undefined && listeners[type].indexOf(listener) !== -1;
-  }
-  removeEventListener(type, listener) {
-    const listeners = this._listeners;
-    const listenerArray = listeners[type];
-    if (listenerArray !== undefined) {
-      const index2 = listenerArray.indexOf(listener);
-      if (index2 !== -1)
-        listenerArray.splice(index2, 1);
-    }
-  }
-  removeAllEventListeners(type) {
-    if (!type) {
-      this._listeners = {};
-      return;
-    }
-    if (Array.isArray(this._listeners[type]))
-      this._listeners[type].length = 0;
-  }
-  dispatchEvent(event) {
-    const listeners = this._listeners;
-    const listenerArray = listeners[event.type];
-    if (listenerArray !== undefined) {
-      event.target = this;
-      const array = listenerArray.slice(0);
-      for (let i = 0, l2 = array.length;i < l2; i++) {
-        array[i].call(this, event);
-      }
-    }
-  }
-}
-var _a3;
-var VERSION = "2.9.0";
-var TOUCH_DOLLY_FACTOR = 1 / 8;
-var isMac = /Mac/.test((_a3 = globalThis === null || globalThis === undefined ? undefined : globalThis.navigator) === null || _a3 === undefined ? undefined : _a3.platform);
-var THREE12;
-var _ORIGIN;
-var _AXIS_Y;
-var _AXIS_Z;
-var _v27;
-var _v3A;
-var _v3B;
-var _v3C;
-var _cameraDirection;
-var _xColumn;
-var _yColumn;
-var _zColumn;
-var _deltaTarget;
-var _deltaOffset;
-var _sphericalA;
-var _sphericalB;
-var _box3A;
-var _box3B;
-var _sphere4;
-var _quaternionA;
-var _quaternionB;
-var _rotationMatrix;
-var _raycaster4;
-
-class CameraControls extends EventDispatcher2 {
-  static install(libs) {
-    THREE12 = libs.THREE;
-    _ORIGIN = Object.freeze(new THREE12.Vector3(0, 0, 0));
-    _AXIS_Y = Object.freeze(new THREE12.Vector3(0, 1, 0));
-    _AXIS_Z = Object.freeze(new THREE12.Vector3(0, 0, 1));
-    _v27 = new THREE12.Vector2;
-    _v3A = new THREE12.Vector3;
-    _v3B = new THREE12.Vector3;
-    _v3C = new THREE12.Vector3;
-    _cameraDirection = new THREE12.Vector3;
-    _xColumn = new THREE12.Vector3;
-    _yColumn = new THREE12.Vector3;
-    _zColumn = new THREE12.Vector3;
-    _deltaTarget = new THREE12.Vector3;
-    _deltaOffset = new THREE12.Vector3;
-    _sphericalA = new THREE12.Spherical;
-    _sphericalB = new THREE12.Spherical;
-    _box3A = new THREE12.Box3;
-    _box3B = new THREE12.Box3;
-    _sphere4 = new THREE12.Sphere;
-    _quaternionA = new THREE12.Quaternion;
-    _quaternionB = new THREE12.Quaternion;
-    _rotationMatrix = new THREE12.Matrix4;
-    _raycaster4 = new THREE12.Raycaster;
-  }
-  static get ACTION() {
-    return ACTION;
-  }
-  constructor(camera, domElement) {
-    super();
-    this.minPolarAngle = 0;
-    this.maxPolarAngle = Math.PI;
-    this.minAzimuthAngle = -Infinity;
-    this.maxAzimuthAngle = Infinity;
-    this.minDistance = Number.EPSILON;
-    this.maxDistance = Infinity;
-    this.infinityDolly = false;
-    this.minZoom = 0.01;
-    this.maxZoom = Infinity;
-    this.smoothTime = 0.25;
-    this.draggingSmoothTime = 0.125;
-    this.maxSpeed = Infinity;
-    this.azimuthRotateSpeed = 1;
-    this.polarRotateSpeed = 1;
-    this.dollySpeed = 1;
-    this.dollyDragInverted = false;
-    this.truckSpeed = 2;
-    this.dollyToCursor = false;
-    this.dragToOffset = false;
-    this.verticalDragToForward = false;
-    this.boundaryFriction = 0;
-    this.restThreshold = 0.01;
-    this.colliderMeshes = [];
-    this.cancel = () => {
-    };
-    this._enabled = true;
-    this._state = ACTION.NONE;
-    this._viewport = null;
-    this._changedDolly = 0;
-    this._changedZoom = 0;
-    this._hasRested = true;
-    this._boundaryEnclosesCamera = false;
-    this._needsUpdate = true;
-    this._updatedLastTime = false;
-    this._elementRect = new DOMRect;
-    this._isDragging = false;
-    this._dragNeedsUpdate = true;
-    this._activePointers = [];
-    this._lockedPointer = null;
-    this._interactiveArea = new DOMRect(0, 0, 1, 1);
-    this._isUserControllingRotate = false;
-    this._isUserControllingDolly = false;
-    this._isUserControllingTruck = false;
-    this._isUserControllingOffset = false;
-    this._isUserControllingZoom = false;
-    this._lastDollyDirection = DOLLY_DIRECTION.NONE;
-    this._thetaVelocity = { value: 0 };
-    this._phiVelocity = { value: 0 };
-    this._radiusVelocity = { value: 0 };
-    this._targetVelocity = new THREE12.Vector3;
-    this._focalOffsetVelocity = new THREE12.Vector3;
-    this._zoomVelocity = { value: 0 };
-    this._truckInternal = (deltaX, deltaY, dragToOffset) => {
-      let truckX;
-      let pedestalY;
-      if (isPerspectiveCamera(this._camera)) {
-        const offset = _v3A.copy(this._camera.position).sub(this._target);
-        const fov2 = this._camera.getEffectiveFOV() * DEG2RAD2;
-        const targetDistance = offset.length() * Math.tan(fov2 * 0.5);
-        truckX = this.truckSpeed * deltaX * targetDistance / this._elementRect.height;
-        pedestalY = this.truckSpeed * deltaY * targetDistance / this._elementRect.height;
-      } else if (isOrthographicCamera(this._camera)) {
-        const camera2 = this._camera;
-        truckX = deltaX * (camera2.right - camera2.left) / camera2.zoom / this._elementRect.width;
-        pedestalY = deltaY * (camera2.top - camera2.bottom) / camera2.zoom / this._elementRect.height;
-      } else {
-        return;
-      }
-      if (this.verticalDragToForward) {
-        dragToOffset ? this.setFocalOffset(this._focalOffsetEnd.x + truckX, this._focalOffsetEnd.y, this._focalOffsetEnd.z, true) : this.truck(truckX, 0, true);
-        this.forward(-pedestalY, true);
-      } else {
-        dragToOffset ? this.setFocalOffset(this._focalOffsetEnd.x + truckX, this._focalOffsetEnd.y + pedestalY, this._focalOffsetEnd.z, true) : this.truck(truckX, pedestalY, true);
-      }
-    };
-    this._rotateInternal = (deltaX, deltaY) => {
-      const theta = PI_2 * this.azimuthRotateSpeed * deltaX / this._elementRect.height;
-      const phi = PI_2 * this.polarRotateSpeed * deltaY / this._elementRect.height;
-      this.rotate(theta, phi, true);
-    };
-    this._dollyInternal = (delta, x2, y3) => {
-      const dollyScale = Math.pow(0.95, -delta * this.dollySpeed);
-      const lastDistance = this._sphericalEnd.radius;
-      const distance = this._sphericalEnd.radius * dollyScale;
-      const clampedDistance = clamp3(distance, this.minDistance, this.maxDistance);
-      const overflowedDistance = clampedDistance - distance;
-      if (this.infinityDolly && this.dollyToCursor) {
-        this._dollyToNoClamp(distance, true);
-      } else if (this.infinityDolly && !this.dollyToCursor) {
-        this.dollyInFixed(overflowedDistance, true);
-        this._dollyToNoClamp(clampedDistance, true);
-      } else {
-        this._dollyToNoClamp(clampedDistance, true);
-      }
-      if (this.dollyToCursor) {
-        this._changedDolly += (this.infinityDolly ? distance : clampedDistance) - lastDistance;
-        this._dollyControlCoord.set(x2, y3);
-      }
-      this._lastDollyDirection = Math.sign(-delta);
-    };
-    this._zoomInternal = (delta, x2, y3) => {
-      const zoomScale = Math.pow(0.95, delta * this.dollySpeed);
-      const lastZoom = this._zoom;
-      const zoom = this._zoom * zoomScale;
-      this.zoomTo(zoom, true);
-      if (this.dollyToCursor) {
-        this._changedZoom += zoom - lastZoom;
-        this._dollyControlCoord.set(x2, y3);
-      }
-    };
-    if (typeof THREE12 === "undefined") {
-      console.error("camera-controls: `THREE` is undefined. You must first run `CameraControls.install( { THREE: THREE } )`. Check the docs for further information.");
-    }
-    this._camera = camera;
-    this._yAxisUpSpace = new THREE12.Quaternion().setFromUnitVectors(this._camera.up, _AXIS_Y);
-    this._yAxisUpSpaceInverse = this._yAxisUpSpace.clone().invert();
-    this._state = ACTION.NONE;
-    this._target = new THREE12.Vector3;
-    this._targetEnd = this._target.clone();
-    this._focalOffset = new THREE12.Vector3;
-    this._focalOffsetEnd = this._focalOffset.clone();
-    this._spherical = new THREE12.Spherical().setFromVector3(_v3A.copy(this._camera.position).applyQuaternion(this._yAxisUpSpace));
-    this._sphericalEnd = this._spherical.clone();
-    this._lastDistance = this._spherical.radius;
-    this._zoom = this._camera.zoom;
-    this._zoomEnd = this._zoom;
-    this._lastZoom = this._zoom;
-    this._nearPlaneCorners = [
-      new THREE12.Vector3,
-      new THREE12.Vector3,
-      new THREE12.Vector3,
-      new THREE12.Vector3
-    ];
-    this._updateNearPlaneCorners();
-    this._boundary = new THREE12.Box3(new THREE12.Vector3(-Infinity, -Infinity, -Infinity), new THREE12.Vector3(Infinity, Infinity, Infinity));
-    this._cameraUp0 = this._camera.up.clone();
-    this._target0 = this._target.clone();
-    this._position0 = this._camera.position.clone();
-    this._zoom0 = this._zoom;
-    this._focalOffset0 = this._focalOffset.clone();
-    this._dollyControlCoord = new THREE12.Vector2;
-    this.mouseButtons = {
-      left: ACTION.ROTATE,
-      middle: ACTION.DOLLY,
-      right: ACTION.TRUCK,
-      wheel: isPerspectiveCamera(this._camera) ? ACTION.DOLLY : isOrthographicCamera(this._camera) ? ACTION.ZOOM : ACTION.NONE
-    };
-    this.touches = {
-      one: ACTION.TOUCH_ROTATE,
-      two: isPerspectiveCamera(this._camera) ? ACTION.TOUCH_DOLLY_TRUCK : isOrthographicCamera(this._camera) ? ACTION.TOUCH_ZOOM_TRUCK : ACTION.NONE,
-      three: ACTION.TOUCH_TRUCK
-    };
-    const dragStartPosition = new THREE12.Vector2;
-    const lastDragPosition = new THREE12.Vector2;
-    const dollyStart = new THREE12.Vector2;
-    const onPointerDown = (event) => {
-      if (!this._enabled || !this._domElement)
-        return;
-      if (this._interactiveArea.left !== 0 || this._interactiveArea.top !== 0 || this._interactiveArea.width !== 1 || this._interactiveArea.height !== 1) {
-        const elRect = this._domElement.getBoundingClientRect();
-        const left = event.clientX / elRect.width;
-        const top = event.clientY / elRect.height;
-        if (left < this._interactiveArea.left || left > this._interactiveArea.right || top < this._interactiveArea.top || top > this._interactiveArea.bottom)
-          return;
-      }
-      const mouseButton = event.pointerType !== "mouse" ? null : (event.buttons & MOUSE_BUTTON.LEFT) === MOUSE_BUTTON.LEFT ? MOUSE_BUTTON.LEFT : (event.buttons & MOUSE_BUTTON.MIDDLE) === MOUSE_BUTTON.MIDDLE ? MOUSE_BUTTON.MIDDLE : (event.buttons & MOUSE_BUTTON.RIGHT) === MOUSE_BUTTON.RIGHT ? MOUSE_BUTTON.RIGHT : null;
-      if (mouseButton !== null) {
-        const zombiePointer = this._findPointerByMouseButton(mouseButton);
-        zombiePointer && this._disposePointer(zombiePointer);
-      }
-      if ((event.buttons & MOUSE_BUTTON.LEFT) === MOUSE_BUTTON.LEFT && this._lockedPointer)
-        return;
-      const pointer = {
-        pointerId: event.pointerId,
-        clientX: event.clientX,
-        clientY: event.clientY,
-        deltaX: 0,
-        deltaY: 0,
-        mouseButton
-      };
-      this._activePointers.push(pointer);
-      this._domElement.ownerDocument.removeEventListener("pointermove", onPointerMove, { passive: false });
-      this._domElement.ownerDocument.removeEventListener("pointerup", onPointerUp);
-      this._domElement.ownerDocument.addEventListener("pointermove", onPointerMove, { passive: false });
-      this._domElement.ownerDocument.addEventListener("pointerup", onPointerUp);
-      this._isDragging = true;
-      startDragging(event);
-    };
-    const onPointerMove = (event) => {
-      if (event.cancelable)
-        event.preventDefault();
-      const pointerId = event.pointerId;
-      const pointer = this._lockedPointer || this._findPointerById(pointerId);
-      if (!pointer)
-        return;
-      pointer.clientX = event.clientX;
-      pointer.clientY = event.clientY;
-      pointer.deltaX = event.movementX;
-      pointer.deltaY = event.movementY;
-      this._state = 0;
-      if (event.pointerType === "touch") {
-        switch (this._activePointers.length) {
-          case 1:
-            this._state = this.touches.one;
-            break;
-          case 2:
-            this._state = this.touches.two;
-            break;
-          case 3:
-            this._state = this.touches.three;
-            break;
-        }
-      } else {
-        if (!this._isDragging && this._lockedPointer || this._isDragging && (event.buttons & MOUSE_BUTTON.LEFT) === MOUSE_BUTTON.LEFT) {
-          this._state = this._state | this.mouseButtons.left;
-        }
-        if (this._isDragging && (event.buttons & MOUSE_BUTTON.MIDDLE) === MOUSE_BUTTON.MIDDLE) {
-          this._state = this._state | this.mouseButtons.middle;
-        }
-        if (this._isDragging && (event.buttons & MOUSE_BUTTON.RIGHT) === MOUSE_BUTTON.RIGHT) {
-          this._state = this._state | this.mouseButtons.right;
-        }
-      }
-      dragging();
-    };
-    const onPointerUp = (event) => {
-      const pointer = this._findPointerById(event.pointerId);
-      if (pointer && pointer === this._lockedPointer)
-        return;
-      pointer && this._disposePointer(pointer);
-      if (event.pointerType === "touch") {
-        switch (this._activePointers.length) {
-          case 0:
-            this._state = ACTION.NONE;
-            break;
-          case 1:
-            this._state = this.touches.one;
-            break;
-          case 2:
-            this._state = this.touches.two;
-            break;
-          case 3:
-            this._state = this.touches.three;
-            break;
-        }
-      } else {
-        this._state = ACTION.NONE;
-      }
-      endDragging();
-    };
-    let lastScrollTimeStamp = -1;
-    const onMouseWheel = (event) => {
-      if (!this._domElement)
-        return;
-      if (!this._enabled || this.mouseButtons.wheel === ACTION.NONE)
-        return;
-      if (this._interactiveArea.left !== 0 || this._interactiveArea.top !== 0 || this._interactiveArea.width !== 1 || this._interactiveArea.height !== 1) {
-        const elRect = this._domElement.getBoundingClientRect();
-        const left = event.clientX / elRect.width;
-        const top = event.clientY / elRect.height;
-        if (left < this._interactiveArea.left || left > this._interactiveArea.right || top < this._interactiveArea.top || top > this._interactiveArea.bottom)
-          return;
-      }
-      event.preventDefault();
-      if (this.dollyToCursor || this.mouseButtons.wheel === ACTION.ROTATE || this.mouseButtons.wheel === ACTION.TRUCK) {
-        const now2 = performance.now();
-        if (lastScrollTimeStamp - now2 < 1000)
-          this._getClientRect(this._elementRect);
-        lastScrollTimeStamp = now2;
-      }
-      const deltaYFactor = isMac ? -1 : -3;
-      const delta = event.deltaMode === 1 ? event.deltaY / deltaYFactor : event.deltaY / (deltaYFactor * 10);
-      const x2 = this.dollyToCursor ? (event.clientX - this._elementRect.x) / this._elementRect.width * 2 - 1 : 0;
-      const y3 = this.dollyToCursor ? (event.clientY - this._elementRect.y) / this._elementRect.height * -2 + 1 : 0;
-      switch (this.mouseButtons.wheel) {
-        case ACTION.ROTATE: {
-          this._rotateInternal(event.deltaX, event.deltaY);
-          this._isUserControllingRotate = true;
-          break;
-        }
-        case ACTION.TRUCK: {
-          this._truckInternal(event.deltaX, event.deltaY, false);
-          this._isUserControllingTruck = true;
-          break;
-        }
-        case ACTION.OFFSET: {
-          this._truckInternal(event.deltaX, event.deltaY, true);
-          this._isUserControllingOffset = true;
-          break;
-        }
-        case ACTION.DOLLY: {
-          this._dollyInternal(-delta, x2, y3);
-          this._isUserControllingDolly = true;
-          break;
-        }
-        case ACTION.ZOOM: {
-          this._zoomInternal(-delta, x2, y3);
-          this._isUserControllingZoom = true;
-          break;
-        }
-      }
-      this.dispatchEvent({ type: "control" });
-    };
-    const onContextMenu = (event) => {
-      if (!this._domElement || !this._enabled)
-        return;
-      if (this.mouseButtons.right === CameraControls.ACTION.NONE) {
-        const pointerId = event instanceof PointerEvent ? event.pointerId : 0;
-        const pointer = this._findPointerById(pointerId);
-        pointer && this._disposePointer(pointer);
-        this._domElement.ownerDocument.removeEventListener("pointermove", onPointerMove, { passive: false });
-        this._domElement.ownerDocument.removeEventListener("pointerup", onPointerUp);
-        return;
-      }
-      event.preventDefault();
-    };
-    const startDragging = (event) => {
-      if (!this._enabled)
-        return;
-      extractClientCoordFromEvent(this._activePointers, _v27);
-      this._getClientRect(this._elementRect);
-      dragStartPosition.copy(_v27);
-      lastDragPosition.copy(_v27);
-      const isMultiTouch = this._activePointers.length >= 2;
-      if (isMultiTouch) {
-        const dx = _v27.x - this._activePointers[1].clientX;
-        const dy2 = _v27.y - this._activePointers[1].clientY;
-        const distance = Math.sqrt(dx * dx + dy2 * dy2);
-        dollyStart.set(0, distance);
-        const x2 = (this._activePointers[0].clientX + this._activePointers[1].clientX) * 0.5;
-        const y3 = (this._activePointers[0].clientY + this._activePointers[1].clientY) * 0.5;
-        lastDragPosition.set(x2, y3);
-      }
-      this._state = 0;
-      if (!event) {
-        if (this._lockedPointer)
-          this._state = this._state | this.mouseButtons.left;
-      } else if ("pointerType" in event && event.pointerType === "touch") {
-        switch (this._activePointers.length) {
-          case 1:
-            this._state = this.touches.one;
-            break;
-          case 2:
-            this._state = this.touches.two;
-            break;
-          case 3:
-            this._state = this.touches.three;
-            break;
-        }
-      } else {
-        if (!this._lockedPointer && (event.buttons & MOUSE_BUTTON.LEFT) === MOUSE_BUTTON.LEFT) {
-          this._state = this._state | this.mouseButtons.left;
-        }
-        if ((event.buttons & MOUSE_BUTTON.MIDDLE) === MOUSE_BUTTON.MIDDLE) {
-          this._state = this._state | this.mouseButtons.middle;
-        }
-        if ((event.buttons & MOUSE_BUTTON.RIGHT) === MOUSE_BUTTON.RIGHT) {
-          this._state = this._state | this.mouseButtons.right;
-        }
-      }
-      if ((this._state & ACTION.ROTATE) === ACTION.ROTATE || (this._state & ACTION.TOUCH_ROTATE) === ACTION.TOUCH_ROTATE || (this._state & ACTION.TOUCH_DOLLY_ROTATE) === ACTION.TOUCH_DOLLY_ROTATE || (this._state & ACTION.TOUCH_ZOOM_ROTATE) === ACTION.TOUCH_ZOOM_ROTATE) {
-        this._sphericalEnd.theta = this._spherical.theta;
-        this._sphericalEnd.phi = this._spherical.phi;
-        this._thetaVelocity.value = 0;
-        this._phiVelocity.value = 0;
-      }
-      if ((this._state & ACTION.TRUCK) === ACTION.TRUCK || (this._state & ACTION.TOUCH_TRUCK) === ACTION.TOUCH_TRUCK || (this._state & ACTION.TOUCH_DOLLY_TRUCK) === ACTION.TOUCH_DOLLY_TRUCK || (this._state & ACTION.TOUCH_ZOOM_TRUCK) === ACTION.TOUCH_ZOOM_TRUCK) {
-        this._targetEnd.copy(this._target);
-        this._targetVelocity.set(0, 0, 0);
-      }
-      if ((this._state & ACTION.DOLLY) === ACTION.DOLLY || (this._state & ACTION.TOUCH_DOLLY) === ACTION.TOUCH_DOLLY || (this._state & ACTION.TOUCH_DOLLY_TRUCK) === ACTION.TOUCH_DOLLY_TRUCK || (this._state & ACTION.TOUCH_DOLLY_OFFSET) === ACTION.TOUCH_DOLLY_OFFSET || (this._state & ACTION.TOUCH_DOLLY_ROTATE) === ACTION.TOUCH_DOLLY_ROTATE) {
-        this._sphericalEnd.radius = this._spherical.radius;
-        this._radiusVelocity.value = 0;
-      }
-      if ((this._state & ACTION.ZOOM) === ACTION.ZOOM || (this._state & ACTION.TOUCH_ZOOM) === ACTION.TOUCH_ZOOM || (this._state & ACTION.TOUCH_ZOOM_TRUCK) === ACTION.TOUCH_ZOOM_TRUCK || (this._state & ACTION.TOUCH_ZOOM_OFFSET) === ACTION.TOUCH_ZOOM_OFFSET || (this._state & ACTION.TOUCH_ZOOM_ROTATE) === ACTION.TOUCH_ZOOM_ROTATE) {
-        this._zoomEnd = this._zoom;
-        this._zoomVelocity.value = 0;
-      }
-      if ((this._state & ACTION.OFFSET) === ACTION.OFFSET || (this._state & ACTION.TOUCH_OFFSET) === ACTION.TOUCH_OFFSET || (this._state & ACTION.TOUCH_DOLLY_OFFSET) === ACTION.TOUCH_DOLLY_OFFSET || (this._state & ACTION.TOUCH_ZOOM_OFFSET) === ACTION.TOUCH_ZOOM_OFFSET) {
-        this._focalOffsetEnd.copy(this._focalOffset);
-        this._focalOffsetVelocity.set(0, 0, 0);
-      }
-      this.dispatchEvent({ type: "controlstart" });
-    };
-    const dragging = () => {
-      if (!this._enabled || !this._dragNeedsUpdate)
-        return;
-      this._dragNeedsUpdate = false;
-      extractClientCoordFromEvent(this._activePointers, _v27);
-      const isPointerLockActive = this._domElement && this._domElement.ownerDocument.pointerLockElement === this._domElement;
-      const lockedPointer = isPointerLockActive ? this._lockedPointer || this._activePointers[0] : null;
-      const deltaX = lockedPointer ? -lockedPointer.deltaX : lastDragPosition.x - _v27.x;
-      const deltaY = lockedPointer ? -lockedPointer.deltaY : lastDragPosition.y - _v27.y;
-      lastDragPosition.copy(_v27);
-      if ((this._state & ACTION.ROTATE) === ACTION.ROTATE || (this._state & ACTION.TOUCH_ROTATE) === ACTION.TOUCH_ROTATE || (this._state & ACTION.TOUCH_DOLLY_ROTATE) === ACTION.TOUCH_DOLLY_ROTATE || (this._state & ACTION.TOUCH_ZOOM_ROTATE) === ACTION.TOUCH_ZOOM_ROTATE) {
-        this._rotateInternal(deltaX, deltaY);
-        this._isUserControllingRotate = true;
-      }
-      if ((this._state & ACTION.DOLLY) === ACTION.DOLLY || (this._state & ACTION.ZOOM) === ACTION.ZOOM) {
-        const dollyX = this.dollyToCursor ? (dragStartPosition.x - this._elementRect.x) / this._elementRect.width * 2 - 1 : 0;
-        const dollyY = this.dollyToCursor ? (dragStartPosition.y - this._elementRect.y) / this._elementRect.height * -2 + 1 : 0;
-        const dollyDirection = this.dollyDragInverted ? -1 : 1;
-        if ((this._state & ACTION.DOLLY) === ACTION.DOLLY) {
-          this._dollyInternal(dollyDirection * deltaY * TOUCH_DOLLY_FACTOR, dollyX, dollyY);
-          this._isUserControllingDolly = true;
-        } else {
-          this._zoomInternal(dollyDirection * deltaY * TOUCH_DOLLY_FACTOR, dollyX, dollyY);
-          this._isUserControllingZoom = true;
-        }
-      }
-      if ((this._state & ACTION.TOUCH_DOLLY) === ACTION.TOUCH_DOLLY || (this._state & ACTION.TOUCH_ZOOM) === ACTION.TOUCH_ZOOM || (this._state & ACTION.TOUCH_DOLLY_TRUCK) === ACTION.TOUCH_DOLLY_TRUCK || (this._state & ACTION.TOUCH_ZOOM_TRUCK) === ACTION.TOUCH_ZOOM_TRUCK || (this._state & ACTION.TOUCH_DOLLY_OFFSET) === ACTION.TOUCH_DOLLY_OFFSET || (this._state & ACTION.TOUCH_ZOOM_OFFSET) === ACTION.TOUCH_ZOOM_OFFSET || (this._state & ACTION.TOUCH_DOLLY_ROTATE) === ACTION.TOUCH_DOLLY_ROTATE || (this._state & ACTION.TOUCH_ZOOM_ROTATE) === ACTION.TOUCH_ZOOM_ROTATE) {
-        const dx = _v27.x - this._activePointers[1].clientX;
-        const dy2 = _v27.y - this._activePointers[1].clientY;
-        const distance = Math.sqrt(dx * dx + dy2 * dy2);
-        const dollyDelta = dollyStart.y - distance;
-        dollyStart.set(0, distance);
-        const dollyX = this.dollyToCursor ? (lastDragPosition.x - this._elementRect.x) / this._elementRect.width * 2 - 1 : 0;
-        const dollyY = this.dollyToCursor ? (lastDragPosition.y - this._elementRect.y) / this._elementRect.height * -2 + 1 : 0;
-        if ((this._state & ACTION.TOUCH_DOLLY) === ACTION.TOUCH_DOLLY || (this._state & ACTION.TOUCH_DOLLY_ROTATE) === ACTION.TOUCH_DOLLY_ROTATE || (this._state & ACTION.TOUCH_DOLLY_TRUCK) === ACTION.TOUCH_DOLLY_TRUCK || (this._state & ACTION.TOUCH_DOLLY_OFFSET) === ACTION.TOUCH_DOLLY_OFFSET) {
-          this._dollyInternal(dollyDelta * TOUCH_DOLLY_FACTOR, dollyX, dollyY);
-          this._isUserControllingDolly = true;
-        } else {
-          this._zoomInternal(dollyDelta * TOUCH_DOLLY_FACTOR, dollyX, dollyY);
-          this._isUserControllingZoom = true;
-        }
-      }
-      if ((this._state & ACTION.TRUCK) === ACTION.TRUCK || (this._state & ACTION.TOUCH_TRUCK) === ACTION.TOUCH_TRUCK || (this._state & ACTION.TOUCH_DOLLY_TRUCK) === ACTION.TOUCH_DOLLY_TRUCK || (this._state & ACTION.TOUCH_ZOOM_TRUCK) === ACTION.TOUCH_ZOOM_TRUCK) {
-        this._truckInternal(deltaX, deltaY, false);
-        this._isUserControllingTruck = true;
-      }
-      if ((this._state & ACTION.OFFSET) === ACTION.OFFSET || (this._state & ACTION.TOUCH_OFFSET) === ACTION.TOUCH_OFFSET || (this._state & ACTION.TOUCH_DOLLY_OFFSET) === ACTION.TOUCH_DOLLY_OFFSET || (this._state & ACTION.TOUCH_ZOOM_OFFSET) === ACTION.TOUCH_ZOOM_OFFSET) {
-        this._truckInternal(deltaX, deltaY, true);
-        this._isUserControllingOffset = true;
-      }
-      this.dispatchEvent({ type: "control" });
-    };
-    const endDragging = () => {
-      extractClientCoordFromEvent(this._activePointers, _v27);
-      lastDragPosition.copy(_v27);
-      this._dragNeedsUpdate = false;
-      if (this._activePointers.length === 0 || this._activePointers.length === 1 && this._activePointers[0] === this._lockedPointer) {
-        this._isDragging = false;
-      }
-      if (this._activePointers.length === 0 && this._domElement) {
-        this._domElement.ownerDocument.removeEventListener("pointermove", onPointerMove, { passive: false });
-        this._domElement.ownerDocument.removeEventListener("pointerup", onPointerUp);
-        this.dispatchEvent({ type: "controlend" });
-      }
-    };
-    this.lockPointer = () => {
-      if (!this._enabled || !this._domElement)
-        return;
-      this.cancel();
-      this._lockedPointer = {
-        pointerId: -1,
-        clientX: 0,
-        clientY: 0,
-        deltaX: 0,
-        deltaY: 0,
-        mouseButton: null
-      };
-      this._activePointers.push(this._lockedPointer);
-      this._domElement.ownerDocument.removeEventListener("pointermove", onPointerMove, { passive: false });
-      this._domElement.ownerDocument.removeEventListener("pointerup", onPointerUp);
-      this._domElement.requestPointerLock();
-      this._domElement.ownerDocument.addEventListener("pointerlockchange", onPointerLockChange);
-      this._domElement.ownerDocument.addEventListener("pointerlockerror", onPointerLockError);
-      this._domElement.ownerDocument.addEventListener("pointermove", onPointerMove, { passive: false });
-      this._domElement.ownerDocument.addEventListener("pointerup", onPointerUp);
-      startDragging();
-    };
-    this.unlockPointer = () => {
-      var _a4, _b3, _c;
-      if (this._lockedPointer !== null) {
-        this._disposePointer(this._lockedPointer);
-        this._lockedPointer = null;
-      }
-      (_a4 = this._domElement) === null || _a4 === undefined || _a4.ownerDocument.exitPointerLock();
-      (_b3 = this._domElement) === null || _b3 === undefined || _b3.ownerDocument.removeEventListener("pointerlockchange", onPointerLockChange);
-      (_c = this._domElement) === null || _c === undefined || _c.ownerDocument.removeEventListener("pointerlockerror", onPointerLockError);
-      this.cancel();
-    };
-    const onPointerLockChange = () => {
-      const isPointerLockActive = this._domElement && this._domElement.ownerDocument.pointerLockElement === this._domElement;
-      if (!isPointerLockActive)
-        this.unlockPointer();
-    };
-    const onPointerLockError = () => {
-      this.unlockPointer();
-    };
-    this._addAllEventListeners = (domElement2) => {
-      this._domElement = domElement2;
-      this._domElement.style.touchAction = "none";
-      this._domElement.style.userSelect = "none";
-      this._domElement.style.webkitUserSelect = "none";
-      this._domElement.addEventListener("pointerdown", onPointerDown);
-      this._domElement.addEventListener("pointercancel", onPointerUp);
-      this._domElement.addEventListener("wheel", onMouseWheel, { passive: false });
-      this._domElement.addEventListener("contextmenu", onContextMenu);
-    };
-    this._removeAllEventListeners = () => {
-      if (!this._domElement)
-        return;
-      this._domElement.style.touchAction = "";
-      this._domElement.style.userSelect = "";
-      this._domElement.style.webkitUserSelect = "";
-      this._domElement.removeEventListener("pointerdown", onPointerDown);
-      this._domElement.removeEventListener("pointercancel", onPointerUp);
-      this._domElement.removeEventListener("wheel", onMouseWheel, { passive: false });
-      this._domElement.removeEventListener("contextmenu", onContextMenu);
-      this._domElement.ownerDocument.removeEventListener("pointermove", onPointerMove, { passive: false });
-      this._domElement.ownerDocument.removeEventListener("pointerup", onPointerUp);
-      this._domElement.ownerDocument.removeEventListener("pointerlockchange", onPointerLockChange);
-      this._domElement.ownerDocument.removeEventListener("pointerlockerror", onPointerLockError);
-    };
-    this.cancel = () => {
-      if (this._state === ACTION.NONE)
-        return;
-      this._state = ACTION.NONE;
-      this._activePointers.length = 0;
-      endDragging();
-    };
-    if (domElement)
-      this.connect(domElement);
-    this.update(0);
-  }
-  get camera() {
-    return this._camera;
-  }
-  set camera(camera) {
-    this._camera = camera;
-    this.updateCameraUp();
-    this._camera.updateProjectionMatrix();
-    this._updateNearPlaneCorners();
-    this._needsUpdate = true;
-  }
-  get enabled() {
-    return this._enabled;
-  }
-  set enabled(enabled) {
-    this._enabled = enabled;
-    if (!this._domElement)
-      return;
-    if (enabled) {
-      this._domElement.style.touchAction = "none";
-      this._domElement.style.userSelect = "none";
-      this._domElement.style.webkitUserSelect = "none";
-    } else {
-      this.cancel();
-      this._domElement.style.touchAction = "";
-      this._domElement.style.userSelect = "";
-      this._domElement.style.webkitUserSelect = "";
-    }
-  }
-  get active() {
-    return !this._hasRested;
-  }
-  get currentAction() {
-    return this._state;
-  }
-  get distance() {
-    return this._spherical.radius;
-  }
-  set distance(distance) {
-    if (this._spherical.radius === distance && this._sphericalEnd.radius === distance)
-      return;
-    this._spherical.radius = distance;
-    this._sphericalEnd.radius = distance;
-    this._needsUpdate = true;
-  }
-  get azimuthAngle() {
-    return this._spherical.theta;
-  }
-  set azimuthAngle(azimuthAngle) {
-    if (this._spherical.theta === azimuthAngle && this._sphericalEnd.theta === azimuthAngle)
-      return;
-    this._spherical.theta = azimuthAngle;
-    this._sphericalEnd.theta = azimuthAngle;
-    this._needsUpdate = true;
-  }
-  get polarAngle() {
-    return this._spherical.phi;
-  }
-  set polarAngle(polarAngle) {
-    if (this._spherical.phi === polarAngle && this._sphericalEnd.phi === polarAngle)
-      return;
-    this._spherical.phi = polarAngle;
-    this._sphericalEnd.phi = polarAngle;
-    this._needsUpdate = true;
-  }
-  get boundaryEnclosesCamera() {
-    return this._boundaryEnclosesCamera;
-  }
-  set boundaryEnclosesCamera(boundaryEnclosesCamera) {
-    this._boundaryEnclosesCamera = boundaryEnclosesCamera;
-    this._needsUpdate = true;
-  }
-  set interactiveArea(interactiveArea) {
-    this._interactiveArea.width = clamp3(interactiveArea.width, 0, 1);
-    this._interactiveArea.height = clamp3(interactiveArea.height, 0, 1);
-    this._interactiveArea.x = clamp3(interactiveArea.x, 0, 1 - this._interactiveArea.width);
-    this._interactiveArea.y = clamp3(interactiveArea.y, 0, 1 - this._interactiveArea.height);
-  }
-  addEventListener(type, listener) {
-    super.addEventListener(type, listener);
-  }
-  removeEventListener(type, listener) {
-    super.removeEventListener(type, listener);
-  }
-  rotate(azimuthAngle, polarAngle, enableTransition = false) {
-    return this.rotateTo(this._sphericalEnd.theta + azimuthAngle, this._sphericalEnd.phi + polarAngle, enableTransition);
-  }
-  rotateAzimuthTo(azimuthAngle, enableTransition = false) {
-    return this.rotateTo(azimuthAngle, this._sphericalEnd.phi, enableTransition);
-  }
-  rotatePolarTo(polarAngle, enableTransition = false) {
-    return this.rotateTo(this._sphericalEnd.theta, polarAngle, enableTransition);
-  }
-  rotateTo(azimuthAngle, polarAngle, enableTransition = false) {
-    this._isUserControllingRotate = false;
-    const theta = clamp3(azimuthAngle, this.minAzimuthAngle, this.maxAzimuthAngle);
-    const phi = clamp3(polarAngle, this.minPolarAngle, this.maxPolarAngle);
-    this._sphericalEnd.theta = theta;
-    this._sphericalEnd.phi = phi;
-    this._sphericalEnd.makeSafe();
-    this._needsUpdate = true;
-    if (!enableTransition) {
-      this._spherical.theta = this._sphericalEnd.theta;
-      this._spherical.phi = this._sphericalEnd.phi;
-    }
-    const resolveImmediately = !enableTransition || approxEquals(this._spherical.theta, this._sphericalEnd.theta, this.restThreshold) && approxEquals(this._spherical.phi, this._sphericalEnd.phi, this.restThreshold);
-    return this._createOnRestPromise(resolveImmediately);
-  }
-  dolly(distance, enableTransition = false) {
-    return this.dollyTo(this._sphericalEnd.radius - distance, enableTransition);
-  }
-  dollyTo(distance, enableTransition = false) {
-    this._isUserControllingDolly = false;
-    this._lastDollyDirection = DOLLY_DIRECTION.NONE;
-    this._changedDolly = 0;
-    return this._dollyToNoClamp(clamp3(distance, this.minDistance, this.maxDistance), enableTransition);
-  }
-  _dollyToNoClamp(distance, enableTransition = false) {
-    const lastRadius = this._sphericalEnd.radius;
-    const hasCollider = this.colliderMeshes.length >= 1;
-    if (hasCollider) {
-      const maxDistanceByCollisionTest = this._collisionTest();
-      const isCollided = approxEquals(maxDistanceByCollisionTest, this._spherical.radius);
-      const isDollyIn = lastRadius > distance;
-      if (!isDollyIn && isCollided)
-        return Promise.resolve();
-      this._sphericalEnd.radius = Math.min(distance, maxDistanceByCollisionTest);
-    } else {
-      this._sphericalEnd.radius = distance;
-    }
-    this._needsUpdate = true;
-    if (!enableTransition) {
-      this._spherical.radius = this._sphericalEnd.radius;
-    }
-    const resolveImmediately = !enableTransition || approxEquals(this._spherical.radius, this._sphericalEnd.radius, this.restThreshold);
-    return this._createOnRestPromise(resolveImmediately);
-  }
-  dollyInFixed(distance, enableTransition = false) {
-    this._targetEnd.add(this._getCameraDirection(_cameraDirection).multiplyScalar(distance));
-    if (!enableTransition) {
-      this._target.copy(this._targetEnd);
-    }
-    const resolveImmediately = !enableTransition || approxEquals(this._target.x, this._targetEnd.x, this.restThreshold) && approxEquals(this._target.y, this._targetEnd.y, this.restThreshold) && approxEquals(this._target.z, this._targetEnd.z, this.restThreshold);
-    return this._createOnRestPromise(resolveImmediately);
-  }
-  zoom(zoomStep, enableTransition = false) {
-    return this.zoomTo(this._zoomEnd + zoomStep, enableTransition);
-  }
-  zoomTo(zoom, enableTransition = false) {
-    this._isUserControllingZoom = false;
-    this._zoomEnd = clamp3(zoom, this.minZoom, this.maxZoom);
-    this._needsUpdate = true;
-    if (!enableTransition) {
-      this._zoom = this._zoomEnd;
-    }
-    const resolveImmediately = !enableTransition || approxEquals(this._zoom, this._zoomEnd, this.restThreshold);
-    this._changedZoom = 0;
-    return this._createOnRestPromise(resolveImmediately);
-  }
-  pan(x2, y3, enableTransition = false) {
-    console.warn("`pan` has been renamed to `truck`");
-    return this.truck(x2, y3, enableTransition);
-  }
-  truck(x2, y3, enableTransition = false) {
-    this._camera.updateMatrix();
-    _xColumn.setFromMatrixColumn(this._camera.matrix, 0);
-    _yColumn.setFromMatrixColumn(this._camera.matrix, 1);
-    _xColumn.multiplyScalar(x2);
-    _yColumn.multiplyScalar(-y3);
-    const offset = _v3A.copy(_xColumn).add(_yColumn);
-    const to = _v3B.copy(this._targetEnd).add(offset);
-    return this.moveTo(to.x, to.y, to.z, enableTransition);
-  }
-  forward(distance, enableTransition = false) {
-    _v3A.setFromMatrixColumn(this._camera.matrix, 0);
-    _v3A.crossVectors(this._camera.up, _v3A);
-    _v3A.multiplyScalar(distance);
-    const to = _v3B.copy(this._targetEnd).add(_v3A);
-    return this.moveTo(to.x, to.y, to.z, enableTransition);
-  }
-  elevate(height2, enableTransition = false) {
-    _v3A.copy(this._camera.up).multiplyScalar(height2);
-    return this.moveTo(this._targetEnd.x + _v3A.x, this._targetEnd.y + _v3A.y, this._targetEnd.z + _v3A.z, enableTransition);
-  }
-  moveTo(x2, y3, z2, enableTransition = false) {
-    this._isUserControllingTruck = false;
-    const offset = _v3A.set(x2, y3, z2).sub(this._targetEnd);
-    this._encloseToBoundary(this._targetEnd, offset, this.boundaryFriction);
-    this._needsUpdate = true;
-    if (!enableTransition) {
-      this._target.copy(this._targetEnd);
-    }
-    const resolveImmediately = !enableTransition || approxEquals(this._target.x, this._targetEnd.x, this.restThreshold) && approxEquals(this._target.y, this._targetEnd.y, this.restThreshold) && approxEquals(this._target.z, this._targetEnd.z, this.restThreshold);
-    return this._createOnRestPromise(resolveImmediately);
-  }
-  lookInDirectionOf(x2, y3, z2, enableTransition = false) {
-    const point = _v3A.set(x2, y3, z2);
-    const direction = point.sub(this._targetEnd).normalize();
-    const position2 = direction.multiplyScalar(-this._sphericalEnd.radius).add(this._targetEnd);
-    return this.setPosition(position2.x, position2.y, position2.z, enableTransition);
-  }
-  fitToBox(box3OrObject, enableTransition, { cover: cover2 = false, paddingLeft = 0, paddingRight = 0, paddingBottom = 0, paddingTop = 0 } = {}) {
-    const promises = [];
-    const aabb2 = box3OrObject.isBox3 ? _box3A.copy(box3OrObject) : _box3A.setFromObject(box3OrObject);
-    if (aabb2.isEmpty()) {
-      console.warn("camera-controls: fitTo() cannot be used with an empty box. Aborting");
-      Promise.resolve();
-    }
-    const theta = roundToStep(this._sphericalEnd.theta, PI_HALF);
-    const phi = roundToStep(this._sphericalEnd.phi, PI_HALF);
-    promises.push(this.rotateTo(theta, phi, enableTransition));
-    const normal = _v3A.setFromSpherical(this._sphericalEnd).normalize();
-    const rotation2 = _quaternionA.setFromUnitVectors(normal, _AXIS_Z);
-    const viewFromPolar = approxEquals(Math.abs(normal.y), 1);
-    if (viewFromPolar) {
-      rotation2.multiply(_quaternionB.setFromAxisAngle(_AXIS_Y, theta));
-    }
-    rotation2.multiply(this._yAxisUpSpaceInverse);
-    const bb = _box3B.makeEmpty();
-    _v3B.copy(aabb2.min).applyQuaternion(rotation2);
-    bb.expandByPoint(_v3B);
-    _v3B.copy(aabb2.min).setX(aabb2.max.x).applyQuaternion(rotation2);
-    bb.expandByPoint(_v3B);
-    _v3B.copy(aabb2.min).setY(aabb2.max.y).applyQuaternion(rotation2);
-    bb.expandByPoint(_v3B);
-    _v3B.copy(aabb2.max).setZ(aabb2.min.z).applyQuaternion(rotation2);
-    bb.expandByPoint(_v3B);
-    _v3B.copy(aabb2.min).setZ(aabb2.max.z).applyQuaternion(rotation2);
-    bb.expandByPoint(_v3B);
-    _v3B.copy(aabb2.max).setY(aabb2.min.y).applyQuaternion(rotation2);
-    bb.expandByPoint(_v3B);
-    _v3B.copy(aabb2.max).setX(aabb2.min.x).applyQuaternion(rotation2);
-    bb.expandByPoint(_v3B);
-    _v3B.copy(aabb2.max).applyQuaternion(rotation2);
-    bb.expandByPoint(_v3B);
-    bb.min.x -= paddingLeft;
-    bb.min.y -= paddingBottom;
-    bb.max.x += paddingRight;
-    bb.max.y += paddingTop;
-    rotation2.setFromUnitVectors(_AXIS_Z, normal);
-    if (viewFromPolar) {
-      rotation2.premultiply(_quaternionB.invert());
-    }
-    rotation2.premultiply(this._yAxisUpSpace);
-    const bbSize = bb.getSize(_v3A);
-    const center = bb.getCenter(_v3B).applyQuaternion(rotation2);
-    if (isPerspectiveCamera(this._camera)) {
-      const distance = this.getDistanceToFitBox(bbSize.x, bbSize.y, bbSize.z, cover2);
-      promises.push(this.moveTo(center.x, center.y, center.z, enableTransition));
-      promises.push(this.dollyTo(distance, enableTransition));
-      promises.push(this.setFocalOffset(0, 0, 0, enableTransition));
-    } else if (isOrthographicCamera(this._camera)) {
-      const camera = this._camera;
-      const width2 = camera.right - camera.left;
-      const height2 = camera.top - camera.bottom;
-      const zoom = cover2 ? Math.max(width2 / bbSize.x, height2 / bbSize.y) : Math.min(width2 / bbSize.x, height2 / bbSize.y);
-      promises.push(this.moveTo(center.x, center.y, center.z, enableTransition));
-      promises.push(this.zoomTo(zoom, enableTransition));
-      promises.push(this.setFocalOffset(0, 0, 0, enableTransition));
-    }
-    return Promise.all(promises);
-  }
-  fitToSphere(sphereOrMesh, enableTransition) {
-    const promises = [];
-    const isObject3D = "isObject3D" in sphereOrMesh;
-    const boundingSphere = isObject3D ? CameraControls.createBoundingSphere(sphereOrMesh, _sphere4) : _sphere4.copy(sphereOrMesh);
-    promises.push(this.moveTo(boundingSphere.center.x, boundingSphere.center.y, boundingSphere.center.z, enableTransition));
-    if (isPerspectiveCamera(this._camera)) {
-      const distanceToFit = this.getDistanceToFitSphere(boundingSphere.radius);
-      promises.push(this.dollyTo(distanceToFit, enableTransition));
-    } else if (isOrthographicCamera(this._camera)) {
-      const width2 = this._camera.right - this._camera.left;
-      const height2 = this._camera.top - this._camera.bottom;
-      const diameter = 2 * boundingSphere.radius;
-      const zoom = Math.min(width2 / diameter, height2 / diameter);
-      promises.push(this.zoomTo(zoom, enableTransition));
-    }
-    promises.push(this.setFocalOffset(0, 0, 0, enableTransition));
-    return Promise.all(promises);
-  }
-  setLookAt(positionX, positionY, positionZ, targetX, targetY, targetZ, enableTransition = false) {
-    this._isUserControllingRotate = false;
-    this._isUserControllingDolly = false;
-    this._isUserControllingTruck = false;
-    this._lastDollyDirection = DOLLY_DIRECTION.NONE;
-    this._changedDolly = 0;
-    const target = _v3B.set(targetX, targetY, targetZ);
-    const position2 = _v3A.set(positionX, positionY, positionZ);
-    this._targetEnd.copy(target);
-    this._sphericalEnd.setFromVector3(position2.sub(target).applyQuaternion(this._yAxisUpSpace));
-    this.normalizeRotations();
-    this._needsUpdate = true;
-    if (!enableTransition) {
-      this._target.copy(this._targetEnd);
-      this._spherical.copy(this._sphericalEnd);
-    }
-    const resolveImmediately = !enableTransition || approxEquals(this._target.x, this._targetEnd.x, this.restThreshold) && approxEquals(this._target.y, this._targetEnd.y, this.restThreshold) && approxEquals(this._target.z, this._targetEnd.z, this.restThreshold) && approxEquals(this._spherical.theta, this._sphericalEnd.theta, this.restThreshold) && approxEquals(this._spherical.phi, this._sphericalEnd.phi, this.restThreshold) && approxEquals(this._spherical.radius, this._sphericalEnd.radius, this.restThreshold);
-    return this._createOnRestPromise(resolveImmediately);
-  }
-  lerpLookAt(positionAX, positionAY, positionAZ, targetAX, targetAY, targetAZ, positionBX, positionBY, positionBZ, targetBX, targetBY, targetBZ, t4, enableTransition = false) {
-    this._isUserControllingRotate = false;
-    this._isUserControllingDolly = false;
-    this._isUserControllingTruck = false;
-    this._lastDollyDirection = DOLLY_DIRECTION.NONE;
-    this._changedDolly = 0;
-    const targetA = _v3A.set(targetAX, targetAY, targetAZ);
-    const positionA = _v3B.set(positionAX, positionAY, positionAZ);
-    _sphericalA.setFromVector3(positionA.sub(targetA).applyQuaternion(this._yAxisUpSpace));
-    const targetB = _v3C.set(targetBX, targetBY, targetBZ);
-    const positionB = _v3B.set(positionBX, positionBY, positionBZ);
-    _sphericalB.setFromVector3(positionB.sub(targetB).applyQuaternion(this._yAxisUpSpace));
-    this._targetEnd.copy(targetA.lerp(targetB, t4));
-    const deltaTheta = _sphericalB.theta - _sphericalA.theta;
-    const deltaPhi = _sphericalB.phi - _sphericalA.phi;
-    const deltaRadius = _sphericalB.radius - _sphericalA.radius;
-    this._sphericalEnd.set(_sphericalA.radius + deltaRadius * t4, _sphericalA.phi + deltaPhi * t4, _sphericalA.theta + deltaTheta * t4);
-    this.normalizeRotations();
-    this._needsUpdate = true;
-    if (!enableTransition) {
-      this._target.copy(this._targetEnd);
-      this._spherical.copy(this._sphericalEnd);
-    }
-    const resolveImmediately = !enableTransition || approxEquals(this._target.x, this._targetEnd.x, this.restThreshold) && approxEquals(this._target.y, this._targetEnd.y, this.restThreshold) && approxEquals(this._target.z, this._targetEnd.z, this.restThreshold) && approxEquals(this._spherical.theta, this._sphericalEnd.theta, this.restThreshold) && approxEquals(this._spherical.phi, this._sphericalEnd.phi, this.restThreshold) && approxEquals(this._spherical.radius, this._sphericalEnd.radius, this.restThreshold);
-    return this._createOnRestPromise(resolveImmediately);
-  }
-  setPosition(positionX, positionY, positionZ, enableTransition = false) {
-    return this.setLookAt(positionX, positionY, positionZ, this._targetEnd.x, this._targetEnd.y, this._targetEnd.z, enableTransition);
-  }
-  setTarget(targetX, targetY, targetZ, enableTransition = false) {
-    const pos = this.getPosition(_v3A);
-    const promise = this.setLookAt(pos.x, pos.y, pos.z, targetX, targetY, targetZ, enableTransition);
-    this._sphericalEnd.phi = clamp3(this._sphericalEnd.phi, this.minPolarAngle, this.maxPolarAngle);
-    return promise;
-  }
-  setFocalOffset(x2, y3, z2, enableTransition = false) {
-    this._isUserControllingOffset = false;
-    this._focalOffsetEnd.set(x2, y3, z2);
-    this._needsUpdate = true;
-    if (!enableTransition)
-      this._focalOffset.copy(this._focalOffsetEnd);
-    const resolveImmediately = !enableTransition || approxEquals(this._focalOffset.x, this._focalOffsetEnd.x, this.restThreshold) && approxEquals(this._focalOffset.y, this._focalOffsetEnd.y, this.restThreshold) && approxEquals(this._focalOffset.z, this._focalOffsetEnd.z, this.restThreshold);
-    return this._createOnRestPromise(resolveImmediately);
-  }
-  setOrbitPoint(targetX, targetY, targetZ) {
-    this._camera.updateMatrixWorld();
-    _xColumn.setFromMatrixColumn(this._camera.matrixWorldInverse, 0);
-    _yColumn.setFromMatrixColumn(this._camera.matrixWorldInverse, 1);
-    _zColumn.setFromMatrixColumn(this._camera.matrixWorldInverse, 2);
-    const position2 = _v3A.set(targetX, targetY, targetZ);
-    const distance = position2.distanceTo(this._camera.position);
-    const cameraToPoint = position2.sub(this._camera.position);
-    _xColumn.multiplyScalar(cameraToPoint.x);
-    _yColumn.multiplyScalar(cameraToPoint.y);
-    _zColumn.multiplyScalar(cameraToPoint.z);
-    _v3A.copy(_xColumn).add(_yColumn).add(_zColumn);
-    _v3A.z = _v3A.z + distance;
-    this.dollyTo(distance, false);
-    this.setFocalOffset(-_v3A.x, _v3A.y, -_v3A.z, false);
-    this.moveTo(targetX, targetY, targetZ, false);
-  }
-  setBoundary(box3) {
-    if (!box3) {
-      this._boundary.min.set(-Infinity, -Infinity, -Infinity);
-      this._boundary.max.set(Infinity, Infinity, Infinity);
-      this._needsUpdate = true;
-      return;
-    }
-    this._boundary.copy(box3);
-    this._boundary.clampPoint(this._targetEnd, this._targetEnd);
-    this._needsUpdate = true;
-  }
-  setViewport(viewportOrX, y3, width2, height2) {
-    if (viewportOrX === null) {
-      this._viewport = null;
-      return;
-    }
-    this._viewport = this._viewport || new THREE12.Vector4;
-    if (typeof viewportOrX === "number") {
-      this._viewport.set(viewportOrX, y3, width2, height2);
-    } else {
-      this._viewport.copy(viewportOrX);
-    }
-  }
-  getDistanceToFitBox(width2, height2, depth, cover2 = false) {
-    if (notSupportedInOrthographicCamera(this._camera, "getDistanceToFitBox"))
-      return this._spherical.radius;
-    const boundingRectAspect = width2 / height2;
-    const fov2 = this._camera.getEffectiveFOV() * DEG2RAD2;
-    const aspect2 = this._camera.aspect;
-    const heightToFit = (cover2 ? boundingRectAspect > aspect2 : boundingRectAspect < aspect2) ? height2 : width2 / aspect2;
-    return heightToFit * 0.5 / Math.tan(fov2 * 0.5) + depth * 0.5;
-  }
-  getDistanceToFitSphere(radius) {
-    if (notSupportedInOrthographicCamera(this._camera, "getDistanceToFitSphere"))
-      return this._spherical.radius;
-    const vFOV = this._camera.getEffectiveFOV() * DEG2RAD2;
-    const hFOV = Math.atan(Math.tan(vFOV * 0.5) * this._camera.aspect) * 2;
-    const fov2 = 1 < this._camera.aspect ? vFOV : hFOV;
-    return radius / Math.sin(fov2 * 0.5);
-  }
-  getTarget(out, receiveEndValue = true) {
-    const _out = !!out && out.isVector3 ? out : new THREE12.Vector3;
-    return _out.copy(receiveEndValue ? this._targetEnd : this._target);
-  }
-  getPosition(out, receiveEndValue = true) {
-    const _out = !!out && out.isVector3 ? out : new THREE12.Vector3;
-    return _out.setFromSpherical(receiveEndValue ? this._sphericalEnd : this._spherical).applyQuaternion(this._yAxisUpSpaceInverse).add(receiveEndValue ? this._targetEnd : this._target);
-  }
-  getSpherical(out, receiveEndValue = true) {
-    const _out = out || new THREE12.Spherical;
-    return _out.copy(receiveEndValue ? this._sphericalEnd : this._spherical);
-  }
-  getFocalOffset(out, receiveEndValue = true) {
-    const _out = !!out && out.isVector3 ? out : new THREE12.Vector3;
-    return _out.copy(receiveEndValue ? this._focalOffsetEnd : this._focalOffset);
-  }
-  normalizeRotations() {
-    this._sphericalEnd.theta = this._sphericalEnd.theta % PI_2;
-    if (this._sphericalEnd.theta < 0)
-      this._sphericalEnd.theta += PI_2;
-    this._spherical.theta += PI_2 * Math.round((this._sphericalEnd.theta - this._spherical.theta) / PI_2);
-  }
-  stop() {
-    this._focalOffset.copy(this._focalOffsetEnd);
-    this._target.copy(this._targetEnd);
-    this._spherical.copy(this._sphericalEnd);
-    this._zoom = this._zoomEnd;
-  }
-  reset(enableTransition = false) {
-    if (!approxEquals(this._camera.up.x, this._cameraUp0.x) || !approxEquals(this._camera.up.y, this._cameraUp0.y) || !approxEquals(this._camera.up.z, this._cameraUp0.z)) {
-      this._camera.up.copy(this._cameraUp0);
-      const position2 = this.getPosition(_v3A);
-      this.updateCameraUp();
-      this.setPosition(position2.x, position2.y, position2.z);
-    }
-    const promises = [
-      this.setLookAt(this._position0.x, this._position0.y, this._position0.z, this._target0.x, this._target0.y, this._target0.z, enableTransition),
-      this.setFocalOffset(this._focalOffset0.x, this._focalOffset0.y, this._focalOffset0.z, enableTransition),
-      this.zoomTo(this._zoom0, enableTransition)
-    ];
-    return Promise.all(promises);
-  }
-  saveState() {
-    this._cameraUp0.copy(this._camera.up);
-    this.getTarget(this._target0);
-    this.getPosition(this._position0);
-    this._zoom0 = this._zoom;
-    this._focalOffset0.copy(this._focalOffset);
-  }
-  updateCameraUp() {
-    this._yAxisUpSpace.setFromUnitVectors(this._camera.up, _AXIS_Y);
-    this._yAxisUpSpaceInverse.copy(this._yAxisUpSpace).invert();
-  }
-  applyCameraUp() {
-    const cameraDirection = _v3A.subVectors(this._target, this._camera.position).normalize();
-    const side = _v3B.crossVectors(cameraDirection, this._camera.up);
-    this._camera.up.crossVectors(side, cameraDirection).normalize();
-    this._camera.updateMatrixWorld();
-    const position2 = this.getPosition(_v3A);
-    this.updateCameraUp();
-    this.setPosition(position2.x, position2.y, position2.z);
-  }
-  update(delta) {
-    const deltaTheta = this._sphericalEnd.theta - this._spherical.theta;
-    const deltaPhi = this._sphericalEnd.phi - this._spherical.phi;
-    const deltaRadius = this._sphericalEnd.radius - this._spherical.radius;
-    const deltaTarget = _deltaTarget.subVectors(this._targetEnd, this._target);
-    const deltaOffset = _deltaOffset.subVectors(this._focalOffsetEnd, this._focalOffset);
-    const deltaZoom = this._zoomEnd - this._zoom;
-    if (approxZero(deltaTheta)) {
-      this._thetaVelocity.value = 0;
-      this._spherical.theta = this._sphericalEnd.theta;
-    } else {
-      const smoothTime = this._isUserControllingRotate ? this.draggingSmoothTime : this.smoothTime;
-      this._spherical.theta = smoothDamp(this._spherical.theta, this._sphericalEnd.theta, this._thetaVelocity, smoothTime, Infinity, delta);
-      this._needsUpdate = true;
-    }
-    if (approxZero(deltaPhi)) {
-      this._phiVelocity.value = 0;
-      this._spherical.phi = this._sphericalEnd.phi;
-    } else {
-      const smoothTime = this._isUserControllingRotate ? this.draggingSmoothTime : this.smoothTime;
-      this._spherical.phi = smoothDamp(this._spherical.phi, this._sphericalEnd.phi, this._phiVelocity, smoothTime, Infinity, delta);
-      this._needsUpdate = true;
-    }
-    if (approxZero(deltaRadius)) {
-      this._radiusVelocity.value = 0;
-      this._spherical.radius = this._sphericalEnd.radius;
-    } else {
-      const smoothTime = this._isUserControllingDolly ? this.draggingSmoothTime : this.smoothTime;
-      this._spherical.radius = smoothDamp(this._spherical.radius, this._sphericalEnd.radius, this._radiusVelocity, smoothTime, this.maxSpeed, delta);
-      this._needsUpdate = true;
-    }
-    if (approxZero(deltaTarget.x) && approxZero(deltaTarget.y) && approxZero(deltaTarget.z)) {
-      this._targetVelocity.set(0, 0, 0);
-      this._target.copy(this._targetEnd);
-    } else {
-      const smoothTime = this._isUserControllingTruck ? this.draggingSmoothTime : this.smoothTime;
-      smoothDampVec3(this._target, this._targetEnd, this._targetVelocity, smoothTime, this.maxSpeed, delta, this._target);
-      this._needsUpdate = true;
-    }
-    if (approxZero(deltaOffset.x) && approxZero(deltaOffset.y) && approxZero(deltaOffset.z)) {
-      this._focalOffsetVelocity.set(0, 0, 0);
-      this._focalOffset.copy(this._focalOffsetEnd);
-    } else {
-      const smoothTime = this._isUserControllingOffset ? this.draggingSmoothTime : this.smoothTime;
-      smoothDampVec3(this._focalOffset, this._focalOffsetEnd, this._focalOffsetVelocity, smoothTime, this.maxSpeed, delta, this._focalOffset);
-      this._needsUpdate = true;
-    }
-    if (approxZero(deltaZoom)) {
-      this._zoomVelocity.value = 0;
-      this._zoom = this._zoomEnd;
-    } else {
-      const smoothTime = this._isUserControllingZoom ? this.draggingSmoothTime : this.smoothTime;
-      this._zoom = smoothDamp(this._zoom, this._zoomEnd, this._zoomVelocity, smoothTime, Infinity, delta);
-    }
-    if (this.dollyToCursor) {
-      if (isPerspectiveCamera(this._camera) && this._changedDolly !== 0) {
-        const dollyControlAmount = this._spherical.radius - this._lastDistance;
-        const camera = this._camera;
-        const cameraDirection = this._getCameraDirection(_cameraDirection);
-        const planeX = _v3A.copy(cameraDirection).cross(camera.up).normalize();
-        if (planeX.lengthSq() === 0)
-          planeX.x = 1;
-        const planeY = _v3B.crossVectors(planeX, cameraDirection);
-        const worldToScreen = this._sphericalEnd.radius * Math.tan(camera.getEffectiveFOV() * DEG2RAD2 * 0.5);
-        const prevRadius = this._sphericalEnd.radius - dollyControlAmount;
-        const lerpRatio = (prevRadius - this._sphericalEnd.radius) / this._sphericalEnd.radius;
-        const cursor = _v3C.copy(this._targetEnd).add(planeX.multiplyScalar(this._dollyControlCoord.x * worldToScreen * camera.aspect)).add(planeY.multiplyScalar(this._dollyControlCoord.y * worldToScreen));
-        const newTargetEnd = _v3A.copy(this._targetEnd).lerp(cursor, lerpRatio);
-        const isMin = this._lastDollyDirection === DOLLY_DIRECTION.IN && this._spherical.radius <= this.minDistance;
-        const isMax = this._lastDollyDirection === DOLLY_DIRECTION.OUT && this.maxDistance <= this._spherical.radius;
-        if (this.infinityDolly && (isMin || isMax)) {
-          this._sphericalEnd.radius -= dollyControlAmount;
-          this._spherical.radius -= dollyControlAmount;
-          const dollyAmount = _v3B.copy(cameraDirection).multiplyScalar(-dollyControlAmount);
-          newTargetEnd.add(dollyAmount);
-        }
-        this._boundary.clampPoint(newTargetEnd, newTargetEnd);
-        const targetEndDiff = _v3B.subVectors(newTargetEnd, this._targetEnd);
-        this._targetEnd.copy(newTargetEnd);
-        this._target.add(targetEndDiff);
-        this._changedDolly -= dollyControlAmount;
-        if (approxZero(this._changedDolly))
-          this._changedDolly = 0;
-      } else if (isOrthographicCamera(this._camera) && this._changedZoom !== 0) {
-        const dollyControlAmount = this._zoom - this._lastZoom;
-        const camera = this._camera;
-        const worldCursorPosition = _v3A.set(this._dollyControlCoord.x, this._dollyControlCoord.y, (camera.near + camera.far) / (camera.near - camera.far)).unproject(camera);
-        const quaternion = _v3B.set(0, 0, -1).applyQuaternion(camera.quaternion);
-        const cursor = _v3C.copy(worldCursorPosition).add(quaternion.multiplyScalar(-worldCursorPosition.dot(camera.up)));
-        const prevZoom = this._zoom - dollyControlAmount;
-        const lerpRatio = -(prevZoom - this._zoom) / this._zoom;
-        const cameraDirection = this._getCameraDirection(_cameraDirection);
-        const prevPlaneConstant = this._targetEnd.dot(cameraDirection);
-        const newTargetEnd = _v3A.copy(this._targetEnd).lerp(cursor, lerpRatio);
-        const newPlaneConstant = newTargetEnd.dot(cameraDirection);
-        const pullBack = cameraDirection.multiplyScalar(newPlaneConstant - prevPlaneConstant);
-        newTargetEnd.sub(pullBack);
-        this._boundary.clampPoint(newTargetEnd, newTargetEnd);
-        const targetEndDiff = _v3B.subVectors(newTargetEnd, this._targetEnd);
-        this._targetEnd.copy(newTargetEnd);
-        this._target.add(targetEndDiff);
-        this._changedZoom -= dollyControlAmount;
-        if (approxZero(this._changedZoom))
-          this._changedZoom = 0;
-      }
-    }
-    if (this._camera.zoom !== this._zoom) {
-      this._camera.zoom = this._zoom;
-      this._camera.updateProjectionMatrix();
-      this._updateNearPlaneCorners();
-      this._needsUpdate = true;
-    }
-    this._dragNeedsUpdate = true;
-    const maxDistance = this._collisionTest();
-    this._spherical.radius = Math.min(this._spherical.radius, maxDistance);
-    this._spherical.makeSafe();
-    this._camera.position.setFromSpherical(this._spherical).applyQuaternion(this._yAxisUpSpaceInverse).add(this._target);
-    this._camera.lookAt(this._target);
-    const affectOffset = !approxZero(this._focalOffset.x) || !approxZero(this._focalOffset.y) || !approxZero(this._focalOffset.z);
-    if (affectOffset) {
-      this._camera.updateMatrixWorld();
-      _xColumn.setFromMatrixColumn(this._camera.matrix, 0);
-      _yColumn.setFromMatrixColumn(this._camera.matrix, 1);
-      _zColumn.setFromMatrixColumn(this._camera.matrix, 2);
-      _xColumn.multiplyScalar(this._focalOffset.x);
-      _yColumn.multiplyScalar(-this._focalOffset.y);
-      _zColumn.multiplyScalar(this._focalOffset.z);
-      _v3A.copy(_xColumn).add(_yColumn).add(_zColumn);
-      this._camera.position.add(_v3A);
-    }
-    if (this._boundaryEnclosesCamera) {
-      this._encloseToBoundary(this._camera.position.copy(this._target), _v3A.setFromSpherical(this._spherical).applyQuaternion(this._yAxisUpSpaceInverse), 1);
-    }
-    const updated = this._needsUpdate;
-    if (updated && !this._updatedLastTime) {
-      this._hasRested = false;
-      this.dispatchEvent({ type: "wake" });
-      this.dispatchEvent({ type: "update" });
-    } else if (updated) {
-      this.dispatchEvent({ type: "update" });
-      if (approxZero(deltaTheta, this.restThreshold) && approxZero(deltaPhi, this.restThreshold) && approxZero(deltaRadius, this.restThreshold) && approxZero(deltaTarget.x, this.restThreshold) && approxZero(deltaTarget.y, this.restThreshold) && approxZero(deltaTarget.z, this.restThreshold) && approxZero(deltaOffset.x, this.restThreshold) && approxZero(deltaOffset.y, this.restThreshold) && approxZero(deltaOffset.z, this.restThreshold) && approxZero(deltaZoom, this.restThreshold) && !this._hasRested) {
-        this._hasRested = true;
-        this.dispatchEvent({ type: "rest" });
-      }
-    } else if (!updated && this._updatedLastTime) {
-      this.dispatchEvent({ type: "sleep" });
-    }
-    this._lastDistance = this._spherical.radius;
-    this._lastZoom = this._zoom;
-    this._updatedLastTime = updated;
-    this._needsUpdate = false;
-    return updated;
-  }
-  toJSON() {
-    return JSON.stringify({
-      enabled: this._enabled,
-      minDistance: this.minDistance,
-      maxDistance: infinityToMaxNumber(this.maxDistance),
-      minZoom: this.minZoom,
-      maxZoom: infinityToMaxNumber(this.maxZoom),
-      minPolarAngle: this.minPolarAngle,
-      maxPolarAngle: infinityToMaxNumber(this.maxPolarAngle),
-      minAzimuthAngle: infinityToMaxNumber(this.minAzimuthAngle),
-      maxAzimuthAngle: infinityToMaxNumber(this.maxAzimuthAngle),
-      smoothTime: this.smoothTime,
-      draggingSmoothTime: this.draggingSmoothTime,
-      dollySpeed: this.dollySpeed,
-      truckSpeed: this.truckSpeed,
-      dollyToCursor: this.dollyToCursor,
-      verticalDragToForward: this.verticalDragToForward,
-      target: this._targetEnd.toArray(),
-      position: _v3A.setFromSpherical(this._sphericalEnd).add(this._targetEnd).toArray(),
-      zoom: this._zoomEnd,
-      focalOffset: this._focalOffsetEnd.toArray(),
-      target0: this._target0.toArray(),
-      position0: this._position0.toArray(),
-      zoom0: this._zoom0,
-      focalOffset0: this._focalOffset0.toArray()
-    });
-  }
-  fromJSON(json, enableTransition = false) {
-    const obj = JSON.parse(json);
-    this.enabled = obj.enabled;
-    this.minDistance = obj.minDistance;
-    this.maxDistance = maxNumberToInfinity(obj.maxDistance);
-    this.minZoom = obj.minZoom;
-    this.maxZoom = maxNumberToInfinity(obj.maxZoom);
-    this.minPolarAngle = obj.minPolarAngle;
-    this.maxPolarAngle = maxNumberToInfinity(obj.maxPolarAngle);
-    this.minAzimuthAngle = maxNumberToInfinity(obj.minAzimuthAngle);
-    this.maxAzimuthAngle = maxNumberToInfinity(obj.maxAzimuthAngle);
-    this.smoothTime = obj.smoothTime;
-    this.draggingSmoothTime = obj.draggingSmoothTime;
-    this.dollySpeed = obj.dollySpeed;
-    this.truckSpeed = obj.truckSpeed;
-    this.dollyToCursor = obj.dollyToCursor;
-    this.verticalDragToForward = obj.verticalDragToForward;
-    this._target0.fromArray(obj.target0);
-    this._position0.fromArray(obj.position0);
-    this._zoom0 = obj.zoom0;
-    this._focalOffset0.fromArray(obj.focalOffset0);
-    this.moveTo(obj.target[0], obj.target[1], obj.target[2], enableTransition);
-    _sphericalA.setFromVector3(_v3A.fromArray(obj.position).sub(this._targetEnd).applyQuaternion(this._yAxisUpSpace));
-    this.rotateTo(_sphericalA.theta, _sphericalA.phi, enableTransition);
-    this.dollyTo(_sphericalA.radius, enableTransition);
-    this.zoomTo(obj.zoom, enableTransition);
-    this.setFocalOffset(obj.focalOffset[0], obj.focalOffset[1], obj.focalOffset[2], enableTransition);
-    this._needsUpdate = true;
-  }
-  connect(domElement) {
-    if (this._domElement) {
-      console.warn("camera-controls is already connected.");
-      return;
-    }
-    domElement.setAttribute("data-camera-controls-version", VERSION);
-    this._addAllEventListeners(domElement);
-    this._getClientRect(this._elementRect);
-  }
-  disconnect() {
-    this.cancel();
-    this._removeAllEventListeners();
-    if (this._domElement) {
-      this._domElement.removeAttribute("data-camera-controls-version");
-      this._domElement = undefined;
-    }
-  }
-  dispose() {
-    this.removeAllEventListeners();
-    this.disconnect();
-  }
-  _getTargetDirection(out) {
-    return out.setFromSpherical(this._spherical).divideScalar(this._spherical.radius).applyQuaternion(this._yAxisUpSpaceInverse);
-  }
-  _getCameraDirection(out) {
-    return this._getTargetDirection(out).negate();
-  }
-  _findPointerById(pointerId) {
-    return this._activePointers.find((activePointer) => activePointer.pointerId === pointerId);
-  }
-  _findPointerByMouseButton(mouseButton) {
-    return this._activePointers.find((activePointer) => activePointer.mouseButton === mouseButton);
-  }
-  _disposePointer(pointer) {
-    this._activePointers.splice(this._activePointers.indexOf(pointer), 1);
-  }
-  _encloseToBoundary(position2, offset, friction) {
-    const offsetLength2 = offset.lengthSq();
-    if (offsetLength2 === 0) {
-      return position2;
-    }
-    const newTarget = _v3B.copy(offset).add(position2);
-    const clampedTarget = this._boundary.clampPoint(newTarget, _v3C);
-    const deltaClampedTarget = clampedTarget.sub(newTarget);
-    const deltaClampedTargetLength2 = deltaClampedTarget.lengthSq();
-    if (deltaClampedTargetLength2 === 0) {
-      return position2.add(offset);
-    } else if (deltaClampedTargetLength2 === offsetLength2) {
-      return position2;
-    } else if (friction === 0) {
-      return position2.add(offset).add(deltaClampedTarget);
-    } else {
-      const offsetFactor = 1 + friction * deltaClampedTargetLength2 / offset.dot(deltaClampedTarget);
-      return position2.add(_v3B.copy(offset).multiplyScalar(offsetFactor)).add(deltaClampedTarget.multiplyScalar(1 - friction));
-    }
-  }
-  _updateNearPlaneCorners() {
-    if (isPerspectiveCamera(this._camera)) {
-      const camera = this._camera;
-      const near = camera.near;
-      const fov2 = camera.getEffectiveFOV() * DEG2RAD2;
-      const heightHalf = Math.tan(fov2 * 0.5) * near;
-      const widthHalf = heightHalf * camera.aspect;
-      this._nearPlaneCorners[0].set(-widthHalf, -heightHalf, 0);
-      this._nearPlaneCorners[1].set(widthHalf, -heightHalf, 0);
-      this._nearPlaneCorners[2].set(widthHalf, heightHalf, 0);
-      this._nearPlaneCorners[3].set(-widthHalf, heightHalf, 0);
-    } else if (isOrthographicCamera(this._camera)) {
-      const camera = this._camera;
-      const zoomInv = 1 / camera.zoom;
-      const left = camera.left * zoomInv;
-      const right = camera.right * zoomInv;
-      const top = camera.top * zoomInv;
-      const bottom = camera.bottom * zoomInv;
-      this._nearPlaneCorners[0].set(left, top, 0);
-      this._nearPlaneCorners[1].set(right, top, 0);
-      this._nearPlaneCorners[2].set(right, bottom, 0);
-      this._nearPlaneCorners[3].set(left, bottom, 0);
-    }
-  }
-  _collisionTest() {
-    let distance = Infinity;
-    const hasCollider = this.colliderMeshes.length >= 1;
-    if (!hasCollider)
-      return distance;
-    if (notSupportedInOrthographicCamera(this._camera, "_collisionTest"))
-      return distance;
-    const rayDirection = this._getTargetDirection(_cameraDirection);
-    _rotationMatrix.lookAt(_ORIGIN, rayDirection, this._camera.up);
-    for (let i = 0;i < 4; i++) {
-      const nearPlaneCorner = _v3B.copy(this._nearPlaneCorners[i]);
-      nearPlaneCorner.applyMatrix4(_rotationMatrix);
-      const origin = _v3C.addVectors(this._target, nearPlaneCorner);
-      _raycaster4.set(origin, rayDirection);
-      _raycaster4.far = this._spherical.radius + 1;
-      const intersects2 = _raycaster4.intersectObjects(this.colliderMeshes);
-      if (intersects2.length !== 0 && intersects2[0].distance < distance) {
-        distance = intersects2[0].distance;
-      }
-    }
-    return distance;
-  }
-  _getClientRect(target) {
-    if (!this._domElement)
-      return;
-    const rect = this._domElement.getBoundingClientRect();
-    target.x = rect.left;
-    target.y = rect.top;
-    if (this._viewport) {
-      target.x += this._viewport.x;
-      target.y += rect.height - this._viewport.w - this._viewport.y;
-      target.width = this._viewport.z;
-      target.height = this._viewport.w;
-    } else {
-      target.width = rect.width;
-      target.height = rect.height;
-    }
-    return target;
-  }
-  _createOnRestPromise(resolveImmediately) {
-    if (resolveImmediately)
-      return Promise.resolve();
-    this._hasRested = false;
-    this.dispatchEvent({ type: "transitionstart" });
-    return new Promise((resolve) => {
-      const onResolve = () => {
-        this.removeEventListener("rest", onResolve);
-        resolve();
-      };
-      this.addEventListener("rest", onResolve);
-    });
-  }
-  _addAllEventListeners(_domElement) {
-  }
-  _removeAllEventListeners() {
-  }
-  get dampingFactor() {
-    console.warn(".dampingFactor has been deprecated. use smoothTime (in seconds) instead.");
-    return 0;
-  }
-  set dampingFactor(_9) {
-    console.warn(".dampingFactor has been deprecated. use smoothTime (in seconds) instead.");
-  }
-  get draggingDampingFactor() {
-    console.warn(".draggingDampingFactor has been deprecated. use draggingSmoothTime (in seconds) instead.");
-    return 0;
-  }
-  set draggingDampingFactor(_9) {
-    console.warn(".draggingDampingFactor has been deprecated. use draggingSmoothTime (in seconds) instead.");
-  }
-  static createBoundingSphere(object3d, out = new THREE12.Sphere) {
-    const boundingSphere = out;
-    const center = boundingSphere.center;
-    _box3A.makeEmpty();
-    object3d.traverseVisible((object) => {
-      if (!object.isMesh)
-        return;
-      _box3A.expandByObject(object);
-    });
-    _box3A.getCenter(center);
-    let maxRadiusSq = 0;
-    object3d.traverseVisible((object) => {
-      if (!object.isMesh)
-        return;
-      const mesh = object;
-      const geometry = mesh.geometry.clone();
-      geometry.applyMatrix4(mesh.matrixWorld);
-      const bufferGeometry = geometry;
-      const position2 = bufferGeometry.attributes.position;
-      for (let i = 0, l2 = position2.count;i < l2; i++) {
-        _v3A.fromBufferAttribute(position2, i);
-        maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(_v3A));
-      }
-    });
-    boundingSphere.radius = Math.sqrt(maxRadiusSq);
-    return boundingSphere;
-  }
-}
-
-// src/class/3d/effect/SparkleParticle.ts
-var THREE13 = _THREE();
-
-class SparkleParticle {
-  scene;
-  position;
-  texture;
-  duration;
-  particleCount;
-  timeElapsed;
-  geometry;
-  material;
-  particles;
-  constructor(scene, position2, texture, duration = 0.2, particleCount = 6) {
-    this.scene = scene;
-    this.position = position2;
-    this.texture = texture;
-    this.duration = duration;
-    this.particleCount = particleCount;
-    this.timeElapsed = 0;
-    this.initParticles();
-  }
-  initParticles() {
-    this.geometry = new THREE13.BufferGeometry;
-    const positions = [];
-    const sizes = [];
-    const minDistance = 1;
-    for (let i = 0;i < this.particleCount; i++) {
-      let validPosition = false;
-      let x2, y3, z2;
-      while (!validPosition) {
-        x2 = this.position.x + Math.random() * 5 - 2.5;
-        y3 = this.position.y + Math.random() * 6.5 - 2.5;
-        z2 = this.position.z + Math.random() * 5 - 2.5;
-        validPosition = true;
-        for (let j2 = 0;j2 < i; j2++) {
-          const dx = x2 - positions[j2 * 3];
-          const dy2 = y3 - positions[j2 * 3 + 1];
-          const dz = z2 - positions[j2 * 3 + 2];
-          const distance = Math.sqrt(dx * dx + dy2 * dy2 + dz * dz);
-          if (distance < minDistance) {
-            validPosition = false;
-            break;
-          }
-        }
-      }
-      positions.push(x2, y3, z2);
-      sizes.push(Math.random() * 5 + 0.1);
-    }
-    this.geometry.setAttribute("position", new THREE13.Float32BufferAttribute(positions, 3));
-    this.geometry.setAttribute("size", new THREE13.Float32BufferAttribute(sizes, 1));
-    this.material = new THREE13.PointsMaterial({
-      size: 4,
-      map: this.texture,
-      transparent: true,
-      blending: THREE13.AdditiveBlending,
-      depthWrite: false
-    });
-    this.particles = new THREE13.Points(this.geometry, this.material);
-    this.scene.add(this.particles);
-  }
-  update(deltaTime) {
-    this.timeElapsed += deltaTime;
-    this.material.opacity = 1 - this.timeElapsed / this.duration;
-    if (this.timeElapsed >= this.duration) {
-      this.dispose();
-    }
-    return true;
-  }
-  dispose() {
-    this.scene.remove(this.particles);
-    this.particles.geometry.dispose();
-    this.particles.material.dispose();
-    return false;
-  }
-}
-
-// src/util/FFLLoader.ts
-var __5 = _8();
-var FFLModule2;
-var getFFL = () => FFLModule2;
-var currentLoadingModal;
-var getCurrentLoadingModal = () => currentLoadingModal;
-async function prepareFFL() {
-  if (Config.renderer.useRendererServer !== false) {
-    return console.log("why do you");
-  }
-  currentLoadingModal = Modal_default.modal(__5("Notice"), __5("Mii Creator is loading assets, please wait..."));
-  FFLModule2 = (await Promise.resolve().then(() => __toESM(require_ffl_emscripten(), 1))).default;
-  FFLModule2 = await FFLModule2({
-    locateFile: (path) => {
-      return "/dist/" + path;
-    }
-  });
-  console.log(FFLModule2);
-  console.log("We've got FFL!");
-  await loadBodyModels();
-  await loadHatModels();
-  await loadClothesTextures();
-  const fflResourceFile = await fetch(Config.renderer.fflResourcePath[await getSetting("resourceType")]);
-  let { module: module2 } = await initializeFFL(fflResourceFile, FFLModule2);
-  FFLModule2 = module2;
-  console.log("Ready!");
-  closeModal(currentLoadingModal);
-}
-
-// src/util/MiiRendering.ts
-var THREE14 = _THREE();
-async function getHeadModel(mii, rendererRef, modelFlag, texResolution) {
-  const dataU8 = mii.export("studioData");
-  const modelDesc = FFLCharModelDescDefault;
-  modelDesc.resolution = 512;
-  modelDesc.allExpressionFlag = new Uint32Array([1, 0, 0]);
-  if (modelFlag)
-    modelDesc.modelFlag = FFLModelFlag[modelFlag];
-  if (texResolution)
-    modelDesc.resolution = texResolution;
-  let currentCharModel;
-  try {
-    currentCharModel = createCharModel(dataU8, modelDesc, await getShaderMaterialFromShaderType(), getFFL(), false);
-    if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
-      window.eyeScleraHack = true;
-    }
-    currentCharModel._materialTextureClass = FFLShaderMaterial_default;
-    initCharModelTextures(currentCharModel, rendererRef, FFLShaderMaterial_default);
-    if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
-      window.eyeScleraHack = false;
-    }
-  } catch (err) {
-    currentCharModel = null;
-    alert(`Error creating/updating CharModel: ${err}`);
-    console.error("Error creating/updating CharModel:", err);
-    throw err;
-  }
-  const asset = {
-    extras: {
-      partsTransform: currentCharModel.partsTransform
-    }
-  };
-  let scene = new THREE14.Group;
-  scene.add(currentCharModel.meshes);
-  return {
-    animations: [],
-    asset,
-    cameras: [],
-    parser: {},
-    scene,
-    scenes: [scene],
-    userData: {},
-    CharModel: currentCharModel
-  };
-}
-async function getMaskTex(mii, rendererRef, expressionFlag = new Uint32Array([1, 0, 0])) {
-  const dataU8 = mii.export("studioData");
-  const modelDesc = FFLCharModelDescDefault;
-  modelDesc.resolution = 1024;
-  modelDesc.allExpressionFlag = expressionFlag;
-  let currentCharModel;
-  var img;
-  const shaderMaterial = await getShaderMaterialFromShaderType();
-  try {
-    currentCharModel = createCharModel(dataU8, modelDesc, shaderMaterial, getFFL(), false);
-    img = await new Promise((resolve) => {
-      if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
-        window.eyeScleraHack = true;
-      }
-      initCharModelTextures(currentCharModel, rendererRef, FFLShaderMaterial_default);
-      if (mii.eyeSclera === 1 && mii.eyeColor !== 8) {
-        window.eyeScleraHack = false;
-      }
-      const target = currentCharModel._maskTargets[currentCharModel.expression];
-      renderTargetToDataTexture(target, rendererRef).then((r) => {
-        resolve(r);
-      });
-    });
-  } catch (err) {
-    currentCharModel = null;
-    alert(`Error creating/updating CharModel: ${err}`);
-    console.error("Error creating/updating CharModel:", err);
-    throw err;
-  }
-  return { img, model: currentCharModel };
-}
-
-// src/class/3DScene.ts
-var import_jszip3 = __toESM(require_lib(), 1);
-
-// src/util/scaling.ts
-var THREE15 = _THREE();
-function streetpassHandScaling(body, scaleMul = 1) {
-  const k4 = 0.2;
-  var scaleVec = new THREE15.Vector3;
-  body.getWorldScale(scaleVec);
-  const baseHandScaleX = 1 / scaleVec.x;
-  const baseHandScaleY = 1 / scaleVec.y;
-  const adjustmentFactor = 1 + k4 * (scaleVec.y - 1);
-  const adjustedHandScaleY = baseHandScaleY * adjustmentFactor;
-  body.getObjectByName("handLPs").scale.set(baseHandScaleX, adjustedHandScaleY, baseHandScaleX);
-  body.getObjectByName("handRPs").scale.set(baseHandScaleX, adjustedHandScaleY, baseHandScaleX);
-}
-
-// src/class/3DScene.ts
-var THREE16 = _THREE();
-class Mii3DScene {
-  #camera;
-  #controls;
-  #textureLoader;
-  #gltfLoader;
-  #scene;
-  #renderer;
-  #parent;
-  charModel;
-  mii;
-  ready;
-  headReady;
-  mixer;
-  animators;
-  animations;
-  setupType;
-  #initCallback;
-  type;
-  cameraPan;
-  shaderOverride;
-  bodyModel;
-  handColor;
-  shaderType;
-  simpleShaderLegacyColors;
-  hatModels;
-  clothingTextures;
-  editor;
-  camSetup;
-  texResolution;
-  constructor(mii, parent2, setupType = 0 /* Normal */, initCallback, shaderOverride = false, editor) {
-    this.animations = new Map;
-    this.animators = new Map;
-    this.anim = new Map;
-    this.#parent = parent2;
-    this.#scene = new THREE16.Scene;
-    this.#camera = new THREE16.PerspectiveCamera(45, parent2.offsetWidth / parent2.offsetHeight, 0.1, 1000);
-    this.ready = false;
-    this.headReady = false;
-    this.texResolution = 512;
-    if (initCallback)
-      this.#initCallback = initCallback;
-    this.shaderOverride = shaderOverride;
-    this.editor = editor;
-    if (setupType === 1 /* Screenshot */) {
-      this.#renderer = new THREE16.WebGLRenderer({
-        alpha: true,
-        antialias: true,
-        preserveDrawingBuffer: true
-      });
-      this.texResolution = 1024;
-    } else {
-      this.#renderer = new THREE16.WebGLRenderer({
-        alpha: true,
-        antialias: true
-      });
-    }
-    this.#renderer.outputColorSpace = THREE16.LinearSRGBColorSpace;
-    this.getRendererElement().classList.add("scene");
-    this.setupType = setupType;
-    getSetting("bodyModel").then((type) => {
-      this.bodyModel = type;
-    });
-    getSetting("shaderType").then((type) => {
-      this.shaderType = type;
-      getSetting("simpleShaderLegacyColors").then((val2) => {
-        this.simpleShaderLegacyColors = val2;
-      });
-      this.#gltfLoader = new GLTFLoader;
-      this.#gltfLoader.setMeshoptDecoder(MeshoptDecoder);
-      if (type === "none") {
-        const cubeTextureLoader = new THREE16.CubeTextureLoader;
-        const environmentMap = cubeTextureLoader.load([
-          "./cube_map.png",
-          "./cube_map.png",
-          "./cube_map.png",
-          "./cube_map.png",
-          "./cube_map.png",
-          "./cube_map.png"
-        ]);
-        this.#scene.environment = environmentMap;
-        this.#scene.environmentIntensity = 1.25;
-        const directionalLight = new THREE16.DirectionalLight(15466239, Math.PI);
-        directionalLight.position.set(1, 0.1, 1);
-        this.#scene.add(directionalLight);
-        const ambientLight = new THREE16.AmbientLight(6710886, Math.PI / 16);
-        this.#scene.add(ambientLight);
-      } else if (type !== "lightDisabled") {
-        this.#scene.environmentIntensity = 0;
-      }
-      this.focusCamera(0 /* MiiHead */, true);
-    });
-    this.#renderer.setSize(512, 512);
-    this.#renderer.setPixelRatio(window.devicePixelRatio);
-    CameraControls.install({ THREE: THREE16 });
-    this.#controls = new CameraControls(this.#camera, this.#renderer.domElement);
-    if (setupType === 0 /* Normal */) {
-      this.camSetup = async () => {
-        const canPan = this.cameraPan !== undefined ? this.cameraPan : false;
-        this.#controls.minAzimuthAngle = -Math.PI;
-        this.#controls.maxAzimuthAngle = Math.PI;
-        this.#controls.minPolarAngle = 0.98;
-        this.#controls.maxPolarAngle = 1.8;
-        if (canPan !== true) {
-          console.log("canPan is not false:", canPan);
-          this.#controls.mouseButtons.left = CameraControls.ACTION.ROTATE;
-          this.#controls.mouseButtons.right = CameraControls.ACTION.NONE;
-          this.#controls.mouseButtons.wheel = CameraControls.ACTION.DOLLY;
-          this.#controls.touches.one = CameraControls.ACTION.TOUCH_ROTATE;
-          this.#controls.touches.two = CameraControls.ACTION.TOUCH_DOLLY;
-          this.#controls.touches.three = CameraControls.ACTION.NONE;
-          this.#controls.enabled = true;
-          this.#controls.minDistance = 10;
-          this.#controls.maxDistance = 35;
-          this.#controls.zoomTo(1);
-          this.cameraPan = true;
-        } else {
-          console.log("canPan is True:", canPan);
-          this.#controls.enabled = false;
-          this.#controls.minDistance = 60;
-          this.#controls.maxDistance = 140;
-          this.#controls.dollyTo(380 / 10);
-          this.#controls.zoomTo(2.5);
-          this.cameraPan = false;
-        }
-      };
-      this.camSetup();
-    }
-    if (setupType === 1 /* Screenshot */) {
-      this.#controls.dollyTo(40);
-      this.#camera.fov = 30;
-      this.#controls.minDistance = 8;
-      this.#controls.maxDistance = 300;
-    } else {
-      setTimeout(() => {
-        this.focusCamera(0 /* MiiHead */, true);
-      }, 200);
-    }
-    this.animators.set("cameraControls", (time2, delta) => {
-      this.#controls.update(delta);
-    });
-    this.#textureLoader = new THREE16.TextureLoader;
-    this.mii = mii;
-    this.type = this.mii.gender === 0 ? "m" : "f";
-    const clock = new THREE16.Clock;
-    const animate = (time2) => {
-      const delta = clock.getDelta();
-      try {
-        this.#renderer.render(this.#scene, this.#camera);
-      } catch (e) {
-        console.error(e);
-      }
-      this.animators.forEach(function(f) {
-        f(time2, delta);
-      });
-    };
-    this.#renderer.setClearAlpha(0);
-    this.#renderer.setAnimationLoop(animate);
-    this.#camera.aspect = this.#parent.offsetWidth / this.#parent.offsetHeight;
-    this.#camera.updateProjectionMatrix();
-    this.resize();
-  }
-  async#loadZip(path, out, useKeys, type) {
-    this[out] = [];
-    const data2 = await fetch(path).then((j2) => j2.blob());
-    const zip = await import_jszip3.default.loadAsync(data2);
-    let promises = [];
-    const fileList = Object.keys(zip.files);
-    for (const file of fileList) {
-      promises.push(zip.files[file].async("blob"));
-    }
-    const resolves = await Promise.all(promises);
-    for (let i = 0;i < fileList.length; i++) {
-      const url = URL.createObjectURL(resolves[i]);
-      let result;
-      if (type === "gltf") {
-        result = await this.#gltfLoader.loadAsync(url);
-      } else {
-        result = await this.#textureLoader.loadAsync(url);
-        result.flipY = false;
-      }
-      if (useKeys) {
-        const fileName = fileList[i].split(".");
-        fileName.pop();
-        this[out][fileName.join(".")] = result;
-      } else {
-        this[out][i] = result;
-      }
-      URL.revokeObjectURL(url);
-    }
-  }
-  currentPosition;
-  focusCamera(part, force = false, transition = true, onlyReturn = false) {
-    this.#controls.smoothTime = 0.2;
-    if (this.currentPosition === part && force === false)
-      return;
-    this.currentPosition = part;
-    const pos = new THREE16.Vector3;
-    let body = this.#scene.getObjectByName(this.type), head2 = this.#scene.getObjectByName("MiiHead");
-    const rotation2 = 0;
-    if (part === 1 /* MiiFullBody */) {
-      if (body !== undefined && head2 !== undefined) {
-        const box = new THREE16.Box3().setFromObject(head2);
-        pos.y = box.max.y / 2;
-      }
-      if (onlyReturn === false) {
-        let minInput = 0, maxInput = 127, minOutput = 38, maxOutput = 40;
-        this.#controls.moveTo(pos.x, pos.y, pos.z, transition);
-        this.#controls.rotateTo(rotation2, Math.PI / 2, transition);
-        if (this.cameraPan === false) {
-          minOutput = 80;
-          maxOutput = 96;
-        }
-        this.#controls.dollyTo(minOutput + (this.mii.height - minInput) / (maxInput - minInput) * (maxOutput - minOutput), transition);
-      }
-      return pos;
-    } else if (part === 0 /* MiiHead */) {
-      switch (this.setupType) {
-        case 0 /* Normal */:
-          if (body !== undefined) {
-            const box = new THREE16.Box3().setFromObject(body);
-            pos.y = box.max.y - box.min.y;
-          }
-          if (onlyReturn === false) {
-            this.#controls.moveTo(pos.x, pos.y + 2, pos.z, transition);
-            this.#controls.rotateTo(rotation2, Math.PI / 2, transition);
-            this.#controls.dollyTo(25, transition);
-            if (this.cameraPan === false) {
-              this.#controls.moveTo(pos.x, pos.y + 1.75, pos.z, transition);
-              this.#controls.dollyTo(65, transition);
-            }
-          }
-          return pos;
-        case 1 /* Screenshot */:
-          if (this.getHead() !== undefined) {
-            const box = new THREE16.Box3().setFromObject(this.getHead());
-            pos.y = box.max.y - box.min.y;
-          }
-          this.#controls.moveTo(pos.x, pos.y + 1.75, pos.z, transition);
-          this.#controls.rotateTo(rotation2, Math.PI / 2, transition);
-          this.#controls.dollyTo(30, transition);
-          break;
-      }
-    }
-  }
-  focusCameraUpdate() {
-    if (this.ready)
-      this.camSetup();
-    if (this.anim)
-      switch (this.cameraPan) {
-        case true:
-          for (const [_9, anim] of this.anim) {
-            anim.timeScale = 0.5;
-          }
-          break;
-        case false:
-          for (const [_9, anim] of this.anim) {
-            anim.reset();
-            anim.timeScale = 0;
-          }
-          break;
-      }
-    this.focusCamera(this.currentPosition, true, false);
-  }
-  playEndingAnimation() {
-    this.#controls.enabled = false;
-    this.focusCamera(1 /* MiiFullBody */, true);
-    let heads = this.#scene.getObjectsByProperty("name", "MiiHead");
-    for (const head2 of heads) {
-      if (Config.renderer.useRendererServer) {
-      }
-      this.traverseAddFaceMaterial(head2, `&data=${encodeURIComponent(this.mii.exportHex("studioData"))}&expression=1&width=512`);
-    }
-    const type = this.mii.gender == 0 ? "m" : "f";
-    this.animators.delete(`animation-${type}`);
-    this.swapAnimation("Finish");
-    getSoundManager().playSound("finish");
-  }
-  resize(width2 = this.#parent.offsetWidth, height2 = this.#parent.offsetHeight) {
-    this.resizeRendererToDisplaySize(width2, height2);
-    let zoomValue = 1, widescreen = window.innerWidth > 960, is2DMode = !this.cameraPan;
-    switch (this.currentPosition) {
-      case 0 /* MiiHead */:
-        if (is2DMode)
-          zoomValue = widescreen ? 2.5 : 3.25;
-        else
-          zoomValue = widescreen ? 1 : 1.25;
-        break;
-      case 1 /* MiiFullBody */:
-        if (is2DMode)
-          zoomValue = widescreen ? 2.5 : 3.25;
-        else
-          zoomValue = 1;
-        break;
-    }
-    if (this.setupType !== 1 /* Screenshot */) {
-      this.#controls.zoomTo(zoomValue, true);
-    } else
-      this.#controls.zoomTo(1);
-  }
-  resizeRendererToDisplaySize(width2, height2) {
-    this.#camera.aspect = width2 / height2;
-    this.#camera.updateProjectionMatrix();
-    const canvas = this.#renderer.domElement;
-    const pixelRatio = window.devicePixelRatio;
-    const w = Math.floor(canvas.clientWidth * pixelRatio);
-    const h = Math.floor(canvas.clientHeight * pixelRatio);
-    this.#renderer.setSize(w, h, false);
-  }
-  preparing;
-  async init() {
-    if (this.ready)
-      return;
-    if (this.preparing)
-      return;
-    this.preparing = true;
-    this.ready = false;
-    this.getRendererElement().style.opacity = "0";
-    await this.#addBody();
-    this.updateBody(1 /* ClothingUpdate */);
-    this.swapAnimation("Wait", true);
-    await this.#loadZip("./assets/models/hat_models_bundle.zip", "hatModels", false, "gltf");
-    await this.#loadZip("./assets/images/mii_clothes_textures_bundle.zip", "clothingTextures", true, "texture");
-    this.ready = true;
-    this.preparing = false;
-    this.resize();
-    this.updateBody(1 /* ClothingUpdate */);
-    if (this.setupType === 1 /* Screenshot */) {
-      this.#initCallback && this.#initCallback(this.#renderer);
-      this.resize();
-      requestAnimationFrame(() => {
-        this.resize();
-      });
-      setTimeout(() => {
-        this.resize();
-      }, 0);
-    } else {
-      this.resize();
-      setTimeout(() => {
-        this.resize();
-        this.focusCamera(0 /* MiiHead */, true, false);
-      }, 500);
-    }
-  }
-  getRendererElement() {
-    return this.#renderer.domElement;
-  }
-  anim;
-  currentAnim;
-  initAnimation(mesh, id) {
-    console.debug("playAnimation() called:", mesh, id);
-    if (this.mixer === undefined)
-      this.mixer = new THREE16.AnimationMixer(this.#scene.getObjectByName("m"));
-    this.animators.set(id, (_time, delta) => {
-      try {
-        this.mixer.update(delta);
-      } catch (e) {
-        console.warn(e);
-      }
-    });
-  }
-  swapAnimation(newAnim, force = false) {
-    if (newAnim === this.currentAnim)
-      return;
-    console.debug("swapAnimation() called:", newAnim);
-    if (force !== true) {
-      for (const [_9, anim] of this.anim) {
-        anim.fadeOut(0.2);
-      }
-    } else {
-      for (const [_9, anim] of this.anim) {
-        anim.fadeOut(0).reset().stop();
-      }
-    }
-    this.currentAnim = newAnim;
-    let x2 = ["m", "f"];
-    for (const key2 of x2) {
-      let clip;
-      try {
-        clip = this.mixer.clipAction(this.animations.get(`${key2}-${newAnim}`), this.#scene.getObjectByName(key2));
-      } catch (e) {
-        return;
-      }
-      this.anim.set(key2, clip);
-      this.anim.get(key2).reset().setEffectiveTimeScale(1).setEffectiveWeight(1);
-      if (newAnim === "Wait") {
-        setTimeout(() => {
-          this.anim.get(key2).timeScale = 0.5;
-        }, 33.33);
-      }
-      if (newAnim === "Finish") {
-        setTimeout(() => {
-          this.anim.get(key2).timeScale = 0.8;
-        }, 33.33);
-      }
-      if (force === false) {
-        this.anim.get(key2).fadeIn(0.2).play();
-      } else {
-        this.anim.get(key2).play();
-      }
-      this.anim.get(key2).timeScale = 1;
-    }
-  }
-  async#addBody() {
-    console.log("addBody()");
-    const setupMiiBody = async (path, type) => {
-      const glb = await this.#gltfLoader.loadAsync(path);
-      const clips = glb.animations;
-      let armature = glb.scene.getObjectByName(type);
-      this.mixer = new THREE16.AnimationMixer(armature);
-      for (const anim of clips) {
-        this.animations.set(`${type}-${anim.name}`, anim);
-      }
-      glb.scene.name = `${type}-body-root`;
-      this.#scene.add(glb.scene);
-      this.initAnimation(glb.scene.getObjectByName(type), `animation-${type}`);
-      const gBodyMesh = glb.scene.getObjectByName(`body_${type}`);
-      gBodyMesh.geometry.userData = {
-        cullMode: 1,
-        modulateColor: MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor],
-        modulateMode: 0,
-        modulateType: 9
-      };
-      if (this.shaderOverride)
-        gBodyMesh.material = new THREE16.MeshStandardMaterial({
-          roughness: 1,
-          metalness: 1,
-          color: MiiFavoriteColorLookupTable[this.mii.favoriteColor]
-        });
-      else
-        traverseMesh(gBodyMesh, this.shaderType);
-      const gHandsMesh = glb.scene.getObjectByName(`hands_${type}`);
-      if (gHandsMesh) {
-        gHandsMesh.geometry.userData = {
-          cullMode: 1,
-          modulateColor: MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor],
-          modulateMode: 0,
-          modulateType: 9
-        };
-        if (this.shaderOverride)
-          gHandsMesh.material = new THREE16.MeshStandardMaterial({
-            roughness: 1,
-            metalness: 1,
-            color: MiiFavoriteColorLookupTable[this.mii.favoriteColor]
-          });
-        else {
-          traverseMesh(gHandsMesh, this.shaderType);
-        }
-      }
-      const gLegsMesh = glb.scene.getObjectByName(`legs_${type}`);
-      gLegsMesh.geometry.userData = {
-        cullMode: 1,
-        modulateColor: cPantsColorGray,
-        modulateMode: 0,
-        modulateType: 10
-      };
-      if (this.shaderOverride)
-        gLegsMesh.material = new THREE16.MeshStandardMaterial({
-          metalness: 1,
-          roughness: 1,
-          color: new THREE16.Color(this.getPantsColor()[0], this.getPantsColor()[1], this.getPantsColor()[2])
-        });
-      else
-        traverseMesh(gLegsMesh, this.shaderType);
-      if (this.#scene.getObjectByName("m"))
-        this.#scene.getObjectByName("m").visible = false;
-      if (this.#scene.getObjectByName("f"))
-        this.#scene.getObjectByName("f").visible = false;
-      glb.scene.rotation.set(0, 0, 0);
-      console.log(`setupBody("${path}", "${type}")`);
-    };
-    const bodyModel = await getSetting("bodyModel");
-    const loaders = [
-      setupMiiBody(`./assets/models/miiBodyM_${bodyModel}.glb`, "m"),
-      setupMiiBody(`./assets/models/miiBodyF_${bodyModel}.glb`, "f")
-    ];
-    await Promise.all(loaders);
-    console.log("READY");
-  }
-  getShirtColor() {
-    return this.mii.shirtColor !== -1 && this.mii.shirtColor < 100 ? SwitchMiiColorTableSRGB[this.mii.shirtColor] : MiiFavoriteFFLColorLookupTable[this.mii.favoriteColor];
-  }
-  getShoesColor() {
-    return this.mii.shoesColor !== -1 && this.mii.shoesColor < 100 ? SwitchMiiColorTableSRGB[this.mii.shoesColor] : [1, 1, 1];
-  }
-  getPantsColor() {
-    if (this.mii.pantsColor !== -1 && this.mii.pantsColor < 100 && !ForbiddenShirtPantColors.includes(this.mii.pantsColor)) {
-      return SwitchMiiColorTableSRGB[this.mii.pantsColor];
-    }
-    if (this.mii.special) {
-      return cPantsColorGold;
-    }
-    if (this.mii.favorite) {
-      return cPantsColorRed;
-    }
-    if (this.mii.temporary) {
-      return cPantsColorBlue;
-    }
-    return cPantsColorGray;
-  }
-  async updateBody(updateType = 0 /* None */) {
-    if (!this.ready)
-      return;
-    this.resize();
-    this.type = this.mii.gender === 0 ? "m" : "f";
-    const bodyM = this.#scene.getObjectByName("m-body-root");
-    const bodyF = this.#scene.getObjectByName("f-body-root");
-    if (!bodyM)
-      return;
-    if (!bodyF)
-      return;
-    const build = this.mii.build;
-    const height2 = this.mii.height;
-    let scaleFactors = { x: 0, y: 0, z: 0 };
-    switch (Config.mii.scalingMode) {
-      case "scaleLimit":
-        let heightFactor = height2 / 128;
-        scaleFactors.y = heightFactor * 0.55 + 0.6;
-        scaleFactors.x = heightFactor * 0.3 + 0.6;
-        scaleFactors.x = (heightFactor * 0.6 + 0.8 - scaleFactors.x) * (build / 128) + scaleFactors.x;
-        break;
-      case "scaleLimitClampY":
-        heightFactor = height2 / 128;
-        scaleFactors.y = heightFactor * 0.55 + 0.6;
-        scaleFactors.x = heightFactor * 0.3 + 0.6;
-        scaleFactors.x = (heightFactor * 0.6 + 0.8 - scaleFactors.x) * (build / 128) + scaleFactors.x;
-        scaleFactors.y = Math.min(scaleFactors.y, 1);
-        break;
-      case "scaleApply":
-        scaleFactors.x = build * (height2 * 0.003671875 + 0.4) / 128 + height2 * 0.001796875 + 0.4;
-        scaleFactors.y = height2 * 0.006015625 + 0.5;
-        break;
-    }
-    scaleFactors.z = scaleFactors.x;
-    let body = this.type === "m" ? bodyM : bodyF;
-    const traverseBones = (object) => {
-      object.scale.set(scaleFactors.x, scaleFactors.y, scaleFactors.z);
-      if (this.bodyModel === "streetpass") {
-        streetpassHandScaling(body);
-      }
-    };
-    const shaderSetting = await getSetting("shaderType");
-    const bodyModel = await getSetting("bodyModel");
-    const makeHeadBoneUpdate = (body2) => {
-      const quaternion = new THREE16.Quaternion;
-      const scale2 = new THREE16.Vector3;
-      return () => {
-        let headBone = body2.getObjectByName("head");
-        if (headBone === undefined)
-          headBone = body2.getObjectByName("Head");
-        if (!headBone)
-          return;
-        headBone.updateMatrixWorld(true);
-        const position2 = new THREE16.Vector3;
-        headBone.matrixWorld.decompose(position2, quaternion, scale2);
-        if (this.#scene.getObjectByName("MiiHead")) {
-          this.#scene.getObjectByName("MiiHead").position.copy(position2);
-          this.#scene.getObjectByName("MiiHead").setRotationFromQuaternion(quaternion);
-          if (bodyModel === "miitomo") {
-            this.#scene.getObjectByName("MiiHead").rotation.z -= Math.PI / 2;
-          } else {
-            this.#scene.getObjectByName("MiiHead").position.y += 0.1;
-          }
-        }
-      };
-    };
-    const assignMaterial = async (bodyN, type) => {
-      const hasShaderApplied = this.shaderOverride === false;
-      const nBody = bodyN.getObjectByName(type).getObjectByName("body_" + type);
-      const nLegs = bodyN.getObjectByName(type).getObjectByName("legs_" + type);
-      if (updateType === 1 /* ClothingUpdate */) {
-        if (hasShaderApplied) {
-          nBody.material.color = new THREE16.Color(...this.getShirtColor());
-        }
-        if (hasShaderApplied)
-          nLegs.material.color = new THREE16.Color(...this.getPantsColor());
-        if (this.mii.clothesType === -1) {
-          const isUsingShader = await isShaderMaterial();
-          let shirtModulate = isUsingShader ? { modulateMode: 0, modulateType: 9 } : {};
-          let pantsModulate = isUsingShader ? { modulateMode: 0, modulateType: 10 } : {};
-          nBody.material = new (await getShaderMaterialFromShaderType())({
-            color: new THREE16.Color(this.getShirtColor()[0], this.getShirtColor()[1], this.getShirtColor()[2]),
-            ...shirtModulate
-          });
-          nLegs.material = new (await getShaderMaterialFromShaderType())({
-            color: new THREE16.Color(this.getPantsColor()[0], this.getPantsColor()[1], this.getPantsColor()[2]),
-            ...pantsModulate
-          });
-        }
-        await clothingUpdate({
-          gender: this.mii.gender,
-          clothesType: this.mii.clothesType,
-          renderer: this.#renderer,
-          bodyModel: this.bodyModel,
-          shirtColor: this.getShirtColor(),
-          pantsColor: this.getPantsColor(),
-          shoesColor: this.getShoesColor(),
-          facelineColor: this.charModel.facelineColor,
-          nBody,
-          nLegs,
-          bodyGroup: this.#scene.getObjectByName(this.type),
-          clothesTextures: getClothesTextures(),
-          originalMaterial: await getShaderMaterialFromShaderType()
-        });
-      }
-    };
-    switch (this.mii.gender) {
-      case 0:
-        bodyM.getObjectByName("m").visible = true;
-        bodyF.getObjectByName("f").visible = false;
-        this.animators.set("head_bone", makeHeadBoneUpdate(bodyM));
-        traverseBones(bodyM);
-        assignMaterial(bodyM, "m");
-        break;
-      case 1:
-        bodyM.getObjectByName("m").visible = false;
-        bodyF.getObjectByName("f").visible = true;
-        this.animators.set("head_bone", makeHeadBoneUpdate(bodyF));
-        traverseBones(bodyF);
-        assignMaterial(bodyF, "f");
-        break;
-    }
-    if (updateType === 2 /* RepositionCamera */)
-      requestAnimationFrame(() => {
-        this.focusCamera(this.currentPosition, true, true, false);
-      });
-    else
-      requestAnimationFrame(() => {
-        this.resize();
-      });
-  }
-  debugGetScene() {
-    return this.#scene;
-  }
-  fadeIn() {
-    if (this.setupType === 0 /* Normal */) {
-      this.getRendererElement().style.opacity = "0";
-      setTimeout(() => {
-        this.getRendererElement().style.opacity = "1";
-      }, 500);
-    } else {
-      this.getRendererElement().style.opacity = "1";
-    }
-  }
-  async updateMiiHead(renderPart = 0 /* Head */) {
-    if (!this.ready) {
-      console.log("first time loading head");
-    }
-    let head2 = this.#scene.getObjectsByProperty("name", "MiiHead");
-    switch (renderPart) {
-      case 0 /* Head */:
-        try {
-          const tmpMii = new Mii(this.mii.export("miic"));
-          let params = {};
-          if (this.mii.hatType !== -1) {
-            switch (HatTypeList[this.mii.hatType]) {
-              case 1 /* HAT */:
-                params["modelType"] = "hat";
-                break;
-              case 2 /* FACE_ONLY */:
-                params["modelType"] = "face_only";
-                break;
-              case 6 /* BALD */:
-                tmpMii.hairType = 30;
-                break;
-            }
-          }
-          params["verifyCharInfo"] = "0";
-          let GLB;
-          if (Config.renderer.useRendererServer) {
-            GLB = null;
-          } else {
-            let modelType = "NORMAL";
-            switch (params.modelType) {
-              case "hat":
-                modelType = "HAT";
-                break;
-              case "face_only":
-                modelType = "FACE_ONLY";
-                break;
-            }
-            GLB = await getHeadModel(tmpMii, this.getRenderer(), modelType, this.texResolution);
-          }
-          GLB.scene.name = "MiiHead";
-          var headScale = 0.14;
-          GLB.scene.scale.set(headScale, headScale, headScale);
-          if (head2) {
-            this.#scene.remove(...head2);
-            this.#scene.getObjectsByProperty("name", "MiiHead").forEach((obj) => {
-              obj.parent.remove(obj);
-            });
-          }
-          console.debug("Adding head to scene");
-          this.resize();
-          this.#scene.add(GLB.scene);
-          if (Config.renderer.useRendererServer)
-            traverseAddShader(GLB.scene, this.shaderType);
-          let lights = await getSimpleMaterialAddLights(this.shaderType);
-          cleanupLights(this.#scene);
-          if (lights) {
-            lights(this.#scene);
-          }
-          console.debug("Traversing shader now");
-          const body = this.#scene.getObjectByName(this.type);
-          let headBone = body.getObjectByName("head");
-          if (headBone === undefined)
-            headBone = body.getObjectByName("Head");
-          if (!headBone)
-            return;
-          headBone.updateMatrixWorld(true);
-          const position2 = new THREE16.Vector3;
-          const quaternion = new THREE16.Quaternion;
-          const scale2 = new THREE16.Vector3;
-          headBone.matrixWorld.decompose(position2, quaternion, scale2);
-          if (GLB.scene) {
-            GLB.scene.position.copy(position2);
-            GLB.scene.setRotationFromQuaternion(quaternion);
-            console.debug("Positioning head to body");
-          }
-          const bodyModelType = this.bodyModel;
-          if (Config.renderer.useRendererServer === false) {
-            if (this.charModel) {
-              if (this.charModel.dispose) {
-                this.charModel.dispose();
-                this.charModel = null;
-              }
-            }
-            this.charModel = GLB.CharModel;
-          }
-          if (bodyModelType === "miitomo") {
-            GLB.scene.rotation.z -= Math.PI / 2;
-          }
-          try {
-            if (this.mii.hatType !== -1) {
-              let hatModel = this.hatModels[this.mii.hatType].scene.clone(true);
-              hatModel.name = "HatScene";
-              let i = 0;
-              if (GLB.asset.extras.partsTransform.hatTranslate) {
-                const vec = GLB.asset.extras.partsTransform.hatTranslate;
-                hatModel.position.add(vec);
-                switch (HatTypeList[this.mii.hatType]) {
-                  case 4 /* SIDE */:
-                    break;
-                  case 3 /* FRONT */:
-                    break;
-                  case 5 /* TOP */:
-                    break;
-                }
-              }
-              let shaderSetting = await getSetting("shaderType");
-              hatModel.traverse((o) => {
-                if (o.name === "HatScene" || o.name === "HatRoot")
-                  return;
-                if (o.isMesh) {
-                  let m = o;
-                  const mat = m.material;
-                  m.material = new THREE16.MeshBasicMaterial({
-                    color: 16777215,
-                    map: mat.map
-                  });
-                  m.material.needsUpdate = true;
-                  m.geometry.userData = {
-                    cullMode: 0,
-                    modulateColor: this.mii.hatCommonColor !== -1 && this.mii.hatCommonColor < 100 ? SwitchMiiColorTableSRGB[this.mii.hatCommonColor] : MiiFavoriteColorVec3Table[this.mii.hatFavoriteColor !== -1 ? this.mii.hatFavoriteColor : this.mii.favoriteColor],
-                    modulateMode: 5,
-                    modulateType: 5
-                  };
-                  i++;
-                  if (Config.renderer.useRendererServer === false) {
-                    traverseMesh(m, this.shaderType);
-                  }
-                }
-              });
-              GLB.scene.add(hatModel);
-            }
-          } catch (e) {
-            console.error("Hat type resulted in an error, but we're not going to let that stop the head from rendering!", e);
-          }
-        } catch (e) {
-          console.error(e);
-        }
-        break;
-      case 1 /* Face */:
-        if (head2.length > 0) {
-          head2.forEach((h) => {
-            this.traverseAddFaceMaterial(h, `&data=${encodeURIComponent(this.mii.exportHex("studioData"))}&width=512`);
-          });
-        }
-        break;
-    }
-    const traverseHierarchy = (tree) => {
-      tree.traverse((n2) => {
-        if (!n2.isMesh)
-          return;
-        const modulateType = n2.geometry.userData.modulateType;
-        if (modulateType !== undefined && (modulateType === FFLModulateType.SHAPE_MASK || modulateType === FFLModulateType.SHAPE_GLASS))
-          return;
-      });
-    };
-    traverseHierarchy(this.getHead());
-    traverseHierarchy(this.#scene.getObjectByName("m"));
-    traverseHierarchy(this.#scene.getObjectByName("f"));
-    if (this.headReady === false)
-      this.fadeIn();
-    this.headReady = true;
-    this.resize();
-  }
-  particles;
-  lastSparkleTime;
-  sparkle() {
-    if (!this.particles)
-      this.particles = [];
-    if (!this.lastSparkleTime)
-      this.lastSparkleTime = 0;
-    if (performance.now() - this.lastSparkleTime < 150) {
-      return;
-    }
-    this.lastSparkleTime = performance.now();
-    this.#textureLoader.load("./assets/images/star.png", (texture) => {
-      const pos = new THREE16.Vector3;
-      const box = new THREE16.Box3;
-      if (this.#scene.getObjectByName("MiiHead") !== undefined) {
-        this.#scene.getObjectByName("MiiHead").getWorldPosition(pos);
-        box.setFromObject(this.#scene.getObjectByName("MiiHead"));
-      }
-      let particle = new SparkleParticle(this.#scene, new THREE16.Vector3(0, pos.y + box.min.y / 2, 2), texture);
-      this.particles.push(particle);
-      this.animators.set("particle_" + performance.now(), (_t, delta) => particle.update(delta));
-      setTimeout(() => {
-        this.particles.forEach((p, i) => {
-          p.dispose();
-        });
-        this.particles = [];
-        Array.from(this.animators.keys()).filter((p) => p.startsWith("particle_")).forEach((key2) => {
-          this.animators.delete(key2);
-        });
-      }, 1000);
-    });
-  }
-  getHead() {
-    return this.#scene.getObjectByName("MiiHead");
-  }
-  traverseAddFaceMaterial(node, urlParams) {
-    node.traverse((c2) => {
-      let child = c2;
-      if (child.isMesh) {
-        if (child.geometry.userData) {
-          const data2 = child.geometry.userData;
-          if (data2.modulateMode) {
-            if (data2.modulateType === 6) {
-              (async () => {
-                const mat = child.material;
-                const oldMat = mat;
-                var loadUrl = Config.renderer.renderFaceURL + urlParams;
-                let tex;
-                if (Config.renderer.useRendererServer === false) {
-                  console.log("READY");
-                  const params = new URLSearchParams(urlParams);
-                  let expressionFlag = new Uint32Array([
-                    1,
-                    0,
-                    0
-                  ]);
-                  if (params.has("expression")) {
-                    expressionFlag = makeExpressionFlag(Number(params.get("expression")));
-                  }
-                  console.log("Expression:", params.get("expression"), expressionFlag);
-                  const { img, model } = await getMaskTex(this.mii, this.getRenderer(), expressionFlag);
-                  console.log("DONE");
-                  loadUrl = null;
-                  tex = img;
-                  model.dispose();
-                } else {
-                  tex = await this.#textureLoader.loadAsync(loadUrl);
-                }
-                if (tex) {
-                  tex.flipY = false;
-                  this.#renderer.initTexture(tex);
-                  child.material.map = tex;
-                  child.material.transparent = true;
-                  oldMat.dispose();
-                }
-              })();
-            }
-          }
-        }
-      }
-    });
-  }
-  getCamera() {
-    return this.#camera;
-  }
-  getControls() {
-    return this.#controls;
-  }
-  getScene() {
-    return this.#scene;
-  }
-  getRenderer() {
-    return this.#renderer;
-  }
-  shutdown() {
-    Array.from(this.animators.keys()).forEach((k4) => {
-      this.animators.delete(k4);
-    });
-  }
-}
-
-// src/ui/components/MiiPagedFeatureSet.ts
-var import_md5 = __toESM(require_md5(), 1);
-var playHoverSound = () => playSound("hover");
-function MiiPagedFeatureSet(set) {
-  let tmpMii;
-  if (set.mii)
-    if (set.miiIsNotMii === undefined || set.miiIsNotMii === false)
-      tmpMii = new Mii(set.mii.export());
-    else
-      tmpMii = set.mii;
-  else
-    tmpMii = {};
-  let setContainer = new Html("div").class("feature-set-container");
-  const tabListInit = [];
-  for (const key2 in set.entries) {
-    const entry = set.entries[key2];
-    let property2 = key2;
-    tabListInit.push({
-      icon: entry.label,
-      async select(content2) {
-        let setList = new Html("div").class("feature-set-group").appendTo(content2);
-        if (entry.header) {
-          const header = new Html("div").class("feature-set-header");
-          if (entry.headerIsHtml !== undefined) {
-            header.append(entry.header);
-          } else {
-            header.text(entry.header);
-          }
-          setList.append(header);
-        }
-        if ("items" in entry) {
-          for (const item of entry.items) {
-            const id = import_md5.default(String(Math.random() * 21412855));
-            let forceRender = true, updateType = 0 /* None */;
-            if (item.forceRender !== undefined) {
-              if (item.forceRender === false) {
-                forceRender = false;
-              }
-            }
-            if (item.bodyUpdateType !== undefined) {
-              if (item.bodyUpdateType !== 0 /* None */) {
-                updateType = item.bodyUpdateType;
-              }
-            }
-            const update = () => set.onChange(tmpMii, forceRender, item.part || 0 /* Head */, updateType);
-            let value2 = tmpMii[property2];
-            switch (item.type) {
-              case 0 /* Icon */:
-                let iconSelected = false;
-                if (item.selectedCondition)
-                  if (item.selectedCondition() === true)
-                    iconSelected = true;
-                  else
-                    iconSelected = false;
-                if (item.property) {
-                  if (Array.isArray(item.property)) {
-                    let tmpValue = tmpMii[item.property[0]];
-                    if (item.property.map((i) => tmpMii[i]).every((i) => i === tmpValue))
-                      value2 = tmpValue;
-                    else {
-                      value2 = false;
-                      iconSelected = false;
-                    }
-                  } else
-                    value2 = tmpMii[item.property];
-                }
-                let featureItem = new Html("div").class("feature-item").on("pointerenter", playHoverSound).on("click", async () => {
-                  let value3;
-                  if (MiiEditor2.getCurrentEditor() !== null) {
-                    tmpMii = MiiEditor2.getCurrentEditor().mii;
-                  }
-                  value3 = tmpMii[property2];
-                  const newValue = item.value;
-                  if (item.selectedCondition)
-                    if (item.selectedCondition() === true)
-                      iconSelected = true;
-                    else
-                      iconSelected = false;
-                  console.log(`condition check: value (${value3}) === newValue (${newValue}), iconSelected (${iconSelected})`);
-                  if (value3 === newValue || iconSelected)
-                    return;
-                  if (item.preSelectCallback)
-                    item.preSelectCallback(tmpMii);
-                  if (item.property) {
-                    if (Array.isArray(item.property)) {
-                      for (const prop of item.property) {
-                        tmpMii[prop] = newValue;
-                      }
-                    } else {
-                      tmpMii[item.property] = newValue;
-                    }
-                  } else {
-                    tmpMii[key2] = newValue;
-                  }
-                  update();
-                  if (item.sound)
-                    playSound(item.sound);
-                  else if (item.color)
-                    playSound("select_color");
-                  else if (item.icon)
-                    playSound("select_part");
-                  setList.qsa(".feature-item").forEach((i) => i.classOff("active"));
-                  featureItem.classOn("active");
-                }).appendTo(setList);
-                if (item.icon) {
-                  featureItem.html(item.icon);
-                }
-                if (item.color) {
-                  featureItem.classOn("is-color").style({ "--color": item.color });
-                }
-                if (value2 === item.value || iconSelected) {
-                  if (item.property) {
-                    if (Array.isArray(item.property)) {
-                      if (item.property.map((i) => tmpMii[i]).every((i) => i === value2) === false) {
-                        console.log("FAILED CHECK, skipping");
-                        debugger;
-                        continue;
-                      }
-                    }
-                  }
-                  featureItem.classOn("active");
-                }
-                break;
-              case 3 /* Slider */:
-                if (item.label !== undefined) {
-                  new Html("span").text(item.label).appendTo(setList);
-                }
-                let featureSliderItem = new Html("div").class("feature-slider").on("pointerenter", playHoverSound).appendTo(setList);
-                if (item.iconStart) {
-                  let frontIcon = new Html("span").html(item.iconStart).on("click", () => {
-                    if (MiiEditor2.getCurrentEditor() !== null) {
-                      tmpMii = MiiEditor2.getCurrentEditor().mii;
-                    }
-                    featureSlider.val(Number(featureSlider.getValue()) - 1);
-                    tmpMii[item.property] = Number(featureSlider.getValue());
-                    if (item.soundStart)
-                      playSound(item.soundStart);
-                    else
-                      playSound("select");
-                    update();
-                  });
-                  featureSliderItem.append(frontIcon);
-                }
-                let featureSlider = new Html("input").attr({
-                  type: "range",
-                  min: item.min,
-                  max: item.max
-                }).id(id).appendTo(featureSliderItem);
-                if (item.iconEnd) {
-                  let backIcon = new Html("span").html(item.iconEnd).on("click", () => {
-                    if (MiiEditor2.getCurrentEditor() !== null) {
-                      tmpMii = MiiEditor2.getCurrentEditor().mii;
-                    }
-                    featureSlider.val(Number(featureSlider.getValue()) + 1);
-                    tmpMii[item.property] = Number(featureSlider.getValue());
-                    if (item.soundEnd)
-                      playSound(item.soundEnd);
-                    else
-                      playSound("select");
-                    update();
-                  });
-                  featureSliderItem.append(backIcon);
-                }
-                featureSlider.val(tmpMii[item.property]);
-                featureSlider.on("input", () => {
-                  if (MiiEditor2.getCurrentEditor() !== null) {
-                    tmpMii = MiiEditor2.getCurrentEditor().mii;
-                  }
-                  playSound("slider_tick");
-                  tmpMii[item.property] = Number(featureSlider.getValue());
-                  update();
-                });
-                break;
-              case 2 /* Range */:
-                let featureRangeGroup = new Html("div").class("col").style({ width: "100%", gap: "0", "align-items": "center" }).appendTo(setList);
-                if (item.label !== undefined) {
-                  new Html("span").text(item.label).appendTo(featureRangeGroup);
-                }
-                let featureRangeItem = new Html("div").class("feature-slider").appendTo(featureRangeGroup);
-                if (item.iconStart) {
-                  let frontIcon = new Html("span").html(item.iconStart).on("click", () => {
-                    if (MiiEditor2.getCurrentEditor() !== null) {
-                      tmpMii = MiiEditor2.getCurrentEditor().mii;
-                    }
-                    featureRange.val(Number(featureRange.getValue()) + (item.inverse ? 1 : -1));
-                    tmpMii[item.property] = item.inverse ? item.max + item.min - Number(featureRange.getValue()) : Number(featureRange.getValue());
-                    if (item.soundStart)
-                      playSound(item.soundStart);
-                    else
-                      playSound("select");
-                    update();
-                  });
-                  if (item.inverse)
-                    featureRangeItem.prepend(frontIcon);
-                  else
-                    featureRangeItem.append(frontIcon);
-                }
-                let featureRange = new Html("input").attr({
-                  type: "range",
-                  min: item.min,
-                  max: item.max
-                }).id(id);
-                if (item.inverse)
-                  featureRangeItem.prepend(featureRange);
-                else
-                  featureRangeItem.append(featureRange);
-                if (item.iconEnd) {
-                  let backIcon = new Html("span").html(item.iconEnd).on("click", () => {
-                    if (MiiEditor2.getCurrentEditor() !== null) {
-                      tmpMii = MiiEditor2.getCurrentEditor().mii;
-                    }
-                    featureRange.val(Number(featureRange.getValue()) + (item.inverse ? -1 : 1));
-                    tmpMii[item.property] = item.inverse ? item.max + item.min - Number(featureRange.getValue()) : Number(featureRange.getValue());
-                    if (item.soundEnd)
-                      playSound(item.soundEnd);
-                    else
-                      playSound("select");
-                    update();
-                  });
-                  if (item.inverse)
-                    featureRangeItem.prepend(backIcon);
-                  else
-                    featureRangeItem.append(backIcon);
-                }
-                featureRange.val(item.inverse ? item.max - tmpMii[item.property] + item.min : tmpMii[item.property]);
-                featureRange.on("change", () => {
-                  if (MiiEditor2.getCurrentEditor() !== null) {
-                    tmpMii = MiiEditor2.getCurrentEditor().mii;
-                  }
-                  const newValue = item.inverse ? item.max + item.min - Number(featureRange.getValue()) : Number(featureRange.getValue());
-                  const current = tmpMii[item.property];
-                  if (item.soundStart !== undefined && item.soundEnd !== undefined) {
-                    if (newValue < current) {
-                      playSound(item.soundStart);
-                    } else {
-                      playSound(item.soundEnd);
-                    }
-                  }
-                  tmpMii[item.property] = newValue;
-                  update();
-                });
-                featureRange.on("input", () => {
-                  playSound("slider_tick");
-                });
-                break;
-              case 4 /* Switch */:
-                let featureSwitchItem = new Html("div").class("feature-switch-group").appendTo(setList);
-                let featureSwitch = new Html("div").class("feature-switch").id(id).appendTo(featureSwitchItem);
-                let buttonLeft = new Html("button").class("feature-switch-left").html(item.iconOff).appendTo(featureSwitch);
-                let buttonRight = new Html("button").class("feature-switch-right").html(item.iconOn).appendTo(featureSwitch);
-                const switchToggle = (value3) => {
-                  if (MiiEditor2.getCurrentEditor() !== null) {
-                    tmpMii = MiiEditor2.getCurrentEditor().mii;
-                  }
-                  let valueToSet = value3;
-                  if (item.isNumber) {
-                    valueToSet = Number(valueToSet);
-                  }
-                  tmpMii[item.property] = valueToSet;
-                  if (value3 === false) {
-                    if (item.soundOff)
-                      playSound(item.soundOff);
-                    else
-                      playSound("select");
-                  }
-                  if (value3 === true) {
-                    if (item.soundOn)
-                      playSound(item.soundOn);
-                    else
-                      playSound("select");
-                  }
-                  update();
-                };
-                buttonLeft.on("click", () => {
-                  switchToggle(false);
-                  buttonLeft.classOn("active");
-                  buttonRight.classOff("active");
-                });
-                buttonRight.on("click", () => {
-                  switchToggle(true);
-                  buttonLeft.classOff("active");
-                  buttonRight.classOn("active");
-                });
-                buttonLeft.on("pointerenter", playHoverSound);
-                buttonRight.on("pointerenter", playHoverSound);
-                if (tmpMii[item.property] == true) {
-                  buttonLeft.classOff("active");
-                  buttonRight.classOn("active");
-                } else {
-                  buttonLeft.classOn("active");
-                  buttonRight.classOff("active");
-                }
-                break;
-              case 5 /* Misc */:
-                let featureMiscItem = item.html.appendTo(setList);
-                featureMiscItem.on("click", item.select);
-                break;
-            }
-          }
-        }
-        window.LazyLoad.update();
-      }
-    });
-  }
-  if (Object.keys(set.entries).length === 1) {
-    let tabs = TabList(tabListInit, 1 /* NotSquare */);
-    tabs.list.appendTo(setContainer);
-    tabs.content.appendTo(setContainer);
-  } else {
-    let tabs = TabList(tabListInit, 1 /* NotSquare */);
-    tabs.list.appendTo(setContainer);
-    tabs.content.appendTo(setContainer);
-  }
-  return setContainer;
-}
-
-// src/constants/MiiFeatureTable.ts
-var MiiEyeTable = [
-  [2, 4, 0, 8, 39, 17, 1, 26, 16, 15, 27, 20],
-  [33, 11, 19, 32, 9, 12, 23, 34, 21, 25, 40, 35],
-  [5, 41, 13, 36, 37, 6, 24, 30, 31, 18, 28, 46],
-  [7, 44, 38, 42, 45, 29, 3, 43, 22, 10, 14, 47],
-  [48, 49, 50, 53, 59, 56, 54, 58, 57, 55, 51, 52]
-];
-var MiiEyebrowTable = [
-  [6, 0, 12, 1, 9, 19, 7, 21, 8, 17, 5, 4],
-  [11, 10, 2, 3, 14, 20, 15, 13, 22, 18, 16, 23]
-];
-var MiiMouthTable = [
-  [23, 1, 19, 21, 22, 5, 0, 8, 10, 16, 6, 13],
-  [7, 9, 2, 17, 3, 4, 15, 11, 20, 18, 14, 12],
-  [27, 30, 24, 25, 29, 28, 26, 35, 31, 34, 33, 32]
-];
-var MiiNoseTable = [
-  [1, 10, 2, 3, 6, 0, 5, 4, 8, 9, 7, 11],
-  [13, 14, 12, 17, 16, 15]
-];
-var MiiHairTable = [
-  [33, 47, 40, 37, 32, 107, 48, 51, 55, 70, 44, 66],
-  [52, 50, 38, 49, 43, 31, 56, 68, 62, 115, 76, 119],
-  [64, 81, 116, 121, 22, 58, 60, 87, 125, 117, 73, 75],
-  [42, 89, 57, 54, 80, 34, 23, 86, 88, 118, 39, 36],
-  [45, 67, 59, 65, 41, 30, 12, 16, 10, 82, 128, 129],
-  [14, 95, 105, 100, 6, 20, 93, 102, 27, 4, 17, 110],
-  [123, 8, 106, 72, 3, 21, 0, 98, 63, 90, 11, 120],
-  [5, 74, 108, 94, 124, 25, 99, 69, 35, 13, 122, 113],
-  [53, 24, 85, 83, 71, 131, 96, 101, 29, 7, 15, 112],
-  [79, 1, 109, 127, 91, 26, 61, 103, 2, 77, 18, 92],
-  [84, 9, 19, 130, 97, 104, 46, 78, 28, 114, 126, 111]
-];
-var MiiSwitchColorTable = [
-  [2, 24, 10, 23, 15, 20, 21, 25, 26, 27],
-  [28, 29, 30, 31, 32, 33, 34, 35, 36, 37],
-  [38, 39, 40, 41, 42, 43, 44, 45, 46, 47],
-  [48, 16, 49, 12, 50, 51, 52, 53, 54, 55],
-  [56, 57, 58, 59, 13, 60, 61, 62, 63, 64],
-  [65, 66, 67, 68, 69, 70, 71, 72, 73, 74],
-  [5, 11, 75, 76, 77, 78, 79, 80, 81, 82],
-  [14, 83, 6, 17, 7, 84, 85, 86, 87, 88],
-  [1, 3, 89, 19, 90, 91, 22, 92, 93, 94],
-  [8, 0, 95, 9, 18, 4, 96, 97, 98, 99]
-];
-var MiiSwitchSkinColorTable = [
-  [0, 7, 1, 4, 5],
-  [6, 3, 2, 8, 9]
-];
-var MiiEyeRotationGroups = [
-  -1,
-  0,
-  0,
-  0,
-  -1,
-  0,
-  0,
-  0,
-  -1,
-  0,
-  0,
-  0,
-  0,
-  -1,
-  -1,
-  0,
-  0,
-  0,
-  -1,
-  -1,
-  0,
-  -1,
-  0,
-  -1,
-  -1,
-  0,
-  -1,
-  0,
-  0,
-  -1,
-  0,
-  0,
-  0,
-  -1,
-  -1,
-  -1,
-  0,
-  0,
-  -1,
-  -1,
-  -1,
-  0,
-  0,
-  -1,
-  -1,
-  -1,
-  -1,
-  -1,
-  -1,
-  -1,
-  -1,
-  -1,
-  0,
-  0,
-  0,
-  0,
-  -1,
-  0,
-  0,
-  -1
-];
-var MiiEyebrowRotationGroups = [
-  0,
-  0,
-  -1,
-  1,
-  0,
-  1,
-  0,
-  1,
-  -2,
-  1,
-  0,
-  2,
-  -1,
-  -1,
-  0,
-  0,
-  1,
-  1,
-  0,
-  0,
-  -1,
-  0,
-  1,
-  0
-];
-function rearrangeArray(array, lookupTable, separator = makeSeparatorGapThinDesktop) {
-  let rearrangedArray = [];
-  if (Array.isArray(lookupTable) && Array.isArray(lookupTable[0])) {
-    for (const page of lookupTable) {
-      let pageItems = page.map((index2) => array[index2]).filter((i) => i !== undefined);
-      if (rearrangedArray.length > 0 && pageItems.length > 0) {
-        rearrangedArray.push(separator());
-      }
-      rearrangedArray.push(...pageItems);
-    }
-  } else {
-    for (const realIndex in lookupTable) {
-      const lookupIndex = lookupTable[realIndex];
-      rearrangedArray[parseInt(realIndex)] = array[lookupIndex];
-    }
-    rearrangedArray = rearrangedArray.filter((i) => i !== undefined);
-  }
-  return rearrangedArray;
-}
-var makeSeparatorFSI = () => ({
-  type: 5 /* Misc */,
-  html: new Html("div").class("separator"),
-  select() {
-  }
-});
-var makeSeparatorGapThinFSI = () => ({
-  type: 5 /* Misc */,
-  html: new Html("div").class("separator-gap-thin"),
-  select() {
-  }
-});
-var makeSeparatorGapThinDesktop = () => ({
-  type: 5 /* Misc */,
-  html: new Html("div").class("separator-gap-thin-desktop"),
-  select() {
-  }
-});
-var makeSeparatorGapThinLaptop = () => ({
-  type: 5 /* Misc */,
-  html: new Html("div").class("separator-gap-thin-laptop"),
-  select() {
-  }
-});
-
-// src/ui/tabs/Eye.ts
-var __6 = _8();
-function EyeTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: data2.callback,
-    entries: {
-      eyeType: {
-        label: __6("Type"),
-        items: rearrangeArray(ArrayNum(60).map((k4) => ({
-          type: 0 /* Icon */,
-          value: k4,
-          icon: data2.icons.eyes[k4],
-          part: 1 /* Face */,
-          preSelectCallback(tmpMii) {
-            tmpMii.eyeRotate += MiiEyeRotationGroups[k4] - MiiEyeRotationGroups[tmpMii.eyeType];
-          }
-        })), MiiEyeTable, makeSeparatorGapThinDesktop)
-      },
-      eyeColor: {
-        label: data2.useAccessibility ? __6("Color") : EditorIcons_default.color,
-        items: [
-          ...ArrayNum(6).map((k4) => ({
-            type: 0 /* Icon */,
-            value: Ver3EyeColorTable[k4],
-            color: SwitchMiiColorTable[Ver3EyeColorTable[k4]],
-            part: 1 /* Face */
-          })),
-          makeSeparatorFSI(),
-          ...rearrangeArray(ArrayNum(100).map((k4) => ({
-            type: 0 /* Icon */,
-            value: k4,
-            color: SwitchMiiColorTable[k4],
-            part: 1 /* Face */
-          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
-        ]
-      },
-      eyeSclera: {
-        label: __6("Sclera"),
-        items: [
-          {
-            type: 4 /* Switch */,
-            part: 1 /* Face */,
-            iconOff: __6("Disabled"),
-            iconOn: __6("Enabled"),
-            property: "eyeSclera",
-            isNumber: true
-          }
-        ],
-        header: __6("%1 is a CUSTOM property, and will not transfer to any other data formats.", __6("Sclera fill"))
-      },
-      eyePosition: {
-        label: __6("Position"),
-        items: [
-          {
-            type: 2 /* Range */,
-            property: "eyeY",
-            iconStart: EditorIcons_default.positionMoveUp,
-            iconEnd: EditorIcons_default.positionMoveDown,
-            soundStart: "position_down",
-            soundEnd: "position_up",
-            min: 0,
-            max: 18,
-            part: 1 /* Face */,
-            inverse: true,
-            label: data2.useAccessibility ? __6("Position") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "eyeX",
-            iconStart: EditorIcons_default.positionPushIn,
-            iconEnd: EditorIcons_default.positionPushOut,
-            soundStart: "move_together",
-            soundEnd: "move_apart",
-            min: 0,
-            max: 12,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __6("Spacing") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "eyeRotate",
-            iconStart: EditorIcons_default.positionRotateCW,
-            iconEnd: EditorIcons_default.positionRotateCCW,
-            soundStart: "rotate_cw",
-            soundEnd: "rotate_ccw",
-            min: 0,
-            max: 7,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __6("Rotation") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "eyeScale",
-            iconStart: EditorIcons_default.positionSizeDown,
-            iconEnd: EditorIcons_default.positionSizeUp,
-            soundStart: "scale_down",
-            soundEnd: "scale_up",
-            min: 0,
-            max: 7,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __6("Scale") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "eyeAspect",
-            iconStart: EditorIcons_default.positionStretchIn,
-            iconEnd: EditorIcons_default.positionStretchOut,
-            soundStart: "vert_stretch_down",
-            soundEnd: "vert_stretch_up",
-            min: 0,
-            max: 6,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __6("Stretch") : undefined
-          }
-        ]
-      }
-    }
-  }));
-}
-
-// src/ui/tabs/Head.ts
-var __7 = _8();
-function HeadTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: data2.callback,
-    entries: {
-      facelineType: {
-        label: data2.useAccessibility ? __7("Shape") : EditorIcons_default.face,
-        items: ArrayNum(12).map((k4) => ({
-          type: 0 /* Icon */,
-          value: k4,
-          icon: data2.icons.face[k4],
-          part: 0 /* Head */,
-          bodyUpdateType: 0 /* None */
-        }))
-      },
-      facelineMake: {
-        label: data2.useAccessibility ? __7("Makeup") : EditorIcons_default.face_makeup,
-        items: ArrayNum(12).map((k4) => ({
-          type: 0 /* Icon */,
-          value: k4,
-          icon: data2.icons.makeup[k4],
-          part: 0 /* Head */,
-          bodyUpdateType: 0 /* None */
-        }))
-      },
-      facelineWrinkle: {
-        label: data2.useAccessibility ? __7("Wrinkles") : EditorIcons_default.face_wrinkles,
-        items: ArrayNum(12).map((k4) => ({
-          type: 0 /* Icon */,
-          value: k4,
-          icon: data2.icons.wrinkles[k4],
-          part: 0 /* Head */,
-          bodyUpdateType: 0 /* None */
-        }))
-      },
-      facelineColor: {
-        label: data2.useAccessibility ? __7("Color") : EditorIcons_default.color,
-        items: [
-          ...ArrayNum(6).map((k4) => ({
-            type: 0 /* Icon */,
-            value: k4,
-            color: MiiSkinColorTable[k4],
-            part: 0 /* Head */,
-            bodyUpdateType: 1 /* ClothingUpdate */
-          })),
-          makeSeparatorFSI(),
-          ...rearrangeArray(ArrayNum(10).map((k4) => ({
-            type: 0 /* Icon */,
-            value: k4,
-            color: MiiSwitchSkinColorList[k4],
-            part: 0 /* Head */,
-            bodyUpdateType: 1 /* ClothingUpdate */
-          })), MiiSwitchSkinColorTable, makeSeparatorGapThinFSI)
-        ]
-      },
-      facePaintColor: {
-        label: data2.useAccessibility ? __7("Face Paint") : EditorIcons_default.face_paint,
-        header: __7("%1 is a CUSTOM property, and will not transfer to any other data formats.", __7("Face paint")),
-        items: [
-          {
-            type: 0 /* Icon */,
-            forceRender: true,
-            value: -1,
-            icon: `<span class="disable-item">${__7("Disabled")}</span>`,
-            part: 0 /* Head */,
-            bodyUpdateType: 1 /* ClothingUpdate */
-          },
-          makeSeparatorGapThinFSI(),
-          ...rearrangeArray(ArrayNum(100).map((k4) => ({
-            type: 0 /* Icon */,
-            value: k4,
-            color: SwitchMiiColorTable[k4],
-            part: 0 /* Head */,
-            bodyUpdateType: 1 /* ClothingUpdate */
-          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
-        ]
-      }
-    }
-  }));
-}
-
-// src/ui/components/Input.ts
-function Input(label, value2, callback, validate2, editor) {
-  let id = String(performance.now());
-  function checkValidity(value3) {
-    if (editor) {
-      editor.dirty = true;
-      if (validate2) {
-        const result = validate2(value3);
-        if (result === true) {
-          input.classOff("invalid");
-          if (editor)
-            editor.errors.set(label, {
-              valid: true,
-              reason: "Valid"
-            });
-          callback(value3);
-        } else {
-          input.classOn("invalid");
-          if (editor)
-            editor.errors.set(label, {
-              valid: false,
-              reason: String(result)
-            });
-        }
-      }
-    }
-  }
-  let input = new Html("input").id(id).attr({ type: "text", value: value2 }).on("input", (e) => {
-    const target = e.target;
-    checkValidity(target.value);
-  });
-  if (validate2)
-    validate2(value2);
-  return new Html("div").class("input-group").appendMany(new Html("label").attr({ for: id }).text(label), input);
-}
-
-// src/ui/tabs/Misc.ts
-var __8 = _8();
-function MiscTab(data2) {
-  let tmpMii = new Mii(data2.mii.export());
-  const setProp = (prop, val2) => {
-    if (MiiEditor2.getCurrentEditor() !== null) {
-      tmpMii = MiiEditor2.getCurrentEditor().mii;
-    }
-    tmpMii[prop] = val2;
-    data2.callback(tmpMii, false, 0 /* Head */, 0 /* None */);
-    return true;
-  };
-  data2.container.appendMany(new Html("div").style({
-    padding: "1rem",
-    display: "flex",
-    "flex-direction": "column",
-    gap: "1rem"
-  }).appendMany(Input(__8("Name"), data2.mii.nickname, (name2) => setProp("nickname", name2.trim()), (name2) => {
-    const nameBuffer = encodeUTF16LE(name2);
-    let nameStr = decodeUTF16LE(nameBuffer);
-    if (nameStr.trim() === "")
-      return __8("Name is empty");
-    if (nameBuffer.length > 20)
-      return __8("Name is too long");
-    if (nameBuffer.length === 0)
-      return __8("Name is too short");
-    return true;
-  }, data2.editor), Input(__8("Creator"), data2.mii.creator, (creator) => setProp("creator", creator.trim()), (name2) => {
-    const nameBuffer = encodeUTF16LE(name2);
-    let nameStr = decodeUTF16LE(nameBuffer);
-    if (nameStr.length === 0)
-      return true;
-    if (nameStr.trim() === "")
-      return __8("Creator name is empty");
-    if (nameBuffer.length > 20)
-      return __8("Creator name is too long");
-    return true;
-  }, data2.editor)), new Html("div").class("input-group").style({
-    height: "max-content"
-  }).appendMany(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: data2.callback,
-    entries: {
-      gender: {
-        label: __8("Gender"),
-        items: [
-          {
-            type: 4 /* Switch */,
-            iconOff: data2.useAccessibility ? __8("Male") : EditorIcons_default.genderMale,
-            iconOn: data2.useAccessibility ? __8("Female") : EditorIcons_default.genderFemale,
-            property: "gender",
-            isNumber: true,
-            forceRender: true,
-            part: 2 /* Body */,
-            bodyUpdateType: 1 /* ClothingUpdate */,
-            soundOff: "select_misc",
-            soundOn: "select_misc"
-          }
-        ]
-      },
-      favorite: {
-        label: __8("Favorite/Special"),
-        items: [
-          {
-            type: 4 /* Switch */,
-            iconOff: __8("Normal"),
-            iconOn: __8("Favorite"),
-            property: "favorite",
-            isNumber: true,
-            forceRender: false,
-            part: 2 /* Body */,
-            bodyUpdateType: 1 /* ClothingUpdate */,
-            soundOff: "select_color",
-            soundOn: "select_color"
-          },
-          makeSeparatorGapThinFSI(),
-          {
-            type: 4 /* Switch */,
-            iconOff: __8("Normal"),
-            iconOn: __8("Special"),
-            property: "special",
-            isNumber: true,
-            forceRender: false,
-            part: 2 /* Body */,
-            bodyUpdateType: 1 /* ClothingUpdate */,
-            soundOff: "select_color",
-            soundOn: "select_color"
-          }
-        ]
-      }
-    }
-  })));
-}
-
-// src/ui/tabs/Nose.ts
-var __9 = _8();
-function NoseTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: data2.callback,
-    entries: {
-      noseType: {
-        label: __9("Type"),
-        items: rearrangeArray(ArrayNum(18).map((k4) => ({
-          type: 0 /* Icon */,
-          value: k4,
-          icon: data2.icons.nose[k4],
-          part: 0 /* Head */
-        })), MiiNoseTable, makeSeparatorGapThinDesktop)
-      },
-      nosePosition: {
-        label: __9("Position"),
-        items: [
-          {
-            type: 2 /* Range */,
-            property: "noseY",
-            iconStart: EditorIcons_default.positionMoveUp,
-            iconEnd: EditorIcons_default.positionMoveDown,
-            soundStart: "position_down",
-            soundEnd: "position_up",
-            min: 0,
-            max: 18,
-            part: 0 /* Head */,
-            inverse: true,
-            label: data2.useAccessibility ? __9("Position") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "noseScale",
-            iconStart: EditorIcons_default.positionSizeDown,
-            iconEnd: EditorIcons_default.positionSizeUp,
-            soundStart: "scale_down",
-            soundEnd: "scale_up",
-            min: 0,
-            max: 8,
-            part: 0 /* Head */,
-            label: data2.useAccessibility ? __9("Scale") : undefined
-          }
-        ]
-      }
-    }
-  }));
-}
-
-// src/ui/tabs/FavoriteColor.ts
-var __10 = _8();
-function FavoriteColorTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: data2.callback,
-    entries: {
-      favoriteColor: {
-        label: __10("Favorite Color"),
-        items: ArrayNum(12).map((k4) => ({
-          type: 0 /* Icon */,
-          forceRender: true,
-          value: k4,
-          color: numToHex(MiiFavoriteColorLookupTable[k4]),
-          part: 0 /* Head */,
-          bodyUpdateType: 1 /* ClothingUpdate */
-        }))
-      }
-    }
-  }));
-}
-
-// src/ui/tabs/Mouth.ts
-var __11 = _8();
-function MouthTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: (newMii, forceRender, renderPart, updateType) => {
-      data2.callback(newMii, forceRender, renderPart, updateType);
-    },
-    entries: {
-      mouthType: {
-        label: __11("Type"),
-        items: rearrangeArray(ArrayNum(36).map((k4) => ({
-          type: 0 /* Icon */,
-          value: k4,
-          icon: data2.icons.mouth[k4],
-          part: 1 /* Face */
-        })), MiiMouthTable, makeSeparatorGapThinDesktop)
-      },
-      mouthColor: {
-        label: data2.useAccessibility ? __11("Color") : EditorIcons_default.color,
-        items: [
-          ...ArrayNum(5).map((k4) => ({
-            type: 0 /* Icon */,
-            value: Ver3MouthColorTable[k4],
-            color: SwitchMiiColorTable[Ver3MouthColorTable[k4]],
-            part: 1 /* Face */,
-            property: "mouthColor"
-          })),
-          makeSeparatorFSI(),
-          ...rearrangeArray(ArrayNum(100).map((k4) => ({
-            type: 0 /* Icon */,
-            value: k4,
-            color: SwitchMiiColorTable[k4],
-            part: 1 /* Face */,
-            property: "mouthColor"
-          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
-        ]
-      },
-      mouthPosition: {
-        label: __11("Position"),
-        items: [
-          {
-            type: 2 /* Range */,
-            property: "mouthY",
-            iconStart: EditorIcons_default.positionMoveUp,
-            iconEnd: EditorIcons_default.positionMoveDown,
-            soundStart: "position_down",
-            soundEnd: "position_up",
-            min: 0,
-            max: 18,
-            part: 1 /* Face */,
-            inverse: true,
-            label: data2.useAccessibility ? __11("Position") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "mouthScale",
-            iconStart: EditorIcons_default.positionSizeDown,
-            iconEnd: EditorIcons_default.positionSizeUp,
-            soundStart: "scale_down",
-            soundEnd: "scale_up",
-            min: 0,
-            max: 8,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __11("Scale") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "mouthAspect",
-            iconStart: EditorIcons_default.positionStretchIn,
-            iconEnd: EditorIcons_default.positionStretchOut,
-            soundStart: "vert_stretch_down",
-            soundEnd: "vert_stretch_up",
-            min: 0,
-            max: 6,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __11("Stretch") : undefined
-          }
-        ]
-      }
-    }
-  }));
-}
-
-// src/ui/tabs/Hair.ts
-var __12 = _8();
-function HairTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: (newMii, forceRender, renderPart, updateType) => {
-      data2.callback(newMii, forceRender, renderPart, updateType);
-    },
-    entries: {
-      hairType: {
-        label: __12("Type"),
-        items: rearrangeArray(ArrayNum(132).map((k4) => ({
-          type: 0 /* Icon */,
-          value: k4,
-          icon: data2.icons.hair[k4],
-          part: 0 /* Head */
-        })), MiiHairTable, makeSeparatorGapThinDesktop)
-      },
-      hairColor: {
-        label: data2.useAccessibility ? __12("Color") : EditorIcons_default.color,
-        items: [
-          ...ArrayNum(8).map((k4) => ({
-            type: 0 /* Icon */,
-            value: Ver3HairColorTable[k4],
-            color: SwitchMiiColorTable[Ver3HairColorTable[k4]],
-            part: 0 /* Head */
-          })),
-          makeSeparatorFSI(),
-          ...rearrangeArray(ArrayNum(100).map((k4) => ({
-            type: 0 /* Icon */,
-            value: k4,
-            color: SwitchMiiColorTable[k4],
-            part: 0 /* Head */
-          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
-        ]
-      },
-      hairPosition: {
-        label: __12("Hair Flip"),
-        items: [
-          {
-            type: 4 /* Switch */,
-            iconOff: data2.useAccessibility ? __12("Unflipped") : EditorIcons_default.positionHairFlip,
-            iconOn: data2.useAccessibility ? __12("Flipped") : EditorIcons_default.positionHairFlipped,
-            property: "hairFlip",
-            part: 0 /* Head */
-          }
-        ]
-      }
-    }
-  }));
-}
-
-// src/ui/tabs/Scale.ts
-var __13 = _8();
-function ScaleTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: data2.callback,
-    entries: {
-      bodySize: {
-        label: __13("Scale"),
-        items: [
-          {
-            type: 3 /* Slider */,
-            property: "height",
-            iconStart: EditorIcons_default.scaleShort,
-            iconEnd: EditorIcons_default.scaleTall,
-            min: 0,
-            max: 127,
-            forceRender: false,
-            part: 2 /* Body */,
-            bodyUpdateType: 2 /* RepositionCamera */,
-            soundStart: "vert_stretch_down",
-            soundEnd: "vert_stretch_up",
-            label: data2.useAccessibility ? __13("Height") : undefined
-          },
-          {
-            type: 3 /* Slider */,
-            property: "build",
-            iconStart: EditorIcons_default.scaleThin,
-            iconEnd: EditorIcons_default.scaleFat,
-            min: 0,
-            max: 127,
-            forceRender: false,
-            part: 2 /* Body */,
-            bodyUpdateType: 2 /* RepositionCamera */,
-            soundStart: "vert_stretch_down",
-            soundEnd: "vert_stretch_up",
-            label: data2.useAccessibility ? __13("Build") : undefined
-          }
-        ]
-      }
-    }
-  }));
-}
-
-// src/ui/tabs/FacialHair.ts
-var __14 = _8();
-function FacialHairTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: data2.callback,
-    entries: {
-      mustacheType: {
-        label: __14("Mustache"),
-        items: ArrayNum(6).map((k4) => ({
-          type: 0 /* Icon */,
-          value: k4,
-          icon: data2.icons.mustache[k4],
-          part: 1 /* Face */
-        }))
-      },
-      mustachePosition: {
-        label: __14("Position"),
-        items: [
-          {
-            type: 2 /* Range */,
-            property: "mustacheY",
-            iconStart: EditorIcons_default.positionMoveUp,
-            iconEnd: EditorIcons_default.positionMoveDown,
-            soundStart: "position_down",
-            soundEnd: "position_up",
-            min: 0,
-            max: 16,
-            part: 1 /* Face */,
-            inverse: true,
-            label: data2.useAccessibility ? "Position" : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "mustacheScale",
-            iconStart: EditorIcons_default.positionSizeDown,
-            iconEnd: EditorIcons_default.positionSizeUp,
-            soundStart: "scale_down",
-            soundEnd: "scale_up",
-            min: 0,
-            max: 8,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? "Scale" : undefined
-          }
-        ]
-      },
-      beardType: {
-        label: __14("Beard"),
-        items: ArrayNum(6).map((k4) => ({
-          type: 0 /* Icon */,
-          value: k4,
-          icon: data2.icons.goatee[k4],
-          part: 0 /* Head */
-        }))
-      },
-      beardColor: {
-        label: data2.useAccessibility ? __14("Color") : EditorIcons_default.color,
-        items: [
-          ...ArrayNum(8).map((k4) => ({
-            type: 0 /* Icon */,
-            value: Ver3HairColorTable[k4],
-            color: SwitchMiiColorTable[Ver3HairColorTable[k4]],
-            part: 0 /* Head */,
-            property: "beardColor"
-          })),
-          makeSeparatorFSI(),
-          ...rearrangeArray(ArrayNum(100).map((k4) => ({
-            type: 0 /* Icon */,
-            value: k4,
-            color: SwitchMiiColorTable[k4],
-            part: 0 /* Head */,
-            property: "beardColor"
-          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
-        ]
-      }
-    }
-  }));
-}
-
-// src/ui/tabs/Mole.ts
-var __15 = _8();
-function MoleTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: data2.callback,
-    entries: {
-      mole: {
-        label: __15("Mole"),
-        items: [
-          {
-            type: 4 /* Switch */,
-            iconOff: __15("Disable"),
-            iconOn: __15("Enable"),
-            property: "moleType",
-            part: 1 /* Face */,
-            isNumber: true
-          },
-          {
-            type: 2 /* Range */,
-            property: "moleY",
-            iconStart: EditorIcons_default.positionMoveUp,
-            iconEnd: EditorIcons_default.positionMoveDown,
-            soundStart: "position_down",
-            soundEnd: "position_up",
-            min: 0,
-            max: 30,
-            part: 1 /* Face */,
-            inverse: true,
-            label: data2.useAccessibility ? __15("Position") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "moleX",
-            iconStart: EditorIcons_default.positionPushIn,
-            iconEnd: EditorIcons_default.positionPushOut,
-            soundStart: "move_together",
-            soundEnd: "move_apart",
-            min: 0,
-            max: 16,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __15("Spacing") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "moleScale",
-            iconStart: EditorIcons_default.positionSizeDown,
-            iconEnd: EditorIcons_default.positionSizeUp,
-            soundStart: "scale_down",
-            soundEnd: "scale_up",
-            min: 0,
-            max: 7,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __15("Scale") : undefined
-          }
-        ]
-      }
-    }
-  }));
-}
-
-// src/ui/tabs/Eyebrow.ts
-var __16 = _8();
-function EyebrowTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: data2.callback,
-    entries: {
-      eyebrowType: {
-        label: __16("Type"),
-        items: rearrangeArray(ArrayNum(24).map((k4) => ({
-          type: 0 /* Icon */,
-          value: k4,
-          icon: data2.icons.eyebrows[k4],
-          part: 1 /* Face */,
-          preSelectCallback(tmpMii) {
-            tmpMii.eyebrowRotate += MiiEyebrowRotationGroups[k4] - MiiEyebrowRotationGroups[tmpMii.eyebrowType];
-          }
-        })), MiiEyebrowTable, makeSeparatorGapThinDesktop)
-      },
-      eyebrowColor: {
-        label: data2.useAccessibility ? __16("Color") : EditorIcons_default.color,
-        items: [
-          ...ArrayNum(8).map((k4) => ({
-            type: 0 /* Icon */,
-            value: Ver3HairColorTable[k4],
-            color: SwitchMiiColorTable[Ver3HairColorTable[k4]],
-            part: 1 /* Face */
-          })),
-          makeSeparatorFSI(),
-          ...rearrangeArray(ArrayNum(100).map((k4) => ({
-            type: 0 /* Icon */,
-            value: k4,
-            color: SwitchMiiColorTable[k4],
-            part: 1 /* Face */
-          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
-        ]
-      },
-      eyebrowPosition: {
-        label: __16("Position"),
-        items: [
-          {
-            type: 2 /* Range */,
-            property: "eyebrowY",
-            iconStart: EditorIcons_default.positionMoveUp,
-            iconEnd: EditorIcons_default.positionMoveDown,
-            soundStart: "position_down",
-            soundEnd: "position_up",
-            min: 3,
-            max: 18,
-            part: 1 /* Face */,
-            inverse: true,
-            label: data2.useAccessibility ? __16("Position") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "eyebrowX",
-            iconStart: EditorIcons_default.positionPushIn,
-            iconEnd: EditorIcons_default.positionPushOut,
-            soundStart: "move_together",
-            soundEnd: "move_apart",
-            min: 0,
-            max: 12,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __16("Spacing") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "eyebrowRotate",
-            iconStart: EditorIcons_default.positionRotateCW,
-            iconEnd: EditorIcons_default.positionRotateCCW,
-            soundStart: "rotate_cw",
-            soundEnd: "rotate_ccw",
-            min: 0,
-            max: 11,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __16("Rotation") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "eyebrowScale",
-            iconStart: EditorIcons_default.positionSizeDown,
-            iconEnd: EditorIcons_default.positionSizeUp,
-            soundStart: "scale_down",
-            soundEnd: "scale_up",
-            min: 0,
-            max: 8,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __16("Scale") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "eyebrowAspect",
-            iconStart: EditorIcons_default.positionStretchIn,
-            iconEnd: EditorIcons_default.positionStretchOut,
-            soundStart: "vert_stretch_down",
-            soundEnd: "vert_stretch_up",
-            min: 0,
-            max: 6,
-            part: 1 /* Face */,
-            label: data2.useAccessibility ? __16("Stretch") : undefined
-          }
-        ]
-      }
-    }
-  }));
-}
-
-// src/ui/tabs/Glasses.ts
-var __17 = _8();
-function GlassesTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: (newMii, forceRender, renderPart, updateType) => {
-      data2.callback(newMii, forceRender, renderPart, updateType);
-    },
-    entries: {
-      glassType: {
-        label: __17("Type"),
-        items: ArrayNum(20).map((k4) => ({
-          type: 0 /* Icon */,
-          value: k4,
-          icon: data2.icons.glasses[k4],
-          part: 0 /* Head */
-        }))
-      },
-      glassesColor: {
-        label: data2.useAccessibility ? __17("Color") : EditorIcons_default.color,
-        items: [
-          ...ArrayNum(6).map((k4) => ({
-            type: 0 /* Icon */,
-            value: Ver3GlassColorTable[k4],
-            color: SwitchMiiColorTable[Ver3GlassColorTable[k4]],
-            part: 0 /* Head */,
-            property: "glassColor"
-          })),
-          makeSeparatorFSI(),
-          ...rearrangeArray(ArrayNum(100).map((k4) => ({
-            type: 0 /* Icon */,
-            value: k4,
-            color: SwitchMiiColorTable[k4],
-            part: 0 /* Head */,
-            property: "glassColor"
-          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
-        ]
-      },
-      glassesPosition: {
-        label: __17("Position"),
-        items: [
-          {
-            type: 2 /* Range */,
-            property: "glassY",
-            iconStart: EditorIcons_default.positionMoveUp,
-            iconEnd: EditorIcons_default.positionMoveDown,
-            soundStart: "position_down",
-            soundEnd: "position_up",
-            min: 0,
-            max: 20,
-            part: 0 /* Head */,
-            inverse: true,
-            label: data2.useAccessibility ? __17("Position") : undefined
-          },
-          {
-            type: 2 /* Range */,
-            property: "glassScale",
-            iconStart: EditorIcons_default.positionSizeDown,
-            iconEnd: EditorIcons_default.positionSizeUp,
-            soundStart: "scale_down",
-            soundEnd: "scale_up",
-            min: 0,
-            max: 7,
-            part: 0 /* Head */,
-            label: data2.useAccessibility ? __17("Scale") : undefined
-          }
-        ]
-      }
-    }
-  }));
-}
-
-// src/ui/tabs/ExtHat.ts
-var __18 = _8();
-function ExtHatTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: data2.callback,
-    entries: {
-      hatType: {
-        label: __18("Hat"),
-        header: __18("%1 is a CUSTOM property, and will not transfer to any other data formats.", __18("Hat type")),
-        items: [
-          {
-            type: 0 /* Icon */,
-            forceRender: true,
-            value: -1,
-            icon: `<span class="disable-item">${__18("Disabled")}</span>`,
-            part: 0 /* Head */
-          },
-          makeSeparatorGapThinFSI(),
-          ...ArrayNum(10).slice(1).map((k4) => ({
-            type: 0 /* Icon */,
-            forceRender: true,
-            value: k4 - 1,
-            icon: data2.icons.hat[k4 - 1],
-            part: 0 /* Head */
-          }))
-        ]
-      },
-      hatColor: {
-        label: __18("Hat Color"),
-        header: __18("%1 is a CUSTOM property, and will not transfer to any other data formats.", __18("Hat color")),
-        items: [
-          {
-            type: 0 /* Icon */,
-            forceRender: true,
-            value: -1,
-            icon: `<span class="disable-item">${__18("Disabled")}</span>`,
-            part: 0 /* Head */,
-            property: ["hatFavoriteColor", "hatCommonColor"],
-            selectedCondition: () => data2.mii.hatCommonColor === -1 && data2.mii.hatFavoriteColor === -1
-          },
-          makeSeparatorGapThinFSI(),
-          ...ArrayNum(12).map((k4) => ({
-            type: 0 /* Icon */,
-            forceRender: true,
-            value: k4,
-            color: numToHex(MiiFavoriteColorLookupTable[k4]),
-            part: 0 /* Head */,
-            property: "hatFavoriteColor",
-            preSelectCallback: (mii) => {
-              mii.hatFavoriteColor = k4;
-              mii.hatCommonColor = -1;
-            }
-          })),
-          makeSeparatorFSI(),
-          ...rearrangeArray(ArrayNum(100).map((k4) => ({
-            type: 0 /* Icon */,
-            value: k4,
-            color: SwitchMiiColorTable[k4],
-            part: 0 /* Head */,
-            property: "hatCommonColor",
-            preSelectCallback: (mii) => {
-              mii.hatFavoriteColor = -1;
-              mii.hatCommonColor = k4;
-            }
-          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop)
-        ]
-      }
-    }
-  }));
-}
-
-// src/ui/tabs/ExtClothes.ts
-var __19 = _8();
-function ExtClothesTab(data2) {
-  data2.container.append(MiiPagedFeatureSet({
-    mii: data2.mii,
-    onChange: data2.callback,
-    entries: {
-      clothesType: {
-        label: __19("Clothes"),
-        header: __19("%1 is a CUSTOM property, and will not transfer to any other data formats.", __19("Clothes type")),
-        items: [
-          {
-            type: 0 /* Icon */,
-            forceRender: true,
-            value: -1,
-            icon: `<span class="disable-item">${__19("Disabled")}</span>`,
-            part: 0 /* Head */,
-            bodyUpdateType: 1 /* ClothingUpdate */
-          },
-          makeSeparatorGapThinFSI(),
-          ...ArrayNum(4).map((k4) => ({
-            type: 0 /* Icon */,
-            forceRender: true,
-            bodyUpdateType: 1 /* ClothingUpdate */,
-            value: k4,
-            icon: k4 + 1,
-            part: 0 /* Head */
-          }))
-        ]
-      },
-      shirtColor: {
-        label: __19("Shirt Color"),
-        header: __19("%1 is a CUSTOM property, and will not transfer to any other data formats.", __19("Shirt color")),
-        items: [
-          {
-            type: 0 /* Icon */,
-            forceRender: true,
-            value: -1,
-            icon: `<span class="disable-item">${__19("Disabled")}</span>`,
-            part: 2 /* Body */,
-            bodyUpdateType: 1 /* ClothingUpdate */,
-            property: "shirtColor",
-            sound: "select_color"
-          },
-          makeSeparatorGapThinFSI(),
-          ...rearrangeArray(ArrayNum(100).map((k4) => ({
-            type: 0 /* Icon */,
-            forceRender: true,
-            value: k4,
-            color: SwitchMiiColorTable[k4],
-            part: 2 /* Body */,
-            bodyUpdateType: 1 /* ClothingUpdate */,
-            property: "shirtColor"
-          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop).filter((n2) => !ForbiddenShirtPantColors.includes(n2.value))
-        ]
-      },
-      pantsColor: {
-        label: __19("Pants Color"),
-        header: __19("%1 is a CUSTOM property, and will not transfer to any other data formats.", __19("Pants color")),
-        items: [
-          {
-            type: 0 /* Icon */,
-            forceRender: false,
-            value: -1,
-            icon: `<span class="disable-item">${__19("Disabled")}</span>`,
-            part: 2 /* Body */,
-            bodyUpdateType: 1 /* ClothingUpdate */,
-            property: "pantsColor",
-            sound: "select_color"
-          },
-          makeSeparatorGapThinFSI(),
-          ...rearrangeArray(ArrayNum(100).map((k4) => ({
-            type: 0 /* Icon */,
-            forceRender: false,
-            value: k4,
-            color: SwitchMiiColorTable[k4],
-            part: 2 /* Body */,
-            bodyUpdateType: 1 /* ClothingUpdate */,
-            property: "pantsColor"
-          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop).filter((n2) => !ForbiddenShirtPantColors.includes(n2.value))
-        ]
-      },
-      shoesColor: {
-        label: __19("Shoes Color"),
-        header: __19("%1 is a CUSTOM property, and will not transfer to any other data formats.", __19("Shoes color")),
-        items: [
-          {
-            type: 0 /* Icon */,
-            forceRender: false,
-            value: -1,
-            icon: `<span class="disable-item">${__19("Disabled")}</span>`,
-            part: 2 /* Body */,
-            bodyUpdateType: 1 /* ClothingUpdate */,
-            property: "shoesColor",
-            sound: "select_color"
-          },
-          makeSeparatorGapThinFSI(),
-          ...rearrangeArray(ArrayNum(100).map((k4) => ({
-            type: 0 /* Icon */,
-            forceRender: false,
-            value: k4,
-            color: SwitchMiiColorTable[k4],
-            part: 2 /* Body */,
-            bodyUpdateType: 1 /* ClothingUpdate */,
-            property: "shoesColor"
-          })), MiiSwitchColorTable, makeSeparatorGapThinLaptop).filter((n2) => !ForbiddenShirtPantColors.includes(n2.value))
-        ]
-      }
-    }
-  }));
-}
-
-// src/class/MiiEditor.ts
-var activeMii;
-var currentEditor = null;
-var __20 = _8();
-
-class MiiEditor2 {
-  mii;
-  icons;
-  ui;
-  dirty;
-  ready;
-  renderingMode;
-  onShutdown;
-  errors;
-  useAccessibility;
-  static getCurrentEditor() {
-    return currentEditor;
-  }
-  constructor(gender, onShutdown, init) {
-    window.editor = this;
-    currentEditor = this;
-    document.dispatchEvent(new CustomEvent("editor-launch"));
-    this.showLoadIndicator();
-    this.dirty = false;
-    this.ready = false;
-    this.errors = new Map;
-    let initString = "BAXGigDvV8wSNID/cJl869TJwxYAAAAAAAAAAAAAAAAAAAAAAAAAAE0AaQBpAAAAAAAAAAAAAAAAAAAACAAAAAAAQAMDAQYEBgIKCAQEAgIMAAAAAP8AAAAACAQACgEAIf///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAP//";
-    if (gender === 1 /* Female */) {
-      initString = "BACnywgm6RFTRIDfGZqVDHu5NhQAAAAAAAAAAAAAAAAAAAAAAAAAAE0AaQBpAAAAAAAAAAAAAAAAAAAACAAAAAAAQAMDAQYEAAIKCAMEBAIMAAAAAP8AAAABCAQACgEADP///0AABAACFAMTBBcNBAAKBAEJ//8A/wAAAP//";
-    }
-    if (init)
-      initString = init;
-    if (onShutdown) {
-      this.onShutdown = onShutdown;
-    }
-    this.mii = new Mii(initString);
-    activeMii = this.mii;
-    this.#setupUi();
-  }
-  #loadInterval;
-  showLoadIndicator() {
-    const check2 = () => {
-      if (this.ready) {
-        this.hideLoadIndicator();
-        return;
-      } else {
-        if (this.ui) {
-          if (this.ui.mii) {
-            if (this.ui.mii.qs(".loader"))
-              this.ui.mii.qs(".loader").classOn("active");
-          }
-        }
-      }
-      playSound("wait");
-    };
-    check2();
-    this.#loadInterval = setInterval(check2, 1000);
-  }
-  hideLoadIndicator() {
-    clearInterval(this.#loadInterval);
-    if (this.ui.mii.qs(".loader")) {
-      this.ui.mii.qs(".loader").classOff("active");
-    }
-  }
-  async#setupUi() {
-    const editMode = await getSetting("editMode");
-    if (editMode === "2d") {
-      this.renderingMode = 0 /* Canvas2DRenderer */;
-    } else if (editMode === "3d") {
-      if (Config.renderer.allow3DMode === true)
-        this.renderingMode = 1 /* Canvas3DScene */;
-      else
-        this.renderingMode = 0 /* Canvas2DRenderer */;
-    }
-    const useAccessibility = await getSetting("accessibilityFeature");
-    this.useAccessibility = useAccessibility;
-    this.icons = await fetch("./dist/icons.json?t=" + Date.now()).then((j2) => j2.json());
-    this.ui = {};
-    this.#setupBase();
-    this.#updateCssVars();
-    await this.#setupMii();
-    this.#setupTabs();
-    await this.render();
-    this.ready = true;
-  }
-  #setupBase() {
-    this.ui.base = new Html("div").class("ui-base").appendTo("body");
-  }
-  #renderModeText(RM) {
-    switch (RM) {
-      case 0 /* Canvas2DRenderer */:
-        return "2D";
-      case 1 /* Canvas3DScene */:
-        return "3D";
-    }
-  }
-  async#setupMii() {
-    this.ui.mii = new Html("div").class("mii-holder").appendTo(this.ui.base);
-    this.ui.mii.append(new Html("div").html(EditorIcons_default.loading).class("loader", "active"));
-    let nextRenderMode = 0;
-    switch (this.renderingMode) {
-      case 0 /* Canvas2DRenderer */:
-        if (Config.renderer.useRendererServer === true)
-          this.#setup2D();
-        else {
-          await this.#setup3D();
-          this.ui.scene.cameraPan = true;
-          this.ui.scene.focusCameraUpdate();
-        }
-        nextRenderMode = 1 /* Canvas3DScene */;
-        break;
-      case 1 /* Canvas3DScene */:
-        this.#setup3D();
-        nextRenderMode = 0 /* Canvas2DRenderer */;
-        break;
-    }
-    const renderModeToggle = AddButtonSounds(new Html("button").class("render-mode-toggle").style({ "z-index": "1" }).text(this.#renderModeText(nextRenderMode)).on("click", () => {
-      if (Config.renderer.allow3DMode === false)
-        return Modal_default.alert(__20("You can't use this feature"), __20("Sorry, but you can't use this feature because 3D mode is disabled at the moment."));
-      renderModeToggle.text(this.#renderModeText(this.renderingMode));
-      switch (this.renderingMode) {
-        case 0 /* Canvas2DRenderer */:
-          this.renderingMode = 1 /* Canvas3DScene */;
-          break;
-        case 1 /* Canvas3DScene */:
-          this.renderingMode = 0 /* Canvas2DRenderer */;
-      }
-      if (this.ui.scene && Config.renderer.useRendererServer === false) {
-        this.ui.scene.cameraPan = !Boolean(this.renderingMode);
-        this.ui.scene.focusCameraUpdate();
-        console.log("why this Really not work :(", this.renderingMode);
-        return;
-      }
-      this.render();
-    }).appendTo(this.ui.mii));
-  }
-  #setup2D() {
-    new Html("img").attr({ crossorigin: "anonymous" }).appendTo(this.ui.mii);
-  }
-  async#setup3D() {
-    this.ui.scene = new Mii3DScene(this.mii, this.ui.mii.elm, undefined, undefined, undefined, this);
-    if (this.ui.scene && Config.renderer.useRendererServer === false) {
-      this.ui.scene.cameraPan = Boolean(this.renderingMode);
-      this.ui.scene.focusCameraUpdate();
-    }
-    await this.ui.scene.init();
-    this.ui.mii.append(this.ui.scene.getRendererElement());
-    window.addEventListener("resize", () => {
-      this.ui.scene.resize();
-    });
-    this.ui.scene.focusCamera(0 /* MiiHead */);
-    this.ui.scene.getRendererElement().classList.add("ready");
-    this.ui.mii.qs(".loader").classOff("active");
-  }
-  async#updateCssVars() {
-    let glassesColor = SwitchMiiColorTable[this.mii.glassColor];
-    let eyeColor = SwitchMiiColorTable[this.mii.eyeColor];
-    let mouthColor = {
-      top: SwitchMiiColorTableLip[this.mii.mouthColor],
-      bottom: SwitchMiiColorTable[this.mii.mouthColor]
-    };
-    if (this.useAccessibility) {
-      this.ui.base.style({
-        "--eye-color": "#787880",
-        "--icon-lip-color-top": "#780c0c",
-        "--icon-lip-color-bottom": "#f00c08",
-        "--icon-hair-tie": "#" + MiiFavoriteColorLookupTable[this.mii.favoriteColor].toString(16).padStart(6, "0"),
-        "--icon-eyebrow-fill": "var(--text)",
-        "--icon-hair-fill": "var(--text)",
-        "--icon-facial-hair-fill": "#9b9b9b",
-        "--icon-hat-fill": MiiFavoriteColorIconTable[0].top,
-        "--icon-hat-stroke": MiiFavoriteColorIconTable[0].bottom,
-        "--icon-custom-hat-fill": MiiFavoriteColorIconTable[0].top,
-        "--icon-custom-hat-stroke": MiiFavoriteColorIconTable[0].bottom,
-        "--icon-glasses-fill": "#787880",
-        "--icon-glasses-shade": "#78788077"
-      });
-    } else {
-      this.ui.base.style({
-        "--eye-color": eyeColor,
-        "--icon-lip-color-top": mouthColor.top,
-        "--icon-lip-color-bottom": mouthColor.bottom,
-        "--icon-hair-tie": "#" + MiiFavoriteColorLookupTable[this.mii.favoriteColor].toString(16).padStart(6, "0"),
-        "--icon-eyebrow-fill": SwitchMiiColorTable[this.mii.eyebrowColor],
-        "--icon-hair-fill": SwitchMiiColorTable[this.mii.hairColor],
-        "--icon-facial-hair-fill": SwitchMiiColorTable[this.mii.beardColor],
-        "--icon-hat-fill": MiiFavoriteColorIconTable[this.mii.favoriteColor].top,
-        "--icon-hat-stroke": MiiFavoriteColorIconTable[this.mii.favoriteColor].bottom,
-        "--icon-glasses-fill": glassesColor,
-        "--icon-glasses-shade": glassesColor + "77"
-      });
-    }
-  }
-  #setupTabs() {
-    const TabInit = (Tab, CameraFocusPart) => {
-      return async (content2) => {
-        if (this.ui.scene)
-          this.ui.scene.focusCamera(CameraFocusPart);
-        await Tab({
-          container: content2,
-          callback: (mii, forceRender, renderPart, bodyUpdateType) => {
-            this.mii = mii;
-            activeMii = mii;
-            this.render(forceRender, renderPart, bodyUpdateType);
-            this.#updateCssVars();
-            this.dirty = true;
-          },
-          icons: this.icons,
-          mii: this.mii,
-          editor: this,
-          useAccessibility: this.useAccessibility
-        });
-        if (this.ui.scene)
-          this.ui.scene.resize();
-      };
-    };
-    const tabs = TabList([
-      {
-        icon: EditorIcons_default.head,
-        select: TabInit(HeadTab, 0 /* MiiHead */)
-      },
-      {
-        icon: EditorIcons_default.hair,
-        select: TabInit(HairTab, 0 /* MiiHead */)
-      },
-      {
-        icon: EditorIcons_default.hat,
-        select: TabInit(ExtHatTab, 0 /* MiiHead */)
-      },
-      {
-        icon: EditorIcons_default.eyebrows,
-        select: TabInit(EyebrowTab, 0 /* MiiHead */)
-      },
-      {
-        icon: EditorIcons_default.eyes,
-        select: TabInit(EyeTab, 0 /* MiiHead */)
-      },
-      {
-        icon: EditorIcons_default.nose,
-        select: TabInit(NoseTab, 0 /* MiiHead */)
-      },
-      {
-        icon: EditorIcons_default.mouth,
-        select: TabInit(MouthTab, 0 /* MiiHead */)
-      },
-      {
-        icon: EditorIcons_default.facialHair,
-        select: TabInit(FacialHairTab, 0 /* MiiHead */)
-      },
-      {
-        icon: EditorIcons_default.mole,
-        select: TabInit(MoleTab, 0 /* MiiHead */)
-      },
-      {
-        icon: EditorIcons_default.glasses,
-        select: TabInit(GlassesTab, 0 /* MiiHead */)
-      },
-      {
-        icon: EditorIcons_default.scale,
-        select: TabInit(ScaleTab, 1 /* MiiFullBody */)
-      },
-      {
-        icon: EditorIcons_default.favoriteColor,
-        select: TabInit(FavoriteColorTab, 1 /* MiiFullBody */)
-      },
-      {
-        icon: EditorIcons_default.clothes,
-        select: TabInit(ExtClothesTab, 1 /* MiiFullBody */)
-      },
-      {
-        icon: EditorIcons_default.details,
-        select: TabInit(MiscTab, 1 /* MiiFullBody */)
-      },
-      {
-        icon: EditorIcons_default.save + "<span>Save</span>",
-        type: "tab-save",
-        select: () => {
-          if (this.dirty === true)
-            Modal_default.modal("Save Mii", "Would you like to save?", "body", {
-              text: "Save & Exit",
-              callback: () => {
-                this.shutdown();
-              }
-            }, {
-              text: "Exit without Saving",
-              callback: () => {
-                this.shutdown(false);
-              }
-            }, {
-              text: "Cancel"
-            });
-          else
-            Modal_default.modal("Quitting Editor", "No changes were made. Are you sure you want to exit?", "body", {
-              text: "Save & Exit",
-              callback: () => {
-                this.shutdown();
-              }
-            }, {
-              text: "Exit without Saving",
-              callback: () => {
-                this.shutdown(false);
-              }
-            }, {
-              text: "Cancel"
-            });
-        },
-        update: false
-      }
-    ]);
-    this.ui.tabList = tabs.list;
-    this.ui.tabContent = tabs.content;
-    this.ui.base.appendMany(tabs.list, tabs.content);
-  }
-  async render(forceReloadHead = true, renderPart = 0 /* Head */, bodyUpdateType = 0 /* None */) {
-    if (Config.renderer.allow3DMode === false)
-      this.renderingMode = 0 /* Canvas2DRenderer */;
-    switch (this.renderingMode) {
-      case 0 /* Canvas2DRenderer */:
-        if (Config.renderer.useRendererServer === false) {
-          if (this.ui.mii.qs("canvas.scene") === null) {
-            await this.#setup3D();
-          }
-          this.ui.mii.qs("canvas.scene")?.style({ display: "block" });
-          this.ui.scene.mii = this.mii;
-          if (renderPart === 2 /* Body */) {
-            this.ui.scene.updateBody(bodyUpdateType);
-            this.ui.scene.resize();
-          } else if (forceReloadHead) {
-            if (bodyUpdateType !== 0 /* None */) {
-              this.ui.scene.updateBody(bodyUpdateType);
-            }
-            this.ui.scene.updateMiiHead(renderPart);
-            this.ui.scene.sparkle();
-            this.ui.scene.resize();
-          }
-          return;
-        }
-        if (this.ui.mii.qs("img") === null) {
-          this.#setup2D();
-        }
-        if (this.ui.mii.qs("canvas.scene")) {
-          this.ui.mii.qs("canvas.scene")?.style({ display: "none" });
-        }
-        this.ui.mii.qs("img")?.style({ display: "block" });
-        let pantsColor = "gray";
-        if (this.mii.special === 1) {
-          pantsColor = "gold";
-        }
-        if (this.mii.favorite) {
-          pantsColor = "red";
-        }
-        this.ui.mii.qs("img")?.style({ display: "block" }).attr({
-          src: `${Config.renderer.renderFullBodyURL}&data=${encodeURIComponent(this.mii.exportHex("studioData"))}&${Config.renderer.hatTypeParam}=${this.mii.hatType + Config.renderer.hatTypeAdd}&${Config.renderer.hatColorParam}=${(this.mii.hatFavoriteColor !== -1 ? this.mii.hatFavoriteColor - 1 : -1) + Config.renderer.hatColorAdd}&miic=${encodeURIComponent(dataToBase64(this.mii.export("miic")))}&pantsColor=${pantsColor}`
-        });
-        break;
-      case 1 /* Canvas3DScene */:
-        if (this.ui.mii.qs("canvas.scene") === null) {
-          await this.#setup3D();
-        }
-        if (this.ui.mii.qs("img")) {
-          this.ui.mii.qs("img")?.style({ display: "none" });
-        }
-        this.ui.mii.qs("canvas.scene")?.style({ display: "block" });
-        this.ui.scene.mii = this.mii;
-        if (renderPart === 2 /* Body */) {
-          this.ui.scene.updateBody(bodyUpdateType);
-        } else if (forceReloadHead) {
-          if (bodyUpdateType !== 0 /* None */) {
-            this.ui.scene.updateBody(bodyUpdateType);
-          }
-          this.ui.scene.updateMiiHead(renderPart);
-          this.ui.scene.sparkle();
-        }
-        break;
-    }
-  }
-  #disableUI() {
-    this.ui.mii.qs("button").classOn("disabled");
-    this.ui.tabList.classOn("disabled");
-    this.ui.tabContent.classOn("disabled");
-  }
-  async shutdown(shouldSave = true) {
-    if (shouldSave) {
-      if (Array.from(this.errors.values()).find((i) => i.valid === false)) {
-        let errorList = [];
-        for (const value2 of this.errors.values()) {
-          if (value2.valid === false)
-            errorList.push(value2.reason);
-        }
-        Modal_default.alert("Notice", `You need to fix the following issues before you can save:
-
-` + errorList.map((e) => `• ${e}`).join(`
-`));
-        return;
-      }
-      if (this.renderingMode === 1 /* Canvas3DScene */) {
-        await new Promise((resolve, reject2) => {
-          this.#disableUI();
-          this.ui.scene.playEndingAnimation();
-          setTimeout(() => {
-            resolve(null);
-          }, 1500);
-        });
-      }
-      await fetch("/api/archive", {
-        body: JSON.stringify({
-          nickname: this.mii.nickname,
-          creator: this.mii.creator,
-          ffsd: this.mii.exportBase64("ffsd"),
-          data: this.mii.exportBase64("miic"),
-          studio: this.mii.exportBase64("studioData")
-        }),
-        method: "POST",
-        headers: { "content-type": "application/json" }
-      }).catch(undefined);
-    }
-    if (this.#loadInterval) {
-      clearInterval(this.#loadInterval);
-    }
-    this.ui.base.classOn("closing");
-    setTimeout(() => {
-      if (this.ui.scene) {
-        this.ui.scene.shutdown();
-      }
-      this.ui.base.cleanup();
-      if (this.onShutdown) {
-        this.onShutdown(dataToBase64(this.mii.export("miic")), shouldSave);
-      }
-      document.dispatchEvent(new CustomEvent("editor-shutdown"));
-      window.editor = null;
-      currentEditor = null;
-    }, 500);
-  }
-}
-
-// src/ui/pages/library/importDialog.ts
-var import_localforage6 = __toESM(require_localforage(), 1);
-async function importMiiConfirmation(mii, source, title = "Mii Import") {
-  var m2 = Modal_default.modal(title, "", "body", {
-    text: "Cancel"
-  }, {
-    text: "Don't Save"
-  }, {
-    text: "Save",
-    async callback(e) {
-      const id = await newMiiId();
-      await import_localforage6.default.setItem(id, dataToBase64(mii.export()));
-      await pushToServer();
-      _shutdown()();
-      Library(id);
-    }
-  });
-  m2.qs(".modal-content").styleJs({ maxWidth: "100%", maxHeight: "100%" });
-  m2.qs(".modal-body span").cleanup();
-  const icon = await getMiiIcon(mii, "import", "all_body_sugar", 260);
-  m2.qs(".modal-body").style({ "align-items": "center", gap: "1.5rem" }).prependMany(new Html("span").text(`Do you want to save this Mii?`), new Html("small").text(source), new Html("span").style({ "font-size": "20px" }).text(`${mii.nickname} has arrived!`), new Html("img").attr({
-    src: icon.url
-  }).on("load", (await icon).dispose).style({
-    width: "260px",
-    height: "260px",
-    "object-fit": "contain"
-  }));
-}
-
-// src/ui/pages/library/render/customRender.ts
-var __21 = _8();
-var expressionTable = [
-  { name: "Normal", id: 0 },
-  { name: "Smile", id: 1 },
-  { name: "Anger", id: 2 },
-  { name: "Sorrow", id: 3 },
-  { name: "Surprise", id: 4 },
-  { name: "Blink", id: 5 },
-  { name: "Normal (open mouth)", id: 6 },
-  { name: "Smile (open mouth)", id: 7 },
-  { name: "Anger (open mouth)", id: 8 },
-  { name: "Surprise (open mouth)", id: 9 },
-  { name: "Sorrow (open mouth)", id: 10 },
-  { name: "Blink (open mouth)", id: 11 },
-  { name: "Wink (left eye open)", id: 12 },
-  { name: "Wink (right eye open)", id: 13 },
-  { name: "Wink (left eye and mouth open)", id: 14 },
-  { name: "Wink (right eye and mouth open)", id: 15 },
-  { name: "Wink (left eye open and smiling)", id: 16 },
-  { name: "Wink (right eye open and smiling)", id: 17 },
-  { name: "Frustrated", id: 18 },
-  { name: "Bored", id: 19 },
-  { name: "Bored open mouth", id: 20 },
-  { name: "Sigh mouth straight", id: 21 },
-  { name: "Sigh", id: 22 },
-  { name: "Disgusted mouth straight", id: 23 },
-  { name: "Disgusted", id: 24 },
-  { name: "Love", id: 25 },
-  { name: "Love mouth open", id: 26 },
-  { name: "Determined mouth straight", id: 27 },
-  { name: "Determined", id: 28 },
-  { name: "Cry mouth straight", id: 29 },
-  { name: "Cry", id: 30 },
-  { name: "Big smile mouth straight", id: 31 },
-  { name: "Big smile", id: 32 },
-  { name: "Cheeky", id: 33 },
-  { name: "Resolve eyes funny mouth", id: 35 },
-  { name: "Resolve eyes funny mouth open", id: 36 },
-  { name: "Smug", id: 37 },
-  { name: "Smug mouth open", id: 38 },
-  { name: "Resolve", id: 39 },
-  { name: "Resolve mouth open", id: 40 },
-  { name: "Unbelievable", id: 41 },
-  { name: "Cunning", id: 43 },
-  { name: "Raspberry", id: 45 },
-  { name: "Innocent", id: 47 },
-  { name: "Cat", id: 49, modifier: 0 /* HideNose */ },
-  { name: "Dog", id: 51, modifier: 0 /* HideNose */ },
-  { name: "Tasty", id: 53 },
-  { name: "Money mouth straight", id: 55 },
-  { name: "Money", id: 56 },
-  { name: "Confused mouth straight", id: 57 },
-  { name: "Confused", id: 58 },
-  { name: "Cheerful mouth straight", id: 59 },
-  { name: "Cheerful", id: 60 },
-  { name: "Blank", id: 61, modifier: 1 /* HideNoseAndMask */ },
-  { name: "Grumble mouth straight", id: 63 },
-  { name: "Grumble", id: 64 },
-  { name: "Moved mouth straight", id: 65 },
-  { name: "Moved (aka pleading face)", id: 66 },
-  { name: "Singing mouth small", id: 67 },
-  { name: "Singing", id: 68 },
-  { name: "Stunned", id: 69 }
-];
-async function customRender(miiData) {
-  const modal = Modal_default.modal("Custom Render", "", "body", {
-    text: "Cancel",
-    callback(e2) {
-      scene.shutdown();
-      icons.forEach((i) => URL.revokeObjectURL(i));
-      parent2.cleanup();
-    }
-  });
-  const body = modal.qs(".modal-body").classOn("responsive-row-lg").clear();
-  modal.qs(".modal-content").styleJs({
-    width: "100%",
-    height: "100%",
-    maxWidth: "100%",
-    maxHeight: "100%",
-    backgroundColor: "var(--container-solid)"
-  });
-  let parent2 = new Html("div").style({
-    display: "flex",
-    flex: "1",
-    background: "var(--container-solid)",
-    "border-radius": "12px",
-    "flex-shrink": "0",
-    height: "100%",
-    overflow: "hidden",
-    "justify-content": "center",
-    "align-items": "center"
-  }).appendTo(body);
-  let parentBox = new Html("div").style({ "aspect-ratio": "1 / 1", height: "100%" }).appendTo(parent2);
-  let tabsContent = new Html("div").classOn("tab-content").style({ flex: "1", height: "100%", overflow: "auto", gap: "0.5rem" }).appendTo(body);
-  const scene = new Mii3DScene(miiData, parentBox.elm, 1 /* Screenshot */, (renderer4) => {
-  });
-  let configuration = {
-    fov: 30,
-    pose: 0,
-    expression: "0",
-    renderWidth: 720,
-    renderHeight: 720,
-    animSpeed: 100
-  };
-  const miiDataHex = miiData.exportHex("studioData");
-  let poseListPerBodyModel = {
-    wii: 4,
-    wiiu: 14,
-    switch: 5,
-    miitomo: 16
-  };
-  let bodyModelSetting = await getSetting("bodyModel");
-  let poseCount = 0;
-  if (bodyModelSetting in poseListPerBodyModel) {
-    poseCount = poseListPerBodyModel[bodyModelSetting] + 1;
-  }
-  console.log(bodyModelSetting);
-  let controls, rotationFactor = Math.PI / 8;
-  const e = {
-    camera: {
-      label: __21("Camera"),
-      header: new Html("span").html(__21(`Use mouse or touch to move the camera around.
-Using touch, rotate the camera around with one finger, and drag with two fingers to pan. Pinch with two fingers to zoom.
-If you like this site, <b>PLEASE</b> consider sharing it with others by <b>crediting the site</b> when you post your renders! \uD83D\uDE09`)),
-      headerIsHtml: true,
-      items: [
-        {
-          type: 3 /* Slider */,
-          property: "fov",
-          iconStart: "FOV",
-          iconEnd: "",
-          min: 5,
-          max: 90,
-          part: 1 /* Face */
-        },
-        {
-          type: 5 /* Misc */,
-          html: new Html("div").class("flex-group", "col").appendMany(new Html("label").text(__21("Position")), new Html("div").class("flex-group").appendMany(new Html("button").text(__21("Center X")).on("click", () => {
-            const newPosition = scene.focusCamera(1 /* MiiFullBody */, true, false, true);
-            let target = new Vector3;
-            controls.getTarget(target);
-            target.x = newPosition.x;
-            controls.moveTo(target.x, target.y, target.z);
-          }), new Html("button").text(__21("Center Y")).on("click", () => {
-            const newPosition = scene.focusCamera(1 /* MiiFullBody */, true, false, true);
-            let target = new Vector3;
-            controls.getTarget(target);
-            target.y = newPosition.y;
-            controls.moveTo(target.x, target.y, target.z);
-          }), new Html("button").text(__21("Center to body")).on("click", () => {
-            scene.focusCamera(1 /* MiiFullBody */, true, false);
-          }), new Html("button").text(__21("Center to head")).on("click", () => {
-            scene.focusCamera(0 /* MiiHead */, true, false);
-          })), new Html("label").text(__21("Rotate")), new Html("div").class("flex-group").appendMany(new Html("button").text(__21("Up")).on("click", () => {
-            scene.getControls().rotateTo(controls.azimuthAngle, controls.polarAngle - rotationFactor);
-          }), new Html("button").text(__21("Down")).on("click", () => {
-            scene.getControls().rotateTo(controls.azimuthAngle, controls.polarAngle + rotationFactor);
-          }), new Html("button").text(__21("Left")).on("click", () => {
-            scene.getControls().rotateTo(controls.azimuthAngle - rotationFactor, controls.polarAngle);
-          }), new Html("button").text(__21("Right")).on("click", () => {
-            scene.getControls().rotateTo(controls.azimuthAngle + rotationFactor, controls.polarAngle);
-          }), new Html("button").text(__21("Reset")).on("click", () => {
-            controls.rotateTo(0, Math.PI / 2);
-          }))),
-          select() {
-          }
-        }
-      ]
-    },
-    pose: {
-      label: __21("Pose"),
-      header: new Html("div").appendMany(new Html("span").html(__21("Change the Body Model option in Settings to get many different options of poses!") + "<br/><br/>" + __21('Do you like the Mii that does the poses? His name is "dummy".') + "&nbsp;"), new Html("a").text(__21("Click here")).on("click", (e2) => {
-        scene.shutdown();
-        icons.forEach((i) => URL.revokeObjectURL(i));
-        parent2.cleanup();
-        modal.qs("button")?.elm.click();
-        const mii = new Mii(parseHexOrB64ToUint8Array("BAUajXYYt5uiVoD/cJkq8RYY+sFNAGkAaQBDAHIAZQBhAHQAbwByAGQAdQBtAG0AeQAAAAAAAAAAAAAACAAAAAAAQAMACAYDBwMLCAMEEgMNAAAJAGMAAAAACAQACgEAHv///0AABAACFAMTAxMMBAAAAQEKX/8A/wEA"));
-        importMiiConfirmation(mii, __21("Mii Creator (Special Mii)"));
-      }), new Html("span").html("&nbsp;" + __21("to obtain him in your library :)"))),
-      headerIsHtml: true,
-      items: ArrayNum(poseCount).map((k4) => ({
-        type: 0 /* Icon */,
-        value: k4,
-        icon: k4 === 0 ? "None" : `<img src="assets/images/poses/${bodyModelSetting}/${String(k4).padStart(2, "0")}.png" height=120>`,
-        part: 0 /* Head */
-      }))
-    },
-    expression: {
-      label: __21("Expression"),
-      items: []
-    },
-    animation: {
-      label: __21("Animation"),
-      header: __21("Control the animation speed."),
-      items: [
-        {
-          type: 3 /* Slider */,
-          property: "animSpeed",
-          part: 1 /* Face */,
-          iconStart: "0x",
-          iconEnd: "2x",
-          min: 0,
-          max: 200
-        }
-      ]
-    }
-  };
-  let icons = [];
-  expressionTable.forEach(async (k4) => {
-    let iconTag;
-    if (Config.renderer.useRendererServer) {
-      iconTag = `<img class="lazy" width=128 height=128 data-src="${Config.renderer.renderHeadshotURLNoParams}?width=128&scale=1&data=${encodeURIComponent(miiDataHex)}&expression=${k4.id}&type=fflmakeicon&verifyCharInfo=0" title="${k4.name}">`;
-    } else {
-      const icon = await createMiiRender({
-        data: miiData.export("studioData"),
-        drawBody: false,
-        type: ViewType.MakeIcon,
-        expression: k4.id,
-        module: getFFL(),
-        renderer: scene.getRenderer(),
-        size: 96,
-        additionalInfo: getAdditionalInfoFromMii(miiData)
-      });
-      const iconURL = URL.createObjectURL(icon.result);
-      icons.push(iconURL);
-      iconTag = `<img class="lazy" width=128 height=128 data-src="${iconURL}" title="${k4.name}">`;
-    }
-    const expressionItem = {
-      type: 0 /* Icon */,
-      value: String(k4.id),
-      icon: iconTag,
-      part: 0 /* Head */
-    };
-    e["expression"].items.push(expressionItem);
-  });
-  MiiPagedFeatureSet({
-    mii: configuration,
-    miiIsNotMii: true,
-    entries: e,
-    onChange(mii, forceRender, part) {
-      configuration = mii;
-      updateConfiguration();
-      oldConfiguration = Object.assign({}, configuration);
-    }
-  }).style({ height: "auto" }).appendTo(tabsContent);
-  let playing = true;
-  if (bodyModelSetting === "wiiu")
-    playing = false;
-  let pauseButton = AddButtonSounds(new Html("button").text(playing ? __21("Pause Animation") : __21("Pause Animation")).on("click", () => {
-    if (playing === true) {
-      playing = false;
-    } else {
-      playing = true;
-    }
-    scene.anim.forEach((anim) => {
-      if (playing === true) {
-        anim.paused = false;
-        pauseButton.text(__21("Pause Animation"));
-      } else {
-        anim.paused = true;
-        pauseButton.text(__21("Play Animation"));
-      }
-    });
-  }).appendTo(tabsContent));
-  new Html("button").text(__21("Save Render")).on("click", finalizeRender).appendTo(tabsContent);
-  function resize() {
-    let { width: width2, height: height2 } = parentBox.elm.getBoundingClientRect();
-    if (width2 < 1024) {
-      width2 = 1024;
-    }
-    if (height2 < 1024) {
-      height2 = 1024;
-    }
-    scene.resize(width2, height2);
-    scene.getRendererElement().style.height = "100%";
-    scene.getRendererElement().style.width = "unset";
-  }
-  window.addEventListener("resize", () => {
-    resize();
-  });
-  controls = scene.getControls();
-  window.scene = scene;
-  const useGreenScreen = await getSetting("customRenderGreenScreen");
-  if (useGreenScreen !== "off") {
-    let color = useGreenScreen;
-    switch (useGreenScreen) {
-      case "green":
-        color = "#00ff00";
-        break;
-      case "blue":
-        color = "#0000ff";
-        break;
-      case "white":
-        color = "#ffffff";
-        break;
-      case "black":
-        color = "#000000";
-        break;
-    }
-    scene.getScene().background = new Color(color);
-  }
-  let oldConfiguration = {
-    fov: 30,
-    pose: 0,
-    expression: "0",
-    renderWidth: 720,
-    renderHeight: 720,
-    animSpeed: 1
-  };
-  function updateConfiguration() {
-    scene.getCamera().fov = configuration.fov;
-    scene.getCamera().updateProjectionMatrix();
-    if (oldConfiguration.expression !== configuration.expression) {
-      scene.traverseAddFaceMaterial(scene.getHead(), `&data=${encodeURIComponent(miiDataHex)}&expression=${configuration.expression}&width=896&verifyCharInfo=0`);
-    }
-    const expr = expressionTable.find((e2) => e2.id === parseInt(configuration.expression));
-    if (expr) {
-      if (typeof expr.modifier !== "undefined") {
-        switch (expr.modifier) {
-          case 0 /* HideNose */:
-            scene.getHead().traverse((o) => {
-              if (o.isMesh !== true)
-                return;
-              const m = o;
-              const modulateType = m.geometry.userData.modulateType;
-              if (modulateType === 2 /* FFL_MODULATE_TYPE_SHAPE_NOSE */ || modulateType === 7 /* FFL_MODULATE_TYPE_SHAPE_NOSELINE */) {
-                m.visible = false;
-              } else {
-                m.visible = true;
-              }
-            });
-            break;
-          case 1 /* HideNoseAndMask */:
-            scene.getHead().traverse((o) => {
-              if (o.isMesh !== true)
-                return;
-              const m = o;
-              const modulateType = m.geometry.userData.modulateType;
-              if (modulateType === 6 /* FFL_MODULATE_TYPE_SHAPE_MASK */ || modulateType === 2 /* FFL_MODULATE_TYPE_SHAPE_NOSE */ || modulateType === 7 /* FFL_MODULATE_TYPE_SHAPE_NOSELINE */) {
-                m.visible = false;
-              } else {
-                m.visible = true;
-              }
-            });
-            break;
-        }
-      } else {
-        scene.getHead().traverse((o) => {
-          if (o.isMesh !== true)
-            return;
-          const m = o;
-          m.visible = true;
-        });
-      }
-    }
-    const pose = "Pose." + String(configuration.pose).padStart(2, "0");
-    if (scene.animations.get(`${scene.type}-${pose}`)) {
-      scene.swapAnimation(pose);
-      if (playing === false) {
-        scene.anim.forEach((a2) => a2.paused = true);
-      }
-    } else {
-      scene.swapAnimation("Wait");
-      if (playing === false) {
-        scene.anim.forEach((a2) => a2.paused = true);
-      }
-    }
-    scene.anim.forEach((a2) => {
-      a2.timeScale = configuration.animSpeed / 100;
-    });
-    scene.anim.get(scene.type).timeScale *= 0.5;
-  }
-  window.scene = scene;
-  scene.init().then(async () => {
-    await scene.updateMiiHead();
-    if (playing === false) {
-      scene.anim.forEach((anim) => {
-        if (playing === true) {
-          anim.paused = false;
-          pauseButton.text(__21("Pause Animation"));
-        } else {
-          anim.paused = true;
-          pauseButton.text(__21("Play Animation"));
-        }
-      });
-    }
-    scene.focusCamera(1 /* MiiFullBody */, true, false);
-    parentBox.append(scene.getRendererElement());
-    scene.resize();
-  });
-  let shouldClose = await getSetting("autoCloseCustomRender");
-  const rendererElm = scene.getRendererElement();
-  function finalizeRender() {
-    rendererElm.toBlob((blob) => {
-      const image = new Image(rendererElm.width, rendererElm.height);
-      image.src = URL.createObjectURL(blob);
-      image.onload = () => {
-        downloadLink(image.src, __21("%1_custom_render_%2.png", miiData.nickname, new Date().toJSON()));
-        if (shouldClose) {
-          scene.shutdown();
-          icons.forEach((i) => URL.revokeObjectURL(i));
-          parent2.cleanup();
-          modal.qs("button")?.elm.click();
-        }
-      };
-    });
-  }
-  async function save3DModel() {
-    alert("This option is only available when using Simple or Toon shader.");
-  }
-}
-
-// src/ui/pages/library/render/renderPresets.ts
-var __22 = _8();
-var { WebGLRenderer: WebGLRenderer2 } = _THREE();
-var miiRenderPresets = async (mii, miiData) => {
-  const renderer4 = new WebGLRenderer2({ alpha: true });
-  const miiRenderInfo = {
-    data: miiData.export("studioData"),
-    module: getFFL(),
-    renderer: renderer4,
-    characterYRotate: 0,
-    expression: 0,
-    modelFlag: 0,
-    size: 1440,
-    additionalInfo: {
-      favorite: miiData.favorite,
-      hatCommonColor: miiData.hatCommonColor,
-      hatFavoriteColor: miiData.hatFavoriteColor,
-      hatType: miiData.hatType,
-      pantsColor: miiData.pantsColor,
-      shirtColor: miiData.shirtColor,
-      special: miiData.special,
-      temporary: miiData.temporary,
-      eyeSclera: miiData.eyeSclera,
-      wigType: miiData.wigType,
-      clothesType: miiData.clothesType,
-      shoesColor: miiData.shoesColor
-    }
-  };
-  Modal_default.modal(__22("Render options: %1", miiData.nickname), __22("Choose a way to render this Mii"), "body", {
-    text: "Focus on head",
-    async callback() {
-      const renderImage = await createMiiRender({
-        ...miiRenderInfo,
-        type: ViewType.Face,
-        drawBody: true
-      });
-      saveBlob(renderImage.result, __22("%1_render_headshot_%2.png", miiData.nickname, new Date().toJSON()));
-      renderer4.dispose();
-    }
-  }, {
-    text: "Focus on full body",
-    async callback() {
-      const renderImage = await createMiiRender({
-        ...miiRenderInfo,
-        type: ViewType.AllBodySugar,
-        drawBody: true
-      });
-      saveBlob(renderImage.result, __22("%1_render_body_%2.png", miiData.nickname, new Date().toJSON()));
-      renderer4.dispose();
-    }
-  }, {
-    text: "Head only",
-    async callback() {
-      const renderImage = await createMiiRender({
-        ...miiRenderInfo,
-        type: ViewType.MakeIcon,
-        drawBody: false
-      });
-      saveBlob(renderImage.result, __22("%1_render_head_only_%2.png", miiData.nickname, new Date().toJSON()));
-      renderer4.dispose();
-    }
-  }, {
-    text: "Cancel"
-  });
-};
-
-// src/ui/pages/library/render/renderMenu.ts
-var __23 = _8();
-var miiRender = (mii, miiData) => {
-  Modal_default.modal(__23("Render Mii"), __23("What would you like to do?"), "body", {
-    text: __23("Download 3D head model"),
-    async callback() {
-      Modal_default.modal(__23("Warning"), __23(`3D model download has been disabled due to some buggy normals exporting going on at the moment.
-In the meantime, you can use Arian's Mii Renderer to get head models.
-Sorry about that.`), "body", ...buttonsOkCancel);
-    }
-  }, {
-    text: __23("Render presets"),
-    async callback() {
-      miiRenderPresets(mii, miiData);
-    }
-  }, {
-    text: __23("Custom render"),
-    async callback() {
-      customRender(miiData);
-    }
-  }, {
-    text: "Cancel"
-  });
-};
 
 // src/ui/pages/library/export.ts
 var __24 = _8();
@@ -139103,7 +138872,7 @@ var miiSelect = (mii, miiData, isSpecial) => {
           await _shutdown()();
           new MiiEditor2(0, async (m, shouldSave) => {
             if (shouldSave === true)
-              await import_localforage7.default.setItem(mii.id, m);
+              await import_localforage6.default.setItem(mii.id, m);
             await pushToServer();
             Library();
           }, mii.mii);
@@ -139119,7 +138888,7 @@ var miiSelect = (mii, miiData, isSpecial) => {
         _shutdown()();
         new MiiEditor2(0, async (m, shouldSave) => {
           if (shouldSave === true)
-            await import_localforage7.default.setItem(await newMiiId(), m);
+            await import_localforage6.default.setItem(await newMiiId(), m);
           await pushToServer();
           Library();
         }, randomMiiB64);
@@ -139156,7 +138925,7 @@ var miiSelect = (mii, miiData, isSpecial) => {
             });
             setTimeout(async () => {
               closeModal2();
-              await import_localforage7.default.removeItem(mii.id);
+              await import_localforage6.default.removeItem(mii.id);
               await pushToServer();
               await _shutdown()();
               Library();
@@ -139192,7 +138961,7 @@ var miiSelect = (mii, miiData, isSpecial) => {
             text: __25("Yes"),
             type: "danger",
             async callback(e2) {
-              await import_localforage7.default.removeItem(mii.id);
+              await import_localforage6.default.removeItem(mii.id);
               await pushToServer();
               await _shutdown()();
               Library();
@@ -139229,10 +138998,10 @@ var miiSelect = (mii, miiData, isSpecial) => {
 };
 
 // src/ui/pages/library/new/_dialog.ts
-var import_localforage12 = __toESM(require_localforage(), 1);
+var import_localforage11 = __toESM(require_localforage(), 1);
 
 // src/ui/pages/library/new/fromScratch.ts
-var import_localforage8 = __toESM(require_localforage(), 1);
+var import_localforage7 = __toESM(require_localforage(), 1);
 var __26 = _8();
 var newFromScratch = () => {
   function cb(gender) {
@@ -139240,7 +139009,7 @@ var newFromScratch = () => {
       _shutdown()();
       new MiiEditor2(gender, async (m2, shouldSave) => {
         if (shouldSave === true)
-          await import_localforage8.default.setItem(await newMiiId(), m2);
+          await import_localforage7.default.setItem(await newMiiId(), m2);
         await pushToServer();
         Library();
       });
@@ -139528,7 +139297,7 @@ Please check the console for more information.`));
 };
 
 // src/ui/pages/library/new/nnidPnid.ts
-var import_localforage9 = __toESM(require_localforage(), 1);
+var import_localforage8 = __toESM(require_localforage(), 1);
 
 // src/ui/components/Loader.ts
 var loader;
@@ -139564,7 +139333,7 @@ var newFromNNID = async () => {
   _shutdown()();
   new MiiEditor2(0, async (m, shouldSave) => {
     if (shouldSave === true)
-      await import_localforage9.default.setItem(await newMiiId(), m);
+      await import_localforage8.default.setItem(await newMiiId(), m);
     await pushToServer();
     Library();
   }, result.data);
@@ -139584,14 +139353,14 @@ var newFromPNID = async () => {
   _shutdown()();
   new MiiEditor2(0, async (m, shouldSave) => {
     if (shouldSave === true)
-      await import_localforage9.default.setItem(await newMiiId(), m);
+      await import_localforage8.default.setItem(await newMiiId(), m);
     await pushToServer();
     Library();
   }, (await pnid.json()).data);
 };
 
 // src/ui/pages/library/new/lookalike.ts
-var import_localforage10 = __toESM(require_localforage(), 1);
+var import_localforage9 = __toESM(require_localforage(), 1);
 
 // src/external/ffl/FFLiCharInfo.ts
 function FFLiiGetEyeRotateOffset(type) {
@@ -139964,26 +139733,7 @@ var RANDOM_PARTS_ARRAY_HAIR_TYPE = [
     [
       [
         18,
-        [
-          13,
-          23,
-          30,
-          36,
-          37,
-          41,
-          45,
-          47,
-          51,
-          53,
-          54,
-          55,
-          58,
-          59,
-          65,
-          67,
-          86,
-          88
-        ]
+        [13, 23, 30, 36, 37, 41, 45, 47, 51, 53, 54, 55, 58, 59, 65, 67, 86, 88]
       ],
       [
         19,
@@ -142764,7 +142514,7 @@ function confirmOrReviseMii(mii, options, modalRef) {
       _shutdown()();
       new MiiEditor2(0, async (m, shouldSave) => {
         if (shouldSave === true)
-          await import_localforage10.default.setItem(await newMiiId(), m);
+          await import_localforage9.default.setItem(await newMiiId(), m);
         await pushToServer();
         Library();
       }, randomMiiB64);
@@ -142773,7 +142523,7 @@ function confirmOrReviseMii(mii, options, modalRef) {
 }
 
 // src/ui/pages/library/new/randomNnid.ts
-var import_localforage11 = __toESM(require_localforage(), 1);
+var import_localforage10 = __toESM(require_localforage(), 1);
 var newFromRandonNNID = async () => {
   Loader_default.show();
   let random2 = await fetch(Config.apis.nnidRandomURL).then((j2) => j2.json());
@@ -142781,7 +142531,7 @@ var newFromRandonNNID = async () => {
   _shutdown()();
   new MiiEditor2(0, async (m, shouldSave) => {
     if (shouldSave === true)
-      await import_localforage11.default.setItem(await newMiiId(), m);
+      await import_localforage10.default.setItem(await newMiiId(), m);
     await pushToServer();
     Library();
   }, random2.data);
@@ -142834,7 +142584,7 @@ var miiCreateDialog = () => {
               const mii = new Mii(miiData);
               const miiDataToSave = dataToBase64(mii.export("miic"));
               id = await newMiiId();
-              await import_localforage12.default.setItem(id, miiDataToSave);
+              await import_localforage11.default.setItem(id, miiDataToSave);
               await pushToServer();
               processed++;
               resolve();
@@ -142869,7 +142619,7 @@ var miiCreateDialog = () => {
       const mii = new Mii(miiData);
       const miiDataToSave = dataToBase64(mii.export("miic"));
       let id = await newMiiId();
-      await import_localforage12.default.setItem(id, miiDataToSave);
+      await import_localforage11.default.setItem(id, miiDataToSave);
       await pushToServer();
       _shutdown()();
       Library(id);
@@ -142909,7 +142659,7 @@ var miiCreateDialog = () => {
 
 // src/ui/pages/Library.ts
 var __31 = _8();
-var savedMiiCount = async () => (await import_localforage13.default.keys()).filter((k4) => k4.startsWith("mii-")).length;
+var savedMiiCount = async () => (await import_localforage12.default.keys()).filter((k4) => k4.startsWith("mii-")).length;
 var newMiiId = async () => `mii-${Date.now()}-${await savedMiiCount()}`;
 var playLoadSound = () => {
   setTimeout(() => {
@@ -142930,6 +142680,7 @@ function blobToDataURL(blob) {
   });
 }
 var getMiiIcon = async (mii, source = "unknown", view = "variableiconbody", size2 = 180, expression = 0, useBlob = true) => {
+  await ensureFFLReady();
   let m = "", drawBody = true, type = ViewType.Face;
   switch (view) {
     case "creditIcon":
@@ -143009,11 +142760,15 @@ var shutdown = () => {
 };
 var _shutdown = () => shutdown;
 async function pushToServer() {
-  const miis = await Promise.all((await import_localforage13.default.keys()).filter((k4) => k4.startsWith("mii-")).sort((a2, b3) => Number(a2.split("-")[1]) - Number(b3.split("-")[1])).map(async (k4) => ({
+  if (typeof Config.syncAPIBase !== "string") {
+    console.debug("pushToServer: Called when Config.syncAPIBase is null. Not syncing.");
+    return;
+  }
+  const miis = await Promise.all((await import_localforage12.default.keys()).filter((k4) => k4.startsWith("mii-")).sort((a2, b3) => Number(a2.split("-")[1]) - Number(b3.split("-")[1])).map(async (k4) => ({
     id: k4,
-    mii: await import_localforage13.default.getItem(k4)
+    mii: await import_localforage12.default.getItem(k4)
   })));
-  await fetch("/api/sync_library", {
+  await fetch(Config.syncAPIBase + "sync_library", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ miis })
@@ -143029,6 +142784,7 @@ async function pushToServer() {
   });
 }
 function choosePersonalMii(miiList, cancelable = false) {
+  console.assert(Config.syncAPIBase !== null);
   return new Promise((resolve) => {
     const personalMiiChooseModal = Modal_default.modal(__31("Notice"), "", "body", {
       text: __31("Confirm")
@@ -143077,6 +142833,7 @@ function choosePersonalMii(miiList, cancelable = false) {
   });
 }
 function confirmPersonalMii(mii, miiLocalforage, modalRef) {
+  console.assert(Config.syncAPIBase !== null);
   return new Promise((resolve) => {
     const miiIcon = new Html("img").style({
       opacity: "0",
@@ -143108,7 +142865,7 @@ function confirmPersonalMii(mii, miiLocalforage, modalRef) {
       async callback(e) {
         if (modalRef)
           modalRef.qs(".flex-group button")?.elm.click();
-        await fetch("/api/personal_mii", {
+        await fetch(Config.syncAPIBase + "/personal_mii", {
           body: JSON.stringify({
             nickname: mii.nickname,
             creator: mii.creator,
@@ -143126,9 +142883,9 @@ function confirmPersonalMii(mii, miiLocalforage, modalRef) {
   });
 }
 async function getAllMiis() {
-  return Promise.all((await import_localforage13.default.keys()).filter((k4) => k4.startsWith("mii-")).sort((a2, b3) => Number(a2.split("-")[1]) - Number(b3.split("-")[1])).map(async (k4) => ({
+  return Promise.all((await import_localforage12.default.keys()).filter((k4) => k4.startsWith("mii-")).sort((a2, b3) => Number(a2.split("-")[1]) - Number(b3.split("-")[1])).map(async (k4) => ({
     id: k4,
-    mii: await import_localforage13.default.getItem(k4)
+    mii: await import_localforage12.default.getItem(k4)
   })));
 }
 async function Library(highlightMiiId) {
@@ -143140,19 +142897,22 @@ async function Library(highlightMiiId) {
       setTimeout(() => {
         container.cleanup();
         resolve();
-      }, 500);
+      }, 0);
     });
   }
   shutdown = shutdownReal;
   const container = new Html("div").class("mii-library").appendTo("body");
   const sidebar = new Html("div").class("library-sidebar").appendTo(container);
-  sidebar.append(new Html("h1").text(__31("Mii Creator")));
+  sidebar.append(new Html("h1").text(__31("Mii Creator") + " (Rehost)"));
   const libraryList = new Html("div").class("library-list").appendTo(container);
-  let miisJson = await fetch("/api/sync_library", {
-    headers: { accept: "application/json" }
-  }).then((j2) => j2.json());
+  let miisJson = null;
+  if (Config.syncAPIBase) {
+    miisJson = await fetch("/api/sync_library", {
+      headers: { accept: "application/json" }
+    }).then((j2) => j2.json());
+  }
   let miis = [];
-  if (miisJson === null) {
+  if (miisJson === null || !Array.isArray(miisJson)) {
     miisJson = [];
     miis = await getAllMiis();
   } else {
@@ -143161,7 +142921,7 @@ async function Library(highlightMiiId) {
   console.log(miisJson);
   if (miis.length === 0) {
     libraryList.append(new Html("div").style({ position: "absolute", top: "2rem", left: "2rem" }).text(__31("You don't have any Miis. Create one to get started!")));
-  } else {
+  } else if (Config.syncAPIBase) {
     const resp = await fetch("/api/personal_mii");
     if (!resp.ok) {
       await choosePersonalMii(miis);
@@ -143169,7 +142929,7 @@ async function Library(highlightMiiId) {
   }
   let miiErrorCount = 0, miiCount = 0;
   for (const mii of miis) {
-    import_localforage13.default.setItem(mii.id, mii.mii);
+    import_localforage12.default.setItem(mii.id, mii.mii);
     let miiContainer = new Html("div").class("library-list-mii");
     AddButtonSounds(miiContainer);
     let miiData = null;
@@ -143279,7 +143039,7 @@ async function Library(highlightMiiId) {
           callback(e2) {
             Modal_default.modal(__31("Warning"), __31("Are you sure you want to delete this Mii?"), "body", {
               async callback(e3) {
-                await import_localforage13.default.removeItem(mii.id);
+                await import_localforage12.default.removeItem(mii.id);
                 await pushToServer();
                 await shutdown();
                 Library();
@@ -143303,97 +143063,7 @@ If you'd like to try and recover the Mii data, you can select the Miis with erro
   window.LazyLoad.update();
   sidebar.appendMany(new Html("div").class("sidebar-buttons").appendMany(AddButtonSounds(new Html("button").text(__31("Create Mii")).on("click", async () => {
     miiCreateDialog();
-  })), AddButtonSounds(new Html("button").text(__31("More Options")).on("click", async () => {
-    Modal_default.modal(__31("More Options"), __31("Select an option."), "body", {
-      text: "Cancel"
-    }, {
-      text: __31("Settings"),
-      callback(e) {
-        Settings2();
-      }
-    }, {
-      text: __31("Credits"),
-      callback(e) {
-        var m = Modal_default.modal(__31("Credits"), "", "body", { text: "Cancel" }, { text: "OK" });
-        m.qs(".modal-body span").cleanup();
-        m.qs(".modal-content").style({
-          "max-width": "100%",
-          "max-height": "100%"
-        });
-        const mb = m.qs(".modal-body");
-        m.qs(".modal-content").style({ position: "relative" });
-        const container2 = new Html("div").class("col").prependTo(mb);
-        new Html("span").text(__31("Check out the people behind Mii Creator!")).style({
-          "font-size": "20px",
-          "flex-shrink": "0",
-          "margin-bottom": "-16px"
-        }).prependTo(mb);
-        new Html("a").text(__31("secret?")).style({
-          "font-size": "10px",
-          opacity: "0.3",
-          cursor: "pointer",
-          position: "absolute",
-          bottom: "10px",
-          right: "10px"
-        }).on("click", (e2) => {
-          m.qs("button")?.elm.click();
-          const mii = new Mii(parseHexOrB64ToUint8Array("BANtKwIiiUS3tZw1sDcq8RYY+sFjAGgAYQByAGwAaQBuAGUAAAAAAGMAaABhAHIAbABpAG4AZQAAAAAACAALAQAAJgMDAQYEAAIKCwQEGwIMAAkBAP8BAAABCAQACgYAZf///0wABAACFAMTARMNBAAKBAEJEP8A/wEA"));
-          importMiiConfirmation(mii, __31("Mii Creator (Special Mii)"));
-        }).appendTo(mb);
-        createMiiCard(container2, __31("Austin☆²¹ / Kat21"), "datkat21", "https://github.com/datkat21", __31("Lead developer of Mii Creator"), "000040030c040320020c0407050213030a0000000008000804000a07003e5303010a09031303130d04000a030d0a");
-        createMiiCard(container2, __31("Arian"), "ariankordi", "https://github.com/ariankordi", __31('Creator of <a target="_blank" href="https://mii-unsecure.ariankordi.net">Mii Renderer (REAL)</a>, made FFL.js and ported shaders, was a big help with debugging many issues'), "080037030d020531020c030105040a0209000001000a011004010b0100662f04000214031603140d04000a020109");
-        createMiiCard(container2, __31("obj"), "objecty", "https://x.com/objecty_twitt", __31("Composed the music for Mii Creator"), "00003a030a030407020b030805040902080400010000000804000a0800403e02010311031304130d04000a040109");
-        createMiiCard(container2, __31("Timothy"), "Timimimi", "https://github.com/Timiimiimii", __31("Modeled many of the custom hats and helped with debugging"), "00003b0208040206040d0308050206040a0100020003005f03090b0800426d01010e16031403130f04000804070b ");
-        createMiiCard(container2, __31("David J."), "dwyazzo90", "https://x.com/dwyazzo90", __31("Helped with design, localization, and created the Wii U theme"), "0800450308040402020c0308060406020a0001000006000804000a0800326702010314031304190d04000a040109");
-        createMiiCard(container2, __31("raymond"), "raymonable", "https://github.com/raymonable", __31("Helped with initial development for client-side rendering"), "0800400308040402020c0301050400020a0000000000000804000a01004b4004000214031303190d04000a040109");
-        createMiiCard(container2, __31("MilkGalaxy"), "milkgalaxy", "https://www.youtube.com/channel/UCUHVT7e1MT0Mpiv0e8WB2fQ", __31("Helped create custom clothing"), "080057033c05030c030d0101060415030c0000010307000804000a1701656204000214011303230d04000a010a0a");
-      }
-    }, {
-      text: __31("Contact"),
-      callback(e) {
-        var m = Modal_default.modal("Contact", "", "body", { text: "Cancel" }, { text: "OK" });
-        m.qs(".modal-body span").cleanup();
-        m.qs(".modal-content").style({
-          "max-width": "100%",
-          "max-height": "100%"
-        });
-        const mb = m.qs(".modal-body");
-        m.qs(".modal-content").style({ position: "relative" });
-        const container2 = new Html("div").class("col").style({ gap: "0" }).prependTo(mb);
-        new Html("span").text(__31("Here's where you can contact the author, Kat21")).style({
-          "font-size": "20px",
-          "flex-shrink": "0",
-          "margin-bottom": "-16px"
-        }).prependTo(mb);
-        new Html("a").text(__31("secret?")).style({
-          "font-size": "10px",
-          opacity: "0.3",
-          cursor: "pointer",
-          position: "absolute",
-          bottom: "10px",
-          left: "10px"
-        }).on("click", (e2) => {
-          m.qs("button")?.elm.click();
-          const mii = new Mii(parseHexOrB64ToUint8Array("BAWl18qbeYiSbgD/dXQq8RYY+sFrAGEAdAAyADEAAAAAAAAAAAAAAGIAbwBvAGUAeQAAAAAAAAAAAAAACAAAAAAAbwMECAYEDQMLMwMHEgIMAAAJAGMACgAANgMACmMASf83ARQABAACFAYTAxMKBAAKAAANN/8AYwEA"));
-          importMiiConfirmation(mii, __31("Mii Creator (Special Mii)"));
-        }).appendTo(mb);
-        createIconCard(container2, __31("E-mail (Preferred)"), "mailto:datkat21.yt@gmail.com", "datkat21.yt@gmail.com", EditorIcons_default.contact_email);
-        createIconCard(container2, __31("Discord"), "", "kat21", EditorIcons_default.contact_discord);
-      }
-    }, {
-      text: __31("Manual"),
-      callback(e) {
-        Modal_default.alert(__31("Notice"), __31("The manual isn't finished yet. Please come back later."));
-      }
-    });
-  }))), new Html("div").class("sidebar-credits").appendMany(new Html("strong").text(__31("This site is not affiliated with Nintendo.")), new Html("small").html(`Mii Creator ${Config.version.string} by kat21 (<b>${Config.version.name}</b>)`).style({ cursor: "pointer" }).on("click", () => {
-    replayUpdateNotice();
-  }), AddButtonSounds(new Html("a").html(`<img style='height:48px' src="./assets/images/update_notice/update_notice_image_01.png">Subscribe to my YouTube channel!`).attr({ href: "https://youtube.com/@ngx3", target: "_blank" }).styleJs({
-    gap: "12px",
-    display: "flex",
-    alignItems: "center",
-    cursor: "pointer"
-  }))));
+  })), AddButtonSounds(new Html("button").text(__31("Settings")).on("click", Settings2))), new Html("div").class("sidebar-credits").appendMany(new Html("small").html('Mii Creator 2025-04-24 version <a target="_blank" href="https://github.com/ariankordi/mii-creator/commit/ce30e3defc154e853df87909b4f766cd395199a4">(ce30e3)</a>'), new Html("strong").text("UNOFFICIAL SITE - Just a fork by Arian. If you've found this, well, you weren't supposed to.")));
 }
 var miiQRConversionWarning = async (miiData) => {
   if (miiData.hasExtendedColors() === true) {
@@ -143420,15 +143090,17 @@ async function setupUi() {
   let mm2 = getMusicManager();
   getSoundManager();
   let shownSessionModal = false;
-  setInterval(() => {
-    fetch("/api/session").then((e) => {
-      if (!e.ok) {
+  if (Config.syncAPIBase) {
+    setInterval(() => {
+      fetch(Config.syncAPIBase + "/session").then((e) => {
+        if (!e.ok) {
+          showSessionModal();
+        }
+      }).catch((e) => {
         showSessionModal();
-      }
-    }).catch((e) => {
-      showSessionModal();
-    });
-  }, 45000);
+      });
+    }, 45000);
+  }
   function showSessionModal() {
     if (shownSessionModal)
       return;
@@ -143441,7 +143113,7 @@ async function setupUi() {
     });
   }
   updateSettings(true);
-  await prepareFFL().catch((e) => {
+  prepareFFLAsync().catch((e) => {
     closeModal(getCurrentLoadingModal());
     let m = Modal_default.modal("Error", "Oops, an error occurred when loading Mii Creator.." + `
 
@@ -143462,21 +143134,6 @@ Loading will not continue.`);
     window.browserMitigations = true;
   } else {
   }
-  Modal_default.modal(__32("Warning"), __32(`You're using a BETA version of Mii Creator. Some features in development have been disabled, and bugs/glitches can occur.
-
-• Special Miis have been changed.
-• QR codes made from this version of Mii Creator can't be scanned back in.
-• Your Mii library now automatically syncs with the server and across devices.`), "body", {
-    text: "Cancel",
-    callback(e) {
-      showBrowserWarning();
-    }
-  }, {
-    text: __32("OK"),
-    callback() {
-      showBrowserWarning();
-    }
-  });
   let state = "main";
   document.addEventListener("editor-launch", () => {
     state = "edit";
@@ -143574,7 +143231,7 @@ Loading will not continue.`);
   });
   window.MusicManager = getMusicManager();
   window.soundManager = getSoundManager();
-  window.localforage = import_localforage14.default;
+  window.localforage = import_localforage13.default;
 }
 
 // src/main.ts
@@ -144520,8 +144177,8 @@ function updateSession(session, context = {}) {
   } else if (typeof context.duration === "number") {
     session.duration = context.duration;
   } else {
-    const duration = session.timestamp - session.started;
-    session.duration = duration >= 0 ? duration : 0;
+    const duration2 = session.timestamp - session.started;
+    session.duration = duration2 >= 0 ? duration2 : 0;
   }
   if (context.release) {
     session.release = context.release;
@@ -148938,7 +148595,7 @@ function init(browserOptions = {}) {
   return initAndBind(BrowserClient, clientOptions);
 }
 // src/main.ts
-var import_localforage15 = __toESM(require_localforage(), 1);
+var import_localforage14 = __toESM(require_localforage(), 1);
 window.LazyLoad = new import_vanilla_lazyload.default;
 if (Config.apis.useSentry) {
   init({
@@ -148947,7 +148604,7 @@ if (Config.apis.useSentry) {
   });
 }
 document.documentElement.dataset.theme = "default";
-window.localforage = import_localforage15.default;
+window.localforage = import_localforage14.default;
 if (window[[108, 111, 99, 97, 116, 105, 111, 110].map((n2) => ([] + []).constructor.fromCharCode(n2)).join("")][[104, 111, 115, 116].map((n2) => ([] + []).constructor.fromCharCode(n2)).join("")].includes([109, 105, 105, 46, 110, 120, 119, 46, 112, 119].map((n2) => ([] + []).constructor.fromCharCode(n2)).join(""))) {
 } else {
 }

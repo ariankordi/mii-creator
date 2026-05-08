@@ -206,6 +206,7 @@ h6 {
   margin: 0;
 }
 
+/*0.8s;*/
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -302,13 +303,13 @@ h6 {
   z-index: 999999999;
   top: 0;
   left: 0;
-  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeIn 0s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .modal.closing {
-  animation: fadeOut 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeOut 0s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .modal.closing .modal-content {
-  animation: shortSlideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: shortSlideDown 0s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .modal .modal-content {
   display: flex;
@@ -318,7 +319,7 @@ h6 {
   min-width: 200px;
   max-height: 440px;
   overflow: clip;
-  animation: shortSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: shortSlideUp 0s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .modal .modal-content .modal-header {
   padding: 8px;
@@ -331,14 +332,19 @@ h6 {
 }
 .modal .modal-content .modal-header .close-button {
   background: var(--error-color);
+  /*
   border-width: 0.1rem;
   border-radius: 50%;
   width: 1.25rem;
   height: 1.25rem;
+  */
+  /* Make the close button larger. TODO: needs redesign. */
+  width: 3.25rem;
+  height: 2rem;
   padding: 0;
   min-width: 0;
   position: absolute;
-  top: 50%;
+  top: 47%;
   right: 0.5rem;
   transform: translateY(-50%);
 }
@@ -516,12 +522,12 @@ select[type=checkbox]:checked {
 
 .fadeIn {
   pointer-events: none;
-  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  animation: fadeIn 0s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .fadeOut {
   pointer-events: none;
-  animation: fadeOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  animation: fadeOut 0s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .slideIn {
@@ -612,14 +618,14 @@ select[type=checkbox]:checked {
   grid-template-areas: "tabList tabList" "mii tabContent";
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto 1fr;
-  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeIn 0s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .ui-base.not-fixed {
   position: static;
 }
 .ui-base.closing {
   pointer-events: none;
-  animation: fadeOut 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  animation: fadeOut 0s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 @media screen and (max-width: 959px) {
   .ui-base {
@@ -915,7 +921,7 @@ canvas.scene {
 }
 
 .mii-library {
-  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeIn 0s cubic-bezier(0.16, 1, 0.3, 1);
   display: grid;
   grid-template-areas: "sidebar miiList" "sidebar miiList";
   grid-template-columns: auto 1fr;
@@ -930,6 +936,7 @@ canvas.scene {
   flex-direction: column;
   gap: 1rem;
   padding: 2rem;
+  width: 380px;
   background: var(--sub-container);
   grid-area: sidebar;
 }
@@ -970,7 +977,7 @@ canvas.scene {
   overflow: visible;
   position: relative;
   cursor: pointer;
-  transition: box-shadow cubic-bezier(0.16, 1, 0.3, 1) 0.8s;
+  transition: box-shadow cubic-bezier(0.16, 1, 0.3, 1) 0s;
   box-shadow: 0 0 0 0 var(--selection-color);
 }
 .mii-library .library-list .library-list-mii.highlight {

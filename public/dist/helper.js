@@ -14123,3667 +14123,6 @@ if (globalThis.THREE) {
 }
 var _THREE = () => THREE2;
 
-// src/external/ffl.js/ffl.js
-var _ = __toESM(require_struct_fu(), 1);
-/*!
- * Bindings for FFL, a Mii renderer, in JavaScript.
- * https://github.com/ariankordi/FFL.js
- * @author Arian Kordi <https://github.com/ariankordi>
- */
-var THREE3 = _THREE();
-globalThis._ = globalThis._;
-globalThis.THREE = globalThis.THREE;
-var FFLResult = {
-  OK: 0,
-  ERROR: 1,
-  HDB_EMPTY: 2,
-  FILE_INVALID: 3,
-  MANAGER_NOT_CONSTRUCT: 4,
-  FILE_LOAD_ERROR: 5,
-  FILE_SAVE_ERROR: 7,
-  RES_FS_ERROR: 9,
-  ODB_EMPTY: 10,
-  OUT_OF_MEMORY: 12,
-  UNKNOWN_17: 17,
-  FS_ERROR: 18,
-  FS_NOT_FOUND: 19,
-  MAX: 20
-};
-var FFLiShapeType = {
-  OPA_BEARD: 0,
-  OPA_FACELINE: 1,
-  OPA_HAIR_NORMAL: 2,
-  OPA_FOREHEAD_NORMAL: 3,
-  XLU_MASK: 4,
-  XLU_NOSELINE: 5,
-  OPA_NOSE: 6,
-  OPA_HAT_NORMAL: 7,
-  XLU_GLASS: 8,
-  OPA_HAIR_CAP: 9,
-  OPA_FOREHEAD_CAP: 10,
-  OPA_HAT_CAP: 11,
-  MAX: 12
-};
-var FFLAttributeBufferType = {
-  POSITION: 0,
-  TEXCOORD: 1,
-  NORMAL: 2,
-  TANGENT: 3,
-  COLOR: 4,
-  MAX: 5
-};
-var FFLCullMode = {
-  NONE: 0,
-  BACK: 1,
-  FRONT: 2,
-  MAX: 3
-};
-var FFLModulateMode = {
-  CONSTANT: 0,
-  TEXTURE_DIRECT: 1,
-  RGB_LAYERED: 2,
-  ALPHA: 3,
-  LUMINANCE_ALPHA: 4,
-  ALPHA_OPA: 5
-};
-var FFLModulateType = {
-  SHAPE_FACELINE: 0,
-  SHAPE_BEARD: 1,
-  SHAPE_NOSE: 2,
-  SHAPE_FOREHEAD: 3,
-  SHAPE_HAIR: 4,
-  SHAPE_CAP: 5,
-  SHAPE_MASK: 6,
-  SHAPE_NOSELINE: 7,
-  SHAPE_GLASS: 8,
-  MUSTACHE: 9,
-  MOUTH: 10,
-  EYEBROW: 11,
-  EYE: 12,
-  MOLE: 13,
-  FACE_MAKE: 14,
-  FACE_LINE: 15,
-  FACE_BEARD: 16,
-  FILL: 17,
-  SHAPE_MAX: 9
-};
-var FFLResourceType = {
-  MIDDLE: 0,
-  HIGH: 1,
-  MAX: 2
-};
-var FFLExpression = {
-  NORMAL: 0,
-  SMILE: 1,
-  ANGER: 2,
-  SORROW: 3,
-  PUZZLED: 3,
-  SURPRISE: 4,
-  SURPRISED: 4,
-  BLINK: 5,
-  OPEN_MOUTH: 6,
-  SMILE_OPEN_MOUTH: 7,
-  HAPPY: 7,
-  ANGER_OPEN_MOUTH: 8,
-  SORROW_OPEN_MOUTH: 9,
-  SURPRISE_OPEN_MOUTH: 10,
-  BLINK_OPEN_MOUTH: 11,
-  WINK_LEFT: 12,
-  WINK_RIGHT: 13,
-  WINK_LEFT_OPEN_MOUTH: 14,
-  WINK_RIGHT_OPEN_MOUTH: 15,
-  LIKE_WINK_LEFT: 16,
-  LIKE: 16,
-  LIKE_WINK_RIGHT: 17,
-  FRUSTRATED: 18,
-  BORED: 19,
-  BORED_OPEN_MOUTH: 20,
-  SIGH_MOUTH_STRAIGHT: 21,
-  SIGH: 22,
-  DISGUSTED_MOUTH_STRAIGHT: 23,
-  DISGUSTED: 24,
-  LOVE: 25,
-  LOVE_OPEN_MOUTH: 26,
-  DETERMINED_MOUTH_STRAIGHT: 27,
-  DETERMINED: 28,
-  CRY_MOUTH_STRAIGHT: 29,
-  CRY: 30,
-  BIG_SMILE_MOUTH_STRAIGHT: 31,
-  BIG_SMILE: 32,
-  CHEEKY: 33,
-  CHEEKY_DUPLICATE: 34,
-  JOJO_EYES_FUNNY_MOUTH: 35,
-  JOJO_EYES_FUNNY_MOUTH_OPEN: 36,
-  SMUG: 37,
-  SMUG_OPEN_MOUTH: 38,
-  RESOLVE: 39,
-  RESOLVE_OPEN_MOUTH: 40,
-  UNBELIEVABLE: 41,
-  UNBELIEVABLE_DUPLICATE: 42,
-  CUNNING: 43,
-  CUNNING_DUPLICATE: 44,
-  RASPBERRY: 45,
-  RASPBERRY_DUPLICATE: 46,
-  INNOCENT: 47,
-  INNOCENT_DUPLICATE: 48,
-  CAT: 49,
-  CAT_DUPLICATE: 50,
-  DOG: 51,
-  DOG_DUPLICATE: 52,
-  TASTY: 53,
-  TASTY_DUPLICATE: 54,
-  MONEY_MOUTH_STRAIGHT: 55,
-  MONEY: 56,
-  SPIRAL_MOUTH_STRAIGHT: 57,
-  CONFUSED: 58,
-  CHEERFUL_MOUTH_STRAIGHT: 59,
-  CHEERFUL: 60,
-  BLANK_61: 61,
-  BLANK_62: 62,
-  GRUMBLE_MOUTH_STRAIGHT: 63,
-  GRUMBLE: 64,
-  MOVED_MOUTH_STRAIGHT: 65,
-  MOVED: 66,
-  SINGING_MOUTH_SMALL: 67,
-  SINGING: 68,
-  STUNNED: 69,
-  MAX: 70
-};
-var FFLModelFlag = {
-  NORMAL: 1 << 0,
-  HAT: 1 << 1,
-  FACE_ONLY: 1 << 2,
-  FLATTEN_NOSE: 1 << 3,
-  NEW_EXPRESSIONS: 1 << 4,
-  NEW_MASK_ONLY: 1 << 5
-};
-var _uintptr = _.uint32le;
-var FFLAttributeBuffer = _.struct([
-  _.uint32le("size"),
-  _.uint32le("stride"),
-  _uintptr("ptr")
-]);
-var FFLAttributeBufferParam = _.struct([
-  _.struct("attributeBuffers", [FFLAttributeBuffer], 5)
-]);
-var FFLPrimitiveParam = _.struct([
-  _.uint32le("primitiveType"),
-  _.uint32le("indexCount"),
-  _uintptr("pAdjustMatrix"),
-  _uintptr("pIndexBuffer")
-]);
-var FFLColor = _.struct([
-  _.float32le("r"),
-  _.float32le("g"),
-  _.float32le("b"),
-  _.float32le("a")
-]);
-var FFLVec3 = _.struct([
-  _.float32le("x"),
-  _.float32le("y"),
-  _.float32le("z")
-]);
-var FFLModulateParam = _.struct([
-  _.uint32le("mode"),
-  _.uint32le("type"),
-  _uintptr("pColorR"),
-  _uintptr("pColorG"),
-  _uintptr("pColorB"),
-  _uintptr("pTexture2D")
-]);
-var FFLDrawParam = _.struct([
-  _.struct("attributeBufferParam", [FFLAttributeBufferParam]),
-  _.struct("modulateParam", [FFLModulateParam]),
-  _.uint32le("cullMode"),
-  _.struct("primitiveParam", [FFLPrimitiveParam])
-]);
-var FFLCreateID = _.struct([
-  _.uint8("data", 10)
-]);
-var FFLiCharInfo = _.struct([
-  _.int32le("miiVersion"),
-  _.struct("faceline", [
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("texture"),
-    _.int32le("make")
-  ]),
-  _.struct("hair", [_.int32le("type"), _.int32le("color"), _.int32le("flip")]),
-  _.struct("eye", [
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("scale"),
-    _.int32le("aspect"),
-    _.int32le("rotate"),
-    _.int32le("x"),
-    _.int32le("y")
-  ]),
-  _.struct("eyebrow", [
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("scale"),
-    _.int32le("aspect"),
-    _.int32le("rotate"),
-    _.int32le("x"),
-    _.int32le("y")
-  ]),
-  _.struct("nose", [
-    _.int32le("type"),
-    _.int32le("scale"),
-    _.int32le("y")
-  ]),
-  _.struct("mouth", [
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("scale"),
-    _.int32le("aspect"),
-    _.int32le("y")
-  ]),
-  _.struct("beard", [
-    _.int32le("mustache"),
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("scale"),
-    _.int32le("y")
-  ]),
-  _.struct("glass", [
-    _.int32le("type"),
-    _.int32le("color"),
-    _.int32le("scale"),
-    _.int32le("y")
-  ]),
-  _.struct("mole", [
-    _.int32le("type"),
-    _.int32le("scale"),
-    _.int32le("x"),
-    _.int32le("y")
-  ]),
-  _.struct("body", [_.int32le("height"), _.int32le("build")]),
-  _.struct("personal", [
-    _.char16le("name", 22),
-    _.char16le("creator", 22),
-    _.int32le("gender"),
-    _.int32le("birthMonth"),
-    _.int32le("birthDay"),
-    _.int32le("favoriteColor"),
-    _.uint8("favorite"),
-    _.uint8("copyable"),
-    _.uint8("ngWord"),
-    _.uint8("localonly"),
-    _.int32le("regionMove"),
-    _.int32le("fontRegion"),
-    _.int32le("roomIndex"),
-    _.int32le("positionInRoom"),
-    _.int32le("birthPlatform")
-  ]),
-  _.struct("createID", [FFLCreateID]),
-  _.uint16le("padding_0"),
-  _.int32le("authorType"),
-  _.uint8("authorID", 8)
-]);
-var FFLStoreData_size = 96;
-var commonColorEnableMask = 1 << 31;
-var commonColorMask = (color) => color | commonColorEnableMask;
-var FFLAdditionalInfo = _.struct([
-  _.char16le("name", 22),
-  _.char16le("creator", 22),
-  _.struct("createID", [FFLCreateID]),
-  _.byte("_padding0", 2),
-  _.struct("skinColor", [FFLColor]),
-  _.uint32le("flags"),
-  _.uint8("facelineType"),
-  _.uint8("hairType"),
-  _.byte("_padding1", 2)
-]);
-var FFLiRenderTexture = _.struct([
-  _uintptr("pTexture2DRenderBufferColorTargetDepthTarget", 4)
-]);
-var FFLiFacelineTextureTempObject = _.struct([
-  _uintptr("pTextureFaceLine"),
-  _.struct("drawParamFaceLine", [FFLDrawParam]),
-  _uintptr("pTextureFaceMake"),
-  _.struct("drawParamFaceMake", [FFLDrawParam]),
-  _uintptr("pTextureFaceBeard"),
-  _.struct("drawParamFaceBeard", [FFLDrawParam]),
-  _uintptr("pRenderTextureCompressorParam", 2)
-]);
-var FFLiRawMaskDrawParam = _.struct([
-  _.struct("drawParamRawMaskPartsEye", [FFLDrawParam], 2),
-  _.struct("drawParamRawMaskPartsEyebrow", [FFLDrawParam], 2),
-  _.struct("drawParamRawMaskPartsMouth", [FFLDrawParam]),
-  _.struct("drawParamRawMaskPartsMustache", [FFLDrawParam], 2),
-  _.struct("drawParamRawMaskPartsMole", [FFLDrawParam]),
-  _.struct("drawParamRawMaskPartsFill", [FFLDrawParam])
-]);
-var FFLiMaskTexturesTempObject = _.struct([
-  _.uint8("partsTextures", 340),
-  _uintptr("pRawMaskDrawParam", FFLExpression.MAX),
-  _.byte("_remaining", 904 - 620)
-]);
-var FFLiTextureTempObject = _.struct([
-  _.struct("maskTextures", [FFLiMaskTexturesTempObject]),
-  _.struct("facelineTexture", [FFLiFacelineTextureTempObject])
-]);
-var FFLiMaskTextures = _.struct([
-  _uintptr("pRenderTextures", FFLExpression.MAX)
-]);
-var FFL_RESOLUTION_MASK = 1073741823;
-var FFLCharModelDesc = _.struct([
-  _.uint32le("resolution"),
-  _.uint32le("allExpressionFlag", 3),
-  _.uint32le("modelFlag"),
-  _.uint32le("resourceType")
-]);
-var FFLCharModelDescDefault = {
-  resolution: 512,
-  allExpressionFlag: new Uint32Array([1, 0, 0]),
-  modelFlag: FFLModelFlag.NORMAL,
-  resourceType: FFLResourceType.HIGH
-};
-var FFLBoundingBox = _.struct([
-  _.struct("min", [FFLVec3]),
-  _.struct("max", [FFLVec3])
-]);
-var FFLPartsTransform = _.struct([
-  _.struct("hatTranslate", [FFLVec3]),
-  _.struct("headFrontRotate", [FFLVec3]),
-  _.struct("headFrontTranslate", [FFLVec3]),
-  _.struct("headSideRotate", [FFLVec3]),
-  _.struct("headSideTranslate", [FFLVec3]),
-  _.struct("headTopRotate", [FFLVec3]),
-  _.struct("headTopTranslate", [FFLVec3])
-]);
-var FFLiCharModel = _.struct([
-  _.struct("charInfo", [FFLiCharInfo]),
-  _.struct("charModelDesc", [FFLCharModelDesc]),
-  _.uint32le("expression"),
-  _uintptr("pTextureTempObject"),
-  _.struct("drawParam", [FFLDrawParam], FFLiShapeType.MAX),
-  _uintptr("pShapeData", FFLiShapeType.MAX),
-  _.struct("facelineRenderTexture", [FFLiRenderTexture]),
-  _uintptr("pCapGlassNoselineTextures", 3),
-  _.struct("maskTextures", [FFLiMaskTextures]),
-  _.struct("beardHairFaceCenterPos", [FFLVec3], 3),
-  _.struct("partsTransform", [FFLPartsTransform]),
-  _.uint32le("modelType"),
-  _.struct("boundingBox", [FFLBoundingBox], 3)
-]);
-var FFLDataSource = {
-  OFFICIAL: 0,
-  DEFAULT: 1,
-  MIDDLE_DB: 2,
-  STORE_DATA_OFFICIAL: 3,
-  STORE_DATA: 4,
-  BUFFER: 5,
-  DIRECT_POINTER: 6
-};
-var FFLCharModelSource = _.struct([
-  _.uint32le("dataSource"),
-  _uintptr("pBuffer"),
-  _.uint16le("index")
-]);
-var FFLResourceDesc = _.struct([
-  _uintptr("pData", FFLResourceType.MAX),
-  _.uint32le("size", FFLResourceType.MAX)
-]);
-var FFLTextureFormat = {
-  R8_UNORM: 0,
-  R8_G8_UNORM: 1,
-  R8_G8_B8_A8_UNORM: 2,
-  MAX: 3
-};
-var FFLTextureInfo = _.struct([
-  _.uint16le("width"),
-  _.uint16le("height"),
-  _.uint8("mipCount"),
-  _.uint8("format"),
-  _.uint8("isGX2Tiled"),
-  _.byte("_padding", 1),
-  _.uint32le("imageSize"),
-  _uintptr("imagePtr"),
-  _.uint32le("mipSize"),
-  _uintptr("mipPtr"),
-  _.uint32le("mipLevelOffset", 13)
-]);
-var FFLTextureCallback = _.struct([
-  _uintptr("pObj"),
-  _.uint8("useOriginalTileMode"),
-  _.byte("_padding", 3),
-  _uintptr("pCreateFunc"),
-  _uintptr("pDeleteFunc")
-]);
-
-class TextureManager {
-  constructor(module2, setToFFLGlobal = false) {
-    this._module = module2;
-    this._textures = new Map;
-    this._textureCallbackPtr = 0;
-    this.logging = false;
-    this._setTextureCallback();
-    if (setToFFLGlobal) {
-      module2._FFLSetTextureCallback(this._textureCallbackPtr);
-    }
-  }
-  static _allocateTextureCallback(module2, createCallback, deleteCallback) {
-    const ptr = module2._malloc(FFLTextureCallback.size);
-    const textureCallback = {
-      pObj: 0,
-      useOriginalTileMode: false,
-      _padding: [0, 0, 0],
-      pCreateFunc: createCallback,
-      pDeleteFunc: deleteCallback
-    };
-    const packed = FFLTextureCallback.pack(textureCallback);
-    module2.HEAPU8.set(packed, ptr);
-    return ptr;
-  }
-  _setTextureCallback(addDeleteCallback = false) {
-    const mod2 = this._module;
-    this._createCallback = mod2.addFunction(this._textureCreateFunc.bind(this), "vppp");
-    if (addDeleteCallback) {
-      this._deleteCallback = mod2.addFunction(this._textureDeleteFunc.bind(this), "vpp");
-    }
-    this._textureCallbackPtr = TextureManager._allocateTextureCallback(mod2, this._createCallback, this._deleteCallback ? this._deleteCallback : 0);
-  }
-  _getTextureFormat(format) {
-    const useGLES2Formats = Number(THREE3.REVISION) <= 136;
-    const r8 = useGLES2Formats ? THREE3.LuminanceFormat : THREE3.RedFormat;
-    const r8g8 = useGLES2Formats ? THREE3.LuminanceAlphaFormat : THREE3.RGFormat;
-    const textureFormatToThreeFormat = {
-      [FFLTextureFormat.R8_UNORM]: r8,
-      [FFLTextureFormat.R8_G8_UNORM]: r8g8,
-      [FFLTextureFormat.R8_G8_B8_A8_UNORM]: THREE3.RGBAFormat
-    };
-    const dataFormat = textureFormatToThreeFormat[format];
-    if (dataFormat === undefined) {
-      throw new Error(`_textureCreateFunc: Unexpected FFLTextureFormat value: ${format}`);
-    }
-    return dataFormat;
-  }
-  _textureCreateFunc(_2, textureInfoPtr, texturePtrPtr) {
-    const u8 = this._module.HEAPU8.subarray(textureInfoPtr, textureInfoPtr + FFLTextureInfo.size);
-    const textureInfo = FFLTextureInfo.unpack(u8);
-    if (this.logging) {
-      console.debug(`_textureCreateFunc: width=${textureInfo.width}, height=${textureInfo.height}, format=${textureInfo.format}, imageSize=${textureInfo.imageSize}, mipCount=${textureInfo.mipCount}`);
-    }
-    const format = this._getTextureFormat(textureInfo.format);
-    const imageData = this._module.HEAPU8.slice(textureInfo.imagePtr, textureInfo.imagePtr + textureInfo.imageSize);
-    const canUseMipmaps = Number(THREE3.REVISION) >= 138;
-    const useMipmaps = textureInfo.mipCount > 1 && canUseMipmaps;
-    const texture = new THREE3.DataTexture(useMipmaps ? null : imageData, textureInfo.width, textureInfo.height, format, THREE3.UnsignedByteType);
-    texture.magFilter = THREE3.LinearFilter;
-    texture.minFilter = THREE3.LinearFilter;
-    if (useMipmaps) {
-      texture.mipmaps = [{
-        data: imageData,
-        width: textureInfo.width,
-        height: textureInfo.height
-      }];
-      texture.minFilter = THREE3.LinearMipmapLinearFilter;
-      texture.generateMipmaps = false;
-      this._addMipmaps(texture, textureInfo);
-    }
-    texture.needsUpdate = true;
-    this.set(texture.id, texture);
-    this._module.HEAPU32[texturePtrPtr / 4] = texture.id;
-  }
-  _addMipmaps(texture, textureInfo) {
-    if (textureInfo.mipPtr === 0) {
-      throw new Error("_addMipmaps: mipPtr is null, so the caller incorrectly assumed this texture has mipmaps");
-    }
-    for (let mipLevel = 1;mipLevel < textureInfo.mipCount; mipLevel++) {
-      const mipOffset = textureInfo.mipLevelOffset[mipLevel - 1];
-      const mipWidth = Math.max(1, textureInfo.width >> mipLevel);
-      const mipHeight = Math.max(1, textureInfo.height >> mipLevel);
-      const nextMipOffset = textureInfo.mipLevelOffset[mipLevel] || textureInfo.mipSize;
-      const end = textureInfo.mipPtr + nextMipOffset;
-      const start = textureInfo.mipPtr + mipOffset;
-      const mipData = this._module.HEAPU8.slice(start, end);
-      if (this.logging) {
-        console.debug(`  - Mip ${mipLevel}: ${mipWidth}x${mipHeight}, offset=${mipOffset}, range=${start}-${end}`);
-      }
-      texture.mipmaps.push({
-        data: mipData,
-        width: mipWidth,
-        height: mipHeight
-      });
-    }
-  }
-  _textureDeleteFunc(_2, texturePtrPtr) {
-    const texId = this._module.HEAPU32[texturePtrPtr / 4];
-    const tex = this._textures.get(texId);
-    if (tex && this.logging) {
-      console.debug("Delete texture    ", tex.id);
-    }
-  }
-  get(id) {
-    const texture = this._textures.get(id);
-    if (!texture && this.logging) {
-      console.error("Unknown texture", id);
-    }
-    return texture;
-  }
-  set(id, texture) {
-    const disposeReal = texture.dispose.bind(texture);
-    texture.dispose = () => {
-      disposeReal();
-      this.delete(id);
-    };
-    this._textures.set(id, texture);
-    if (this.logging) {
-      console.debug("Adding texture    ", texture.id);
-    }
-  }
-  delete(id) {
-    const texture = this._textures.get(id);
-    if (texture) {
-      texture.source = null;
-      texture.mipmaps = null;
-      if (this.logging) {
-        console.debug("Deleted texture   ", id);
-      }
-      this._textures.delete(id);
-    }
-  }
-  disposeCallback() {
-    if (this._textureCallbackPtr) {
-      this._module._free(this._textureCallbackPtr);
-      this._textureCallbackPtr = 0;
-    }
-    if (this._deleteCallback) {
-      this._module.removeFunction(this._deleteCallback);
-      this._deleteCallback = 0;
-    }
-    if (this._createCallback) {
-      this._module.removeFunction(this._createCallback);
-      this._createCallback = 0;
-    }
-  }
-  dispose() {
-    this._textures.forEach((tex) => {
-      tex.dispose();
-    });
-    this._textures.clear();
-    this.disposeCallback();
-  }
-}
-
-class FFLResultException extends Error {
-  constructor(result, funcName, message) {
-    if (!message) {
-      if (funcName) {
-        message = `${funcName} failed with FFLResult: ${result}`;
-      } else {
-        message = `From FFLResult: ${result}`;
-      }
-    }
-    super(message);
-    this.result = result;
-  }
-  static handleResult(result, funcName) {
-    switch (result) {
-      case FFLResult.ERROR:
-        throw new FFLResultWrongParam(funcName);
-      case FFLResult.FILE_INVALID:
-        throw new FFLResultBroken(funcName);
-      case FFLResult.MANAGER_NOT_CONSTRUCT:
-        throw new FFLResultNotAvailable(funcName);
-      case FFLResult.FILE_LOAD_ERROR:
-        throw new FFLResultFatal(funcName);
-      case FFLResult.OK:
-        return;
-      default:
-        throw new FFLResultException(result, funcName);
-    }
-  }
-}
-
-class FFLResultWrongParam extends FFLResultException {
-  constructor(funcName) {
-    super(FFLResult.ERROR, funcName, `${funcName} returned FFL_RESULT_WRONG_PARAM. This usually means parameters going into that function were invalid.`);
-  }
-}
-
-class FFLResultBroken extends FFLResultException {
-  constructor(funcName, message) {
-    super(FFLResult.FILE_INVALID, funcName, message ? message : `${funcName} returned FFL_RESULT_BROKEN. This usually indicates invalid underlying data.`);
-  }
-}
-
-class BrokenInitRes extends FFLResultBroken {
-  constructor() {
-    super("FFLInitRes", 'The header for the FFL resource is probably invalid. Check the version and magic, should be "FFRA" or "ARFF".');
-  }
-}
-
-class BrokenInitModel extends FFLResultBroken {
-  constructor() {
-    super("FFLInitCharModelCPUStep", "FFLInitCharModelCPUStep failed probably because your data failed CRC or CharInfo verification (FFLiVerifyCharInfoWithReason).");
-  }
-}
-
-class FFLResultNotAvailable extends FFLResultException {
-  constructor(funcName) {
-    super(FFLResult.MANAGER_NOT_CONSTRUCT, funcName, `Tried to call FFL function ${funcName} when FFLManager is not constructed (FFL is not initialized properly).`);
-  }
-}
-
-class FFLResultFatal extends FFLResultException {
-  constructor(funcName) {
-    super(FFLResult.FILE_LOAD_ERROR, funcName, `Failed to uncompress or load a specific asset from the FFL resource file during call to ${funcName}`);
-  }
-}
-
-class FFLiVerifyReasonException extends Error {
-  constructor(result) {
-    super(`FFLiVerifyCharInfoWithReason (CharInfo verification) failed with result: ${result}`);
-    this.result = result;
-  }
-}
-
-class ExpressionNotSet extends Error {
-  constructor(expression) {
-    super(`Attempted to set expression ${expression}, but the mask for that expression does not exist. You must reinitialize the CharModel with this expression in the expression flags before using it.`);
-    this.expression = expression;
-  }
-}
-async function _loadDataIntoHeap(resource, module2) {
-  let heapSize;
-  let heapPtr;
-  try {
-    if (resource instanceof ArrayBuffer) {
-      resource = new Uint8Array(resource);
-    }
-    if (resource instanceof Uint8Array) {
-      heapSize = resource.length;
-      heapPtr = module2._malloc(heapSize);
-      console.debug(`_loadDataIntoHeap: Loading from buffer. Size: ${heapSize}, pointer: ${heapPtr}`);
-      module2.HEAPU8.set(resource, heapPtr);
-    } else if (resource instanceof Response) {
-      if (!resource.ok) {
-        throw new Error(`_loadDataIntoHeap: Failed to fetch resource at URL = ${resource.url}, response code = ${resource.status}`);
-      }
-      if (!resource.body) {
-        throw new Error(`_loadDataIntoHeap: Fetch response body is null (resource.body = ${resource.body})`);
-      }
-      const contentLength = resource.headers.get("Content-Length");
-      if (!contentLength) {
-        console.debug("_loadDataIntoHeap: Fetch response is missing Content-Length, falling back to reading as ArrayBuffer.");
-        return _loadDataIntoHeap(await resource.arrayBuffer(), module2);
-      }
-      heapSize = parseInt(contentLength, 10);
-      heapPtr = module2._malloc(heapSize);
-      console.debug(`loadDataIntoHeap: Streaming from fetch response. Size: ${heapSize}, pointer: ${heapPtr}, URL: ${resource.url}`);
-      const reader = resource.body.getReader();
-      let offset = heapPtr;
-      while (true) {
-        const { done, value: value2 } = await reader.read();
-        if (done) {
-          break;
-        }
-        module2.HEAPU8.set(value2, offset);
-        offset += value2.length;
-      }
-    } else {
-      throw new Error("loadDataIntoHeap: type is not Uint8Array or Response");
-    }
-    return { pointer: heapPtr, size: heapSize };
-  } catch (error) {
-    if (heapPtr) {
-      module2._free(heapPtr);
-    }
-    throw error;
-  }
-}
-async function initializeFFL(resource, moduleOrPromise) {
-  console.debug("initializeFFL: Entrypoint, waiting for module to be ready.");
-  let resourceDescPtr;
-  function freeResDesc() {
-    if (resourceDescPtr) {
-      module2._free(resourceDescPtr);
-    }
-  }
-  const resourceType = FFLResourceType.HIGH;
-  let module2;
-  if (typeof moduleOrPromise === "function") {
-    moduleOrPromise = moduleOrPromise();
-  }
-  if (moduleOrPromise instanceof Promise) {
-    module2 = await moduleOrPromise;
-  } else {
-    module2 = moduleOrPromise;
-  }
-  if (!module2.calledRun && !module2.onRuntimeInitialized) {
-    await new Promise((resolve) => {
-      module2.onRuntimeInitialized = () => {
-        console.debug("initializeFFL: Emscripten runtime initialized, resolving.");
-        resolve(null);
-      };
-      console.debug(`initializeFFL: module.calledRun: ${module2.calledRun}, module.onRuntimeInitialized:
-${module2.onRuntimeInitialized}
- // ^^ assigned and waiting.`);
-    });
-  } else {
-    console.debug("initializeFFL: Assuming module is ready.");
-  }
-  let resourceDesc = null;
-  try {
-    if (resource instanceof Promise) {
-      resource = await resource;
-    }
-    const { pointer: heapPtr, size: heapSize } = await _loadDataIntoHeap(resource, module2);
-    console.debug(`initializeFFL: Resource loaded into heap. Pointer: ${heapPtr}, Size: ${heapSize}`);
-    resourceDesc = { pData: [0, 0], size: [0, 0] };
-    resourceDesc.pData[resourceType] = heapPtr;
-    resourceDesc.size[resourceType] = heapSize;
-    const resourceDescData = FFLResourceDesc.pack(resourceDesc);
-    resourceDescPtr = module2._malloc(FFLResourceDesc.size);
-    module2.HEAPU8.set(resourceDescData, resourceDescPtr);
-    const result = module2._FFLInitRes(0, resourceDescPtr);
-    if (result === FFLResult.FILE_INVALID) {
-      throw new BrokenInitRes;
-    }
-    FFLResultException.handleResult(result, "FFLInitRes");
-    module2._FFLInitResGPUStep();
-    module2._FFLSetNormalIsSnorm8_8_8_8(true);
-    module2._FFLSetTextureFlipY(true);
-  } catch (error) {
-    _freeResourceDesc(resourceDesc, module2);
-    freeResDesc();
-    console.error("initializeFFL failed:", error);
-    throw error;
-  } finally {
-    freeResDesc();
-  }
-  return {
-    module: module2,
-    resourceDesc
-  };
-}
-function _freeResourceDesc(desc, module2) {
-  if (!desc || !desc.pData) {
-    return;
-  }
-  desc.pData.forEach((ptr, i) => {
-    if (ptr) {
-      module2._free(ptr);
-      desc.pData[i] = 0;
-    }
-  });
-}
-class CharModel {
-  constructor(ptr, module2, materialClass, texManager) {
-    this._module = module2;
-    this._data = null;
-    this._materialClass = materialClass;
-    this._materialTextureClass = materialClass;
-    this._textureManager = texManager;
-    this._ptr = ptr;
-    this.__ptr = ptr;
-    const charModelData = this._module.HEAPU8.subarray(ptr, ptr + FFLiCharModel.size);
-    this._model = FFLiCharModel.unpack(charModelData);
-    this._facelineTarget = null;
-    this._maskTargets = new Array(FFLExpression.MAX).fill(null);
-    this.expressions = [];
-    this.meshes = new THREE3.Group;
-    this._addCharModelMeshes(module2);
-  }
-  _addCharModelMeshes(module2) {
-    if (!this.meshes) {
-      throw new Error("_addCharModelMeshes: this.meshes is null or undefined, was this CharModel disposed?");
-    }
-    for (let shapeType = 0;shapeType < FFLiShapeType.MAX; shapeType++) {
-      const drawParam = this._model.drawParam[shapeType];
-      const mesh = drawParamToMesh(drawParam, this._materialClass, module2, this._textureManager);
-      if (!mesh) {
-        continue;
-      }
-      mesh.renderOrder = drawParam.modulateParam.type;
-      switch (shapeType) {
-        case FFLiShapeType.OPA_FACELINE:
-          this._facelineMesh = mesh;
-          break;
-        case FFLiShapeType.XLU_MASK:
-          this._maskMesh = mesh;
-          break;
-      }
-      this.meshes.add(mesh);
-    }
-  }
-  _getTextureTempObjectPtr() {
-    return this._model.pTextureTempObject;
-  }
-  _getTextureTempObject() {
-    const ptr = this._getTextureTempObjectPtr();
-    return FFLiTextureTempObject.unpack(this._module.HEAPU8.subarray(ptr, ptr + FFLiTextureTempObject.size));
-  }
-  _getPartsTransform() {
-    const obj = this._model.partsTransform;
-    const newPartsTransform = {};
-    for (const key2 in obj) {
-      const vec = obj[key2];
-      if (vec.x === undefined) {
-        throw new Error;
-      }
-      newPartsTransform[key2] = new THREE3.Vector3(vec.x, vec.y, vec.z);
-    }
-    return newPartsTransform;
-  }
-  _getFacelineColor() {
-    const mod2 = this._module;
-    const facelineColor = this._model.charInfo.faceline.color;
-    const colorPtr = mod2._malloc(FFLColor.size);
-    mod2._FFLGetFacelineColor(colorPtr, facelineColor);
-    const color = _getFFLColor3(_getFFLColor(colorPtr, mod2.HEAPF32));
-    mod2._free(colorPtr);
-    return color;
-  }
-  _getFavoriteColor() {
-    const mod2 = this._module;
-    const favoriteColor = this._model.charInfo.personal.favoriteColor;
-    const colorPtr = mod2._malloc(FFLColor.size);
-    mod2._FFLGetFavoriteColor(colorPtr, favoriteColor);
-    const color = _getFFLColor3(_getFFLColor(colorPtr, mod2.HEAPF32));
-    mod2._free(colorPtr);
-    return color;
-  }
-  _getCharInfoUint8Array() {
-    return FFLiCharInfo.pack(this._model.charInfo);
-  }
-  _getPartsTexturesPtr() {
-    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.maskTextures.offset + FFLiMaskTexturesTempObject.fields.partsTextures.offset;
-  }
-  _getFacelineTempObjectPtr() {
-    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.facelineTexture.offset;
-  }
-  _getMaskTempObjectPtr() {
-    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.maskTextures.offset;
-  }
-  _getExpressionFlagPtr() {
-    return this._ptr + FFLiCharModel.fields.charModelDesc.offset + FFLCharModelDesc.fields.allExpressionFlag.offset;
-  }
-  _getBoundingBox() {
-    const bbox = this._model.boundingBox[this._model.modelType];
-    if (!(bbox.max.x === 0 && bbox.max.y === 0 && bbox.max.z === 0)) {
-      const min = new THREE3.Vector3(bbox.min.x, bbox.min.y, bbox.min.z);
-      const max = new THREE3.Vector3(bbox.max.x, bbox.max.y, bbox.max.z);
-      return new THREE3.Box3(min, max);
-    }
-    const excludeFromBox = [FFLModulateType.SHAPE_MASK, FFLModulateType.SHAPE_GLASS];
-    const box = new THREE3.Box3;
-    if (!this.meshes) {
-      throw new Error("_getBoundingBox: this.meshes is null.");
-    }
-    this.meshes.traverse((child) => {
-      if (!(child instanceof THREE3.Mesh) || excludeFromBox.indexOf(child.geometry.userData.modulateType) !== -1) {
-        return;
-      }
-      box.expandByObject(child);
-    });
-    return box;
-  }
-  _getResolution() {
-    return this._model.charModelDesc.resolution & FFL_RESOLUTION_MASK;
-  }
-  _isTexOnly() {
-    return (this._model.charModelDesc.modelFlag & FFLModelFlag.NEW_MASK_ONLY) !== 0;
-  }
-  _finalizeCharModel() {
-    if (!this._ptr) {
-      return;
-    }
-    this._module._FFLDeleteCharModel(this._ptr);
-    this._module._free(this._ptr);
-    this._ptr = 0;
-  }
-  disposeTargets() {
-    if (this._facelineTarget) {
-      console.debug(`Disposing target ${this._facelineTarget.texture.id} for faceline`);
-      this._facelineTarget.dispose();
-      this._facelineTarget = null;
-    }
-    this._maskTargets.forEach((target, i) => {
-      if (!target) {
-        return;
-      }
-      console.debug(`Disposing target ${target.texture.id} for mask ${i}`);
-      target.dispose();
-      this._maskTargets[i] = null;
-    });
-  }
-  dispose(disposeTargets = true) {
-    console.debug("CharModel.dispose: ptr =", this.__ptr);
-    this._finalizeCharModel();
-    if (this.meshes) {
-      this._facelineMesh = null;
-      this._maskMesh = null;
-      disposeMeshes(this.meshes);
-      this.meshes = null;
-    }
-    if (disposeTargets) {
-      this.disposeTargets();
-    }
-    if (this._textureManager) {
-      this._textureManager.dispose();
-      this._textureManager = null;
-    }
-  }
-  getStoreData() {
-    const charInfoData = this._getCharInfoUint8Array();
-    const mod2 = this._module;
-    const charInfoPtr = mod2._malloc(FFLiCharInfo.size);
-    const storeDataPtr = mod2._malloc(FFLStoreData_size);
-    mod2.HEAPU8.set(charInfoData, charInfoPtr);
-    const result = mod2._FFLpGetStoreDataFromCharInfo(storeDataPtr, charInfoPtr);
-    const storeData = mod2.HEAPU8.slice(storeDataPtr, storeDataPtr + FFLStoreData_size);
-    mod2._free(charInfoPtr);
-    mod2._free(storeDataPtr);
-    if (!result) {
-      throw new Error("getStoreData: call to FFLpGetStoreDataFromCharInfo returned false, CharInfo verification probably failed");
-    }
-    return storeData;
-  }
-  setExpression(expression) {
-    this._model.expression = expression;
-    const targ = this._maskTargets[expression];
-    if (!targ || !targ.texture) {
-      throw new ExpressionNotSet(expression);
-    }
-    if (this._isTexOnly()) {
-      return;
-    }
-    const mesh = this._maskMesh;
-    if (!mesh || !(mesh instanceof THREE3.Mesh)) {
-      if (expression === FFLExpression.BLANK_61 || expression === FFLExpression.BLANK_62) {
-        return;
-      }
-      throw new Error("setExpression: mask mesh does not exist, cannot set expression on it");
-    }
-    targ.texture._target = targ;
-    mesh.material.map = targ.texture;
-    mesh.material.needsUpdate = true;
-  }
-  getFaceline() {
-    if (this._facelineTarget) {
-      return this._facelineTarget;
-    }
-    return null;
-  }
-  getMask(expression = this.expression) {
-    if (this._maskTargets && this._maskTargets[expression]) {
-      return this._maskTargets[expression];
-    }
-    return null;
-  }
-  get expression() {
-    return this._model.expression;
-  }
-  get charInfo() {
-    return this._model.charInfo;
-  }
-  get facelineColor() {
-    if (!this._facelineColor) {
-      this._facelineColor = this._getFacelineColor();
-    }
-    return this._facelineColor;
-  }
-  get favoriteColor() {
-    if (!this._favoriteColor) {
-      this._favoriteColor = this._getFavoriteColor();
-    }
-    return this._favoriteColor;
-  }
-  get gender() {
-    return this._model.charInfo.personal.gender;
-  }
-  get partsTransform() {
-    if (!this._partsTransform) {
-      this._partsTransform = this._getPartsTransform();
-    }
-    return this._partsTransform;
-  }
-  get boundingBox() {
-    if (!this._boundingBox) {
-      this._boundingBox = this._getBoundingBox();
-    }
-    return this._boundingBox;
-  }
-  static BodyScaleMode = {
-    Apply: 0,
-    Limit: 1
-  };
-  getBodyScale(scaleMode = CharModel.BodyScaleMode.Apply) {
-    const build = this._model.charInfo.body.build;
-    const height2 = this._model.charInfo.body.height;
-    const bodyScale = new THREE3.Vector3;
-    switch (scaleMode) {
-      case CharModel.BodyScaleMode.Apply: {
-        bodyScale.x = build * (height2 * 0.003671875 + 0.4) / 128 + height2 * 0.001796875 + 0.4;
-        bodyScale.y = height2 * 0.006015625 + 0.5;
-        break;
-      }
-      case CharModel.BodyScaleMode.Limit: {
-        const heightFactor = height2 / 128;
-        bodyScale.y = heightFactor * 0.55 + 0.6;
-        bodyScale.x = heightFactor * 0.3 + 0.6;
-        bodyScale.x = (heightFactor * 0.6 + 0.8 - bodyScale.x) * (build / 128) + bodyScale.x;
-        break;
-      }
-      default:
-        throw new Error(`getBodyScale: Unexpected value for scaleMode: ${scaleMode}`);
-    }
-    bodyScale.z = bodyScale.x;
-    return bodyScale;
-  }
-}
-var PantsColor = {
-  GrayNormal: 0,
-  BluePresent: 1,
-  RedRegular: 2,
-  GoldSpecial: 3
-};
-var pantsColors = {
-  [PantsColor.GrayNormal]: new THREE3.Color(4212558),
-  [PantsColor.BluePresent]: new THREE3.Color(2637946),
-  [PantsColor.RedRegular]: new THREE3.Color(7348245),
-  [PantsColor.GoldSpecial]: new THREE3.Color(12623920)
-};
-function _allocateModelSource(data2, module2) {
-  const bufferPtr = module2._malloc(FFLiCharInfo.size);
-  const modelSource = {
-    dataSource: FFLDataSource.DIRECT_POINTER,
-    pBuffer: bufferPtr,
-    index: 0
-  };
-  if (!(data2 instanceof Uint8Array)) {
-    try {
-      if (typeof data2 !== "object") {
-        throw new Error("_allocateModelSource: data passed in is not FFLiCharInfo object or Uint8Array");
-      }
-      data2 = FFLiCharInfo.pack(data2);
-    } catch (e) {
-      module2._free(bufferPtr);
-      throw e;
-    }
-  }
-  function setStudioData(src) {
-    const studio = StudioCharInfo.unpack(src);
-    const charInfo = convertStudioCharInfoToFFLiCharInfo(studio);
-    data2 = FFLiCharInfo.pack(charInfo);
-    module2.HEAPU8.set(data2, bufferPtr);
-  }
-  function callGetCharInfoFunc(data3, size, funcName) {
-    const dataPtr = module2._malloc(size);
-    module2.HEAPU8.set(data3, dataPtr);
-    const result = module2[funcName](bufferPtr, dataPtr);
-    module2._free(dataPtr);
-    if (!result) {
-      module2._free(bufferPtr);
-      throw new Error(`_allocateModelSource: call to ${funcName} returned false, CharInfo verification probably failed`);
-    }
-  }
-  switch (data2.length) {
-    case FFLStoreData_size: {
-      callGetCharInfoFunc(data2, FFLStoreData_size, "_FFLpGetCharInfoFromStoreData");
-      break;
-    }
-    case 74:
-    case 76: {
-      callGetCharInfoFunc(data2, 74, "_FFLpGetCharInfoFromMiiDataOfficialRFL");
-      break;
-    }
-    case FFLiCharInfo.size:
-      module2.HEAPU8.set(data2, bufferPtr);
-      break;
-    case StudioCharInfo.size + 1: {
-      data2 = studioURLObfuscationDecode(data2);
-      setStudioData(data2);
-      break;
-    }
-    case StudioCharInfo.size: {
-      setStudioData(data2);
-      break;
-    }
-    case 88:
-      throw new Error("_allocateModelSource: NX CharInfo is not supported.");
-    case 48:
-    case 68:
-      throw new Error("_allocateModelSource: NX CoreData/StoreData is not supported.");
-    case 92:
-    case 72:
-      throw new Error("_allocateModelSource: Please convert your FFLiMiiDataOfficial/FFLiMiiDataCore to FFLStoreData (add a checksum).");
-    default: {
-      module2._free(bufferPtr);
-      throw new Error(`_allocateModelSource: Unknown length for character data: ${data2.length}`);
-    }
-  }
-  return modelSource;
-}
-function verifyCharInfo(data2, module2, verifyName = false) {
-  let charInfoPtr = 0;
-  let charInfoAllocated = false;
-  if (typeof data2 === "number") {
-    charInfoPtr = data2;
-    charInfoAllocated = false;
-  } else {
-    charInfoAllocated = true;
-    charInfoPtr = module2._malloc(FFLiCharInfo.size);
-    module2.HEAPU8.set(data2, charInfoPtr);
-  }
-  const result = module2._FFLiVerifyCharInfoWithReason(charInfoPtr, verifyName);
-  if (charInfoAllocated) {
-    module2._free(charInfoPtr);
-  }
-  if (result !== 0) {
-    throw new FFLiVerifyReasonException(result);
-  }
-}
-function checkExpressionChangesShapes(i, warn = false) {
-  const expressionsDisablingNose = [49, 50, 51, 52, 61, 62];
-  const expressionsDisablingMask = [61, 62];
-  const prefix = `checkExpressionChangesShapes: An expression was enabled (${i}) that is meant to disable nose or mask shape for the entire CharModel, so it is only recommended to set this as a single expression rather than as one of multiple.`;
-  if (expressionsDisablingMask.indexOf(i) !== -1) {
-    warn && console.warn(`${prefix} (in this case, MASK SHAPE so there is supposed to be NO FACE)`);
-    return true;
-  }
-  if (expressionsDisablingNose.indexOf(i) !== -1) {
-    warn && console.warn(`${prefix} (nose shape)`);
-    return true;
-  }
-  return false;
-}
-function makeExpressionFlag(expressions) {
-  function checkRange(i) {
-    if (i >= FFLExpression.MAX) {
-      throw new Error(`makeExpressionFlag: input out of range: got ${i}, max: ${FFLExpression.MAX}`);
-    }
-  }
-  const flags = new Uint32Array([0, 0, 0]);
-  let checkForChangeShapes = true;
-  if (typeof expressions === "number") {
-    expressions = [expressions];
-    checkForChangeShapes = false;
-  } else if (!Array.isArray(expressions)) {
-    throw new Error("makeExpressionFlag: expected array or single number");
-  }
-  for (const index2 of expressions) {
-    checkRange(index2);
-    if (checkForChangeShapes) {
-      checkExpressionChangesShapes(index2, true);
-    }
-    const part = Math.floor(index2 / 32);
-    const bitIndex = index2 % 32;
-    flags[part] |= 1 << bitIndex;
-  }
-  return flags;
-}
-function createCharModel(data2, descOrExpFlag, materialClass, module2, verify = true) {
-  if (!module2 || !module2._malloc) {
-    throw new Error("createCharModel: module is null not initialized properly (cannot find ._malloc).");
-  }
-  if (!data2) {
-    throw new Error("createCharModel: data is null or undefined.");
-  }
-  const modelSourcePtr = module2._malloc(FFLCharModelSource.size);
-  const modelDescPtr = module2._malloc(FFLCharModelDesc.size);
-  const charModelPtr = module2._malloc(FFLiCharModel.size);
-  const modelSource = _allocateModelSource(data2, module2);
-  const charInfoPtr = modelSource.pBuffer;
-  const modelSourceBuffer = FFLCharModelSource.pack(modelSource);
-  module2.HEAPU8.set(modelSourceBuffer, modelSourcePtr);
-  const modelDesc = _descOrExpFlagToModelDesc(descOrExpFlag);
-  modelDesc.modelFlag |= FFLModelFlag.NEW_EXPRESSIONS;
-  const modelDescBuffer = FFLCharModelDesc.pack(modelDesc);
-  module2.HEAPU8.set(modelDescBuffer, modelDescPtr);
-  let textureManager = null;
-  try {
-    if (verify) {
-      verifyCharInfo(charInfoPtr, module2, false);
-    }
-    textureManager = new TextureManager(module2, false);
-    const result = module2._FFLInitCharModelCPUStepWithCallback(charModelPtr, modelSourcePtr, modelDescPtr, textureManager._textureCallbackPtr);
-    if (result === FFLResult.FILE_INVALID) {
-      throw new BrokenInitModel;
-    }
-    FFLResultException.handleResult(result, "FFLInitCharModelCPUStep");
-  } catch (error) {
-    if (textureManager) {
-      textureManager.dispose();
-    }
-    module2._free(charModelPtr);
-    throw error;
-  } finally {
-    module2._free(modelSourcePtr);
-    module2._free(modelDescPtr);
-    module2._free(charInfoPtr);
-    if (textureManager) {
-      textureManager.disposeCallback();
-    }
-  }
-  const charModel = new CharModel(charModelPtr, module2, materialClass, textureManager);
-  charModel._data = data2;
-  console.debug(`createCharModel: Initialized for "${charModel._model.charInfo.personal.name}", ptr =`, charModelPtr);
-  return charModel;
-}
-function _descOrExpFlagToModelDesc(descOrExpFlag, defaultDesc = FFLCharModelDescDefault) {
-  if (!descOrExpFlag && typeof descOrExpFlag !== "number") {
-    return defaultDesc;
-  }
-  if (typeof descOrExpFlag === "number" || Array.isArray(descOrExpFlag)) {
-    descOrExpFlag = makeExpressionFlag(descOrExpFlag);
-  }
-  let newModelDesc = Object.assign({}, defaultDesc);
-  if (descOrExpFlag instanceof Uint32Array) {
-    newModelDesc.allExpressionFlag = descOrExpFlag;
-  } else if (typeof descOrExpFlag === "object") {
-    newModelDesc = descOrExpFlag;
-  } else {
-    throw new Error("_descOrExpFlagToModelDesc: Unexpected type for descOrExpFlag");
-  }
-  return newModelDesc;
-}
-function matSupportsFFL(material) {
-  return "modulateMode" in material.prototype;
-}
-function drawParamToMesh(drawParam, materialClass, module2, texManager) {
-  if (!drawParam) {
-    throw new Error("drawParamToMesh: drawParam may be null.");
-  }
-  if (!texManager) {
-    throw new Error("drawParamToMesh: Passed in TextureManager is null or undefined, is it constructed?");
-  }
-  if (typeof materialClass !== "function") {
-    throw new Error("drawParamToMesh: materialClass is unexpectedly not a function.");
-  }
-  if (drawParam.primitiveParam.indexCount === 0) {
-    return null;
-  }
-  const geometry = _bindDrawParamGeometry(drawParam, module2);
-  const cullModeToThreeSide = {
-    [FFLCullMode.NONE]: THREE3.DoubleSide,
-    [FFLCullMode.BACK]: THREE3.FrontSide,
-    [FFLCullMode.FRONT]: THREE3.BackSide,
-    [FFLCullMode.MAX]: THREE3.DoubleSide
-  };
-  const side = cullModeToThreeSide[drawParam.cullMode];
-  if (side === undefined) {
-    throw new Error(`drawParamToMesh: Unexpected value for FFLCullMode: ${drawParam.cullMode}`);
-  }
-  const texture = _getTextureFromModulateParam(drawParam.modulateParam, texManager);
-  const isFFLMaterial = matSupportsFFL(materialClass);
-  const params = _applyModulateParam(drawParam.modulateParam, module2, isFFLMaterial);
-  const materialParam = {
-    side,
-    map: texture,
-    ...params
-  };
-  if (geometry.attributes.tangent === undefined && "useSpecularModeBlinn" in materialClass.prototype) {
-    materialParam.useSpecularModeBlinn = true;
-  }
-  const material = new materialClass(materialParam);
-  const mesh = new THREE3.Mesh(geometry, material);
-  if (drawParam.primitiveParam.pAdjustMatrix !== 0) {
-    _applyAdjustMatrixToMesh(drawParam.primitiveParam.pAdjustMatrix, mesh, module2.HEAPF32);
-  }
-  if (mesh.geometry.userData) {
-    mesh.geometry.userData.modulateMode = drawParam.modulateParam.mode;
-    mesh.geometry.userData.modulateType = drawParam.modulateParam.type;
-    mesh.geometry.userData.modulateColor = params.color instanceof THREE3.Color ? [params.color.r, params.color.g, params.color.b, 1] : [1, 1, 1, 1];
-    mesh.geometry.userData.cullMode = drawParam.cullMode;
-  }
-  return mesh;
-}
-function _bindDrawParamGeometry(drawParam, module2) {
-  function unexpectedStride(typeStr, stride) {
-    throw new Error(`_bindDrawParamGeometry: Unexpected stride for attribute ${typeStr}: ${stride}`);
-  }
-  const attributes = drawParam.attributeBufferParam.attributeBuffers;
-  const positionBuffer = attributes[FFLAttributeBufferType.POSITION];
-  if (positionBuffer.size === 0) {
-    throw new Error("_bindDrawParamGeometry: Position buffer must not have size of 0");
-  }
-  const vertexCount = positionBuffer.size / positionBuffer.stride;
-  const geometry = new THREE3.BufferGeometry;
-  const indexPtr = drawParam.primitiveParam.pIndexBuffer / 2;
-  const indexCount = drawParam.primitiveParam.indexCount;
-  const indices = module2.HEAPU16.slice(indexPtr, indexPtr + indexCount);
-  geometry.setIndex(new THREE3.Uint16BufferAttribute(indices, 1));
-  for (const typeStr in attributes) {
-    const buffer = attributes[typeStr];
-    const type = parseInt(typeStr);
-    if (buffer.size === 0) {
-      continue;
-    }
-    switch (type) {
-      case FFLAttributeBufferType.POSITION: {
-        if (buffer.stride === 16) {
-          const ptr = buffer.ptr / 4;
-          const data2 = module2.HEAPF32.slice(ptr, ptr + vertexCount * 4);
-          const interleavedBuffer = new THREE3.InterleavedBuffer(data2, 4);
-          geometry.setAttribute("position", new THREE3.InterleavedBufferAttribute(interleavedBuffer, 3, 0));
-        } else if (buffer.stride === 6) {
-          const ptr = buffer.ptr / 2;
-          const data2 = module2.HEAPU16.slice(ptr, ptr + vertexCount * 3);
-          geometry.setAttribute("position", new THREE3.Float16BufferAttribute(data2, 3));
-        } else {
-          unexpectedStride(typeStr, buffer.stride);
-        }
-        break;
-      }
-      case FFLAttributeBufferType.NORMAL: {
-        const data2 = module2.HEAP8.slice(buffer.ptr, buffer.ptr + buffer.size);
-        geometry.setAttribute("normal", new THREE3.Int8BufferAttribute(data2, buffer.stride, true));
-        break;
-      }
-      case FFLAttributeBufferType.TANGENT: {
-        const data2 = module2.HEAP8.slice(buffer.ptr, buffer.ptr + buffer.size);
-        geometry.setAttribute("tangent", new THREE3.Int8BufferAttribute(data2, buffer.stride, true));
-        break;
-      }
-      case FFLAttributeBufferType.TEXCOORD: {
-        if (buffer.stride === 8) {
-          const ptr = buffer.ptr / 4;
-          const data2 = module2.HEAPF32.slice(ptr, ptr + vertexCount * 2);
-          geometry.setAttribute("uv", new THREE3.Float32BufferAttribute(data2, 2));
-        } else if (buffer.stride === 4) {
-          const ptr = buffer.ptr / 2;
-          const data2 = module2.HEAPU16.slice(ptr, ptr + vertexCount * 2);
-          geometry.setAttribute("uv", new THREE3.Float16BufferAttribute(data2, 2));
-        } else {
-          unexpectedStride(typeStr, buffer.stride);
-        }
-        break;
-      }
-      case FFLAttributeBufferType.COLOR: {
-        if (buffer.stride === 0) {
-          break;
-        }
-        const data2 = module2.HEAPU8.slice(buffer.ptr, buffer.ptr + buffer.size);
-        geometry.setAttribute("_color", new THREE3.Uint8BufferAttribute(data2, buffer.stride, true));
-        break;
-      }
-    }
-  }
-  return geometry;
-}
-function _getTextureFromModulateParam(modulateParam, textureManager) {
-  if (!modulateParam.pTexture2D || modulateParam.pTexture2D === 1) {
-    return null;
-  }
-  const texturePtr = modulateParam.pTexture2D;
-  const texture = textureManager.get(texturePtr);
-  if (!texture) {
-    throw new Error(`_getTextureFromModulateParam: Texture not found for ${texturePtr}.`);
-  }
-  const applyMirrorTypes = [
-    FFLModulateType.SHAPE_FACELINE,
-    FFLModulateType.SHAPE_CAP,
-    FFLModulateType.SHAPE_GLASS
-  ];
-  if (applyMirrorTypes.indexOf(modulateParam.type) !== -1) {
-    texture.wrapS = THREE3.MirroredRepeatWrapping;
-    texture.wrapT = THREE3.MirroredRepeatWrapping;
-    texture.needsUpdate = true;
-  }
-  return texture;
-}
-function _getBlendOptionsFromModulateType(modulateType, modulateMode) {
-  if (modulateMode !== 0 && modulateType >= FFLModulateType.SHAPE_MAX && modulateType <= FFLModulateType.MOLE) {
-    return {
-      blending: THREE3.CustomBlending,
-      blendSrc: THREE3.OneMinusDstAlphaFactor,
-      blendSrcAlpha: THREE3.SrcAlphaFactor,
-      blendDst: THREE3.DstAlphaFactor
-    };
-  } else if (modulateMode !== 0 && modulateType >= FFLModulateType.FACE_MAKE && modulateType <= FFLModulateType.FILL) {
-    return {
-      blending: THREE3.CustomBlending,
-      blendSrc: THREE3.SrcAlphaFactor,
-      blendDst: THREE3.OneMinusSrcAlphaFactor,
-      blendSrcAlpha: THREE3.OneFactor,
-      blendDstAlpha: THREE3.OneFactor
-    };
-  }
-  return {};
-}
-function _applyModulateParam(modulateParam, module2, forFFLMaterial = true) {
-  let color = null;
-  let color4 = null;
-  const f32 = module2.HEAPF32;
-  if (modulateParam.pColorG !== 0 && modulateParam.pColorB !== 0) {
-    color = [
-      _getFFLColor3(_getFFLColor(modulateParam.pColorR, f32)),
-      _getFFLColor3(_getFFLColor(modulateParam.pColorG, f32)),
-      _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32))
-    ];
-    if (self.eyeScleraHack && modulateParam.type === 12) {
-      color = [
-        _getFFLColor3(_getFFLColor(modulateParam.pColorR, f32)),
-        _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32)),
-        _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32))
-      ];
-    }
-  } else if (modulateParam.pColorR !== 0) {
-    color4 = _getFFLColor(modulateParam.pColorR, f32);
-    color = _getFFLColor3(color4);
-  }
-  const opacity = color4 ? color4.a : 1;
-  const transparent = modulateParam.type >= FFLModulateType.SHAPE_MASK;
-  const lightEnable = !(modulateParam.type >= FFLModulateType.SHAPE_MAX && modulateParam.mode !== FFLModulateMode.CONSTANT);
-  const modulateModeType = forFFLMaterial ? {
-    modulateMode: modulateParam.mode,
-    modulateType: modulateParam.type
-  } : {};
-  const param = Object.assign(modulateModeType, {
-    color,
-    opacity,
-    transparent,
-    depthWrite: !transparent,
-    ..._getBlendOptionsFromModulateType(modulateParam.type, modulateParam.mode)
-  });
-  if (!lightEnable) {
-    param.lightEnable = lightEnable;
-  }
-  return param;
-}
-function _getFFLColor(colorPtr, heapf32) {
-  if (!colorPtr) {
-    throw new Error("_getFFLColor: Received null pointer");
-  }
-  const colorData = heapf32.subarray(colorPtr / 4, colorPtr / 4 + 4);
-  return { r: colorData[0], g: colorData[1], b: colorData[2], a: colorData[3] };
-}
-function _getFFLColor3(color) {
-  return new THREE3.Color(color.r, color.g, color.b);
-}
-function _applyAdjustMatrixToMesh(pMtx, mesh, heapf32) {
-  const ptr = pMtx / 4;
-  const m = heapf32.slice(ptr, ptr + 48 / 4);
-  function matrixFromRowMajor3x4(m2) {
-    const matrix2 = new THREE3.Matrix4;
-    matrix2.set(m2[0], m2[4], m2[8], m2[3], m2[1], m2[5], m2[9], m2[7], m2[2], m2[6], m2[10], m2[11], 0, 0, 0, 1);
-    return matrix2;
-  }
-  const matrix = matrixFromRowMajor3x4(m);
-  mesh.scale.setFromMatrixScale(matrix);
-  mesh.position.setFromMatrixPosition(matrix);
-  if (matrix.elements[0] === -1) {
-    mesh.scale.x = -1;
-  }
-}
-function initCharModelTextures(charModel, renderer2, materialClass = charModel._materialClass) {
-  if (renderer2.render === undefined) {
-    throw new Error("initCharModelTextures: renderer is an unexpected type (cannot find .render).");
-  }
-  const module2 = charModel._module;
-  charModel._materialTextureClass = materialClass;
-  const textureTempObject = charModel._getTextureTempObject();
-  charModel.expressions = textureTempObject.maskTextures.pRawMaskDrawParam.map((val2, idx) => val2 !== 0 ? idx : -1).filter((i) => i !== -1);
-  _drawFacelineTexture(charModel, textureTempObject, renderer2, module2, materialClass);
-  const clearAlpha = renderer2.getClearAlpha();
-  clearAlpha !== 0 && renderer2.setClearAlpha(0);
-  _drawMaskTextures(charModel, textureTempObject, renderer2, module2, materialClass);
-  charModel._finalizeCharModel();
-  charModel.setExpression(charModel.expression);
-  clearAlpha !== 0 && renderer2.setClearAlpha(clearAlpha);
-  if (!matSupportsFFL(charModel._materialClass)) {
-    if (!matSupportsFFL(charModel._materialTextureClass)) {
-      console.warn("initCharModelTextures: charModel._materialClass does not support modulateMode (no getter), but the _materialTextureClass is either the same or also does not support modulateMode so textures will look wrong");
-    } else {
-      convertModelTexturesToRGBA(charModel, renderer2, charModel._materialTextureClass);
-    }
-  }
-}
-function _drawFacelineTexture(charModel, textureTempObject, renderer2, module2, materialClass) {
-  const facelineTempObjectPtr = charModel._getFacelineTempObjectPtr();
-  module2._FFLiInvalidateTempObjectFacelineTexture(facelineTempObjectPtr);
-  const drawParams = [
-    textureTempObject.facelineTexture.drawParamFaceMake,
-    textureTempObject.facelineTexture.drawParamFaceLine,
-    textureTempObject.facelineTexture.drawParamFaceBeard
-  ].filter((dp) => dp && dp.modulateParam.pTexture2D !== 0);
-  if (drawParams.length === 0) {
-    console.debug("_drawFacelineTexture: Skipping faceline texture.");
-    return;
-  }
-  const bgColor = charModel.facelineColor;
-  const { scene: offscreenScene } = createSceneFromDrawParams(drawParams, bgColor, materialClass, charModel._module, charModel._textureManager);
-  const width2 = charModel._getResolution() / 2;
-  const height2 = charModel._getResolution();
-  const options = {
-    depthBuffer: false,
-    stencilBuffer: false,
-    wrapS: THREE3.MirroredRepeatWrapping,
-    wrapT: THREE3.MirroredRepeatWrapping
-  };
-  const target = createAndRenderToTarget(offscreenScene, getIdentCamera(), renderer2, width2, height2, options);
-  console.debug(`Creating target ${target.texture.id} for faceline`);
-  _setFaceline(charModel, target);
-  module2._FFLiDeleteTempObjectFacelineTexture(facelineTempObjectPtr, charModel._ptr, charModel._model.charModelDesc.resourceType);
-  disposeMeshes(offscreenScene);
-}
-function _drawMaskTextures(charModel, textureTempObject, renderer2, module2, materialClass) {
-  const maskTempObjectPtr = charModel._getMaskTempObjectPtr();
-  const expressionFlagPtr = charModel._getExpressionFlagPtr();
-  const scenes = [];
-  for (let i = 0;i < charModel._model.maskTextures.pRenderTextures.length; i++) {
-    if (charModel._model.maskTextures.pRenderTextures[i] === 0) {
-      continue;
-    }
-    const rawMaskDrawParamPtr = textureTempObject.maskTextures.pRawMaskDrawParam[i];
-    const rawMaskDrawParam = FFLiRawMaskDrawParam.unpack(module2.HEAPU8.subarray(rawMaskDrawParamPtr, rawMaskDrawParamPtr + FFLiRawMaskDrawParam.size));
-    module2._FFLiInvalidateRawMask(rawMaskDrawParamPtr);
-    const { target, scene } = _drawMaskTexture(charModel, rawMaskDrawParam, renderer2, module2, materialClass);
-    console.debug(`Creating target ${target.texture.id} for mask ${i}`);
-    charModel._maskTargets[i] = target;
-    scenes.push(scene);
-  }
-  scenes.forEach((scene) => {
-    disposeMeshes(scene);
-  });
-  module2._FFLiDeleteTempObjectMaskTextures(maskTempObjectPtr, expressionFlagPtr, charModel._model.charModelDesc.resourceType);
-  module2._FFLiDeleteTextureTempObject(charModel._ptr);
-}
-function _drawMaskTexture(charModel, rawMaskParam, renderer2, module2, materialClass) {
-  const drawParams = [
-    rawMaskParam.drawParamRawMaskPartsMustache[0],
-    rawMaskParam.drawParamRawMaskPartsMustache[1],
-    rawMaskParam.drawParamRawMaskPartsMouth,
-    rawMaskParam.drawParamRawMaskPartsEyebrow[0],
-    rawMaskParam.drawParamRawMaskPartsEyebrow[1],
-    rawMaskParam.drawParamRawMaskPartsEye[0],
-    rawMaskParam.drawParamRawMaskPartsEye[1],
-    rawMaskParam.drawParamRawMaskPartsMole
-  ].filter((dp) => dp && dp.primitiveParam.indexCount !== 0);
-  if (drawParams.length === 0) {
-    throw new Error("_drawMaskTexture: All DrawParams are empty.");
-  }
-  const options = {
-    depthBuffer: false,
-    stencilBuffer: false
-  };
-  const { scene: offscreenScene } = createSceneFromDrawParams(drawParams, null, materialClass, module2, charModel._textureManager);
-  const width2 = charModel._getResolution();
-  const target = createAndRenderToTarget(offscreenScene, getIdentCamera(), renderer2, width2, width2, options);
-  return { target, scene: offscreenScene };
-}
-function _setFaceline(charModel, target) {
-  if (!target || !target.texture) {
-    throw new Error("setFaceline: passed in RenderTarget is invalid");
-  }
-  charModel._facelineTarget = target;
-  if (charModel._isTexOnly()) {
-    return;
-  }
-  const mesh = charModel._facelineMesh;
-  if (!mesh || !(mesh instanceof THREE3.Mesh)) {
-    throw new Error("setFaceline: faceline shape does not exist");
-  }
-  target.texture._target = target;
-  mesh.material.map = target.texture;
-  mesh.material.needsUpdate = true;
-}
-function _texDrawRGBATarget(renderer2, material, userData, materialTextureClass) {
-  const plane = new THREE3.PlaneGeometry(2, 2);
-  const scene = new THREE3.Scene;
-  const bgClearRGBMesh = new THREE3.Mesh(plane, new THREE3.MeshBasicMaterial({
-    color: material.color,
-    transparent: true,
-    opacity: 0,
-    blending: THREE3.NoBlending
-  }));
-  scene.add(bgClearRGBMesh);
-  if (!material.map) {
-    throw new Error("_texDrawRGBATarget: material.map is null or undefined");
-  }
-  const tex = material.map;
-  const texMat = new materialTextureClass({
-    map: tex,
-    modulateMode: userData.modulateMode,
-    color: material.color,
-    lightEnable: false
-  });
-  texMat.blending = THREE3.NoBlending;
-  texMat.transparent = true;
-  const textureMesh = new THREE3.Mesh(plane, texMat);
-  scene.add(textureMesh);
-  const target = createAndRenderToTarget(scene, getIdentCamera(false), renderer2, tex.image.width, tex.image.height, {
-    wrapS: tex.wrapS,
-    wrapT: tex.wrapT,
-    depthBuffer: false,
-    stencilBuffer: false
-  });
-  target.texture._target = target;
-  material.map.dispose();
-  material.map = target.texture;
-  material.color = new THREE3.Color(1, 1, 1);
-  userData.modulateMode = 1;
-  return target;
-}
-function convertModelTexturesToRGBA(charModel, renderer2, materialTextureClass) {
-  const convertTextureForTypes = [
-    FFLModulateType.SHAPE_CAP,
-    FFLModulateType.SHAPE_NOSELINE,
-    FFLModulateType.SHAPE_GLASS
-  ];
-  if (!charModel.meshes) {
-    throw new Error("convertModelTexturesToRGBA: charModel.meshes is null.");
-  }
-  charModel.meshes.traverse((mesh) => {
-    if (!(mesh instanceof THREE3.Mesh) || !mesh.geometry.userData.modulateType || !mesh.material.map || convertTextureForTypes.indexOf(mesh.geometry.userData.modulateType) === -1) {
-      return;
-    }
-    const target = _texDrawRGBATarget(renderer2, mesh.material, mesh.geometry.userData, materialTextureClass);
-    charModel._maskTargets.push(target);
-  });
-}
-class TextureShaderMaterial extends THREE3.ShaderMaterial {
-  constructor(options = {}) {
-    const uniforms = {
-      opacity: { value: 1 }
-    };
-    const blankMatrix3 = { value: new THREE3.Matrix3 };
-    if (Number(THREE3.REVISION) < 151) {
-      uniforms.uvTransform = blankMatrix3;
-    } else {
-      uniforms.mapTransform = blankMatrix3;
-    }
-    super({
-      vertexShader: `
-				#include <common>
-				#include <uv_pars_vertex>
-
-				void main() {
-					#include <begin_vertex>
-					#include <uv_vertex>
-					#include <project_vertex>
-				}`,
-      fragmentShader: `
-				#include <common>
-				#include <uv_pars_fragment>
-				#include <map_pars_fragment>
-				uniform vec3 diffuse;
-				uniform float opacity;
-				uniform int modulateMode;
-				uniform vec3 color1;
-				uniform vec3 color2;
-
-				void main() {
-					vec4 diffuseColor = vec4( diffuse, opacity );
-
-					#include <map_fragment>
-					#include <alphamap_fragment>
-				#ifdef USE_MAP
-					if (modulateMode == 2) { // FFL_MODULATE_MODE_RGB_LAYERED
-				    diffuseColor = vec4(
-				      diffuse.rgb * sampledDiffuseColor.r +
-				      color1.rgb * sampledDiffuseColor.g +
-				      color2.rgb * sampledDiffuseColor.b,
-				      sampledDiffuseColor.a
-				    );
-				  } else if (modulateMode == 3) { // FFL_MODULATE_MODE_ALPHA
-				    diffuseColor = vec4(
-				      diffuse.rgb * sampledDiffuseColor.r,
-				      sampledDiffuseColor.r
-				    );
-				  } else if (modulateMode == 4) { // FFL_MODULATE_MODE_LUMINANCE_ALPHA
-				    diffuseColor = vec4(
-				      diffuse.rgb * sampledDiffuseColor.g,
-				      sampledDiffuseColor.r
-				    );
-				  } else if (modulateMode == 5) { // FFL_MODULATE_MODE_ALPHA_OPA
-				    diffuseColor = vec4(
-				      diffuse.rgb * sampledDiffuseColor.r,
-				      1.0
-				    );
-				  }
-				#endif
-
-				  // avoids little outline around mask elements
-				  if (modulateMode != 0 && diffuseColor.a == 0.0) { // FFL_MODULATE_MODE_CONSTANT
-				      discard;
-				  }
-
-					gl_FragColor = diffuseColor;
-					//#include <colorspace_fragment>
-				}`,
-      uniforms
-    });
-    this.lightEnable = false;
-    this.modulateType = 0;
-    this.setValues(options);
-  }
-  get color() {
-    return this.uniforms.diffuse ? this.uniforms.diffuse.value : null;
-  }
-  set color(value2) {
-    if (Array.isArray(value2)) {
-      this.uniforms.diffuse = { value: value2[0] };
-      this.uniforms.color1 = { value: value2[1] };
-      this.uniforms.color2 = { value: value2[2] };
-      return;
-    }
-    const color3 = value2 ? value2 : new THREE3.Color(1, 1, 1);
-    this._color3 = color3;
-    this.uniforms.diffuse = { value: color3 };
-  }
-  get modulateMode() {
-    return this.uniforms.modulateMode ? this.uniforms.modulateMode.value : null;
-  }
-  set modulateMode(value2) {
-    this.uniforms.modulateMode = { value: value2 };
-  }
-  get map() {
-    return this.uniforms.map ? this.uniforms.map.value : null;
-  }
-  set map(value2) {
-    this.uniforms.map = { value: value2 };
-  }
-}
-function createSceneFromDrawParams(drawParams, bgColor, ...drawParamArgs) {
-  const scene = new THREE3.Scene;
-  scene.background = bgColor || null;
-  const meshes = [];
-  drawParams.forEach((param) => {
-    const mesh = drawParamToMesh(param, ...drawParamArgs);
-    if (mesh) {
-      scene.add(mesh);
-      meshes.push(mesh);
-    }
-  });
-  return { scene, meshes };
-}
-function getIdentCamera(flipY = false) {
-  const camera = new THREE3.OrthographicCamera(-1, 1, flipY ? -1 : 1, flipY ? 1 : -1, 0.1, 10);
-  camera.position.z = 1;
-  return camera;
-}
-function createAndRenderToTarget(scene, camera, renderer2, width2, height2, targetOptions = {}) {
-  const options = {
-    minFilter: THREE3.LinearFilter,
-    magFilter: THREE3.LinearFilter,
-    ...targetOptions
-  };
-  const renderTarget = renderer2["isWebGPURenderer"] === undefined ? new THREE3.WebGLRenderTarget(width2, height2, options) : new THREE3.RenderTarget(width2, height2, options);
-  const prevTarget = renderer2.getRenderTarget();
-  renderer2.setRenderTarget(renderTarget);
-  renderer2.render(scene, camera);
-  renderer2.setRenderTarget(prevTarget);
-  return renderTarget;
-}
-function disposeMeshes(group, scene) {
-  function disposeMaterial(material) {
-    if (material.map) {
-      material.map.dispose();
-    }
-    material.dispose();
-  }
-  group.traverse((child) => {
-    if (!(child instanceof THREE3.Mesh)) {
-      return;
-    }
-    if (child.geometry) {
-      child.geometry.dispose();
-    }
-    if (child.material) {
-      Array.isArray(child.material) ? child.material.forEach((material) => {
-        disposeMaterial(material);
-      }) : disposeMaterial(child.material);
-    }
-  });
-  if (scene && scene instanceof THREE3.Scene) {
-    scene.remove(group);
-  }
-  group.children = [];
-}
-var StudioCharInfo = _.struct([
-  _.uint8("beardColor"),
-  _.uint8("beardType"),
-  _.uint8("build"),
-  _.uint8("eyeAspect"),
-  _.uint8("eyeColor"),
-  _.uint8("eyeRotate"),
-  _.uint8("eyeScale"),
-  _.uint8("eyeType"),
-  _.uint8("eyeX"),
-  _.uint8("eyeY"),
-  _.uint8("eyebrowAspect"),
-  _.uint8("eyebrowColor"),
-  _.uint8("eyebrowRotate"),
-  _.uint8("eyebrowScale"),
-  _.uint8("eyebrowType"),
-  _.uint8("eyebrowX"),
-  _.uint8("eyebrowY"),
-  _.uint8("facelineColor"),
-  _.uint8("facelineMake"),
-  _.uint8("facelineType"),
-  _.uint8("facelineWrinkle"),
-  _.uint8("favoriteColor"),
-  _.uint8("gender"),
-  _.uint8("glassColor"),
-  _.uint8("glassScale"),
-  _.uint8("glassType"),
-  _.uint8("glassY"),
-  _.uint8("hairColor"),
-  _.uint8("hairFlip"),
-  _.uint8("hairType"),
-  _.uint8("height"),
-  _.uint8("moleScale"),
-  _.uint8("moleType"),
-  _.uint8("moleX"),
-  _.uint8("moleY"),
-  _.uint8("mouthAspect"),
-  _.uint8("mouthColor"),
-  _.uint8("mouthScale"),
-  _.uint8("mouthType"),
-  _.uint8("mouthY"),
-  _.uint8("mustacheScale"),
-  _.uint8("mustacheType"),
-  _.uint8("mustacheY"),
-  _.uint8("noseScale"),
-  _.uint8("noseType"),
-  _.uint8("noseY")
-]);
-function convertStudioCharInfoToFFLiCharInfo(src) {
-  return {
-    miiVersion: 0,
-    faceline: {
-      type: src.facelineType,
-      color: src.facelineColor,
-      texture: src.facelineWrinkle,
-      make: src.facelineMake
-    },
-    hair: {
-      type: src.hairType,
-      color: commonColorMask(src.hairColor),
-      flip: src.hairFlip
-    },
-    eye: {
-      type: src.eyeType,
-      color: commonColorMask(src.eyeColor),
-      scale: src.eyeScale,
-      aspect: src.eyeAspect,
-      rotate: src.eyeRotate,
-      x: src.eyeX,
-      y: src.eyeY
-    },
-    eyebrow: {
-      type: src.eyebrowType,
-      color: commonColorMask(src.eyebrowColor),
-      scale: src.eyebrowScale,
-      aspect: src.eyebrowAspect,
-      rotate: src.eyebrowRotate,
-      x: src.eyebrowX,
-      y: src.eyebrowY
-    },
-    nose: {
-      type: src.noseType,
-      scale: src.noseScale,
-      y: src.noseY
-    },
-    mouth: {
-      type: src.mouthType,
-      color: commonColorMask(src.mouthColor),
-      scale: src.mouthScale,
-      aspect: src.mouthAspect,
-      y: src.mouthY
-    },
-    beard: {
-      mustache: src.mustacheType,
-      type: src.beardType,
-      color: commonColorMask(src.beardColor),
-      scale: src.mustacheScale,
-      y: src.mustacheY
-    },
-    glass: {
-      type: src.glassType,
-      color: commonColorMask(src.glassColor),
-      scale: src.glassScale,
-      y: src.glassY
-    },
-    mole: {
-      type: src.moleType,
-      scale: src.moleScale,
-      x: src.moleX,
-      y: src.moleY
-    },
-    body: {
-      height: src.height,
-      build: src.build
-    },
-    personal: {
-      name: "",
-      creator: "",
-      gender: src.gender,
-      birthMonth: 0,
-      birthDay: 0,
-      favoriteColor: src.favoriteColor,
-      favorite: 0,
-      copyable: 0,
-      ngWord: 0,
-      localonly: 0,
-      regionMove: 0,
-      fontRegion: 0,
-      roomIndex: 0,
-      positionInRoom: 0,
-      birthPlatform: 3
-    },
-    createID: {
-      data: new Array(10).fill(0)
-    },
-    padding_0: 0,
-    authorType: 0,
-    authorID: new Array(8).fill(0)
-  };
-}
-function studioURLObfuscationDecode(data2) {
-  const decodedData = new Uint8Array(data2);
-  const random2 = decodedData[0];
-  let previous = random2;
-  for (let i = 1;i < 48; i++) {
-    const encodedByte = decodedData[i];
-    const original = (encodedByte - 7 + 256) % 256;
-    decodedData[i - 1] = original ^ previous;
-    previous = encodedByte;
-  }
-  return decodedData.slice(0, StudioCharInfo.size);
-}
-function stripSpaces(str) {
-  return str.replace(/\s+/g, "");
-}
-function hexToUint8Array(hex) {
-  const match = hex.match(/.{1,2}/g);
-  const arr = (match ? match : []).map(function(byte2) {
-    return parseInt(byte2, 16);
-  });
-  return new Uint8Array(arr);
-}
-function base64ToUint8Array(base64) {
-  const normalizedBase64 = base64.replace(/-/g, "+").replace(/_/g, "/");
-  function padBase64(str) {
-    while (str.length % 4 !== 0) {
-      str += "=";
-    }
-    return str;
-  }
-  const paddedBase64 = padBase64(normalizedBase64);
-  const binaryString = atob(paddedBase64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0;i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes;
-}
-function parseHexOrB64ToUint8Array(text2) {
-  let inputData;
-  const textData = stripSpaces(text2);
-  if (/^[0-9a-fA-F]+$/.test(textData)) {
-    inputData = hexToUint8Array(textData);
-  } else {
-    inputData = base64ToUint8Array(textData);
-  }
-  return inputData;
-}
-
-// src/constants/BodyShaderTypes.ts
-var BodyType;
-((BodyType2) => {
-  BodyType2["WiiU"] = "wiiu";
-  BodyType2["Switch"] = "switch";
-  BodyType2["Miitomo"] = "miitomo";
-  BodyType2["StreetPass"] = "streetpass";
-})(BodyType ||= {});
-var ShaderType;
-((ShaderType2) => {
-  ShaderType2["WiiU"] = "wiiu";
-  ShaderType2["Switch"] = "switch";
-  ShaderType2["LightDisabled"] = "lightDisabled";
-  ShaderType2["Miitomo"] = "miitomo";
-  ShaderType2["MiitomoBasic"] = "miitomo_basic";
-  ShaderType2["WiiUBlinn"] = "wiiu_blinn";
-  ShaderType2["WiiUFFLIconWithBody"] = "wiiu_ffliconwithbody";
-  ShaderType2["WiiUToon"] = "wiiu_toon";
-  ShaderType2["ThreeToon"] = "three_toon";
-  ShaderType2["ThreePhong"] = "three_phong";
-})(ShaderType ||= {});
-function adjustShaderQuery(params, shader) {
-  switch (shader) {
-    case "wiiu" /* WiiU */:
-    case "switch" /* Switch */:
-    case "miitomo" /* Miitomo */:
-      params.set("shaderType", shader);
-      break;
-    case "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */:
-      params.set("shaderType", "ffliconwithbody");
-      break;
-    case "wiiu_toon" /* WiiUToon */:
-      params.set("shaderType", "wiiu");
-      break;
-    case "wiiu_blinn" /* WiiUBlinn */:
-      params.set("shaderType", "wiiu_blinn");
-      break;
-    case "lightDisabled" /* LightDisabled */:
-      params.set("shaderType", "wiiu");
-      params.set("lightEnable", "0");
-      break;
-    default:
-      console.warn(`unknown shader type: ${shader}`);
-  }
-}
-
-// src/external/ffl.js/FFLShaderMaterial.js
-var THREE4 = _THREE();
-var _FFLShader_vert = `
-// 頂点シェーダーに入力される attribute 変数
-//attribute vec4 position;       //!< 入力: 位置情報
-//attribute vec2 uv;             //!< 入力: テクスチャー座標
-//attribute vec3 normal;         //!< 入力: 法線ベクトル
-// All provided by three.js ^^
-
-// vertex color is not actually the color of the shape, as such
-// it is a custom attribute _COLOR in the glTF
-
-attribute vec4 _color;           //!< 入力: 頂点の色
-attribute vec3 tangent;          //!< 入力: 異方位
-
-// フラグメントシェーダーへの入力
-varying   vec4 v_color;          //!< 出力: 頂点の色
-varying   vec4 v_position;       //!< 出力: 位置情報
-varying   vec3 v_normal;         //!< 出力: 法線ベクトル
-varying   vec3 v_tangent;        //!< 出力: 異方位
-varying   vec2 v_texCoord;       //!< 出力: テクスチャー座標
-
-// ユニフォーム
-//uniform mat3 normalMatrix;     //!< ユニフォーム: モデルの法線用行列
-//uniform mat4 modelViewMatrix;  //!< ユニフォーム: プロジェクション行列
-//uniform mat4 projectionMatrix; //!< ユニフォーム: モデル行列
-// All provided by three.js ^^
-
-// skinning_pars_vertex.glsl.js
-#ifdef USE_SKINNING
-    uniform mat4 bindMatrix;
-    uniform mat4 bindMatrixInverse;
-    uniform highp sampler2D boneTexture;
-    mat4 getBoneMatrix( const in float i ) {
-        int size = textureSize( boneTexture, 0 ).x;
-        int j = int( i ) * 4;
-        int x = j % size;
-        int y = j / size;
-        vec4 v1 = texelFetch( boneTexture, ivec2( x, y ), 0 );
-        vec4 v2 = texelFetch( boneTexture, ivec2( x + 1, y ), 0 );
-        vec4 v3 = texelFetch( boneTexture, ivec2( x + 2, y ), 0 );
-        vec4 v4 = texelFetch( boneTexture, ivec2( x + 3, y ), 0 );
-        return mat4( v1, v2, v3, v4 );
-    }
-#endif
-
-void main()
-{
-
-    // begin_vertex.glsl.js
-    vec3 transformed = vec3( position );
-// skinbase_vertex.glsl.js
-#ifdef USE_SKINNING
-    mat4 boneMatX = getBoneMatrix( skinIndex.x );
-    mat4 boneMatY = getBoneMatrix( skinIndex.y );
-    mat4 boneMatZ = getBoneMatrix( skinIndex.z );
-    mat4 boneMatW = getBoneMatrix( skinIndex.w );
-    // skinning_vertex.glsl.js
-    vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );
-    vec4 skinned = vec4( 0.0 );
-    skinned += boneMatX * skinVertex * skinWeight.x;
-    skinned += boneMatY * skinVertex * skinWeight.y;
-    skinned += boneMatZ * skinVertex * skinWeight.z;
-    skinned += boneMatW * skinVertex * skinWeight.w;
-    transformed = ( bindMatrixInverse * skinned ).xyz;
-#endif
-
-//#ifdef FFL_COORDINATE_MODE_NORMAL
-    // 頂点座標を変換
-    v_position = modelViewMatrix * vec4(transformed, 1.0);
-    gl_Position =  projectionMatrix * v_position;
-
-    vec3 objectNormal = normal;
-    vec3 objectTangent = tangent.xyz;
-// skinnormal_vertex.glsl.js
-#ifdef USE_SKINNING
-    mat4 skinMatrix = mat4( 0.0 );
-    skinMatrix += skinWeight.x * boneMatX;
-    skinMatrix += skinWeight.y * boneMatY;
-    skinMatrix += skinWeight.z * boneMatZ;
-    skinMatrix += skinWeight.w * boneMatW;
-    skinMatrix = bindMatrixInverse * skinMatrix * bindMatrix;
-
-    objectNormal = vec4( skinMatrix * vec4( objectNormal, 0.0 ) ).xyz;
-    objectTangent = vec4( skinMatrix * vec4( objectTangent, 0.0 ) ).xyz;
-
-#endif
-
-    // 法線も変換
-    //v_normal = mat3(inverse(u_mv)) * a_normal;
-    v_normal = normalize(normalMatrix * objectNormal);
-//#elif defined(FFL_COORDINATE_MODE_NONE)
-//    // 頂点座標を変換
-//    gl_Position = vec4(a_position.x, a_position.y * -1.0, a_position.z, a_position.w);
-//    v_position = a_position;
-//
-//    v_normal = a_normal;
-//#endif
-
-     // その他の情報も書き出す
-    v_texCoord = uv;
-    // safe normalize
-    if (tangent != vec3(0.0, 0.0, 0.0))
-    {
-        v_tangent = normalize(normalMatrix * objectTangent);
-    }
-    else
-    {
-        v_tangent = vec3(0.0, 0.0, 0.0);
-    }
-
-    v_color = _color;
-}
-`;
-var _FFLShader_frag = `
-//
-//  sample.flg
-//  Fragment shader
-//  Copyright (c) 2014 Nintendo Co., Ltd. All rights reserved.
-//
-//
-
-#ifdef GL_ES
-precision mediump float;
-#else
-#   define lowp
-#   define mediump
-#   define highp
-#endif
-
-
-//
-//  定数定義ファイル
-//
-
-/// シェーダーモード
-#define FFL_SHADER_MODE_UR 0
-#define FFL_SHADER_MODE_UB 1
-
-/// 変調処理のマクロ
-#define FFL_MODULATE_MODE_CONSTANT        0
-#define FFL_MODULATE_MODE_TEXTURE_DIRECT  1
-#define FFL_MODULATE_MODE_RGB_LAYERED     2
-#define FFL_MODULATE_MODE_ALPHA           3
-#define FFL_MODULATE_MODE_LUMINANCE_ALPHA 4
-#define FFL_MODULATE_MODE_ALPHA_OPA       5
-
-/// スペキュラのモード
-#define FFL_SPECULAR_MODE_BLINN 0
-#define FFL_SPECULAR_MODE_ANISO 1
-
-/// ライトのON/OFF
-#define FFL_LIGHT_MODE_DISABLE 0
-#define FFL_LIGHT_MODE_ENABLE 1
-
-/// フラグメントのディスカードモード
-#define FFL_DISCARD_FRAGMENT_DISABLE 0
-#define FFL_DISCARD_FRAGMENT_ENABLE  1
-
-/// 座標変換モード
-#define FFL_COORDINATE_MODE_NONE   0
-#define FFL_COORDINATE_MODE_NORMAL 1
-
-//
-//  関数の定義ファイル
-//
-
-/**
- * @brief 異方性反射の反射率を計算します。
- * @param[in] light   ライトの向き
- * @param[in] tangent 接線
- * @param[in] eye     視線の向き
- * @param[in] power   鋭さ
- */
-mediump float calculateAnisotropicSpecular(mediump vec3 light, mediump vec3 tangent, mediump vec3 eye, mediump float power )
-{
-	mediump float dotLT = dot(light, tangent);
-	mediump float dotVT = dot(eye, tangent);
-	mediump float dotLN = sqrt(1.0 - dotLT * dotLT);
-	mediump float dotVR = dotLN*sqrt(1.0 - dotVT * dotVT) - dotLT * dotVT;
-
-	return pow(max(0.0, dotVR), power);
-}
-
-/**
- * @brief 異方性反射の反射率を計算します。
- * @param[in] light   ライトの向き
- * @param[in] normal  法線
- * @param[in] eye     視線の向き
- * @param[in] power   鋭さ
- */
-mediump float calculateBlinnSpecular(mediump vec3 light, mediump vec3 normal, mediump vec3 eye, mediump float power)
-{
-	return pow(max(dot(reflect(-light, normal), eye), 0.0), power);
-}
-
-/**
- * @brief 異方性反射、ブリン反射をブレンドします。
- * @param[in] blend ブレンド率
- * @param[in] blinn ブリンの値
- * @param[in] aniso 異方性の値
- */
-mediump float calculateSpecularBlend(mediump float blend, mediump float blinn, mediump float aniso)
-{
-	return mix(aniso, blinn, blend);
-}
-
-/**
- * @brief アンビエントを計算します。
- * @param[in] light    ライト
- * @param[in] material マテリアル
- */
-mediump vec3 calculateAmbientColor(mediump vec3 light, mediump vec3 material)
-{
-	return light * material;
-}
-
-/**
- * @brief 拡散を計算します。
- * @param[in] light    ライト
- * @param[in] material マテリアル
- * @param[in] ln       ライトと法線の内積
- */
-mediump vec3 calculateDiffuseColor(mediump vec3 light, mediump vec3 material, mediump float ln)
-{
-	return light * material * ln;
-}
-
-/**
- * @brief 鏡面反射を計算します。
- * @param[in] light      ライト
- * @param[in] material   マテリアル
- * @param[in] reflection 反射率
- * @param[in] strength   幅
- */
-mediump vec3 calculateSpecularColor(mediump vec3 light, mediump vec3 material, mediump float reflection, mediump float strength)
-{
-	return light * material * reflection * strength;
-}
-
-/**
- * @brief リムを計算します。
- * @param[in] color   リム色
- * @param[in] normalZ 法線のZ方向
- * @param[in] width   リム幅
- * @param[in] power   リムの鋭さ
- */
-mediump vec3 calculateRimColor(mediump vec3 color, mediump float normalZ, mediump float width, mediump float power)
-{
-	return color * pow(width * (1.0 - abs(normalZ)), power);
-}
-
-/**
- * @brief ライト方向と法線の内積を求める
- * @note 特殊な実装になっています。
- */
-mediump float calculateDot(mediump vec3 light, mediump vec3 normal)
-{
-	return max(dot(light, normal), 0.1);
-}
-
-// フラグメントシェーダーに入力される varying 変数
-varying mediump vec4 v_color;          //!< 出力: 頂点の色
-varying highp   vec4 v_position;       //!< 出力: 位置情報
-varying highp   vec3 v_normal;         //!< 出力: 法線ベクトル
-// NOTE: ^^ Those two need to be highp to avoid weird black dot issue on Android
-varying mediump vec3 v_tangent;        //!< 出力: 異方位
-varying mediump vec2 v_texCoord;       //!< 出力: テクスチャー座標
-
-/// constカラー
-uniform mediump vec4  u_const1; ///< constカラー1
-uniform mediump vec4  u_const2; ///< constカラー2
-uniform mediump vec4  u_const3; ///< constカラー3
-
-/// ライト設定
-uniform mediump vec3 u_light_ambient;  ///< カメラ空間のライト方向
-uniform mediump vec3 u_light_diffuse;  ///< 拡散光用ライト
-uniform mediump vec3 u_light_dir;
-uniform bool u_light_enable;
-uniform mediump vec3 u_light_specular; ///< 鏡面反射用ライト強度
-
-/// マテリアル設定
-uniform mediump vec3 u_material_ambient;         ///< 環境光用マテリアル設定
-uniform mediump vec3 u_material_diffuse;         ///< 拡散光用マテリアル設定
-uniform mediump vec3 u_material_specular;        ///< 鏡面反射用マテリアル設定
-uniform int u_material_specular_mode;            ///< スペキュラの反射モード(CharModelに依存する設定のためub_modulateにしている)
-uniform mediump float u_material_specular_power; ///< スペキュラの鋭さ(0.0を指定すると頂点カラーの設定が利用される)
-
-/// 変調設定
-uniform int u_mode;   ///< 描画モード
-
-/// リム設定
-uniform mediump vec3  u_rim_color;
-uniform mediump float u_rim_power;
-
-// サンプラー
-uniform sampler2D s_texture;
-
-
-// -------------------------------------------------------
-// メイン文
-void main()
-{
-    mediump vec4 color;
-
-    mediump float specularPower    = u_material_specular_power;
-    mediump float rimWidth         = v_color.a;
-
-//#ifdef FFL_MODULATE_MODE_CONSTANT
-    if(u_mode == FFL_MODULATE_MODE_CONSTANT)
-    {
-      color = u_const1;
-    }
-    // modified to handle u_const1 alpha:
-//#elif defined(FFL_MODULATE_MODE_TEXTURE_DIRECT)
-    else if(u_mode == FFL_MODULATE_MODE_TEXTURE_DIRECT)
-    {
-        mediump vec4 texel = texture2D(s_texture, v_texCoord);
-        color = vec4(texel.rgb, u_const1.a * texel.a);
-    }
-//#elif defined(FFL_MODULATE_MODE_RGB_LAYERED)
-    else if(u_mode == FFL_MODULATE_MODE_RGB_LAYERED)
-    {
-        mediump vec4 texel = texture2D(s_texture, v_texCoord);
-        color = vec4(texel.r * u_const1.rgb + texel.g * u_const2.rgb + texel.b * u_const3.rgb, u_const1.a * texel.a);
-    }
-//#elif defined(FFL_MODULATE_MODE_ALPHA)
-    else if(u_mode == FFL_MODULATE_MODE_ALPHA)
-    {
-        mediump vec4 texel = texture2D(s_texture, v_texCoord);
-        color = vec4(u_const1.rgb, u_const1.a * texel.r);
-    }
-//#elif defined(FFL_MODULATE_MODE_LUMINANCE_ALPHA)
-    else if(u_mode == FFL_MODULATE_MODE_LUMINANCE_ALPHA)
-    {
-        mediump vec4 texel = texture2D(s_texture, v_texCoord);
-        color = vec4(texel.g * u_const1.rgb, u_const1.a * texel.r);
-    }
-//#elif defined(FFL_MODULATE_MODE_ALPHA_OPA)
-    else if(u_mode == FFL_MODULATE_MODE_ALPHA_OPA)
-    {
-        mediump vec4 texel = texture2D(s_texture, v_texCoord);
-        color = vec4(texel.r * u_const1.rgb, u_const1.a);
-    }
-//#endif
-
-    // avoids little outline around mask elements
-    if(u_mode != FFL_MODULATE_MODE_CONSTANT && color.a == 0.0)
-    {
-        discard;
-    }
-
-//#ifdef FFL_LIGHT_MODE_ENABLE
-    if(u_light_enable)
-    {
-        /// 環境光の計算
-        mediump vec3 ambient = calculateAmbientColor(u_light_ambient.xyz, u_material_ambient.xyz);
-
-        /// 法線ベクトルの正規化
-        mediump vec3 norm = normalize(v_normal);
-
-        /// 視線ベクトル
-        mediump vec3 eye = normalize(-v_position.xyz);
-
-        // ライトの向き
-        mediump float fDot = calculateDot(u_light_dir, norm);
-
-        /// Diffuse計算
-        mediump vec3 diffuse = calculateDiffuseColor(u_light_diffuse.xyz, u_material_diffuse.xyz, fDot);
-
-        /// Specular計算
-        mediump float specularBlinn = calculateBlinnSpecular(u_light_dir, norm, eye, u_material_specular_power);
-
-        /// Specularの値を確保する変数を宣言
-        mediump float reflection;
-        mediump float strength = v_color.g;
-        if(u_material_specular_mode == 0)
-        {
-            /// Blinnモデルの場合
-            strength = 1.0;
-            reflection = specularBlinn;
-        }
-        else
-        {
-            /// Aisoモデルの場合
-            mediump float specularAniso = calculateAnisotropicSpecular(u_light_dir, v_tangent, eye, u_material_specular_power);
-            reflection = calculateSpecularBlend(v_color.r, specularBlinn, specularAniso);
-        }
-        /// Specularの色を取得
-        mediump vec3 specular = calculateSpecularColor(u_light_specular.xyz, u_material_specular.xyz, reflection, strength);
-
-        // リムの色を計算
-        mediump vec3 rimColor = calculateRimColor(u_rim_color.rgb, norm.z, rimWidth, u_rim_power);
-
-        // カラーの計算
-        color.rgb = (ambient + diffuse) * color.rgb + specular + rimColor;
-    }
-//#endif
-
-    gl_FragColor = color;
-}
-`;
-
-class FFLShaderMaterial extends THREE4.ShaderMaterial {
-  static defaultLightAmbient = new THREE4.Color(0.73, 0.73, 0.73);
-  static defaultLightDiffuse = new THREE4.Color(0.6, 0.6, 0.6);
-  static defaultLightSpecular = new THREE4.Color(0.7, 0.7, 0.7);
-  static defaultLightDir = new THREE4.Vector3(-0.4531539381, 0.4226179123, 0.7848858833);
-  static defaultRimColor = new THREE4.Color(0.3, 0.3, 0.3);
-  static defaultRimPower = 2;
-  static defaultLightDirection = this.defaultLightDir;
-  static materialParams = [
-    {
-      ambient: new THREE4.Color(0.85, 0.75, 0.75),
-      diffuse: new THREE4.Color(0.75, 0.75, 0.75),
-      specular: new THREE4.Color(0.3, 0.3, 0.3),
-      specularPower: 1.2,
-      specularMode: 0
-    },
-    {
-      ambient: new THREE4.Color(1, 1, 1),
-      diffuse: new THREE4.Color(0.7, 0.7, 0.7),
-      specular: new THREE4.Color(0, 0, 0),
-      specularPower: 40,
-      specularMode: 1
-    },
-    {
-      ambient: new THREE4.Color(0.9, 0.85, 0.85),
-      diffuse: new THREE4.Color(0.75, 0.75, 0.75),
-      specular: new THREE4.Color(0.22, 0.22, 0.22),
-      specularPower: 1.5,
-      specularMode: 0
-    },
-    {
-      ambient: new THREE4.Color(0.85, 0.75, 0.75),
-      diffuse: new THREE4.Color(0.75, 0.75, 0.75),
-      specular: new THREE4.Color(0.3, 0.3, 0.3),
-      specularPower: 1.2,
-      specularMode: 0
-    },
-    {
-      ambient: new THREE4.Color(1, 1, 1),
-      diffuse: new THREE4.Color(0.7, 0.7, 0.7),
-      specular: new THREE4.Color(0.35, 0.35, 0.35),
-      specularPower: 10,
-      specularMode: 1
-    },
-    {
-      ambient: new THREE4.Color(0.75, 0.75, 0.75),
-      diffuse: new THREE4.Color(0.72, 0.72, 0.72),
-      specular: new THREE4.Color(0.3, 0.3, 0.3),
-      specularPower: 1.5,
-      specularMode: 0
-    },
-    {
-      ambient: new THREE4.Color(1, 1, 1),
-      diffuse: new THREE4.Color(0.7, 0.7, 0.7),
-      specular: new THREE4.Color(0, 0, 0),
-      specularPower: 40,
-      specularMode: 1
-    },
-    {
-      ambient: new THREE4.Color(1, 1, 1),
-      diffuse: new THREE4.Color(0.7, 0.7, 0.7),
-      specular: new THREE4.Color(0, 0, 0),
-      specularPower: 40,
-      specularMode: 1
-    },
-    {
-      ambient: new THREE4.Color(1, 1, 1),
-      diffuse: new THREE4.Color(0.7, 0.7, 0.7),
-      specular: new THREE4.Color(0, 0, 0),
-      specularPower: 40,
-      specularMode: 1
-    },
-    {
-      ambient: new THREE4.Color(0.95622, 0.95622, 0.95622),
-      diffuse: new THREE4.Color(0.49673, 0.49673, 0.49673),
-      specular: new THREE4.Color(0.24099, 0.24099, 0.24099),
-      specularPower: 3,
-      specularMode: 0
-    },
-    {
-      ambient: new THREE4.Color(0.95622, 0.95622, 0.95622),
-      diffuse: new THREE4.Color(1.08497, 1.08497, 1.08497),
-      specular: new THREE4.Color(0.2409, 0.2409, 0.2409),
-      specularPower: 3,
-      specularMode: 0
-    }
-  ];
-  constructor(options = {}) {
-    const uniforms = {
-      u_light_ambient: {
-        value: FFLShaderMaterial.defaultLightAmbient
-      },
-      u_light_diffuse: {
-        value: FFLShaderMaterial.defaultLightDiffuse
-      },
-      u_light_specular: {
-        value: FFLShaderMaterial.defaultLightSpecular
-      },
-      u_light_dir: { value: FFLShaderMaterial.defaultLightDir.clone() },
-      u_light_enable: { value: true },
-      u_rim_color: { value: FFLShaderMaterial.defaultRimColor },
-      u_rim_power: { value: FFLShaderMaterial.defaultRimPower }
-    };
-    super({
-      vertexShader: _FFLShader_vert,
-      fragmentShader: _FFLShader_frag,
-      uniforms
-    });
-    this._modulateType = 0;
-    this.useSpecularModeBlinn = false;
-    this.setValues(options);
-  }
-  get color() {
-    if (!this.uniforms.u_const1) {
-      return null;
-    } else if (this._color3) {
-      return this._color3;
-    }
-    const color4 = this.uniforms.u_const1.value;
-    const color3 = new THREE4.Color(color4.x, color4.y, color4.z);
-    this._color3 = color3;
-    return color3;
-  }
-  set color(value2) {
-    function toColor4(color, opacity2 = 1) {
-      return new THREE4.Vector4(color.r, color.g, color.b, opacity2);
-    }
-    if (Array.isArray(value2)) {
-      this.uniforms.u_const1 = { value: toColor4(value2[0]) };
-      this.uniforms.u_const2 = { value: toColor4(value2[1]) };
-      this.uniforms.u_const3 = { value: toColor4(value2[2]) };
-      return;
-    }
-    const color3 = value2 ? value2 : new THREE4.Color(1, 1, 1);
-    this._color3 = color3;
-    const opacity = this.opacity;
-    if (this._opacity) {
-      delete this._opacity;
-    }
-    this.uniforms.u_const1 = { value: toColor4(color3, opacity) };
-  }
-  get opacity() {
-    if (!this.uniforms.u_const1) {
-      return this._opacity ? this._opacity : 1;
-    }
-    return this.uniforms.u_const1.value.w;
-  }
-  set opacity(value2) {
-    if (!this.uniforms || !this.uniforms.u_const1) {
-      this._opacity = 1;
-      return;
-    }
-    this.uniforms.u_const1.value.w = value2;
-  }
-  get modulateMode() {
-    return this.uniforms.u_mode ? this.uniforms.u_mode.value : null;
-  }
-  set modulateMode(value2) {
-    this.uniforms.u_mode = { value: value2 };
-  }
-  get lightEnable() {
-    return this.uniforms.u_light_enable ? this.uniforms.u_light_enable.value : null;
-  }
-  set lightEnable(value2) {
-    this.uniforms.u_light_enable = { value: value2 };
-  }
-  set useSpecularModeBlinn(value2) {
-    this._useSpecularModeBlinn = value2;
-    if (this._modulateType !== undefined) {
-      this.modulateType = this._modulateType;
-    }
-  }
-  get useSpecularModeBlinn() {
-    return this._useSpecularModeBlinn;
-  }
-  get modulateType() {
-    return this._modulateType;
-  }
-  set modulateType(value2) {
-    const matParam = FFLShaderMaterial.materialParams[value2];
-    if (!matParam) {
-      return;
-    }
-    this._modulateType = value2;
-    this.uniforms.u_material_ambient = { value: matParam.ambient };
-    this.uniforms.u_material_diffuse = { value: matParam.diffuse };
-    this.uniforms.u_material_specular = { value: matParam.specular };
-    this.uniforms.u_material_specular_mode = {
-      value: this._useSpecularModeBlinn ? 0 : matParam.specularMode
-    };
-    this.uniforms.u_material_specular_power = { value: matParam.specularPower };
-  }
-  get map() {
-    return this.uniforms.s_texture ? this.uniforms.s_texture.value : null;
-  }
-  set map(value2) {
-    this.uniforms.s_texture = { value: value2 };
-  }
-  get lightDirection() {
-    return this.uniforms.u_light_dir.value;
-  }
-  set lightDirection(value2) {
-    this.uniforms.u_light_dir = { value: value2 };
-  }
-}
-var FFLShaderMaterial_default = FFLShaderMaterial;
-
-// src/external/ffl.js/LUTShaderMaterial.js
-var THREE5 = _THREE();
-var _LUTShader_vert = `
-#define AGX_FEATURE_ALBEDO_TEXTURE
-/**
- * @file    LUT.vsh
- * @brief   LUT
- * @since   2014/10/02
- *
- * Copyright (c)2014 Nintendo Co., Ltd. All rights reserved.
- */
-
-// シェーダーの種類毎に設定されるマクロリスト
-// AGX_FEATURE_VERTEX_COLOR         頂点カラーが有効
-// AGX_FEATURE_ALBEDO_TEXTURE       アルベドテクスチャーが有効
-// AGX_FEATURE_BUMP_TEXTURE         バンプテクスチャーが有効
-// AGX_FEATURE_MASK_TEXTURE         マスクテクスチャーが有効
-// AGX_FEATURE_ALPHA_TEXTURE        アルファテクスチャーが有効
-// AGX_FEATURE_SPHERE_MAP_TEXTURE   スフィア環境マップが有効
-// AGX_FEATURE_SKIN_MASK            肌マスクが有効（uColor0）
-// AGX_FEATURE_HAIR_MASK            髪マスクが有効（uColor1）
-// AGX_FEATURE_ALPHA_TEST           アルファテストが有効
-// AGX_FEATURE_FADE_OUT_COLOR       フェードアウトカラーが有効（uColor2）
-// AGX_FEATURE_DISABLE_LIGHT        ライトが無効
-// AGX_FEATURE_ALPHA_COLOR_FILTER   アルベドアルファによる色替えが有効
-// AGX_FEATURE_ALBEDO_ALPHA         アルベドのアルファをカラーのアルファに適用
-// AGX_FEATURE_PREMULTIPLY_ALPHA    プレマルチプライアルファな描画
-// AGX_FEATURE_MII                  Miiを描画する
-// AGX_FEATURE_MII_CONSTANT         Miiを描画する：Constant
-// AGX_FEATURE_MII_TEXTURE_DIRECT   Miiを描画する：Texture Direct
-// AGX_FEATURE_MII_RGB_LAYERED      Miiを描画する：RGB Layered
-// AGX_FEATURE_MII_ALPHA            Miiを描画する：Alpha
-// AGX_FEATURE_MII_LUMINANCE_ALPHA  Miiを描画する：Luminance Alpha
-// AGX_FEATURE_MII_ALPHA_OPA        Miiを描画する：Alpha Opa
-//
-// AGX_BONE_MAX     ボーンの最大数
-
-#ifdef GL_ES
-precision highp float;
-#else
-#   define lowp
-#   define mediump
-#   define highp
-#endif
-
-//#ifndef AGX_BONE_MAX
-//#   define AGX_BONE_MAX 15
-//#endif
-#ifndef AGX_DIR_LIGHT_MAX
-#   define AGX_DIR_LIGHT_MAX 2
-#endif
-
-// ----------------------------------------
-// 頂点シェーダーに入力される attribute 変数
-//attribute highp   vec3 position;   //!< 入力:[ 1 : 1 ] 位置情報
-#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
-//attribute mediump vec2 uv;  //!< 入力:[ 1 : 5 ] テクスチャー座標
-#endif
-//attribute mediump vec3 normal;     //!< 入力:[ 1 : 2 ] 法線ベクトル
-//attribute mediump vec4 aBoneIndex;  //!< 入力:[ 1 : 3 ] ボーンのインデックス（最大4つ）
-//attribute mediump vec4 aBoneWeight; //!< 入力:[ 1 : 4 ] ボーンの影響度（最大4つ）
-#if defined(AGX_FEATURE_VERTEX_COLOR)
-//attribute lowp    vec4 _color;      //!< 入力:[ 1 : 6 ] 頂点カラー
-#endif
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-//attribute mediump vec3 tangent;    //!< 入力:[ 1 : 7 ] 接線ベクトル
-#endif
-
-// ^^ Commented attributes are provided by three.js.
-
-// ----------------------------------------
-// 頂点シェーダーに入力される uniform 変数
-//uniform highp   mat4 modelViewMatrix;                            //!< 入力:[ 4      /  4 :   4 ] モデルの合成行列
-//uniform mat4 projectionMatrix;
-//uniform highp   mat4 viewMatrix;                           //!< 入力:[ 4      /  4 :   8 ] モデルのビュー行列
-//uniform mediump mat3 normalMatrix;                         //!< 入力:[ 3      /  3 :  11 ] モデルの法線用行列
-//uniform highp   mat4 modelMatrix;                          //!< 入力:[ 4      /  4 :  15 ] モデルのワールド変換行列
-//uniform lowp    int  uBoneCount;                            //!< 入力:[ 1      /  1 :  16 ] ボーンの個数
-//uniform highp   mat4 uBoneMatrices[AGX_BONE_MAX];           //!< 入力:[ 4 x 15 / 60 :  76 ] ボーンの行列配列
-//uniform mediump mat3 uBoneNormalMatrices[AGX_BONE_MAX];     //!< 入力:[ 3 x 15 / 45 : 121 ] ボーンの法線行列配列
-// ^^ Unused in favor of three.js skinning.
-uniform lowp    int  uDirLightCount;                        //!< 入力:[ 1      /  1 : 122 ] 方向ライトの数
-uniform mediump vec4 uDirLightDirAndType0;//!< 入力:[ 1 x  2 /  2 : 124 ] 平行ライトの向く方向
-uniform mediump vec4 uDirLightDirAndType1;//!< 入力:[ 1 x  2 /  2 : 124 ] 平行ライトの向く方向
-uniform mediump vec3 uDirLightColor0;     //!< 入力:[ 1 x  2 /  2 : 126 ] 平行ライトのカラー
-uniform mediump vec3 uDirLightColor1;     //!< 入力:[ 1 x  2 /  2 : 126 ] 平行ライトのカラー
-uniform mediump vec3 uHSLightSkyColor;                      //!< 入力:[ 1      /  1 : 127 ] 半球ライトのスカイカラー
-uniform mediump vec3 uHSLightGroundColor;                   //!< 入力:[ 1      /  1 : 128 ] 半球ライトのグラウンドカラー
-//uniform mediump vec3 cameraPosition;                                //!< 入力:[ 1      /  1 : 129 ] カメラの位置
-// ^^ previously uEyePt
-uniform mediump float uAlpha;                               //!< 入力:[ 1      /  1 : 130 ] アルファ値
-
-// ^^ Commented uniforms are provided by three.js.
-
-// ----------------------------------------
-// フラグメントシェーダーに渡される varying 変数
-varying lowp    vec4    vModelColor;                            //!< 出力:[ 1 : 1 ] モデルの色
-#if !defined(AGX_FEATURE_BUMP_TEXTURE)
-varying mediump vec3    vNormal;                                //!< 出力:[ 1 : 2 ] モデルの法線
-#endif
-#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
-varying mediump vec2    vTexcoord0;                             //!< 出力:[ 1 : 3 ] テクスチャーUV
-#endif
-// camera
-varying mediump vec3    vEyeVecWorldOrTangent;                  //!< 出力:[ 1 : 4 ] 視線ベクトル
-#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-// punctual light
-varying mediump vec3    vPunctualLightDirWorldOrTangent;        //!< 出力:[ 1 : 5 ] ライトの方向
-varying mediump vec3    vPunctualLightHalfVecWorldOrTangent;    //!< 出力:[ 1 : 6 ] カメラとライトのハーフベクトル
-// GI
-varying mediump vec3    vGISpecularLightColor;                  //!< 出力:[ 1 : 7 ] GIフレネルで使用するカラー
-// Lighting Result
-varying mediump vec3    vDiffuseColor;                          //!< 出力:[ 1 : 8 ] ディフューズライティング結果
-#endif
-// Reflect
-#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
-varying lowp    vec3    vReflectDir;                            //!< 出力:[ 1 : 9 ] 環境マップの反射ベクトル
-#endif
-
-// skinning_pars_vertex.glsl.js
-#ifdef USE_SKINNING
-    uniform mat4 bindMatrix;
-    uniform mat4 bindMatrixInverse;
-    uniform highp sampler2D boneTexture;
-    mat4 getBoneMatrix( const in float i ) {
-        int size = textureSize( boneTexture, 0 ).x;
-        int j = int( i ) * 4;
-        int x = j % size;
-        int y = j / size;
-        vec4 v1 = texelFetch( boneTexture, ivec2( x, y ), 0 );
-        vec4 v2 = texelFetch( boneTexture, ivec2( x + 1, y ), 0 );
-        vec4 v3 = texelFetch( boneTexture, ivec2( x + 2, y ), 0 );
-        vec4 v4 = texelFetch( boneTexture, ivec2( x + 3, y ), 0 );
-        return mat4( v1, v2, v3, v4 );
-    }
-#endif
-
-// ------------------------------------------------------------
-// 頂点シェーダーのエントリーポイント
-// ------------------------------------------------------------
-void main()
-{
-    // ------------------------------------------------------------
-    // 頂点変換用の処理
-    // ------------------------------------------------------------
-    highp   vec4 position_;  //!< 最終的な頂点
-    mediump vec3 normal_;    //!< 最終的な法線
-    mediump vec3 tangent_;   //!< 最終的な接線
-    highp   vec4 positionWorld; //!< ワールド空間上での頂点
-
-
-    // begin_vertex.glsl.js
-    vec3 transformed = vec3( position );
-// skinbase_vertex.glsl.js
-#ifdef USE_SKINNING
-    mat4 boneMatX = getBoneMatrix( skinIndex.x );
-    mat4 boneMatY = getBoneMatrix( skinIndex.y );
-    mat4 boneMatZ = getBoneMatrix( skinIndex.z );
-    mat4 boneMatW = getBoneMatrix( skinIndex.w );
-    // skinning_vertex.glsl.js
-    vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );
-    vec4 skinned = vec4( 0.0 );
-    skinned += boneMatX * skinVertex * skinWeight.x;
-    skinned += boneMatY * skinVertex * skinWeight.y;
-    skinned += boneMatZ * skinVertex * skinWeight.z;
-    skinned += boneMatW * skinVertex * skinWeight.w;
-    transformed = ( bindMatrixInverse * skinned ).xyz;
-#endif
-
-    // ----------------------------------------
-    // ボーンが存在しない場合は位置と法線に手を加えない
-    position_ = vec4(transformed.xyz, 1.0);
-
-
-
-    normal_ = normal;
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-    tangent_ = tangent.xyz;
-#endif
-    // skinnormal_vertex.glsl.js
-#ifdef USE_SKINNING
-    mat4 skinMatrix = mat4( 0.0 );
-    skinMatrix += skinWeight.x * boneMatX;
-    skinMatrix += skinWeight.y * boneMatY;
-    skinMatrix += skinWeight.z * boneMatZ;
-    skinMatrix += skinWeight.w * boneMatW;
-    skinMatrix = bindMatrixInverse * skinMatrix * bindMatrix;
-
-    normal_ = vec4( skinMatrix * vec4( normal_, 0.0 ) ).xyz;
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-    tangent_ = vec4( skinMatrix * vec4( tangent_, 0.0 ) ).xyz;
-#endif // defined(AGX_FEATURE_BUMP_TEXTURE)
-#endif // USE_SKINNING
-
-    // ----------------------------------------
-    // ワールド上での位置を求める
-    positionWorld = modelMatrix * position_;
-    // 最終結果を行う
-    position_ = projectionMatrix * modelViewMatrix * position_;
-    normal_   = normalize(normalMatrix * normal_);
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-    tangent  = normalize(normalMatrix * tangent_);
-#endif
-
-    // ----------------------------------------
-    // 計算結果を保持させる
-    gl_Position = position_;
-#if !defined(AGX_FEATURE_BUMP_TEXTURE)
-    vNormal     = normal_;
-#endif
-#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
-    // テクスチャー座標を設定する
-    vTexcoord0 = uv;
-#endif
-    // モデルの色を指定する
-#if defined(AGX_FEATURE_VERTEX_COLOR)
-    lowp vec4 modelColor = aColor;
-
-#else
-    lowp vec4 modelColor = vec4(1.0, 1.0, 1.0, 1.0);
-#endif
-
-    // プリマルチプライドアルファ
-#if defined(AGX_FEATURE_PREMULTIPLY_ALPHA)
-    modelColor *= uAlpha;
-#else
-    modelColor.a *= uAlpha;
-#endif
-
-
-    // ------------------------------------------------------------
-    // ライト用の処理
-    // ------------------------------------------------------------
-    mediump vec3 eyeVecWorld;   //!< ワールド状態での視線ベクトル
-    mediump vec3 eyeVec;        //!< 最終的にフラグメントシェーダーに渡す視線ベクトル（バンプの有無によって、ワールド座標系になったり、タンジェント座標系になったりする）
-
-    vec4 eye = modelViewMatrix * position_;
-
-    // 視線ベクトルを取得する
-    //eyeVecWorld = normalize(cameraPosition - positionWorld.xyz);
-    eyeVecWorld = normalize(-(eye.xyz) - positionWorld.xyz);//normalize(cameraPosition - positionWorld.xyz);
-    eyeVec = eyeVecWorld;
-
-    lowp vec3 diffuseColor = vec3(0.0); // バーテックスシェーダーで計算できるディフューズの色をここに格納する
-
-#   if defined(AGX_FEATURE_BUMP_TEXTURE)
-    // Normal, Binormal, Tangent を取得する
-    mediump vec3 n = normal;
-    mediump vec3 t = tangent;
-    mediump vec3 b = cross(n, t);
-    // 接空間からローカルへ変換する行列を設定する（mat3(N, T, B)の逆行列）
-    mediump mat3 tangentMatrix = mat3(t.x, b.x, n.x, t.y, b.y, n.y, t.z, b.z, n.z);
-    // 視線ベクトルを接空間へ
-    vEyeVecWorldOrTangent.xyz = tangentMatrix * eyeVec;
-#else
-    vEyeVecWorldOrTangent.xyz = eyeVec;
-#endif
-
-#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-    // punctual lightの設定
-    if (uDirLightCount > 0)
-    {
-        mediump vec3 lightDir;
-
-        // 方向ライト
-        if (uDirLightDirAndType0.w < 0.0) { lightDir = uDirLightDirAndType0.xyz; }
-        // 点光源ライト
-        else                                { lightDir = uDirLightDirAndType0.xyz - positionWorld.xyz; }
-        lightDir = normalize(lightDir);
-
-#   if defined(AGX_FEATURE_BUMP_TEXTURE)
-        // ライトを接空間へ
-        vPunctualLightDirWorldOrTangent.xyz = tangentMatrix * lightDir;
-#   else
-        vPunctualLightDirWorldOrTangent.xyz = lightDir;
-#   endif
-
-        // Halfベクトルを求める
-        vPunctualLightHalfVecWorldOrTangent.xyz = normalize(vPunctualLightDirWorldOrTangent.xyz + vEyeVecWorldOrTangent.xyz);
-
-        // Diffuse計算
-        diffuseColor += (uDirLightColor0.rgb * clamp(dot(lightDir, normal_), 0.0, 1.0));
-    }
-    if (uDirLightCount > 1)
-    {
-        mediump vec3 lightDir;
-
-        // 方向ライト
-        if (uDirLightDirAndType1.w < 0.0) { lightDir = uDirLightDirAndType1.xyz; }
-        // 点光源ライト
-        else                                { lightDir = uDirLightDirAndType1.xyz - positionWorld.xyz; }
-        lightDir = normalize(lightDir);
-
-        diffuseColor += max(dot(lightDir, normal_), 0.0) * uDirLightColor1;
-    }
-    // ライトは1.0を超えないように
-    diffuseColor = min(diffuseColor, 1.0);
-#endif
-
-#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
-    {
-        // キューブ環境マップ用の反射ベクトルを求める
-//        vReflectDir = reflect(normalize(positionWorld.xyz - cameraPosition), normal_);
-
-        // スフィア環境マップ用の反射ベクトルを求める
-//        vReflectDir = normalize((uViewMatrix * vec4(normal_, 0.0)).xyz) * 0.5 + 0.5;
-
-        // ビュー座標系での位置と法線を取得
-        mediump vec3 viewNormal   = normalize(mat3(uViewMatrix) * normal_);
-        mediump vec4 viewPosition = uViewMatrix * positionWorld;
-        viewPosition = viewPosition / viewPosition.w;
-        // ビュー座標系での頂点ベクトルを取得
-        viewPosition.z = 1.0 - viewPosition.z;
-        mediump vec3 viewPositionVec = normalize(viewPosition.xyz);
-        // ビュー座標系での反射ベクトルを求める
-        mediump vec3 viewReflect  = viewPositionVec - 2.0 * dot(viewPositionVec, viewNormal) * viewNormal;
-        // 両面スフィア環境マップではないので、反射ベクトルを調整
-        viewReflect = normalize(viewReflect - vec3(0.0, 0.0, 1.5));
-        // 反射ベクトルをテクスチャー座標系へ
-        vReflectDir = viewReflect * 0.5 + 0.5;
-
-        // 公式
-//        mediump vec3  viewPositionVec = normalize(vec3(uViewMatrix * positionWorld));
-//        mediump vec3  viewReflectVec = viewPositionVec - 2.0 * dot(viewPositionVec, normal_) * normal;
-//        mediump float m = 2.0 * sqrt(viewReflectVec.x * viewReflectVec.x +
-//                                     viewReflectVec.y * viewReflectVec.y +
-//                                     (viewReflectVec.z + 1.0) * (viewReflectVec.z * 1.0));
-//        vReflectDir = viewReflectVec / m + 0.5;
-
-        // 別版
-//        mediump vec3 posW = positionWorld.xyz;
-//        mediump vec3 dir  = normalize(mat3(uViewMatrix) * normal);
-//
-//        mediump float radius     = 75.0;
-//        mediump vec3  posWDir    = dot(dir, posW) * dir;
-//        mediump vec3  posWDirV   = posW - posWDir;
-//        mediump float lengthDir  = sqrt(radius * radius - dot(posWDirV, posWDirV)) - length(posWDir);
-//        vReflectDir = normalize(posW + dir * lengthDir) * 0.5 + 0.5;
-    }
-#endif
-
-#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-    // GIの計算
-    {
-        mediump vec3 hemiColor;
-        mediump vec3 sky = uHSLightSkyColor;
-        mediump vec3 ground = uHSLightGroundColor;
-
-        {
-            mediump float skyRatio = (normal_.y + 1.0) * 0.5;
-            hemiColor =  (sky * skyRatio + ground * (1.0 - skyRatio));
-            diffuseColor += hemiColor;
-        }
-
-        {
-//            mediump vec3 reflectDir = -reflect(normal_, eyeVecWorld); // おそらくコレで良いはず
-            mediump vec3 reflectDir = 2.0 * dot(eyeVecWorld, normal_) * normal_ - eyeVecWorld; // 多少冗長でも、正しい計算で行なう
-
-            mediump float skyRatio = (reflectDir.y + 1.0) * 0.5;
-            hemiColor =  (sky * skyRatio + ground * (1.0 - skyRatio));
-            vGISpecularLightColor.rgb = hemiColor;
-        }
-    }
-#endif
-
-    // モデルの色を設定
-    vModelColor = modelColor;
-#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-    vDiffuseColor.rgb = diffuseColor;
-#endif
-}
-`;
-var _LUTShader_frag = `
-#define AGX_FEATURE_ALBEDO_TEXTURE
-#define AGX_FEATURE_MII
-/**
- * @file    LUT.fsh
- * @brief   LUT
- * @since   2014/10/02
- *
- * Copyright (c)2014 Nintendo Co., Ltd. All rights reserved.
- */
-
-// シェーダーの種類毎に設定されるマクロリスト
-// AGX_FEATURE_VERTEX_COLOR         頂点カラーが有効
-// AGX_FEATURE_ALBEDO_TEXTURE       アルベドテクスチャーが有効
-// AGX_FEATURE_BUMP_TEXTURE         バンプテクスチャーが有効
-// AGX_FEATURE_MASK_TEXTURE         マスクテクスチャーが有効
-// AGX_FEATURE_ALPHA_TEXTURE        アルファテクスチャーが有効
-// AGX_FEATURE_SPHERE_MAP_TEXTURE   スフィア環境マップが有効
-// AGX_FEATURE_SKIN_MASK            肌マスクが有効（uColor0）
-// AGX_FEATURE_HAIR_MASK            髪マスクが有効（uColor1）
-// AGX_FEATURE_ALPHA_TEST           アルファテストが有効
-// AGX_FEATURE_FADE_OUT_COLOR       フェードアウトカラーが有効（uColor2）
-// AGX_FEATURE_DISABLE_LIGHT        ライトが無効
-// AGX_FEATURE_ALPHA_COLOR_FILTER   アルベドアルファによる色替えが有効
-// AGX_FEATURE_ALBEDO_ALPHA         アルベドのアルファをカラーのアルファに適用
-// AGX_FEATURE_PREMULTIPLY_ALPHA    プレマルチプライアルファな描画
-// AGX_FEATURE_MII                  Miiを描画する
-// AGX_FEATURE_MII_CONSTANT         Miiを描画する：Constant
-// AGX_FEATURE_MII_TEXTURE_DIRECT   Miiを描画する：Texture Direct
-// AGX_FEATURE_MII_RGB_LAYERED      Miiを描画する：RGB Layered
-// AGX_FEATURE_MII_ALPHA            Miiを描画する：Alpha
-// AGX_FEATURE_MII_LUMINANCE_ALPHA  Miiを描画する：Luminance Alpha
-// AGX_FEATURE_MII_ALPHA_OPA        Miiを描画する：Alpha Opa
-
-#ifdef GL_ES
-precision mediump float;
-#else
-#   define lowp
-#   define mediump
-#   define highp
-#endif
-
-/// 変調処理のマクロ
-#define FFL_MODULATE_MODE_CONSTANT        0
-#define FFL_MODULATE_MODE_TEXTURE_DIRECT  1
-#define FFL_MODULATE_MODE_RGB_LAYERED     2
-#define FFL_MODULATE_MODE_ALPHA           3
-#define FFL_MODULATE_MODE_LUMINANCE_ALPHA 4
-#define FFL_MODULATE_MODE_ALPHA_OPA       5
-
-// ----------------------------------------
-// フラグメントシェーダーに入力される uniform 変数
-uniform int   uMode;   ///< 描画モード
-uniform bool uAlphaTest;
-uniform bool uLightEnable;
-uniform mediump vec4    uColor0;            //!< 入力:[ 1 : 1 ] カラー0 (OR 肌カラー)
-uniform mediump vec4    uColor1;            //!< 入力:[ 1 : 2 ] カラー1 (OR 髪カラー)
-uniform mediump vec4    uColor2;            //!< 入力:[ 1 : 3 ] カラー2 (OR フェードアウトカラー)
-//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-uniform mediump vec3    uLightColor;        //!< 入力:[ 1 : 4 ] ライトの色
-//#endif
-
-#if defined(AGX_FEATURE_ALBEDO_TEXTURE)
-uniform sampler2D       uAlbedoTexture;     //!< 入力: テクスチャー
-#endif
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-uniform sampler2D       uNormalTexture;     //!< 入力: ノーマルマップ
-#endif
-#if defined(AGX_FEATURE_MASK_TEXTURE)
-uniform sampler2D       uMaskTexture;       //!< 入力：マスクテクスチャー
-#endif
-#if defined(AGX_FEATURE_ALPHA_TEXTURE)
-uniform sampler2D       uAlphaTexture;      //!< 入力：アルファテクスチャー
-#endif
-uniform sampler2D       uLUTSpecTexture;    //!< 入力: スペキュラーLUT
-uniform sampler2D       uLUTFresTexture;    //!< 入力: フレネルLUT
-#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
-uniform sampler2D       uSphereMapTexture;  //!< 入力: スフィア環境マップ
-#endif
-
-// ----------------------------------------
-// フラグメントシェーダーに渡される varying 変数
-varying lowp    vec4    vModelColor;                            //!< 出力:[ 1 : 1 ] モデルの色
-#if !defined(AGX_FEATURE_BUMP_TEXTURE)
-varying mediump vec3    vNormal;                                //!< 出力:[ 1 : 2 ] モデルの法線
-#endif
-#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
-varying mediump vec2    vTexcoord0;                             //!< 出力:[ 1 : 3 ] テクスチャーUV
-#endif
-// camera
-varying mediump vec3    vEyeVecWorldOrTangent;                  //!< 出力:[ 1 : 4 ] 視線ベクトル
-//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-// punctual light
-varying mediump vec3    vPunctualLightDirWorldOrTangent;        //!< 出力:[ 1 : 5 ] ライトの方向
-varying mediump vec3    vPunctualLightHalfVecWorldOrTangent;    //!< 出力:[ 1 : 6 ] カメラとライトのハーフベクトル
-// GI
-varying mediump vec3    vGISpecularLightColor;                  //!< 出力:[ 1 : 7 ] GIフレネルで使用するカラー
-// Lighting Result
-varying mediump vec3    vDiffuseColor;                          //!< 出力:[ 1 : 8 ] ディフューズライティング結果
-//#endif
-// Reflect
-#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
-varying lowp    vec3    vReflectDir;                            //!< 出力:[ 1 : 9 ] 環境マップの反射ベクトル
-#endif
-
-// ------------------------------------------------------------
-// フラグメントシェーダーのエントリーポイント
-// ------------------------------------------------------------
-void main()
-{
-
-    // ディフューズカラーを取得
-    lowp vec4 albedoColor = vec4(1.0, 1.0, 1.0, 1.0);
-
-    // ============================================================
-    //  Mii
-    // ============================================================
-#if defined(AGX_FEATURE_MII)
-
-   //#if defined(AGX_FEATURE_MII_CONSTANT)
-    if(uMode == FFL_MODULATE_MODE_CONSTANT)
-    {
-        albedoColor = uColor0;
-    }
-    //#elif defined(AGX_FEATURE_MII_TEXTURE_DIRECT)
-    else if(uMode == FFL_MODULATE_MODE_TEXTURE_DIRECT)
-    {
-        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-    }
-    //#elif defined(AGX_FEATURE_MII_RGB_LAYERED)
-    else if(uMode == FFL_MODULATE_MODE_RGB_LAYERED)
-    {
-        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-        albedoColor = vec4(albedoColor.r * uColor0.rgb + albedoColor.g * uColor1.rgb + albedoColor.b * uColor2.rgb,
-                           uColor0.a * albedoColor.a);
-    }
-    //#elif defined(AGX_FEATURE_MII_ALPHA)
-    else if(uMode == FFL_MODULATE_MODE_ALPHA)
-    {
-        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-        albedoColor = vec4(uColor0.rgb, uColor0.a * albedoColor.r);
-    }
-    //#elif defined(AGX_FEATURE_MII_LUMINANCE_ALPHA)
-    else if(uMode == FFL_MODULATE_MODE_LUMINANCE_ALPHA)
-    {
-        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-        albedoColor = vec4(albedoColor.g * uColor0.rgb, uColor0.a * albedoColor.r);
-    }
-    //#elif defined(AGX_FEATURE_MII_ALPHA_OPA)
-    else if(uMode == FFL_MODULATE_MODE_ALPHA_OPA)
-    {
-        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-        albedoColor = vec4(albedoColor.r * uColor0.rgb, uColor0.a);
-    }
-//#endif
-
-    albedoColor = albedoColor * vModelColor;
-#endif
-
-    // ============================================================
-    //  Albedo Texture
-    // ============================================================
-#if !defined(AGX_FEATURE_MII) && defined(AGX_FEATURE_ALBEDO_TEXTURE)
-    albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
-#endif
-#if defined(AGX_FEATURE_ALPHA_TEXTURE)
-    albedoColor.a   = texture2D(uAlphaTexture, vTexcoord0).r;
-#endif
-
-    // ============================================================
-    //  Color Mask
-    // ============================================================
-    // ----------------------------------------
-    // Deprecated
-#if defined(AGX_FEATURE_ALPHA_COLOR_FILTER)
-    // 一部の場所にColor0を反映する
-    albedoColor.rgb = (albedoColor.rgb * albedoColor.a + uColor0.rgb * (1.0 - albedoColor.a));
-    albedoColor.a = 1.0;
-#elif defined(AGX_FEATURE_MASK_TEXTURE)
-    lowp vec3  maskTextureColor = texture2D(uMaskTexture, vTexcoord0).rgb;
-
-#   if defined(AGX_FEATURE_SKIN_MASK) && defined(AGX_FEATURE_HAIR_MASK)
-    // 肌と髪両方マスクが存在する
-    lowp float maskColorValue = maskTextureColor.g + maskTextureColor.b;
-    lowp vec3  maskColor      = maskTextureColor.g * uColor0.rgb + maskTextureColor.b * uColor1.rgb;
-    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskColorValue) + maskColor);
-
-#   elif defined(AGX_FEATURE_SKIN_MASK)
-    // 肌しかマスクが存在しない
-    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskTextureColor.g) + maskTextureColor.g * uColor0.rgb);
-
-#   elif defined(AGX_FEATURE_HAIR_MASK)
-    // 髪しかマスクが存在しない
-    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskTextureColor.b) + maskTextureColor.b * uColor1.rgb);
-
-#   endif
-#endif
-
-    // アルベドに頂点カラーを掛ける
-    albedoColor *= vModelColor;
-
-    // ============================================================
-    //  Alpha test
-    // ============================================================
-//#if defined(AGX_FEATURE_ALPHA_TEST)
-    if (uAlphaTest && albedoColor.a < 0.5) { discard; }
-//#endif
-
-    // ============================================================
-    //  Bumpmap
-    // ============================================================
-    // 頂点からの情報
-    lowp vec3 normalWorldOrTangent;
-#if defined(AGX_FEATURE_BUMP_TEXTURE)
-    // バンプマップから法線を取得する
-    mediump vec3 bumpNormal = texture2D(uNormalTexture, vTexcoord0).rgb;
-
-    // 法線の正規化は処理が重いのでいったん正規化しない様に...
-//    normalWorldOrTangent = normalize(bumpNormal * 2.0 - 1.0);
-    normalWorldOrTangent = bumpNormal * 2.0 - 1.0;
-
-#else
-    // 法線を正規化して取得する
-    normalWorldOrTangent = normalize(vNormal);
-#endif
-
-    // ============================================================
-    //  Lighting
-    // ============================================================
-    // 最終的なカラー情報
-    lowp vec4 colorOut = vec4(0.0, 0.0, 0.0, albedoColor.a);  // 最終的に出力される色
-    lowp vec3 fresnel  = vec3(0.0, 0.0, 0.0);   // フレネル
-    lowp vec3 specular = vec3(0.0, 0.0, 0.0);   // スペキュラー
-
-//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-if (uLightEnable) {
-
-    // BRDFの計算を行う（バンプマッピングの場合は接空間）
-    lowp vec3 N = normalWorldOrTangent;
-    lowp vec3 V = vEyeVecWorldOrTangent.xyz;//normalize(vEyeVecWorldOrTangent.xyz);
-    lowp vec3 I = vPunctualLightDirWorldOrTangent.xyz;//normalize(vPunctualLightDirWorldOrTangent.xyz);
-    lowp vec3 H = vPunctualLightHalfVecWorldOrTangent.xyz;//normalize(vPunctualLightHalfVecWorldOrTangent.xyz);
-
-
-    // ----------------------------------------
-    // punctual light
-    // 平行光源や点光源などの厳密なライティング計算を行なうもの
-    {
-        lowp float fSpecular = dot(N, H);
-
-        lowp float specularIntensity = texture2D(uLUTSpecTexture, vec2(fSpecular)).r;
-        specular = (specularIntensity * uLightColor.rgb);
-    }
-
-    // ----------------------------------------
-    // GI
-    // 半球ライトやIBL、SHのように法線方向に半球積分された結果でライティング計算を行なうもの
-    {
-        lowp float fFresnel = dot(N, V);
-        lowp float fresnelIntensity = texture2D(uLUTFresTexture, vec2(fFresnel)).r;
-
-        fresnel = (fresnelIntensity * vGISpecularLightColor.rgb);
-    }
-}
-//#endif
-
-#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
-    // スフィア環境マップ
-    specular += texture2D(uSphereMapTexture, vReflectDir.xy).rgb;
-#endif
-
-    // ============================================================
-    //  Specular Mask
-    // ============================================================
-#if !defined(AGX_FEATURE_ALPHA_COLOR_FILTER) && defined(AGX_FEATURE_MASK_TEXTURE)
-    // スペキュラーマスク
-    specular = specular * maskTextureColor.r + fresnel;
-#else
-    specular += fresnel;
-#endif
-
-    // ============================================================
-    //  Output
-    // ============================================================
-//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
-if (uLightEnable)
-    colorOut.rgb = vDiffuseColor.rgb * albedoColor.rgb + specular;
-//#else
-else
-    colorOut.rgb = albedoColor.rgb;
-//#endif
-
-    // フェードアウトを実装する
-#if defined(AGX_FEATURE_FADE_OUT_COLOR)
-    colorOut.rgb = (colorOut.rgb * (1.0 - uColor2.a)) + (uColor2.rgb * uColor2.a);
-#endif
-
-    // 色を反映させる
-    gl_FragColor = colorOut;
-
-    //#include <tonemapping_fragment>
-    //#include <colorspace_fragment>
-}
-`;
-
-class HermitianCurve {
-  constructor(keys2) {
-    this.keys = keys2.sort((a, b) => a.x - b.x);
-  }
-  interpolate(t, p0, p1, m0, m1) {
-    const h00 = 2 * t * t * t - 3 * t * t + 1;
-    const h10 = t * t * t - 2 * t * t + t;
-    const h01 = -2 * t * t * t + 3 * t * t;
-    const h11 = t * t * t - t * t;
-    return h00 * p0 + h10 * m0 + h01 * p1 + h11 * m1;
-  }
-  clamp(value2, min, max) {
-    return Math.min(Math.max(value2, min), max);
-  }
-  generateLUT(lutSize = 512) {
-    const lut = new Uint8Array(lutSize);
-    let keyIdx = 0;
-    for (let i = 0;i < lutSize; i++) {
-      const pos = i / (lutSize - 1);
-      while (keyIdx < this.keys.length - 2 && pos > this.keys[keyIdx + 1].x) {
-        keyIdx++;
-      }
-      const p0 = this.keys[keyIdx];
-      const p1 = this.keys[keyIdx + 1];
-      let t = (pos - p0.x) / (p1.x - p0.x);
-      t = isNaN(t) ? 0 : t;
-      const y = this.interpolate(t, p0.y, p1.y, p0.dx * (p1.x - p0.x), p1.dx * (p1.x - p0.x));
-      lut[i] = Math.round(this.clamp(y, 0, 1) * 255);
-    }
-    return lut;
-  }
-}
-
-class LUTShaderMaterial extends THREE5.ShaderMaterial {
-  static LUTSpecularTextureType = {
-    NONE: 0,
-    DEFAULT_02: 1,
-    SKIN_01: 2,
-    MAX: 3
-  };
-  static LUTFresnelTextureType = {
-    NONE: 0,
-    DEFAULT_02: 1,
-    SKIN_01: 2,
-    MAX: 3
-  };
-  static lutDefinitions = {
-    specular: {
-      [LUTShaderMaterial.LUTSpecularTextureType.NONE]: new HermitianCurve([
-        { x: 0, y: 0, dx: 0, dy: 0 },
-        { x: 1, y: 0, dx: 0, dy: 0 }
-      ]),
-      [LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02]: new HermitianCurve([
-        { x: 0, y: 0, dx: 0, dy: 0 },
-        { x: 0.05, y: 0, dx: 0, dy: 0 },
-        {
-          x: 0.8,
-          y: 0.038,
-          dx: 0.157894736842105,
-          dy: 0.157894736842105
-        },
-        { x: 1, y: 0.11, dx: 0, dy: 0 }
-      ]),
-      [LUTShaderMaterial.LUTSpecularTextureType.SKIN_01]: new HermitianCurve([
-        {
-          x: 0,
-          y: 0.03,
-          dx: -0.105263157894737,
-          dy: -0.105263157894737
-        },
-        { x: 1, y: 0, dx: 0, dy: 0 }
-      ])
-    },
-    fresnel: {
-      [LUTShaderMaterial.LUTFresnelTextureType.NONE]: new HermitianCurve([
-        { x: 0, y: 0, dx: 0, dy: 0 },
-        { x: 1, y: 0, dx: 0, dy: 0 }
-      ]),
-      [LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02]: new HermitianCurve([
-        {
-          x: 0,
-          y: 0.3,
-          dx: -0.105263157894734,
-          dy: -0.105263157894734
-        },
-        {
-          x: 0.175,
-          y: 0.23,
-          dx: -0.626315789473681,
-          dy: -0.626315789473681
-        },
-        {
-          x: 0.6,
-          y: 0.05,
-          dx: -0.210526315789474,
-          dy: -0.210526315789474
-        },
-        {
-          x: 1,
-          y: 0,
-          dx: -0.105263157894737,
-          dy: -0.105263157894737
-        }
-      ]),
-      [LUTShaderMaterial.LUTFresnelTextureType.SKIN_01]: new HermitianCurve([
-        {
-          x: 0.005,
-          y: 0.35,
-          dx: -0.105263157894734,
-          dy: -0.105263157894734
-        },
-        {
-          x: 0.173,
-          y: 0.319,
-          dx: -0.205263157894734,
-          dy: -0.205263157894734
-        },
-        {
-          x: 0.552,
-          y: 0.051,
-          dx: -0.210526315789474,
-          dy: -0.210526315789474
-        },
-        { x: 1, y: 0.001, dx: 0, dy: 0 }
-      ])
-    }
-  };
-  static modulateTypeToLUTSpecular = [
-    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
-    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTSpecularTextureType.NONE,
-    LUTShaderMaterial.LUTSpecularTextureType.NONE,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02
-  ];
-  static modulateTypeToLUTFresnel = [
-    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
-    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTFresnelTextureType.NONE,
-    LUTShaderMaterial.LUTFresnelTextureType.NONE,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
-    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02
-  ];
-  static _lutTextures = null;
-  static getLUTTextures(lutSize = 512) {
-    if (LUTShaderMaterial._lutTextures) {
-      return LUTShaderMaterial._lutTextures;
-    }
-    const textures = { specular: {}, fresnel: {} };
-    const r8 = Number(THREE5.REVISION) <= 136 ? THREE5.LuminanceFormat : THREE5.RedFormat;
-    function generateLUTTextures(lutType, target) {
-      for (const key2 in lutType) {
-        const lutData = lutType[key2].generateLUT(lutSize);
-        target[Number(key2)] = Object.assign(new THREE5.DataTexture(lutData, lutSize, 1, r8, THREE5.UnsignedByteType), {
-          colorSpace: THREE5.LinearSRGBColorSpace,
-          needsUpdate: true
-        });
-      }
-    }
-    generateLUTTextures(LUTShaderMaterial.lutDefinitions.specular, textures.specular);
-    generateLUTTextures(LUTShaderMaterial.lutDefinitions.fresnel, textures.fresnel);
-    LUTShaderMaterial._lutTextures = textures;
-    return textures;
-  }
-  static defaultHSLightGroundColor = new THREE5.Color(0.87843, 0.72157, 0.5898);
-  static defaultHSLightSkyColor = new THREE5.Color(0.87843, 0.83451, 0.80314);
-  static defaultDirLightColor0 = new THREE5.Color(0.35137, 0.32392, 0.32392);
-  static defaultDirLightColor1 = new THREE5.Color(0.10039, 0.09255, 0.09255);
-  static defaultDirLightCount = 2;
-  static defaultDirLightDirAndType0 = new THREE5.Vector4(-0.2, 0.5, 0.8, -1);
-  static defaultDirLightDirAndType1 = new THREE5.Vector4(0, -0.19612, 0.98058, -1);
-  static defaultLightColor = new THREE5.Color(0.35137, 0.32392, 0.32392);
-  static defaultLightDirection = this.defaultDirLightDirAndType0;
-  static multiplyColorIfNeeded(color, modulateType, modulateMode) {
-    if (modulateType === 1 || modulateType === 4 || modulateMode === 0 && modulateType === 9) {
-      const mul2 = 0.9019608;
-      color.r *= mul2;
-      color.g *= mul2;
-      color.b *= mul2;
-    }
-    return color;
-  }
-  constructor(options = {}) {
-    const uniforms = {
-      uBoneCount: { value: 0 },
-      uAlpha: { value: 1 },
-      uHSLightGroundColor: {
-        value: LUTShaderMaterial.defaultHSLightGroundColor
-      },
-      uHSLightSkyColor: {
-        value: LUTShaderMaterial.defaultHSLightSkyColor
-      },
-      uDirLightColor0: {
-        value: LUTShaderMaterial.defaultDirLightColor0
-      },
-      uDirLightColor1: {
-        value: LUTShaderMaterial.defaultDirLightColor1
-      },
-      uDirLightCount: {
-        value: LUTShaderMaterial.defaultDirLightCount
-      },
-      uDirLightDirAndType0: {
-        value: LUTShaderMaterial.defaultDirLightDirAndType0.clone()
-      },
-      uDirLightDirAndType1: {
-        value: LUTShaderMaterial.defaultDirLightDirAndType1.clone()
-      },
-      uLightEnable: { value: true },
-      uLightColor: { value: LUTShaderMaterial.defaultLightColor }
-    };
-    super({
-      vertexShader: _LUTShader_vert,
-      fragmentShader: _LUTShader_frag,
-      uniforms
-    });
-    this._modulateType = 0;
-    this.setValues(options);
-  }
-  get color() {
-    if (!this.uniforms.uColor0) {
-      return null;
-    } else if (this._color3) {
-      return this._color3;
-    }
-    const color4 = this.uniforms.uColor0.value;
-    const color3 = new THREE5.Color(color4.x, color4.y, color4.z);
-    this._color3 = color3;
-    return color3;
-  }
-  set color(value2) {
-    function toColor4(color, opacity2 = 1) {
-      return new THREE5.Vector4(color.r, color.g, color.b, opacity2);
-    }
-    if (Array.isArray(value2)) {
-      this.uniforms.uColor0 = { value: toColor4(value2[0]) };
-      this.uniforms.uColor1 = { value: toColor4(value2[1]) };
-      this.uniforms.uColor2 = { value: toColor4(value2[2]) };
-      return;
-    }
-    const color3 = value2 ? value2 : new THREE5.Color(1, 1, 1);
-    this._color3 = color3.clone();
-    if (this.modulateType !== undefined && typeof this.modulateMode === "number") {
-      LUTShaderMaterial.multiplyColorIfNeeded(color3, this.modulateType, this.modulateMode);
-    }
-    const opacity = this.opacity;
-    if (this._opacity) {
-      delete this._opacity;
-    }
-    this.uniforms.uColor0 = { value: toColor4(color3, opacity) };
-  }
-  get opacity() {
-    if (!this.uniforms.uColor0) {
-      return this._opacity ? this._opacity : 1;
-    }
-    return this.uniforms.uColor0.value.w;
-  }
-  set opacity(value2) {
-    if (!this.uniforms || !this.uniforms.uColor0) {
-      this._opacity = 1;
-      return;
-    }
-    this.uniforms.uColor0.value.w = value2;
-  }
-  get modulateMode() {
-    return this.uniforms.uMode ? this.uniforms.uMode.value : null;
-  }
-  set modulateMode(value2) {
-    this.uniforms.uMode = { value: value2 };
-  }
-  get lightEnable() {
-    return this.uniforms.uLightEnable ? this.uniforms.uLightEnable.value : null;
-  }
-  set lightEnable(value2) {
-    this.uniforms.uLightEnable = { value: value2 };
-  }
-  get modulateType() {
-    return this._modulateType;
-  }
-  set modulateType(value2) {
-    const lutTextures = LUTShaderMaterial.getLUTTextures();
-    const specType = LUTShaderMaterial.modulateTypeToLUTSpecular[value2];
-    const fresType = LUTShaderMaterial.modulateTypeToLUTFresnel[value2];
-    if (specType === undefined || fresType === undefined) {
-      return;
-    }
-    this._modulateType = value2;
-    const lutSpecTexture = lutTextures.specular[specType];
-    const lutFresTexture = lutTextures.fresnel[fresType];
-    this.uniforms.uLUTSpecTexture = { value: lutSpecTexture };
-    this.uniforms.uLUTFresTexture = { value: lutFresTexture };
-    this.uniforms.uAlphaTest = {
-      value: value2 >= 6 && value2 <= 8
-    };
-    this._side = this.side;
-    this.side = value2 === 6 ? THREE5.DoubleSide : this.side;
-  }
-  get map() {
-    return this.uniforms.uAlbedoTexture ? this.uniforms.uAlbedoTexture.value : null;
-  }
-  set map(value2) {
-    this.uniforms.uAlbedoTexture = { value: value2 };
-  }
-  get lightDirection() {
-    return this.uniforms.uDirLightDirAndType0.value;
-  }
-  set lightDirection(value2) {
-    this.uniforms.uDirLightDirAndType0 = { value: value2 };
-    this.uniforms.uDirLightDirAndType0.value.w = -1;
-  }
-}
-var LUTShaderMaterial_default = LUTShaderMaterial;
-
-// src/class/3d/shader/ShaderUtils.ts
-var import_localforage = __toESM(require_localforage(), 1);
-
 // node_modules/three/build/three.module.js
 var exports_three_module = {};
 __export(exports_three_module, {
@@ -53219,21 +49558,3564 @@ class WebGLRenderer {
   }
 }
 
+// src/external/ffl.js/ffl.js
+var _Import = __toESM(require_struct_fu(), 1);
+/*!
+ * Bindings for FFL, a Mii renderer, in JavaScript.
+ * https://github.com/ariankordi/FFL.js
+ * @author Arian Kordi <https://github.com/ariankordi>
+ */
+globalThis._ = globalThis._;
+globalThis.THREE = globalThis.THREE;
+var _ = globalThis._;
+_ = !_ ? _Import : _;
+var FFLResult = {
+  OK: 0,
+  ERROR: 1,
+  HDB_EMPTY: 2,
+  FILE_INVALID: 3,
+  MANAGER_NOT_CONSTRUCT: 4,
+  FILE_LOAD_ERROR: 5,
+  FILE_SAVE_ERROR: 7,
+  RES_FS_ERROR: 9,
+  ODB_EMPTY: 10,
+  OUT_OF_MEMORY: 12,
+  UNKNOWN_17: 17,
+  FS_ERROR: 18,
+  FS_NOT_FOUND: 19,
+  MAX: 20
+};
+var FFLiShapeType = {
+  OPA_BEARD: 0,
+  OPA_FACELINE: 1,
+  OPA_HAIR_NORMAL: 2,
+  OPA_FOREHEAD_NORMAL: 3,
+  XLU_MASK: 4,
+  XLU_NOSELINE: 5,
+  OPA_NOSE: 6,
+  OPA_HAT_NORMAL: 7,
+  XLU_GLASS: 8,
+  OPA_HAIR_CAP: 9,
+  OPA_FOREHEAD_CAP: 10,
+  OPA_HAT_CAP: 11,
+  MAX: 12
+};
+var FFLAttributeBufferType = {
+  POSITION: 0,
+  TEXCOORD: 1,
+  NORMAL: 2,
+  TANGENT: 3,
+  COLOR: 4,
+  MAX: 5
+};
+var FFLCullMode = {
+  NONE: 0,
+  BACK: 1,
+  FRONT: 2,
+  MAX: 3
+};
+var FFLModulateMode = {
+  CONSTANT: 0,
+  TEXTURE_DIRECT: 1,
+  RGB_LAYERED: 2,
+  ALPHA: 3,
+  LUMINANCE_ALPHA: 4,
+  ALPHA_OPA: 5
+};
+var FFLModulateType = {
+  SHAPE_FACELINE: 0,
+  SHAPE_BEARD: 1,
+  SHAPE_NOSE: 2,
+  SHAPE_FOREHEAD: 3,
+  SHAPE_HAIR: 4,
+  SHAPE_CAP: 5,
+  SHAPE_MASK: 6,
+  SHAPE_NOSELINE: 7,
+  SHAPE_GLASS: 8,
+  MUSTACHE: 9,
+  MOUTH: 10,
+  EYEBROW: 11,
+  EYE: 12,
+  MOLE: 13,
+  FACE_MAKE: 14,
+  FACE_LINE: 15,
+  FACE_BEARD: 16,
+  FILL: 17,
+  SHAPE_MAX: 9
+};
+var FFLResourceType = {
+  MIDDLE: 0,
+  HIGH: 1,
+  MAX: 2
+};
+var FFLExpression = {
+  NORMAL: 0,
+  SMILE: 1,
+  ANGER: 2,
+  SORROW: 3,
+  PUZZLED: 3,
+  SURPRISE: 4,
+  SURPRISED: 4,
+  BLINK: 5,
+  OPEN_MOUTH: 6,
+  SMILE_OPEN_MOUTH: 7,
+  HAPPY: 7,
+  ANGER_OPEN_MOUTH: 8,
+  SORROW_OPEN_MOUTH: 9,
+  SURPRISE_OPEN_MOUTH: 10,
+  BLINK_OPEN_MOUTH: 11,
+  WINK_LEFT: 12,
+  WINK_RIGHT: 13,
+  WINK_LEFT_OPEN_MOUTH: 14,
+  WINK_RIGHT_OPEN_MOUTH: 15,
+  LIKE_WINK_LEFT: 16,
+  LIKE: 16,
+  LIKE_WINK_RIGHT: 17,
+  FRUSTRATED: 18,
+  BORED: 19,
+  BORED_OPEN_MOUTH: 20,
+  SIGH_MOUTH_STRAIGHT: 21,
+  SIGH: 22,
+  DISGUSTED_MOUTH_STRAIGHT: 23,
+  DISGUSTED: 24,
+  LOVE: 25,
+  LOVE_OPEN_MOUTH: 26,
+  DETERMINED_MOUTH_STRAIGHT: 27,
+  DETERMINED: 28,
+  CRY_MOUTH_STRAIGHT: 29,
+  CRY: 30,
+  BIG_SMILE_MOUTH_STRAIGHT: 31,
+  BIG_SMILE: 32,
+  CHEEKY: 33,
+  CHEEKY_DUPLICATE: 34,
+  JOJO_EYES_FUNNY_MOUTH: 35,
+  JOJO_EYES_FUNNY_MOUTH_OPEN: 36,
+  SMUG: 37,
+  SMUG_OPEN_MOUTH: 38,
+  RESOLVE: 39,
+  RESOLVE_OPEN_MOUTH: 40,
+  UNBELIEVABLE: 41,
+  UNBELIEVABLE_DUPLICATE: 42,
+  CUNNING: 43,
+  CUNNING_DUPLICATE: 44,
+  RASPBERRY: 45,
+  RASPBERRY_DUPLICATE: 46,
+  INNOCENT: 47,
+  INNOCENT_DUPLICATE: 48,
+  CAT: 49,
+  CAT_DUPLICATE: 50,
+  DOG: 51,
+  DOG_DUPLICATE: 52,
+  TASTY: 53,
+  TASTY_DUPLICATE: 54,
+  MONEY_MOUTH_STRAIGHT: 55,
+  MONEY: 56,
+  SPIRAL_MOUTH_STRAIGHT: 57,
+  CONFUSED: 58,
+  CHEERFUL_MOUTH_STRAIGHT: 59,
+  CHEERFUL: 60,
+  BLANK_61: 61,
+  BLANK_62: 62,
+  GRUMBLE_MOUTH_STRAIGHT: 63,
+  GRUMBLE: 64,
+  MOVED_MOUTH_STRAIGHT: 65,
+  MOVED: 66,
+  SINGING_MOUTH_SMALL: 67,
+  SINGING: 68,
+  STUNNED: 69,
+  MAX: 70
+};
+var FFLModelFlag = {
+  NORMAL: 1 << 0,
+  HAT: 1 << 1,
+  FACE_ONLY: 1 << 2,
+  FLATTEN_NOSE: 1 << 3,
+  NEW_EXPRESSIONS: 1 << 4,
+  NEW_MASK_ONLY: 1 << 5
+};
+var _uintptr = _.uint32le;
+var FFLAttributeBuffer = _.struct([
+  _.uint32le("size"),
+  _.uint32le("stride"),
+  _uintptr("ptr")
+]);
+var FFLAttributeBufferParam = _.struct([
+  _.struct("attributeBuffers", [FFLAttributeBuffer], 5)
+]);
+var FFLPrimitiveParam = _.struct([
+  _.uint32le("primitiveType"),
+  _.uint32le("indexCount"),
+  _uintptr("pAdjustMatrix"),
+  _uintptr("pIndexBuffer")
+]);
+var FFLColor = _.struct([
+  _.float32le("r"),
+  _.float32le("g"),
+  _.float32le("b"),
+  _.float32le("a")
+]);
+var FFLVec3 = _.struct([
+  _.float32le("x"),
+  _.float32le("y"),
+  _.float32le("z")
+]);
+var FFLModulateParam = _.struct([
+  _.uint32le("mode"),
+  _.uint32le("type"),
+  _uintptr("pColorR"),
+  _uintptr("pColorG"),
+  _uintptr("pColorB"),
+  _uintptr("pTexture2D")
+]);
+var FFLDrawParam = _.struct([
+  _.struct("attributeBufferParam", [FFLAttributeBufferParam]),
+  _.struct("modulateParam", [FFLModulateParam]),
+  _.uint32le("cullMode"),
+  _.struct("primitiveParam", [FFLPrimitiveParam])
+]);
+var FFLCreateID = _.struct([
+  _.uint8("data", 10)
+]);
+var FFLiCharInfo = _.struct([
+  _.int32le("miiVersion"),
+  _.struct("faceline", [
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("texture"),
+    _.int32le("make")
+  ]),
+  _.struct("hair", [_.int32le("type"), _.int32le("color"), _.int32le("flip")]),
+  _.struct("eye", [
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("scale"),
+    _.int32le("aspect"),
+    _.int32le("rotate"),
+    _.int32le("x"),
+    _.int32le("y")
+  ]),
+  _.struct("eyebrow", [
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("scale"),
+    _.int32le("aspect"),
+    _.int32le("rotate"),
+    _.int32le("x"),
+    _.int32le("y")
+  ]),
+  _.struct("nose", [
+    _.int32le("type"),
+    _.int32le("scale"),
+    _.int32le("y")
+  ]),
+  _.struct("mouth", [
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("scale"),
+    _.int32le("aspect"),
+    _.int32le("y")
+  ]),
+  _.struct("beard", [
+    _.int32le("mustache"),
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("scale"),
+    _.int32le("y")
+  ]),
+  _.struct("glass", [
+    _.int32le("type"),
+    _.int32le("color"),
+    _.int32le("scale"),
+    _.int32le("y")
+  ]),
+  _.struct("mole", [
+    _.int32le("type"),
+    _.int32le("scale"),
+    _.int32le("x"),
+    _.int32le("y")
+  ]),
+  _.struct("body", [_.int32le("height"), _.int32le("build")]),
+  _.struct("personal", [
+    _.char16le("name", 22),
+    _.char16le("creator", 22),
+    _.int32le("gender"),
+    _.int32le("birthMonth"),
+    _.int32le("birthDay"),
+    _.int32le("favoriteColor"),
+    _.uint8("favorite"),
+    _.uint8("copyable"),
+    _.uint8("ngWord"),
+    _.uint8("localonly"),
+    _.int32le("regionMove"),
+    _.int32le("fontRegion"),
+    _.int32le("roomIndex"),
+    _.int32le("positionInRoom"),
+    _.int32le("birthPlatform")
+  ]),
+  _.struct("createID", [FFLCreateID]),
+  _.uint16le("padding_0"),
+  _.int32le("authorType"),
+  _.uint8("authorID", 8)
+]);
+var FFLStoreData_size = 96;
+var commonColorEnableMask = 1 << 31;
+var commonColorMask = (color) => color | commonColorEnableMask;
+var FFLAdditionalInfo = _.struct([
+  _.char16le("name", 22),
+  _.char16le("creator", 22),
+  _.struct("createID", [FFLCreateID]),
+  _.byte("_padding0", 2),
+  _.struct("skinColor", [FFLColor]),
+  _.uint32le("flags"),
+  _.uint8("facelineType"),
+  _.uint8("hairType"),
+  _.byte("_padding1", 2)
+]);
+var FFLiRenderTexture = _.struct([
+  _uintptr("pTexture2DRenderBufferColorTargetDepthTarget", 4)
+]);
+var FFLiFacelineTextureTempObject = _.struct([
+  _uintptr("pTextureFaceLine"),
+  _.struct("drawParamFaceLine", [FFLDrawParam]),
+  _uintptr("pTextureFaceMake"),
+  _.struct("drawParamFaceMake", [FFLDrawParam]),
+  _uintptr("pTextureFaceBeard"),
+  _.struct("drawParamFaceBeard", [FFLDrawParam]),
+  _uintptr("pRenderTextureCompressorParam", 2)
+]);
+var FFLiRawMaskDrawParam = _.struct([
+  _.struct("drawParamRawMaskPartsEye", [FFLDrawParam], 2),
+  _.struct("drawParamRawMaskPartsEyebrow", [FFLDrawParam], 2),
+  _.struct("drawParamRawMaskPartsMouth", [FFLDrawParam]),
+  _.struct("drawParamRawMaskPartsMustache", [FFLDrawParam], 2),
+  _.struct("drawParamRawMaskPartsMole", [FFLDrawParam]),
+  _.struct("drawParamRawMaskPartsFill", [FFLDrawParam])
+]);
+var FFLiMaskTexturesTempObject = _.struct([
+  _.uint8("partsTextures", 340),
+  _uintptr("pRawMaskDrawParam", FFLExpression.MAX),
+  _.byte("_remaining", 904 - 620)
+]);
+var FFLiTextureTempObject = _.struct([
+  _.struct("maskTextures", [FFLiMaskTexturesTempObject]),
+  _.struct("facelineTexture", [FFLiFacelineTextureTempObject])
+]);
+var FFLiMaskTextures = _.struct([
+  _uintptr("pRenderTextures", FFLExpression.MAX)
+]);
+var FFL_RESOLUTION_MASK = 1073741823;
+var FFLCharModelDesc = _.struct([
+  _.uint32le("resolution"),
+  _.uint32le("allExpressionFlag", 3),
+  _.uint32le("modelFlag"),
+  _.uint32le("resourceType")
+]);
+var FFLCharModelDescDefault = {
+  resolution: 512,
+  allExpressionFlag: new Uint32Array([1, 0, 0]),
+  modelFlag: FFLModelFlag.NORMAL,
+  resourceType: FFLResourceType.HIGH
+};
+var FFLBoundingBox = _.struct([
+  _.struct("min", [FFLVec3]),
+  _.struct("max", [FFLVec3])
+]);
+var FFLPartsTransform = _.struct([
+  _.struct("hatTranslate", [FFLVec3]),
+  _.struct("headFrontRotate", [FFLVec3]),
+  _.struct("headFrontTranslate", [FFLVec3]),
+  _.struct("headSideRotate", [FFLVec3]),
+  _.struct("headSideTranslate", [FFLVec3]),
+  _.struct("headTopRotate", [FFLVec3]),
+  _.struct("headTopTranslate", [FFLVec3])
+]);
+var FFLiCharModel = _.struct([
+  _.struct("charInfo", [FFLiCharInfo]),
+  _.struct("charModelDesc", [FFLCharModelDesc]),
+  _.uint32le("expression"),
+  _uintptr("pTextureTempObject"),
+  _.struct("drawParam", [FFLDrawParam], FFLiShapeType.MAX),
+  _uintptr("pShapeData", FFLiShapeType.MAX),
+  _.struct("facelineRenderTexture", [FFLiRenderTexture]),
+  _uintptr("pCapGlassNoselineTextures", 3),
+  _.struct("maskTextures", [FFLiMaskTextures]),
+  _.struct("beardHairFaceCenterPos", [FFLVec3], 3),
+  _.struct("partsTransform", [FFLPartsTransform]),
+  _.uint32le("modelType"),
+  _.struct("boundingBox", [FFLBoundingBox], 3)
+]);
+var FFLDataSource = {
+  OFFICIAL: 0,
+  DEFAULT: 1,
+  MIDDLE_DB: 2,
+  STORE_DATA_OFFICIAL: 3,
+  STORE_DATA: 4,
+  BUFFER: 5,
+  DIRECT_POINTER: 6
+};
+var FFLCharModelSource = _.struct([
+  _.uint32le("dataSource"),
+  _uintptr("pBuffer"),
+  _.uint16le("index")
+]);
+var FFLResourceDesc = _.struct([
+  _uintptr("pData", FFLResourceType.MAX),
+  _.uint32le("size", FFLResourceType.MAX)
+]);
+var FFLTextureFormat = {
+  R8_UNORM: 0,
+  R8_G8_UNORM: 1,
+  R8_G8_B8_A8_UNORM: 2,
+  MAX: 3
+};
+var FFLTextureInfo = _.struct([
+  _.uint16le("width"),
+  _.uint16le("height"),
+  _.uint8("mipCount"),
+  _.uint8("format"),
+  _.uint8("isGX2Tiled"),
+  _.byte("_padding", 1),
+  _.uint32le("imageSize"),
+  _uintptr("imagePtr"),
+  _.uint32le("mipSize"),
+  _uintptr("mipPtr"),
+  _.uint32le("mipLevelOffset", 13)
+]);
+var FFLTextureCallback = _.struct([
+  _uintptr("pObj"),
+  _.uint8("useOriginalTileMode"),
+  _.byte("_padding", 3),
+  _uintptr("pCreateFunc"),
+  _uintptr("pDeleteFunc")
+]);
+
+class TextureManager {
+  constructor(module2, setToFFLGlobal = false) {
+    this._module = module2;
+    this._textures = new Map;
+    this._textureCallbackPtr = 0;
+    this.logging = false;
+    this._setTextureCallback();
+    if (setToFFLGlobal) {
+      module2._FFLSetTextureCallback(this._textureCallbackPtr);
+    }
+  }
+  static _allocateTextureCallback(module2, createCallback, deleteCallback) {
+    const ptr = module2._malloc(FFLTextureCallback.size);
+    const textureCallback = {
+      pObj: 0,
+      useOriginalTileMode: false,
+      _padding: [0, 0, 0],
+      pCreateFunc: createCallback,
+      pDeleteFunc: deleteCallback
+    };
+    const packed = FFLTextureCallback.pack(textureCallback);
+    module2.HEAPU8.set(packed, ptr);
+    return ptr;
+  }
+  _setTextureCallback(addDeleteCallback = false) {
+    const mod2 = this._module;
+    this._createCallback = mod2.addFunction(this._textureCreateFunc.bind(this), "vppp");
+    if (addDeleteCallback) {
+      this._deleteCallback = mod2.addFunction(this._textureDeleteFunc.bind(this), "vpp");
+    }
+    this._textureCallbackPtr = TextureManager._allocateTextureCallback(mod2, this._createCallback, this._deleteCallback ? this._deleteCallback : 0);
+  }
+  _getTextureFormat(format) {
+    const useGLES2Formats = Number(REVISION) <= 136;
+    const r8 = useGLES2Formats ? LuminanceFormat : RedFormat;
+    const r8g8 = useGLES2Formats ? LuminanceAlphaFormat : RGFormat;
+    const textureFormatToThreeFormat = {
+      [FFLTextureFormat.R8_UNORM]: r8,
+      [FFLTextureFormat.R8_G8_UNORM]: r8g8,
+      [FFLTextureFormat.R8_G8_B8_A8_UNORM]: RGBAFormat
+    };
+    const dataFormat = textureFormatToThreeFormat[format];
+    if (dataFormat === undefined) {
+      throw new Error(`_textureCreateFunc: Unexpected FFLTextureFormat value: ${format}`);
+    }
+    return dataFormat;
+  }
+  _textureCreateFunc(_2, textureInfoPtr, texturePtrPtr) {
+    const u8 = this._module.HEAPU8.subarray(textureInfoPtr, textureInfoPtr + FFLTextureInfo.size);
+    const textureInfo = FFLTextureInfo.unpack(u8);
+    if (this.logging) {
+      console.debug(`_textureCreateFunc: width=${textureInfo.width}, height=${textureInfo.height}, format=${textureInfo.format}, imageSize=${textureInfo.imageSize}, mipCount=${textureInfo.mipCount}`);
+    }
+    const format = this._getTextureFormat(textureInfo.format);
+    const imageData = this._module.HEAPU8.slice(textureInfo.imagePtr, textureInfo.imagePtr + textureInfo.imageSize);
+    const canUseMipmaps = Number(REVISION) >= 138;
+    const useMipmaps = textureInfo.mipCount > 1 && canUseMipmaps;
+    const texture = new DataTexture(useMipmaps ? null : imageData, textureInfo.width, textureInfo.height, format, UnsignedByteType);
+    texture.magFilter = LinearFilter;
+    texture.minFilter = LinearFilter;
+    if (useMipmaps) {
+      texture.mipmaps = [{
+        data: imageData,
+        width: textureInfo.width,
+        height: textureInfo.height
+      }];
+      texture.minFilter = LinearMipmapLinearFilter;
+      texture.generateMipmaps = false;
+      this._addMipmaps(texture, textureInfo);
+    }
+    texture.needsUpdate = true;
+    this.set(texture.id, texture);
+    this._module.HEAPU32[texturePtrPtr / 4] = texture.id;
+  }
+  _addMipmaps(texture, textureInfo) {
+    if (textureInfo.mipPtr === 0) {
+      throw new Error("_addMipmaps: mipPtr is null, so the caller incorrectly assumed this texture has mipmaps");
+    }
+    for (let mipLevel = 1;mipLevel < textureInfo.mipCount; mipLevel++) {
+      const mipOffset = textureInfo.mipLevelOffset[mipLevel - 1];
+      const mipWidth = Math.max(1, textureInfo.width >> mipLevel);
+      const mipHeight = Math.max(1, textureInfo.height >> mipLevel);
+      const nextMipOffset = textureInfo.mipLevelOffset[mipLevel] || textureInfo.mipSize;
+      const end = textureInfo.mipPtr + nextMipOffset;
+      const start = textureInfo.mipPtr + mipOffset;
+      const mipData = this._module.HEAPU8.slice(start, end);
+      if (this.logging) {
+        console.debug(`  - Mip ${mipLevel}: ${mipWidth}x${mipHeight}, offset=${mipOffset}, range=${start}-${end}`);
+      }
+      texture.mipmaps.push({
+        data: mipData,
+        width: mipWidth,
+        height: mipHeight
+      });
+    }
+  }
+  _textureDeleteFunc(_2, texturePtrPtr) {
+    const texId = this._module.HEAPU32[texturePtrPtr / 4];
+    const tex = this._textures.get(texId);
+    if (tex && this.logging) {
+      console.debug("Delete texture    ", tex.id);
+    }
+  }
+  get(id) {
+    const texture = this._textures.get(id);
+    if (!texture && this.logging) {
+      console.error("Unknown texture", id);
+    }
+    return texture;
+  }
+  set(id, texture) {
+    const disposeReal = texture.dispose.bind(texture);
+    texture.dispose = () => {
+      disposeReal();
+      this.delete(id);
+    };
+    this._textures.set(id, texture);
+    if (this.logging) {
+      console.debug("Adding texture    ", texture.id);
+    }
+  }
+  delete(id) {
+    const texture = this._textures.get(id);
+    if (texture) {
+      texture.source = null;
+      texture.mipmaps = null;
+      if (this.logging) {
+        console.debug("Deleted texture   ", id);
+      }
+      this._textures.delete(id);
+    }
+  }
+  disposeCallback() {
+    if (this._textureCallbackPtr) {
+      this._module._free(this._textureCallbackPtr);
+      this._textureCallbackPtr = 0;
+    }
+    if (this._deleteCallback) {
+      this._module.removeFunction(this._deleteCallback);
+      this._deleteCallback = 0;
+    }
+    if (this._createCallback) {
+      this._module.removeFunction(this._createCallback);
+      this._createCallback = 0;
+    }
+  }
+  dispose() {
+    this._textures.forEach((tex) => {
+      tex.dispose();
+    });
+    this._textures.clear();
+    this.disposeCallback();
+  }
+}
+
+class FFLResultException extends Error {
+  constructor(result, funcName, message) {
+    if (!message) {
+      if (funcName) {
+        message = `${funcName} failed with FFLResult: ${result}`;
+      } else {
+        message = `From FFLResult: ${result}`;
+      }
+    }
+    super(message);
+    this.result = result;
+  }
+  static handleResult(result, funcName) {
+    switch (result) {
+      case FFLResult.ERROR:
+        throw new FFLResultWrongParam(funcName);
+      case FFLResult.FILE_INVALID:
+        throw new FFLResultBroken(funcName);
+      case FFLResult.MANAGER_NOT_CONSTRUCT:
+        throw new FFLResultNotAvailable(funcName);
+      case FFLResult.FILE_LOAD_ERROR:
+        throw new FFLResultFatal(funcName);
+      case FFLResult.OK:
+        return;
+      default:
+        throw new FFLResultException(result, funcName);
+    }
+  }
+}
+
+class FFLResultWrongParam extends FFLResultException {
+  constructor(funcName) {
+    super(FFLResult.ERROR, funcName, `${funcName} returned FFL_RESULT_WRONG_PARAM. This usually means parameters going into that function were invalid.`);
+  }
+}
+
+class FFLResultBroken extends FFLResultException {
+  constructor(funcName, message) {
+    super(FFLResult.FILE_INVALID, funcName, message ? message : `${funcName} returned FFL_RESULT_BROKEN. This usually indicates invalid underlying data.`);
+  }
+}
+
+class BrokenInitRes extends FFLResultBroken {
+  constructor() {
+    super("FFLInitRes", 'The header for the FFL resource is probably invalid. Check the version and magic, should be "FFRA" or "ARFF".');
+  }
+}
+
+class BrokenInitModel extends FFLResultBroken {
+  constructor() {
+    super("FFLInitCharModelCPUStep", "FFLInitCharModelCPUStep failed probably because your data failed CRC or CharInfo verification (FFLiVerifyCharInfoWithReason).");
+  }
+}
+
+class FFLResultNotAvailable extends FFLResultException {
+  constructor(funcName) {
+    super(FFLResult.MANAGER_NOT_CONSTRUCT, funcName, `Tried to call FFL function ${funcName} when FFLManager is not constructed (FFL is not initialized properly).`);
+  }
+}
+
+class FFLResultFatal extends FFLResultException {
+  constructor(funcName) {
+    super(FFLResult.FILE_LOAD_ERROR, funcName, `Failed to uncompress or load a specific asset from the FFL resource file during call to ${funcName}`);
+  }
+}
+
+class FFLiVerifyReasonException extends Error {
+  constructor(result) {
+    super(`FFLiVerifyCharInfoWithReason (CharInfo verification) failed with result: ${result}`);
+    this.result = result;
+  }
+}
+
+class ExpressionNotSet extends Error {
+  constructor(expression) {
+    super(`Attempted to set expression ${expression}, but the mask for that expression does not exist. You must reinitialize the CharModel with this expression in the expression flags before using it.`);
+    this.expression = expression;
+  }
+}
+async function _loadDataIntoHeap(resource, module2) {
+  let heapSize;
+  let heapPtr;
+  try {
+    if (resource instanceof ArrayBuffer) {
+      resource = new Uint8Array(resource);
+    }
+    if (resource instanceof Uint8Array) {
+      heapSize = resource.length;
+      heapPtr = module2._malloc(heapSize);
+      console.debug(`_loadDataIntoHeap: Loading from buffer. Size: ${heapSize}, pointer: ${heapPtr}`);
+      module2.HEAPU8.set(resource, heapPtr);
+    } else if (resource instanceof Response) {
+      if (!resource.ok) {
+        throw new Error(`_loadDataIntoHeap: Failed to fetch resource at URL = ${resource.url}, response code = ${resource.status}`);
+      }
+      if (!resource.body) {
+        throw new Error(`_loadDataIntoHeap: Fetch response body is null (resource.body = ${resource.body})`);
+      }
+      const contentLength = resource.headers.get("Content-Length");
+      if (!contentLength) {
+        console.debug("_loadDataIntoHeap: Fetch response is missing Content-Length, falling back to reading as ArrayBuffer.");
+        return _loadDataIntoHeap(await resource.arrayBuffer(), module2);
+      }
+      heapSize = parseInt(contentLength, 10);
+      heapPtr = module2._malloc(heapSize);
+      console.debug(`loadDataIntoHeap: Streaming from fetch response. Size: ${heapSize}, pointer: ${heapPtr}, URL: ${resource.url}`);
+      const reader = resource.body.getReader();
+      let offset = heapPtr;
+      while (true) {
+        const { done, value: value2 } = await reader.read();
+        if (done) {
+          break;
+        }
+        module2.HEAPU8.set(value2, offset);
+        offset += value2.length;
+      }
+    } else {
+      throw new Error("loadDataIntoHeap: type is not Uint8Array or Response");
+    }
+    return { pointer: heapPtr, size: heapSize };
+  } catch (error) {
+    if (heapPtr) {
+      module2._free(heapPtr);
+    }
+    throw error;
+  }
+}
+async function initializeFFL(resource, moduleOrPromise) {
+  console.debug("initializeFFL: Entrypoint, waiting for module to be ready.");
+  let resourceDescPtr;
+  function freeResDesc() {
+    if (resourceDescPtr) {
+      module2._free(resourceDescPtr);
+    }
+  }
+  const resourceType = FFLResourceType.HIGH;
+  let module2;
+  if (typeof moduleOrPromise === "function") {
+    moduleOrPromise = moduleOrPromise();
+  }
+  if (moduleOrPromise instanceof Promise) {
+    module2 = await moduleOrPromise;
+  } else {
+    module2 = moduleOrPromise;
+  }
+  if (!module2.calledRun && !module2.onRuntimeInitialized) {
+    await new Promise((resolve) => {
+      module2.onRuntimeInitialized = () => {
+        console.debug("initializeFFL: Emscripten runtime initialized, resolving.");
+        resolve(null);
+      };
+      console.debug(`initializeFFL: module.calledRun: ${module2.calledRun}, module.onRuntimeInitialized:
+${module2.onRuntimeInitialized}
+ // ^^ assigned and waiting.`);
+    });
+  } else {
+    console.debug("initializeFFL: Assuming module is ready.");
+  }
+  let resourceDesc = null;
+  try {
+    if (resource instanceof Promise) {
+      resource = await resource;
+    }
+    const { pointer: heapPtr, size: heapSize } = await _loadDataIntoHeap(resource, module2);
+    console.debug(`initializeFFL: Resource loaded into heap. Pointer: ${heapPtr}, Size: ${heapSize}`);
+    resourceDesc = { pData: [0, 0], size: [0, 0] };
+    resourceDesc.pData[resourceType] = heapPtr;
+    resourceDesc.size[resourceType] = heapSize;
+    const resourceDescData = FFLResourceDesc.pack(resourceDesc);
+    resourceDescPtr = module2._malloc(FFLResourceDesc.size);
+    module2.HEAPU8.set(resourceDescData, resourceDescPtr);
+    const result = module2._FFLInitRes(0, resourceDescPtr);
+    if (result === FFLResult.FILE_INVALID) {
+      throw new BrokenInitRes;
+    }
+    FFLResultException.handleResult(result, "FFLInitRes");
+    module2._FFLInitResGPUStep();
+    module2._FFLSetNormalIsSnorm8_8_8_8(true);
+    module2._FFLSetTextureFlipY(true);
+  } catch (error) {
+    _freeResourceDesc(resourceDesc, module2);
+    freeResDesc();
+    console.error("initializeFFL failed:", error);
+    throw error;
+  } finally {
+    freeResDesc();
+  }
+  return {
+    module: module2,
+    resourceDesc
+  };
+}
+function _freeResourceDesc(desc, module2) {
+  if (!desc || !desc.pData) {
+    return;
+  }
+  desc.pData.forEach((ptr, i) => {
+    if (ptr) {
+      module2._free(ptr);
+      desc.pData[i] = 0;
+    }
+  });
+}
+class CharModel {
+  constructor(ptr, module2, materialClass, texManager) {
+    this._module = module2;
+    this._data = null;
+    this._materialClass = materialClass;
+    this._materialTextureClass = materialClass;
+    this._textureManager = texManager;
+    this._ptr = ptr;
+    this.__ptr = ptr;
+    const charModelData = this._module.HEAPU8.subarray(ptr, ptr + FFLiCharModel.size);
+    this._model = FFLiCharModel.unpack(charModelData);
+    this._facelineTarget = null;
+    this._maskTargets = new Array(FFLExpression.MAX).fill(null);
+    this.expressions = [];
+    this.meshes = new Group;
+    this._addCharModelMeshes(module2);
+  }
+  _addCharModelMeshes(module2) {
+    if (!this.meshes) {
+      throw new Error("_addCharModelMeshes: this.meshes is null or undefined, was this CharModel disposed?");
+    }
+    for (let shapeType = 0;shapeType < FFLiShapeType.MAX; shapeType++) {
+      const drawParam = this._model.drawParam[shapeType];
+      const mesh = drawParamToMesh(drawParam, this._materialClass, module2, this._textureManager);
+      if (!mesh) {
+        continue;
+      }
+      mesh.renderOrder = drawParam.modulateParam.type;
+      switch (shapeType) {
+        case FFLiShapeType.OPA_FACELINE:
+          this._facelineMesh = mesh;
+          break;
+        case FFLiShapeType.XLU_MASK:
+          this._maskMesh = mesh;
+          break;
+      }
+      this.meshes.add(mesh);
+    }
+  }
+  _getTextureTempObjectPtr() {
+    return this._model.pTextureTempObject;
+  }
+  _getTextureTempObject() {
+    const ptr = this._getTextureTempObjectPtr();
+    return FFLiTextureTempObject.unpack(this._module.HEAPU8.subarray(ptr, ptr + FFLiTextureTempObject.size));
+  }
+  _getPartsTransform() {
+    const obj = this._model.partsTransform;
+    const newPartsTransform = {};
+    for (const key2 in obj) {
+      const vec = obj[key2];
+      if (vec.x === undefined) {
+        throw new Error;
+      }
+      newPartsTransform[key2] = new Vector3(vec.x, vec.y, vec.z);
+    }
+    return newPartsTransform;
+  }
+  _getFacelineColor() {
+    const mod2 = this._module;
+    const facelineColor = this._model.charInfo.faceline.color;
+    const colorPtr = mod2._malloc(FFLColor.size);
+    mod2._FFLGetFacelineColor(colorPtr, facelineColor);
+    const color = _getFFLColor3(_getFFLColor(colorPtr, mod2.HEAPF32));
+    mod2._free(colorPtr);
+    return color;
+  }
+  _getFavoriteColor() {
+    const mod2 = this._module;
+    const favoriteColor = this._model.charInfo.personal.favoriteColor;
+    const colorPtr = mod2._malloc(FFLColor.size);
+    mod2._FFLGetFavoriteColor(colorPtr, favoriteColor);
+    const color = _getFFLColor3(_getFFLColor(colorPtr, mod2.HEAPF32));
+    mod2._free(colorPtr);
+    return color;
+  }
+  _getCharInfoUint8Array() {
+    return FFLiCharInfo.pack(this._model.charInfo);
+  }
+  _getPartsTexturesPtr() {
+    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.maskTextures.offset + FFLiMaskTexturesTempObject.fields.partsTextures.offset;
+  }
+  _getFacelineTempObjectPtr() {
+    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.facelineTexture.offset;
+  }
+  _getMaskTempObjectPtr() {
+    return this._model.pTextureTempObject + FFLiTextureTempObject.fields.maskTextures.offset;
+  }
+  _getExpressionFlagPtr() {
+    return this._ptr + FFLiCharModel.fields.charModelDesc.offset + FFLCharModelDesc.fields.allExpressionFlag.offset;
+  }
+  _getBoundingBox() {
+    const bbox = this._model.boundingBox[this._model.modelType];
+    if (!(bbox.max.x === 0 && bbox.max.y === 0 && bbox.max.z === 0)) {
+      const min = new Vector3(bbox.min.x, bbox.min.y, bbox.min.z);
+      const max = new Vector3(bbox.max.x, bbox.max.y, bbox.max.z);
+      return new Box3(min, max);
+    }
+    const excludeFromBox = [FFLModulateType.SHAPE_MASK, FFLModulateType.SHAPE_GLASS];
+    const box = new Box3;
+    if (!this.meshes) {
+      throw new Error("_getBoundingBox: this.meshes is null.");
+    }
+    this.meshes.traverse((child) => {
+      if (!(child instanceof Mesh) || excludeFromBox.indexOf(child.geometry.userData.modulateType) !== -1) {
+        return;
+      }
+      box.expandByObject(child);
+    });
+    return box;
+  }
+  _getResolution() {
+    return this._model.charModelDesc.resolution & FFL_RESOLUTION_MASK;
+  }
+  _finalizeCharModel() {
+    if (!this._ptr) {
+      return;
+    }
+    this._module._FFLDeleteCharModel(this._ptr);
+    this._module._free(this._ptr);
+    this._ptr = 0;
+  }
+  disposeTargets() {
+    if (this._facelineTarget) {
+      console.debug(`Disposing target ${this._facelineTarget.texture.id} for faceline`);
+      this._facelineTarget.dispose();
+      this._facelineTarget = null;
+    }
+    this._maskTargets.forEach((target, i) => {
+      if (!target) {
+        return;
+      }
+      console.debug(`Disposing target ${target.texture.id} for mask ${i}`);
+      target.dispose();
+      this._maskTargets[i] = null;
+    });
+  }
+  dispose(disposeTargets = true) {
+    console.debug("CharModel.dispose: ptr =", this.__ptr);
+    this._finalizeCharModel();
+    if (this.meshes) {
+      this._facelineMesh = null;
+      this._maskMesh = null;
+      disposeMeshes(this.meshes);
+      this.meshes = null;
+    }
+    if (disposeTargets) {
+      this.disposeTargets();
+    }
+    if (this._textureManager) {
+      this._textureManager.dispose();
+      this._textureManager = null;
+    }
+  }
+  getStoreData() {
+    const charInfoData = this._getCharInfoUint8Array();
+    const mod2 = this._module;
+    const charInfoPtr = mod2._malloc(FFLiCharInfo.size);
+    const storeDataPtr = mod2._malloc(FFLStoreData_size);
+    mod2.HEAPU8.set(charInfoData, charInfoPtr);
+    const result = mod2._FFLpGetStoreDataFromCharInfo(storeDataPtr, charInfoPtr);
+    const storeData = mod2.HEAPU8.slice(storeDataPtr, storeDataPtr + FFLStoreData_size);
+    mod2._free(charInfoPtr);
+    mod2._free(storeDataPtr);
+    if (!result) {
+      throw new Error("getStoreData: call to FFLpGetStoreDataFromCharInfo returned false, CharInfo verification probably failed");
+    }
+    return storeData;
+  }
+  setExpression(expression) {
+    this._model.expression = expression;
+    const targ = this._maskTargets[expression];
+    if (!targ || !targ.texture) {
+      throw new ExpressionNotSet(expression);
+    }
+    const mesh = this._maskMesh;
+    if (!mesh || !(mesh instanceof Mesh)) {
+      if (expression === FFLExpression.BLANK_61 || expression === FFLExpression.BLANK_62) {
+        return;
+      }
+      throw new Error("setExpression: mask mesh does not exist, cannot set expression on it");
+    }
+    targ.texture._target = targ;
+    mesh.material.map = targ.texture;
+    mesh.material.needsUpdate = true;
+  }
+  getFaceline() {
+    if (this._facelineTarget) {
+      return this._facelineTarget;
+    }
+    return null;
+  }
+  getMask(expression = this.expression) {
+    if (this._maskTargets && this._maskTargets[expression]) {
+      return this._maskTargets[expression];
+    }
+    return null;
+  }
+  get expression() {
+    return this._model.expression;
+  }
+  get charInfo() {
+    return this._model.charInfo;
+  }
+  get facelineColor() {
+    if (!this._facelineColor) {
+      this._facelineColor = this._getFacelineColor();
+    }
+    return this._facelineColor;
+  }
+  get favoriteColor() {
+    if (!this._favoriteColor) {
+      this._favoriteColor = this._getFavoriteColor();
+    }
+    return this._favoriteColor;
+  }
+  get gender() {
+    return this._model.charInfo.personal.gender;
+  }
+  get partsTransform() {
+    if (!this._partsTransform) {
+      this._partsTransform = this._getPartsTransform();
+    }
+    return this._partsTransform;
+  }
+  get boundingBox() {
+    if (!this._boundingBox) {
+      this._boundingBox = this._getBoundingBox();
+    }
+    return this._boundingBox;
+  }
+  static BodyScaleMode = {
+    Apply: 0,
+    Limit: 1
+  };
+  getBodyScale(scaleMode = CharModel.BodyScaleMode.Apply) {
+    const build = this._model.charInfo.body.build;
+    const height2 = this._model.charInfo.body.height;
+    const bodyScale = new Vector3;
+    switch (scaleMode) {
+      case CharModel.BodyScaleMode.Apply: {
+        bodyScale.x = build * (height2 * 0.003671875 + 0.4) / 128 + height2 * 0.001796875 + 0.4;
+        bodyScale.y = height2 * 0.006015625 + 0.5;
+        break;
+      }
+      case CharModel.BodyScaleMode.Limit: {
+        const heightFactor = height2 / 128;
+        bodyScale.y = heightFactor * 0.55 + 0.6;
+        bodyScale.x = heightFactor * 0.3 + 0.6;
+        bodyScale.x = (heightFactor * 0.6 + 0.8 - bodyScale.x) * (build / 128) + bodyScale.x;
+        break;
+      }
+      default:
+        throw new Error(`getBodyScale: Unexpected value for scaleMode: ${scaleMode}`);
+    }
+    bodyScale.z = bodyScale.x;
+    return bodyScale;
+  }
+}
+var PantsColor = {
+  GrayNormal: 0,
+  BluePresent: 1,
+  RedRegular: 2,
+  GoldSpecial: 3
+};
+var pantsColors = {
+  [PantsColor.GrayNormal]: new Color(4212558),
+  [PantsColor.BluePresent]: new Color(2637946),
+  [PantsColor.RedRegular]: new Color(7348245),
+  [PantsColor.GoldSpecial]: new Color(12623920)
+};
+function _allocateModelSource(data2, module2) {
+  const bufferPtr = module2._malloc(FFLiCharInfo.size);
+  const modelSource = {
+    dataSource: FFLDataSource.DIRECT_POINTER,
+    pBuffer: bufferPtr,
+    index: 0
+  };
+  if (!(data2 instanceof Uint8Array)) {
+    try {
+      if (typeof data2 !== "object") {
+        throw new Error("_allocateModelSource: data passed in is not FFLiCharInfo object or Uint8Array");
+      }
+      data2 = FFLiCharInfo.pack(data2);
+    } catch (e) {
+      module2._free(bufferPtr);
+      throw e;
+    }
+  }
+  function setStudioData(src) {
+    const studio = StudioCharInfo.unpack(src);
+    const charInfo = convertStudioCharInfoToFFLiCharInfo(studio);
+    data2 = FFLiCharInfo.pack(charInfo);
+    module2.HEAPU8.set(data2, bufferPtr);
+  }
+  function callGetCharInfoFunc(data3, size, funcName) {
+    const dataPtr = module2._malloc(size);
+    module2.HEAPU8.set(data3, dataPtr);
+    const result = module2[funcName](bufferPtr, dataPtr);
+    module2._free(dataPtr);
+    if (!result) {
+      module2._free(bufferPtr);
+      throw new Error(`_allocateModelSource: call to ${funcName} returned false, CharInfo verification probably failed`);
+    }
+  }
+  switch (data2.length) {
+    case FFLStoreData_size: {
+      callGetCharInfoFunc(data2, FFLStoreData_size, "_FFLpGetCharInfoFromStoreData");
+      break;
+    }
+    case 74:
+    case 76: {
+      callGetCharInfoFunc(data2, 74, "_FFLpGetCharInfoFromMiiDataOfficialRFL");
+      break;
+    }
+    case FFLiCharInfo.size:
+      module2.HEAPU8.set(data2, bufferPtr);
+      break;
+    case StudioCharInfo.size + 1: {
+      data2 = studioURLObfuscationDecode(data2);
+      setStudioData(data2);
+      break;
+    }
+    case StudioCharInfo.size: {
+      setStudioData(data2);
+      break;
+    }
+    case 88:
+      throw new Error("_allocateModelSource: NX CharInfo is not supported.");
+    case 48:
+    case 68:
+      throw new Error("_allocateModelSource: NX CoreData/StoreData is not supported.");
+    case 92:
+    case 72:
+      throw new Error("_allocateModelSource: Please convert your FFLiMiiDataOfficial/FFLiMiiDataCore to FFLStoreData (add a checksum).");
+    default: {
+      module2._free(bufferPtr);
+      throw new Error(`_allocateModelSource: Unknown length for character data: ${data2.length}`);
+    }
+  }
+  return modelSource;
+}
+function verifyCharInfo(data2, module2, verifyName = false) {
+  let charInfoPtr = 0;
+  let charInfoAllocated = false;
+  if (typeof data2 === "number") {
+    charInfoPtr = data2;
+    charInfoAllocated = false;
+  } else {
+    charInfoAllocated = true;
+    charInfoPtr = module2._malloc(FFLiCharInfo.size);
+    module2.HEAPU8.set(data2, charInfoPtr);
+  }
+  const result = module2._FFLiVerifyCharInfoWithReason(charInfoPtr, verifyName);
+  if (charInfoAllocated) {
+    module2._free(charInfoPtr);
+  }
+  if (result !== 0) {
+    throw new FFLiVerifyReasonException(result);
+  }
+}
+function makeExpressionFlag(expressions) {
+  function checkRange(i) {
+    if (i >= FFLExpression.MAX) {
+      throw new Error(`makeExpressionFlag: input out of range: got ${i}, max: ${FFLExpression.MAX}`);
+    }
+  }
+  function warnIfChangesShapes(i) {
+    const expressionsDisablingNose = [49, 50, 51, 52, 61, 62];
+    const expressionsDisablingMask = [61, 62];
+    const prefix = `makeExpressionFlag > warnIfChangesShapes: An expression was enabled (${i}) that is meant to disable nose or mask shape for the entire CharModel, so it is only recommended to set this as a single expression rather than as one of multiple.`;
+    if (expressionsDisablingNose.indexOf(i) !== -1) {
+      console.warn(`${prefix} (nose shape)`);
+    }
+    if (expressionsDisablingMask.indexOf(i) !== -1) {
+      console.warn(`${prefix} (in this case, MASK SHAPE so there is supposed to be NO FACE)`);
+    }
+  }
+  const flags = new Uint32Array([0, 0, 0]);
+  if (typeof expressions === "number") {
+    expressions = [expressions];
+  } else if (!Array.isArray(expressions)) {
+    throw new Error("makeExpressionFlag: expected array or single number");
+  }
+  for (const index2 of expressions) {
+    checkRange(index2);
+    warnIfChangesShapes(index2);
+    const part = Math.floor(index2 / 32);
+    const bitIndex = index2 % 32;
+    flags[part] |= 1 << bitIndex;
+  }
+  return flags;
+}
+function createCharModel(data2, descOrExpFlag, materialClass, module2, verify = true) {
+  if (!module2 || !module2._malloc) {
+    throw new Error("createCharModel: module is null not initialized properly (cannot find ._malloc).");
+  }
+  if (!data2) {
+    throw new Error("createCharModel: data is null or undefined.");
+  }
+  const modelSourcePtr = module2._malloc(FFLCharModelSource.size);
+  const modelDescPtr = module2._malloc(FFLCharModelDesc.size);
+  const charModelPtr = module2._malloc(FFLiCharModel.size);
+  const modelSource = _allocateModelSource(data2, module2);
+  const charInfoPtr = modelSource.pBuffer;
+  const modelSourceBuffer = FFLCharModelSource.pack(modelSource);
+  module2.HEAPU8.set(modelSourceBuffer, modelSourcePtr);
+  const modelDesc = _descOrExpFlagToModelDesc(descOrExpFlag);
+  modelDesc.modelFlag |= FFLModelFlag.NEW_EXPRESSIONS;
+  const modelDescBuffer = FFLCharModelDesc.pack(modelDesc);
+  module2.HEAPU8.set(modelDescBuffer, modelDescPtr);
+  let textureManager = null;
+  try {
+    if (verify) {
+      verifyCharInfo(charInfoPtr, module2, false);
+    }
+    textureManager = new TextureManager(module2, false);
+    const result = module2._FFLInitCharModelCPUStepWithCallback(charModelPtr, modelSourcePtr, modelDescPtr, textureManager._textureCallbackPtr);
+    if (result === FFLResult.FILE_INVALID) {
+      throw new BrokenInitModel;
+    }
+    FFLResultException.handleResult(result, "FFLInitCharModelCPUStep");
+  } catch (error) {
+    if (textureManager) {
+      textureManager.dispose();
+    }
+    module2._free(charModelPtr);
+    throw error;
+  } finally {
+    module2._free(modelSourcePtr);
+    module2._free(modelDescPtr);
+    module2._free(charInfoPtr);
+    if (textureManager) {
+      textureManager.disposeCallback();
+    }
+  }
+  const charModel = new CharModel(charModelPtr, module2, materialClass, textureManager);
+  charModel._data = data2;
+  console.debug(`createCharModel: Initialized for "${charModel._model.charInfo.personal.name}", ptr =`, charModelPtr);
+  return charModel;
+}
+function _descOrExpFlagToModelDesc(descOrExpFlag, defaultDesc = FFLCharModelDescDefault) {
+  if (!descOrExpFlag && typeof descOrExpFlag !== "number") {
+    return defaultDesc;
+  }
+  if (typeof descOrExpFlag === "number" || Array.isArray(descOrExpFlag)) {
+    descOrExpFlag = makeExpressionFlag(descOrExpFlag);
+  }
+  let newModelDesc = Object.assign({}, defaultDesc);
+  if (descOrExpFlag instanceof Uint32Array) {
+    newModelDesc.allExpressionFlag = descOrExpFlag;
+  } else if (typeof descOrExpFlag === "object") {
+    newModelDesc = descOrExpFlag;
+  } else {
+    throw new Error("_descOrExpFlagToModelDesc: Unexpected type for descOrExpFlag");
+  }
+  return newModelDesc;
+}
+function matSupportsFFL(material) {
+  return "modulateMode" in material.prototype;
+}
+function drawParamToMesh(drawParam, materialClass, module2, texManager) {
+  if (!drawParam) {
+    throw new Error("drawParamToMesh: drawParam may be null.");
+  }
+  if (!texManager) {
+    throw new Error("drawParamToMesh: Passed in TextureManager is null or undefined, is it constructed?");
+  }
+  if (typeof materialClass !== "function") {
+    throw new Error("drawParamToMesh: materialClass is unexpectedly not a function.");
+  }
+  if (drawParam.primitiveParam.indexCount === 0) {
+    return null;
+  }
+  const geometry = _bindDrawParamGeometry(drawParam, module2);
+  const cullModeToThreeSide = {
+    [FFLCullMode.NONE]: DoubleSide,
+    [FFLCullMode.BACK]: FrontSide,
+    [FFLCullMode.FRONT]: BackSide,
+    [FFLCullMode.MAX]: DoubleSide
+  };
+  const side = cullModeToThreeSide[drawParam.cullMode];
+  if (side === undefined) {
+    throw new Error(`drawParamToMesh: Unexpected value for FFLCullMode: ${drawParam.cullMode}`);
+  }
+  const texture = _getTextureFromModulateParam(drawParam.modulateParam, texManager);
+  const isFFLMaterial = matSupportsFFL(materialClass);
+  const params = _applyModulateParam(drawParam.modulateParam, module2, isFFLMaterial);
+  const materialParam = {
+    side,
+    map: texture,
+    ...params
+  };
+  if (geometry.attributes.tangent === undefined && "useSpecularModeBlinn" in materialClass.prototype) {
+    materialParam.useSpecularModeBlinn = true;
+  }
+  const material = new materialClass(materialParam);
+  const mesh = new Mesh(geometry, material);
+  if (drawParam.primitiveParam.pAdjustMatrix !== 0) {
+    _applyAdjustMatrixToMesh(drawParam.primitiveParam.pAdjustMatrix, mesh, module2.HEAPF32);
+  }
+  if (mesh.geometry.userData) {
+    mesh.geometry.userData.modulateMode = drawParam.modulateParam.mode;
+    mesh.geometry.userData.modulateType = drawParam.modulateParam.type;
+    mesh.geometry.userData.modulateColor = params.color instanceof Color ? [params.color.r, params.color.g, params.color.b, 1] : [1, 1, 1, 1];
+    mesh.geometry.userData.cullMode = drawParam.cullMode;
+  }
+  return mesh;
+}
+function _bindDrawParamGeometry(drawParam, module2) {
+  function unexpectedStride(typeStr, stride) {
+    throw new Error(`_bindDrawParamGeometry: Unexpected stride for attribute ${typeStr}: ${stride}`);
+  }
+  const attributes = drawParam.attributeBufferParam.attributeBuffers;
+  const positionBuffer = attributes[FFLAttributeBufferType.POSITION];
+  if (positionBuffer.size === 0) {
+    throw new Error("_bindDrawParamGeometry: Position buffer must not have size of 0");
+  }
+  const vertexCount = positionBuffer.size / positionBuffer.stride;
+  const geometry = new BufferGeometry;
+  const indexPtr = drawParam.primitiveParam.pIndexBuffer / 2;
+  const indexCount = drawParam.primitiveParam.indexCount;
+  const indices = module2.HEAPU16.slice(indexPtr, indexPtr + indexCount);
+  geometry.setIndex(new Uint16BufferAttribute(indices, 1));
+  for (const typeStr in attributes) {
+    const buffer = attributes[typeStr];
+    const type = parseInt(typeStr);
+    if (buffer.size === 0) {
+      continue;
+    }
+    switch (type) {
+      case FFLAttributeBufferType.POSITION: {
+        if (buffer.stride === 16) {
+          const ptr = buffer.ptr / 4;
+          const data2 = module2.HEAPF32.slice(ptr, ptr + vertexCount * 4);
+          const interleavedBuffer = new InterleavedBuffer(data2, 4);
+          geometry.setAttribute("position", new InterleavedBufferAttribute(interleavedBuffer, 3, 0));
+        } else if (buffer.stride === 6) {
+          const ptr = buffer.ptr / 2;
+          const data2 = module2.HEAPU16.slice(ptr, ptr + vertexCount * 3);
+          geometry.setAttribute("position", new Float16BufferAttribute(data2, 3));
+        } else {
+          unexpectedStride(typeStr, buffer.stride);
+        }
+        break;
+      }
+      case FFLAttributeBufferType.NORMAL: {
+        const data2 = module2.HEAP8.slice(buffer.ptr, buffer.ptr + buffer.size);
+        geometry.setAttribute("normal", new Int8BufferAttribute(data2, buffer.stride, true));
+        break;
+      }
+      case FFLAttributeBufferType.TANGENT: {
+        const data2 = module2.HEAP8.slice(buffer.ptr, buffer.ptr + buffer.size);
+        geometry.setAttribute("tangent", new Int8BufferAttribute(data2, buffer.stride, true));
+        break;
+      }
+      case FFLAttributeBufferType.TEXCOORD: {
+        if (buffer.stride === 8) {
+          const ptr = buffer.ptr / 4;
+          const data2 = module2.HEAPF32.slice(ptr, ptr + vertexCount * 2);
+          geometry.setAttribute("uv", new Float32BufferAttribute(data2, 2));
+        } else if (buffer.stride === 4) {
+          const ptr = buffer.ptr / 2;
+          const data2 = module2.HEAPU16.slice(ptr, ptr + vertexCount * 2);
+          geometry.setAttribute("uv", new Float16BufferAttribute(data2, 2));
+        } else {
+          unexpectedStride(typeStr, buffer.stride);
+        }
+        break;
+      }
+      case FFLAttributeBufferType.COLOR: {
+        if (buffer.stride === 0) {
+          break;
+        }
+        const data2 = module2.HEAPU8.slice(buffer.ptr, buffer.ptr + buffer.size);
+        geometry.setAttribute("_color", new Uint8BufferAttribute(data2, buffer.stride, true));
+        break;
+      }
+    }
+  }
+  return geometry;
+}
+function _getTextureFromModulateParam(modulateParam, textureManager) {
+  if (!modulateParam.pTexture2D || modulateParam.pTexture2D === 1) {
+    return null;
+  }
+  const texturePtr = modulateParam.pTexture2D;
+  const texture = textureManager.get(texturePtr);
+  if (!texture) {
+    throw new Error(`_getTextureFromModulateParam: Texture not found for ${texturePtr}.`);
+  }
+  const applyMirrorTypes = [
+    FFLModulateType.SHAPE_FACELINE,
+    FFLModulateType.SHAPE_CAP,
+    FFLModulateType.SHAPE_GLASS
+  ];
+  if (applyMirrorTypes.indexOf(modulateParam.type) !== -1) {
+    texture.wrapS = MirroredRepeatWrapping;
+    texture.wrapT = MirroredRepeatWrapping;
+    texture.needsUpdate = true;
+  }
+  return texture;
+}
+function _getBlendOptionsFromModulateType(modulateType, modulateMode) {
+  if (modulateMode !== 0 && modulateType >= FFLModulateType.SHAPE_MAX && modulateType <= FFLModulateType.MOLE) {
+    return {
+      blending: CustomBlending,
+      blendSrc: OneMinusDstAlphaFactor,
+      blendSrcAlpha: SrcAlphaFactor,
+      blendDst: DstAlphaFactor
+    };
+  } else if (modulateMode !== 0 && modulateType >= FFLModulateType.FACE_MAKE && modulateType <= FFLModulateType.FILL) {
+    return {
+      blending: CustomBlending,
+      blendSrc: SrcAlphaFactor,
+      blendDst: OneMinusSrcAlphaFactor,
+      blendSrcAlpha: OneFactor,
+      blendDstAlpha: OneFactor
+    };
+  }
+  return {};
+}
+function _applyModulateParam(modulateParam, module2, forFFLMaterial = true) {
+  let color = null;
+  let color4 = null;
+  const f32 = module2.HEAPF32;
+  if (modulateParam.pColorG !== 0 && modulateParam.pColorB !== 0) {
+    color = [
+      _getFFLColor3(_getFFLColor(modulateParam.pColorR, f32)),
+      _getFFLColor3(_getFFLColor(modulateParam.pColorG, f32)),
+      _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32))
+    ];
+    if (self.eyeScleraHack && modulateParam.type === 12) {
+      color = [
+        _getFFLColor3(_getFFLColor(modulateParam.pColorR, f32)),
+        _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32)),
+        _getFFLColor3(_getFFLColor(modulateParam.pColorB, f32))
+      ];
+    }
+  } else if (modulateParam.pColorR !== 0) {
+    color4 = _getFFLColor(modulateParam.pColorR, f32);
+    color = _getFFLColor3(color4);
+  }
+  const opacity = color4 ? color4.a : 1;
+  const transparent = modulateParam.type >= FFLModulateType.SHAPE_MASK;
+  const lightEnable = !(modulateParam.type >= FFLModulateType.SHAPE_MAX && modulateParam.mode !== FFLModulateMode.CONSTANT);
+  const modulateModeType = forFFLMaterial ? {
+    modulateMode: modulateParam.mode,
+    modulateType: modulateParam.type
+  } : {};
+  const param = Object.assign(modulateModeType, {
+    color,
+    opacity,
+    transparent,
+    depthWrite: !transparent,
+    ..._getBlendOptionsFromModulateType(modulateParam.type, modulateParam.mode)
+  });
+  if (!lightEnable) {
+    param.lightEnable = lightEnable;
+  }
+  return param;
+}
+function _getFFLColor(colorPtr, heapf32) {
+  if (!colorPtr) {
+    throw new Error("_getFFLColor: Received null pointer");
+  }
+  const colorData = heapf32.subarray(colorPtr / 4, colorPtr / 4 + 4);
+  return { r: colorData[0], g: colorData[1], b: colorData[2], a: colorData[3] };
+}
+function _getFFLColor3(color) {
+  return new Color(color.r, color.g, color.b);
+}
+function _applyAdjustMatrixToMesh(pMtx, mesh, heapf32) {
+  const ptr = pMtx / 4;
+  const m = heapf32.slice(ptr, ptr + 48 / 4);
+  function matrixFromRowMajor3x4(m2) {
+    const matrix2 = new Matrix4;
+    matrix2.set(m2[0], m2[4], m2[8], m2[3], m2[1], m2[5], m2[9], m2[7], m2[2], m2[6], m2[10], m2[11], 0, 0, 0, 1);
+    return matrix2;
+  }
+  const matrix = matrixFromRowMajor3x4(m);
+  mesh.scale.setFromMatrixScale(matrix);
+  mesh.position.setFromMatrixPosition(matrix);
+  if (matrix.elements[0] === -1) {
+    mesh.scale.x = -1;
+  }
+}
+function initCharModelTextures(charModel, renderer2, materialClass = charModel._materialClass) {
+  if (renderer2.render === undefined) {
+    throw new Error("initCharModelTextures: renderer is an unexpected type (cannot find .render).");
+  }
+  const module2 = charModel._module;
+  charModel._materialTextureClass = materialClass;
+  const textureTempObject = charModel._getTextureTempObject();
+  charModel.expressions = textureTempObject.maskTextures.pRawMaskDrawParam.map((val2, idx) => val2 !== 0 ? idx : -1).filter((i) => i !== -1);
+  _drawFacelineTexture(charModel, textureTempObject, renderer2, module2, materialClass);
+  const clearAlpha = renderer2.getClearAlpha();
+  clearAlpha !== 0 && renderer2.setClearAlpha(0);
+  _drawMaskTextures(charModel, textureTempObject, renderer2, module2, materialClass);
+  charModel._finalizeCharModel();
+  charModel.setExpression(charModel.expression);
+  clearAlpha !== 0 && renderer2.setClearAlpha(clearAlpha);
+  if (!matSupportsFFL(charModel._materialClass)) {
+    if (!matSupportsFFL(charModel._materialTextureClass)) {
+      console.warn("initCharModelTextures: charModel._materialClass does not support modulateMode (no getter), but the _materialTextureClass is either the same or also does not support modulateMode so textures will look wrong");
+    } else {
+      convertModelTexturesToRGBA(charModel, renderer2, charModel._materialTextureClass);
+    }
+  }
+}
+function _drawFacelineTexture(charModel, textureTempObject, renderer2, module2, materialClass) {
+  const facelineTempObjectPtr = charModel._getFacelineTempObjectPtr();
+  module2._FFLiInvalidateTempObjectFacelineTexture(facelineTempObjectPtr);
+  const drawParams = [
+    textureTempObject.facelineTexture.drawParamFaceMake,
+    textureTempObject.facelineTexture.drawParamFaceLine,
+    textureTempObject.facelineTexture.drawParamFaceBeard
+  ].filter((dp) => dp && dp.modulateParam.pTexture2D !== 0);
+  if (drawParams.length === 0) {
+    console.debug("_drawFacelineTexture: Skipping faceline texture.");
+    return;
+  }
+  const bgColor = charModel.facelineColor;
+  const { scene: offscreenScene } = createSceneFromDrawParams(drawParams, bgColor, materialClass, charModel._module, charModel._textureManager);
+  const width2 = charModel._getResolution() / 2;
+  const height2 = charModel._getResolution();
+  const options = {
+    depthBuffer: false,
+    stencilBuffer: false,
+    wrapS: MirroredRepeatWrapping,
+    wrapT: MirroredRepeatWrapping
+  };
+  const target = createAndRenderToTarget(offscreenScene, getIdentCamera(), renderer2, width2, height2, options);
+  console.debug(`Creating target ${target.texture.id} for faceline`);
+  _setFaceline(charModel, target);
+  module2._FFLiDeleteTempObjectFacelineTexture(facelineTempObjectPtr, charModel._ptr, charModel._model.charModelDesc.resourceType);
+  disposeMeshes(offscreenScene);
+}
+function _drawMaskTextures(charModel, textureTempObject, renderer2, module2, materialClass) {
+  const maskTempObjectPtr = charModel._getMaskTempObjectPtr();
+  const expressionFlagPtr = charModel._getExpressionFlagPtr();
+  const scenes = [];
+  for (let i = 0;i < charModel._model.maskTextures.pRenderTextures.length; i++) {
+    if (charModel._model.maskTextures.pRenderTextures[i] === 0) {
+      continue;
+    }
+    const rawMaskDrawParamPtr = textureTempObject.maskTextures.pRawMaskDrawParam[i];
+    const rawMaskDrawParam = FFLiRawMaskDrawParam.unpack(module2.HEAPU8.subarray(rawMaskDrawParamPtr, rawMaskDrawParamPtr + FFLiRawMaskDrawParam.size));
+    module2._FFLiInvalidateRawMask(rawMaskDrawParamPtr);
+    const { target, scene } = _drawMaskTexture(charModel, rawMaskDrawParam, renderer2, module2, materialClass);
+    console.debug(`Creating target ${target.texture.id} for mask ${i}`);
+    charModel._maskTargets[i] = target;
+    scenes.push(scene);
+  }
+  scenes.forEach((scene) => {
+    disposeMeshes(scene);
+  });
+  module2._FFLiDeleteTempObjectMaskTextures(maskTempObjectPtr, expressionFlagPtr, charModel._model.charModelDesc.resourceType);
+  module2._FFLiDeleteTextureTempObject(charModel._ptr);
+}
+function _drawMaskTexture(charModel, rawMaskParam, renderer2, module2, materialClass) {
+  const drawParams = [
+    rawMaskParam.drawParamRawMaskPartsMustache[0],
+    rawMaskParam.drawParamRawMaskPartsMustache[1],
+    rawMaskParam.drawParamRawMaskPartsMouth,
+    rawMaskParam.drawParamRawMaskPartsEyebrow[0],
+    rawMaskParam.drawParamRawMaskPartsEyebrow[1],
+    rawMaskParam.drawParamRawMaskPartsEye[0],
+    rawMaskParam.drawParamRawMaskPartsEye[1],
+    rawMaskParam.drawParamRawMaskPartsMole
+  ].filter((dp) => dp && dp.primitiveParam.indexCount !== 0);
+  if (drawParams.length === 0) {
+    throw new Error("_drawMaskTexture: All DrawParams are empty.");
+  }
+  const options = {
+    depthBuffer: false,
+    stencilBuffer: false
+  };
+  const { scene: offscreenScene } = createSceneFromDrawParams(drawParams, null, materialClass, module2, charModel._textureManager);
+  const width2 = charModel._getResolution();
+  const target = createAndRenderToTarget(offscreenScene, getIdentCamera(), renderer2, width2, width2, options);
+  return { target, scene: offscreenScene };
+}
+function _setFaceline(charModel, target) {
+  if (!target || !target.texture) {
+    throw new Error("setFaceline: passed in RenderTarget is invalid");
+  }
+  charModel._facelineTarget = target;
+  const mesh = charModel._facelineMesh;
+  if (!mesh || !(mesh instanceof Mesh)) {
+    throw new Error("setFaceline: faceline shape does not exist");
+  }
+  target.texture._target = target;
+  mesh.material.map = target.texture;
+  mesh.material.needsUpdate = true;
+}
+function _texDrawRGBATarget(renderer2, material, userData, materialTextureClass) {
+  const plane = new PlaneGeometry(2, 2);
+  const scene = new Scene;
+  const bgClearRGBMesh = new Mesh(plane, new MeshBasicMaterial({
+    color: material.color,
+    transparent: true,
+    opacity: 0,
+    blending: NoBlending
+  }));
+  scene.add(bgClearRGBMesh);
+  if (!material.map) {
+    throw new Error("_texDrawRGBATarget: material.map is null or undefined");
+  }
+  const tex = material.map;
+  const texMat = new materialTextureClass({
+    map: tex,
+    modulateMode: userData.modulateMode,
+    color: material.color,
+    lightEnable: false
+  });
+  texMat.blending = NoBlending;
+  texMat.transparent = true;
+  const textureMesh = new Mesh(plane, texMat);
+  scene.add(textureMesh);
+  const target = createAndRenderToTarget(scene, getIdentCamera(false), renderer2, tex.image.width, tex.image.height, {
+    wrapS: tex.wrapS,
+    wrapT: tex.wrapT,
+    depthBuffer: false,
+    stencilBuffer: false
+  });
+  target.texture._target = target;
+  material.map.dispose();
+  material.map = target.texture;
+  material.color = new Color(1, 1, 1);
+  userData.modulateMode = 1;
+  return target;
+}
+function convertModelTexturesToRGBA(charModel, renderer2, materialTextureClass) {
+  const convertTextureForTypes = [
+    FFLModulateType.SHAPE_CAP,
+    FFLModulateType.SHAPE_NOSELINE,
+    FFLModulateType.SHAPE_GLASS
+  ];
+  if (!charModel.meshes) {
+    throw new Error("convertModelTexturesToRGBA: charModel.meshes is null.");
+  }
+  charModel.meshes.traverse((mesh) => {
+    if (!(mesh instanceof Mesh) || !mesh.geometry.userData.modulateType || !mesh.material.map || convertTextureForTypes.indexOf(mesh.geometry.userData.modulateType) === -1) {
+      return;
+    }
+    const target = _texDrawRGBATarget(renderer2, mesh.material, mesh.geometry.userData, materialTextureClass);
+    charModel._maskTargets.push(target);
+  });
+}
+function createSceneFromDrawParams(drawParams, bgColor, ...drawParamArgs) {
+  const scene = new Scene;
+  scene.background = bgColor || null;
+  const meshes = [];
+  drawParams.forEach((param) => {
+    const mesh = drawParamToMesh(param, ...drawParamArgs);
+    if (mesh) {
+      scene.add(mesh);
+      meshes.push(mesh);
+    }
+  });
+  return { scene, meshes };
+}
+function getIdentCamera(flipY = false) {
+  const camera = new OrthographicCamera(-1, 1, flipY ? -1 : 1, flipY ? 1 : -1, 0.1, 10);
+  camera.position.z = 1;
+  return camera;
+}
+function createAndRenderToTarget(scene, camera, renderer2, width2, height2, targetOptions = {}) {
+  const options = {
+    minFilter: LinearFilter,
+    magFilter: LinearFilter,
+    ...targetOptions
+  };
+  const renderTarget = renderer2["isWebGPURenderer"] === undefined ? new WebGLRenderTarget(width2, height2, options) : new RenderTarget(width2, height2, options);
+  const prevTarget = renderer2.getRenderTarget();
+  renderer2.setRenderTarget(renderTarget);
+  renderer2.render(scene, camera);
+  renderer2.setRenderTarget(prevTarget);
+  return renderTarget;
+}
+function disposeMeshes(group, scene) {
+  function disposeMaterial(material) {
+    if (material.map) {
+      material.map.dispose();
+    }
+    material.dispose();
+  }
+  group.traverse((child) => {
+    if (!(child instanceof Mesh)) {
+      return;
+    }
+    if (child.geometry) {
+      child.geometry.dispose();
+    }
+    if (child.material) {
+      Array.isArray(child.material) ? child.material.forEach((material) => {
+        disposeMaterial(material);
+      }) : disposeMaterial(child.material);
+    }
+  });
+  if (scene && scene instanceof Scene) {
+    scene.remove(group);
+  }
+  group.children = [];
+}
+var StudioCharInfo = _.struct([
+  _.uint8("beardColor"),
+  _.uint8("beardType"),
+  _.uint8("build"),
+  _.uint8("eyeAspect"),
+  _.uint8("eyeColor"),
+  _.uint8("eyeRotate"),
+  _.uint8("eyeScale"),
+  _.uint8("eyeType"),
+  _.uint8("eyeX"),
+  _.uint8("eyeY"),
+  _.uint8("eyebrowAspect"),
+  _.uint8("eyebrowColor"),
+  _.uint8("eyebrowRotate"),
+  _.uint8("eyebrowScale"),
+  _.uint8("eyebrowType"),
+  _.uint8("eyebrowX"),
+  _.uint8("eyebrowY"),
+  _.uint8("facelineColor"),
+  _.uint8("facelineMake"),
+  _.uint8("facelineType"),
+  _.uint8("facelineWrinkle"),
+  _.uint8("favoriteColor"),
+  _.uint8("gender"),
+  _.uint8("glassColor"),
+  _.uint8("glassScale"),
+  _.uint8("glassType"),
+  _.uint8("glassY"),
+  _.uint8("hairColor"),
+  _.uint8("hairFlip"),
+  _.uint8("hairType"),
+  _.uint8("height"),
+  _.uint8("moleScale"),
+  _.uint8("moleType"),
+  _.uint8("moleX"),
+  _.uint8("moleY"),
+  _.uint8("mouthAspect"),
+  _.uint8("mouthColor"),
+  _.uint8("mouthScale"),
+  _.uint8("mouthType"),
+  _.uint8("mouthY"),
+  _.uint8("mustacheScale"),
+  _.uint8("mustacheType"),
+  _.uint8("mustacheY"),
+  _.uint8("noseScale"),
+  _.uint8("noseType"),
+  _.uint8("noseY")
+]);
+function convertStudioCharInfoToFFLiCharInfo(src) {
+  return {
+    miiVersion: 0,
+    faceline: {
+      type: src.facelineType,
+      color: src.facelineColor,
+      texture: src.facelineWrinkle,
+      make: src.facelineMake
+    },
+    hair: {
+      type: src.hairType,
+      color: commonColorMask(src.hairColor),
+      flip: src.hairFlip
+    },
+    eye: {
+      type: src.eyeType,
+      color: commonColorMask(src.eyeColor),
+      scale: src.eyeScale,
+      aspect: src.eyeAspect,
+      rotate: src.eyeRotate,
+      x: src.eyeX,
+      y: src.eyeY
+    },
+    eyebrow: {
+      type: src.eyebrowType,
+      color: commonColorMask(src.eyebrowColor),
+      scale: src.eyebrowScale,
+      aspect: src.eyebrowAspect,
+      rotate: src.eyebrowRotate,
+      x: src.eyebrowX,
+      y: src.eyebrowY
+    },
+    nose: {
+      type: src.noseType,
+      scale: src.noseScale,
+      y: src.noseY
+    },
+    mouth: {
+      type: src.mouthType,
+      color: commonColorMask(src.mouthColor),
+      scale: src.mouthScale,
+      aspect: src.mouthAspect,
+      y: src.mouthY
+    },
+    beard: {
+      mustache: src.mustacheType,
+      type: src.beardType,
+      color: commonColorMask(src.beardColor),
+      scale: src.mustacheScale,
+      y: src.mustacheY
+    },
+    glass: {
+      type: src.glassType,
+      color: commonColorMask(src.glassColor),
+      scale: src.glassScale,
+      y: src.glassY
+    },
+    mole: {
+      type: src.moleType,
+      scale: src.moleScale,
+      x: src.moleX,
+      y: src.moleY
+    },
+    body: {
+      height: src.height,
+      build: src.build
+    },
+    personal: {
+      name: "",
+      creator: "",
+      gender: src.gender,
+      birthMonth: 0,
+      birthDay: 0,
+      favoriteColor: src.favoriteColor,
+      favorite: 0,
+      copyable: 0,
+      ngWord: 0,
+      localonly: 0,
+      regionMove: 0,
+      fontRegion: 0,
+      roomIndex: 0,
+      positionInRoom: 0,
+      birthPlatform: 3
+    },
+    createID: {
+      data: new Array(10).fill(0)
+    },
+    padding_0: 0,
+    authorType: 0,
+    authorID: new Array(8).fill(0)
+  };
+}
+function studioURLObfuscationDecode(data2) {
+  const decodedData = new Uint8Array(data2);
+  const random2 = decodedData[0];
+  let previous = random2;
+  for (let i = 1;i < 48; i++) {
+    const encodedByte = decodedData[i];
+    const original = (encodedByte - 7 + 256) % 256;
+    decodedData[i - 1] = original ^ previous;
+    previous = encodedByte;
+  }
+  return decodedData.slice(0, StudioCharInfo.size);
+}
+function stripSpaces(str) {
+  return str.replace(/\s+/g, "");
+}
+function hexToUint8Array(hex) {
+  const match = hex.match(/.{1,2}/g);
+  const arr = (match ? match : []).map(function(byte) {
+    return parseInt(byte, 16);
+  });
+  return new Uint8Array(arr);
+}
+function base64ToUint8Array(base64) {
+  const normalizedBase64 = base64.replace(/-/g, "+").replace(/_/g, "/");
+  function padBase64(str) {
+    while (str.length % 4 !== 0) {
+      str += "=";
+    }
+    return str;
+  }
+  const paddedBase64 = padBase64(normalizedBase64);
+  const binaryString = atob(paddedBase64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0;i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+function parseHexOrB64ToUint8Array(text2) {
+  let inputData;
+  const textData = stripSpaces(text2);
+  if (/^[0-9a-fA-F]+$/.test(textData)) {
+    inputData = hexToUint8Array(textData);
+  } else {
+    inputData = base64ToUint8Array(textData);
+  }
+  return inputData;
+}
+
+// src/constants/BodyShaderTypes.ts
+var BodyType;
+((BodyType2) => {
+  BodyType2["WiiU"] = "wiiu";
+  BodyType2["Switch"] = "switch";
+  BodyType2["Miitomo"] = "miitomo";
+  BodyType2["StreetPass"] = "streetpass";
+})(BodyType ||= {});
+var ShaderType;
+((ShaderType2) => {
+  ShaderType2["WiiU"] = "wiiu";
+  ShaderType2["Switch"] = "switch";
+  ShaderType2["LightDisabled"] = "lightDisabled";
+  ShaderType2["Miitomo"] = "miitomo";
+  ShaderType2["MiitomoBasic"] = "miitomo_basic";
+  ShaderType2["WiiUBlinn"] = "wiiu_blinn";
+  ShaderType2["WiiUFFLIconWithBody"] = "wiiu_ffliconwithbody";
+  ShaderType2["WiiUToon"] = "wiiu_toon";
+  ShaderType2["ThreeToon"] = "three_toon";
+  ShaderType2["ThreePhong"] = "three_phong";
+})(ShaderType ||= {});
+function adjustShaderQuery(params, shader) {
+  switch (shader) {
+    case "wiiu" /* WiiU */:
+    case "switch" /* Switch */:
+    case "miitomo" /* Miitomo */:
+      params.set("shaderType", shader);
+      break;
+    case "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */:
+      params.set("shaderType", "ffliconwithbody");
+      break;
+    case "wiiu_toon" /* WiiUToon */:
+      params.set("shaderType", "wiiu");
+      break;
+    case "wiiu_blinn" /* WiiUBlinn */:
+      params.set("shaderType", "wiiu_blinn");
+      break;
+    case "lightDisabled" /* LightDisabled */:
+      params.set("shaderType", "wiiu");
+      params.set("lightEnable", "0");
+      break;
+    default:
+      console.warn(`unknown shader type: ${shader}`);
+  }
+}
+
+// src/external/ffl.js/FFLShaderMaterial.js
+var THREE3 = _THREE();
+var _FFLShader_vert = `
+// 頂点シェーダーに入力される attribute 変数
+//attribute vec4 position;       //!< 入力: 位置情報
+//attribute vec2 uv;             //!< 入力: テクスチャー座標
+//attribute vec3 normal;         //!< 入力: 法線ベクトル
+// All provided by three.js ^^
+
+// vertex color is not actually the color of the shape, as such
+// it is a custom attribute _COLOR in the glTF
+
+attribute vec4 _color;           //!< 入力: 頂点の色
+attribute vec3 tangent;          //!< 入力: 異方位
+
+// フラグメントシェーダーへの入力
+varying   vec4 v_color;          //!< 出力: 頂点の色
+varying   vec4 v_position;       //!< 出力: 位置情報
+varying   vec3 v_normal;         //!< 出力: 法線ベクトル
+varying   vec3 v_tangent;        //!< 出力: 異方位
+varying   vec2 v_texCoord;       //!< 出力: テクスチャー座標
+
+// ユニフォーム
+//uniform mat3 normalMatrix;     //!< ユニフォーム: モデルの法線用行列
+//uniform mat4 modelViewMatrix;  //!< ユニフォーム: プロジェクション行列
+//uniform mat4 projectionMatrix; //!< ユニフォーム: モデル行列
+// All provided by three.js ^^
+
+// skinning_pars_vertex.glsl.js
+#ifdef USE_SKINNING
+    uniform mat4 bindMatrix;
+    uniform mat4 bindMatrixInverse;
+    uniform highp sampler2D boneTexture;
+    mat4 getBoneMatrix( const in float i ) {
+        int size = textureSize( boneTexture, 0 ).x;
+        int j = int( i ) * 4;
+        int x = j % size;
+        int y = j / size;
+        vec4 v1 = texelFetch( boneTexture, ivec2( x, y ), 0 );
+        vec4 v2 = texelFetch( boneTexture, ivec2( x + 1, y ), 0 );
+        vec4 v3 = texelFetch( boneTexture, ivec2( x + 2, y ), 0 );
+        vec4 v4 = texelFetch( boneTexture, ivec2( x + 3, y ), 0 );
+        return mat4( v1, v2, v3, v4 );
+    }
+#endif
+
+void main()
+{
+
+    // begin_vertex.glsl.js
+    vec3 transformed = vec3( position );
+// skinbase_vertex.glsl.js
+#ifdef USE_SKINNING
+    mat4 boneMatX = getBoneMatrix( skinIndex.x );
+    mat4 boneMatY = getBoneMatrix( skinIndex.y );
+    mat4 boneMatZ = getBoneMatrix( skinIndex.z );
+    mat4 boneMatW = getBoneMatrix( skinIndex.w );
+    // skinning_vertex.glsl.js
+    vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );
+    vec4 skinned = vec4( 0.0 );
+    skinned += boneMatX * skinVertex * skinWeight.x;
+    skinned += boneMatY * skinVertex * skinWeight.y;
+    skinned += boneMatZ * skinVertex * skinWeight.z;
+    skinned += boneMatW * skinVertex * skinWeight.w;
+    transformed = ( bindMatrixInverse * skinned ).xyz;
+#endif
+
+//#ifdef FFL_COORDINATE_MODE_NORMAL
+    // 頂点座標を変換
+    v_position = modelViewMatrix * vec4(transformed, 1.0);
+    gl_Position =  projectionMatrix * v_position;
+
+    vec3 objectNormal = normal;
+    vec3 objectTangent = tangent.xyz;
+// skinnormal_vertex.glsl.js
+#ifdef USE_SKINNING
+    mat4 skinMatrix = mat4( 0.0 );
+    skinMatrix += skinWeight.x * boneMatX;
+    skinMatrix += skinWeight.y * boneMatY;
+    skinMatrix += skinWeight.z * boneMatZ;
+    skinMatrix += skinWeight.w * boneMatW;
+    skinMatrix = bindMatrixInverse * skinMatrix * bindMatrix;
+
+    objectNormal = vec4( skinMatrix * vec4( objectNormal, 0.0 ) ).xyz;
+    objectTangent = vec4( skinMatrix * vec4( objectTangent, 0.0 ) ).xyz;
+
+#endif
+
+    // 法線も変換
+    //v_normal = mat3(inverse(u_mv)) * a_normal;
+    v_normal = normalize(normalMatrix * objectNormal);
+//#elif defined(FFL_COORDINATE_MODE_NONE)
+//    // 頂点座標を変換
+//    gl_Position = vec4(a_position.x, a_position.y * -1.0, a_position.z, a_position.w);
+//    v_position = a_position;
+//
+//    v_normal = a_normal;
+//#endif
+
+     // その他の情報も書き出す
+    v_texCoord = uv;
+    // safe normalize
+    if (tangent != vec3(0.0, 0.0, 0.0))
+    {
+        v_tangent = normalize(normalMatrix * objectTangent);
+    }
+    else
+    {
+        v_tangent = vec3(0.0, 0.0, 0.0);
+    }
+
+    v_color = _color;
+}
+`;
+var _FFLShader_frag = `
+//
+//  sample.flg
+//  Fragment shader
+//  Copyright (c) 2014 Nintendo Co., Ltd. All rights reserved.
+//
+//
+
+#ifdef GL_ES
+precision mediump float;
+#else
+#   define lowp
+#   define mediump
+#   define highp
+#endif
+
+
+//
+//  定数定義ファイル
+//
+
+/// シェーダーモード
+#define FFL_SHADER_MODE_UR 0
+#define FFL_SHADER_MODE_UB 1
+
+/// 変調処理のマクロ
+#define FFL_MODULATE_MODE_CONSTANT        0
+#define FFL_MODULATE_MODE_TEXTURE_DIRECT  1
+#define FFL_MODULATE_MODE_RGB_LAYERED     2
+#define FFL_MODULATE_MODE_ALPHA           3
+#define FFL_MODULATE_MODE_LUMINANCE_ALPHA 4
+#define FFL_MODULATE_MODE_ALPHA_OPA       5
+
+/// スペキュラのモード
+#define FFL_SPECULAR_MODE_BLINN 0
+#define FFL_SPECULAR_MODE_ANISO 1
+
+/// ライトのON/OFF
+#define FFL_LIGHT_MODE_DISABLE 0
+#define FFL_LIGHT_MODE_ENABLE 1
+
+/// フラグメントのディスカードモード
+#define FFL_DISCARD_FRAGMENT_DISABLE 0
+#define FFL_DISCARD_FRAGMENT_ENABLE  1
+
+/// 座標変換モード
+#define FFL_COORDINATE_MODE_NONE   0
+#define FFL_COORDINATE_MODE_NORMAL 1
+
+//
+//  関数の定義ファイル
+//
+
+/**
+ * @brief 異方性反射の反射率を計算します。
+ * @param[in] light   ライトの向き
+ * @param[in] tangent 接線
+ * @param[in] eye     視線の向き
+ * @param[in] power   鋭さ
+ */
+mediump float calculateAnisotropicSpecular(mediump vec3 light, mediump vec3 tangent, mediump vec3 eye, mediump float power )
+{
+	mediump float dotLT = dot(light, tangent);
+	mediump float dotVT = dot(eye, tangent);
+	mediump float dotLN = sqrt(1.0 - dotLT * dotLT);
+	mediump float dotVR = dotLN*sqrt(1.0 - dotVT * dotVT) - dotLT * dotVT;
+
+	return pow(max(0.0, dotVR), power);
+}
+
+/**
+ * @brief 異方性反射の反射率を計算します。
+ * @param[in] light   ライトの向き
+ * @param[in] normal  法線
+ * @param[in] eye     視線の向き
+ * @param[in] power   鋭さ
+ */
+mediump float calculateBlinnSpecular(mediump vec3 light, mediump vec3 normal, mediump vec3 eye, mediump float power)
+{
+	return pow(max(dot(reflect(-light, normal), eye), 0.0), power);
+}
+
+/**
+ * @brief 異方性反射、ブリン反射をブレンドします。
+ * @param[in] blend ブレンド率
+ * @param[in] blinn ブリンの値
+ * @param[in] aniso 異方性の値
+ */
+mediump float calculateSpecularBlend(mediump float blend, mediump float blinn, mediump float aniso)
+{
+	return mix(aniso, blinn, blend);
+}
+
+/**
+ * @brief アンビエントを計算します。
+ * @param[in] light    ライト
+ * @param[in] material マテリアル
+ */
+mediump vec3 calculateAmbientColor(mediump vec3 light, mediump vec3 material)
+{
+	return light * material;
+}
+
+/**
+ * @brief 拡散を計算します。
+ * @param[in] light    ライト
+ * @param[in] material マテリアル
+ * @param[in] ln       ライトと法線の内積
+ */
+mediump vec3 calculateDiffuseColor(mediump vec3 light, mediump vec3 material, mediump float ln)
+{
+	return light * material * ln;
+}
+
+/**
+ * @brief 鏡面反射を計算します。
+ * @param[in] light      ライト
+ * @param[in] material   マテリアル
+ * @param[in] reflection 反射率
+ * @param[in] strength   幅
+ */
+mediump vec3 calculateSpecularColor(mediump vec3 light, mediump vec3 material, mediump float reflection, mediump float strength)
+{
+	return light * material * reflection * strength;
+}
+
+/**
+ * @brief リムを計算します。
+ * @param[in] color   リム色
+ * @param[in] normalZ 法線のZ方向
+ * @param[in] width   リム幅
+ * @param[in] power   リムの鋭さ
+ */
+mediump vec3 calculateRimColor(mediump vec3 color, mediump float normalZ, mediump float width, mediump float power)
+{
+	return color * pow(width * (1.0 - abs(normalZ)), power);
+}
+
+/**
+ * @brief ライト方向と法線の内積を求める
+ * @note 特殊な実装になっています。
+ */
+mediump float calculateDot(mediump vec3 light, mediump vec3 normal)
+{
+	return max(dot(light, normal), 0.1);
+}
+
+// フラグメントシェーダーに入力される varying 変数
+varying mediump vec4 v_color;          //!< 出力: 頂点の色
+varying highp   vec4 v_position;       //!< 出力: 位置情報
+varying highp   vec3 v_normal;         //!< 出力: 法線ベクトル
+// NOTE: ^^ Those two need to be highp to avoid weird black dot issue on Android
+varying mediump vec3 v_tangent;        //!< 出力: 異方位
+varying mediump vec2 v_texCoord;       //!< 出力: テクスチャー座標
+
+/// constカラー
+uniform mediump vec4  u_const1; ///< constカラー1
+uniform mediump vec4  u_const2; ///< constカラー2
+uniform mediump vec4  u_const3; ///< constカラー3
+
+/// ライト設定
+uniform mediump vec3 u_light_ambient;  ///< カメラ空間のライト方向
+uniform mediump vec3 u_light_diffuse;  ///< 拡散光用ライト
+uniform mediump vec3 u_light_dir;
+uniform bool u_light_enable;
+uniform mediump vec3 u_light_specular; ///< 鏡面反射用ライト強度
+
+/// マテリアル設定
+uniform mediump vec3 u_material_ambient;         ///< 環境光用マテリアル設定
+uniform mediump vec3 u_material_diffuse;         ///< 拡散光用マテリアル設定
+uniform mediump vec3 u_material_specular;        ///< 鏡面反射用マテリアル設定
+uniform int u_material_specular_mode;            ///< スペキュラの反射モード(CharModelに依存する設定のためub_modulateにしている)
+uniform mediump float u_material_specular_power; ///< スペキュラの鋭さ(0.0を指定すると頂点カラーの設定が利用される)
+
+/// 変調設定
+uniform int u_mode;   ///< 描画モード
+
+/// リム設定
+uniform mediump vec3  u_rim_color;
+uniform mediump float u_rim_power;
+
+// サンプラー
+uniform sampler2D s_texture;
+
+
+// -------------------------------------------------------
+// メイン文
+void main()
+{
+    mediump vec4 color;
+
+    mediump float specularPower    = u_material_specular_power;
+    mediump float rimWidth         = v_color.a;
+
+//#ifdef FFL_MODULATE_MODE_CONSTANT
+    if(u_mode == FFL_MODULATE_MODE_CONSTANT)
+    {
+      color = u_const1;
+    }
+    // modified to handle u_const1 alpha:
+//#elif defined(FFL_MODULATE_MODE_TEXTURE_DIRECT)
+    else if(u_mode == FFL_MODULATE_MODE_TEXTURE_DIRECT)
+    {
+        mediump vec4 texel = texture2D(s_texture, v_texCoord);
+        color = vec4(texel.rgb, u_const1.a * texel.a);
+    }
+//#elif defined(FFL_MODULATE_MODE_RGB_LAYERED)
+    else if(u_mode == FFL_MODULATE_MODE_RGB_LAYERED)
+    {
+        mediump vec4 texel = texture2D(s_texture, v_texCoord);
+        color = vec4(texel.r * u_const1.rgb + texel.g * u_const2.rgb + texel.b * u_const3.rgb, u_const1.a * texel.a);
+    }
+//#elif defined(FFL_MODULATE_MODE_ALPHA)
+    else if(u_mode == FFL_MODULATE_MODE_ALPHA)
+    {
+        mediump vec4 texel = texture2D(s_texture, v_texCoord);
+        color = vec4(u_const1.rgb, u_const1.a * texel.r);
+    }
+//#elif defined(FFL_MODULATE_MODE_LUMINANCE_ALPHA)
+    else if(u_mode == FFL_MODULATE_MODE_LUMINANCE_ALPHA)
+    {
+        mediump vec4 texel = texture2D(s_texture, v_texCoord);
+        color = vec4(texel.g * u_const1.rgb, u_const1.a * texel.r);
+    }
+//#elif defined(FFL_MODULATE_MODE_ALPHA_OPA)
+    else if(u_mode == FFL_MODULATE_MODE_ALPHA_OPA)
+    {
+        mediump vec4 texel = texture2D(s_texture, v_texCoord);
+        color = vec4(texel.r * u_const1.rgb, u_const1.a);
+    }
+//#endif
+
+    // avoids little outline around mask elements
+    if(u_mode != FFL_MODULATE_MODE_CONSTANT && color.a == 0.0)
+    {
+        discard;
+    }
+
+//#ifdef FFL_LIGHT_MODE_ENABLE
+    if(u_light_enable)
+    {
+        /// 環境光の計算
+        mediump vec3 ambient = calculateAmbientColor(u_light_ambient.xyz, u_material_ambient.xyz);
+
+        /// 法線ベクトルの正規化
+        mediump vec3 norm = normalize(v_normal);
+
+        /// 視線ベクトル
+        mediump vec3 eye = normalize(-v_position.xyz);
+
+        // ライトの向き
+        mediump float fDot = calculateDot(u_light_dir, norm);
+
+        /// Diffuse計算
+        mediump vec3 diffuse = calculateDiffuseColor(u_light_diffuse.xyz, u_material_diffuse.xyz, fDot);
+
+        /// Specular計算
+        mediump float specularBlinn = calculateBlinnSpecular(u_light_dir, norm, eye, u_material_specular_power);
+
+        /// Specularの値を確保する変数を宣言
+        mediump float reflection;
+        mediump float strength = v_color.g;
+        if(u_material_specular_mode == 0)
+        {
+            /// Blinnモデルの場合
+            strength = 1.0;
+            reflection = specularBlinn;
+        }
+        else
+        {
+            /// Aisoモデルの場合
+            mediump float specularAniso = calculateAnisotropicSpecular(u_light_dir, v_tangent, eye, u_material_specular_power);
+            reflection = calculateSpecularBlend(v_color.r, specularBlinn, specularAniso);
+        }
+        /// Specularの色を取得
+        mediump vec3 specular = calculateSpecularColor(u_light_specular.xyz, u_material_specular.xyz, reflection, strength);
+
+        // リムの色を計算
+        mediump vec3 rimColor = calculateRimColor(u_rim_color.rgb, norm.z, rimWidth, u_rim_power);
+
+        // カラーの計算
+        color.rgb = (ambient + diffuse) * color.rgb + specular + rimColor;
+    }
+//#endif
+
+    gl_FragColor = color;
+}
+`;
+
+class FFLShaderMaterial extends THREE3.ShaderMaterial {
+  static defaultLightAmbient = new THREE3.Color(0.73, 0.73, 0.73);
+  static defaultLightDiffuse = new THREE3.Color(0.6, 0.6, 0.6);
+  static defaultLightSpecular = new THREE3.Color(0.7, 0.7, 0.7);
+  static defaultLightDir = new THREE3.Vector3(-0.4531539381, 0.4226179123, 0.7848858833);
+  static defaultRimColor = new THREE3.Color(0.3, 0.3, 0.3);
+  static defaultRimPower = 2;
+  static defaultLightDirection = this.defaultLightDir;
+  static materialParams = [
+    {
+      ambient: new THREE3.Color(0.85, 0.75, 0.75),
+      diffuse: new THREE3.Color(0.75, 0.75, 0.75),
+      specular: new THREE3.Color(0.3, 0.3, 0.3),
+      specularPower: 1.2,
+      specularMode: 0
+    },
+    {
+      ambient: new THREE3.Color(1, 1, 1),
+      diffuse: new THREE3.Color(0.7, 0.7, 0.7),
+      specular: new THREE3.Color(0, 0, 0),
+      specularPower: 40,
+      specularMode: 1
+    },
+    {
+      ambient: new THREE3.Color(0.9, 0.85, 0.85),
+      diffuse: new THREE3.Color(0.75, 0.75, 0.75),
+      specular: new THREE3.Color(0.22, 0.22, 0.22),
+      specularPower: 1.5,
+      specularMode: 0
+    },
+    {
+      ambient: new THREE3.Color(0.85, 0.75, 0.75),
+      diffuse: new THREE3.Color(0.75, 0.75, 0.75),
+      specular: new THREE3.Color(0.3, 0.3, 0.3),
+      specularPower: 1.2,
+      specularMode: 0
+    },
+    {
+      ambient: new THREE3.Color(1, 1, 1),
+      diffuse: new THREE3.Color(0.7, 0.7, 0.7),
+      specular: new THREE3.Color(0.35, 0.35, 0.35),
+      specularPower: 10,
+      specularMode: 1
+    },
+    {
+      ambient: new THREE3.Color(0.75, 0.75, 0.75),
+      diffuse: new THREE3.Color(0.72, 0.72, 0.72),
+      specular: new THREE3.Color(0.3, 0.3, 0.3),
+      specularPower: 1.5,
+      specularMode: 0
+    },
+    {
+      ambient: new THREE3.Color(1, 1, 1),
+      diffuse: new THREE3.Color(0.7, 0.7, 0.7),
+      specular: new THREE3.Color(0, 0, 0),
+      specularPower: 40,
+      specularMode: 1
+    },
+    {
+      ambient: new THREE3.Color(1, 1, 1),
+      diffuse: new THREE3.Color(0.7, 0.7, 0.7),
+      specular: new THREE3.Color(0, 0, 0),
+      specularPower: 40,
+      specularMode: 1
+    },
+    {
+      ambient: new THREE3.Color(1, 1, 1),
+      diffuse: new THREE3.Color(0.7, 0.7, 0.7),
+      specular: new THREE3.Color(0, 0, 0),
+      specularPower: 40,
+      specularMode: 1
+    },
+    {
+      ambient: new THREE3.Color(0.95622, 0.95622, 0.95622),
+      diffuse: new THREE3.Color(0.49673, 0.49673, 0.49673),
+      specular: new THREE3.Color(0.24099, 0.24099, 0.24099),
+      specularPower: 3,
+      specularMode: 0
+    },
+    {
+      ambient: new THREE3.Color(0.95622, 0.95622, 0.95622),
+      diffuse: new THREE3.Color(1.08497, 1.08497, 1.08497),
+      specular: new THREE3.Color(0.2409, 0.2409, 0.2409),
+      specularPower: 3,
+      specularMode: 0
+    }
+  ];
+  constructor(options = {}) {
+    const uniforms = {
+      u_light_ambient: {
+        value: FFLShaderMaterial.defaultLightAmbient
+      },
+      u_light_diffuse: {
+        value: FFLShaderMaterial.defaultLightDiffuse
+      },
+      u_light_specular: {
+        value: FFLShaderMaterial.defaultLightSpecular
+      },
+      u_light_dir: { value: FFLShaderMaterial.defaultLightDir.clone() },
+      u_light_enable: { value: true },
+      u_rim_color: { value: FFLShaderMaterial.defaultRimColor },
+      u_rim_power: { value: FFLShaderMaterial.defaultRimPower }
+    };
+    super({
+      vertexShader: _FFLShader_vert,
+      fragmentShader: _FFLShader_frag,
+      uniforms
+    });
+    this._modulateType = 0;
+    this.useSpecularModeBlinn = false;
+    this.setValues(options);
+  }
+  get color() {
+    if (!this.uniforms.u_const1) {
+      return null;
+    } else if (this._color3) {
+      return this._color3;
+    }
+    const color4 = this.uniforms.u_const1.value;
+    const color3 = new THREE3.Color(color4.x, color4.y, color4.z);
+    this._color3 = color3;
+    return color3;
+  }
+  set color(value2) {
+    function toColor4(color, opacity2 = 1) {
+      return new THREE3.Vector4(color.r, color.g, color.b, opacity2);
+    }
+    if (Array.isArray(value2)) {
+      this.uniforms.u_const1 = { value: toColor4(value2[0]) };
+      this.uniforms.u_const2 = { value: toColor4(value2[1]) };
+      this.uniforms.u_const3 = { value: toColor4(value2[2]) };
+      return;
+    }
+    const color3 = value2 ? value2 : new THREE3.Color(1, 1, 1);
+    this._color3 = color3;
+    const opacity = this.opacity;
+    if (this._opacity) {
+      delete this._opacity;
+    }
+    this.uniforms.u_const1 = { value: toColor4(color3, opacity) };
+  }
+  get opacity() {
+    if (!this.uniforms.u_const1) {
+      return this._opacity ? this._opacity : 1;
+    }
+    return this.uniforms.u_const1.value.w;
+  }
+  set opacity(value2) {
+    if (!this.uniforms || !this.uniforms.u_const1) {
+      this._opacity = 1;
+      return;
+    }
+    this.uniforms.u_const1.value.w = value2;
+  }
+  get modulateMode() {
+    return this.uniforms.u_mode ? this.uniforms.u_mode.value : null;
+  }
+  set modulateMode(value2) {
+    this.uniforms.u_mode = { value: value2 };
+  }
+  get lightEnable() {
+    return this.uniforms.u_light_enable ? this.uniforms.u_light_enable.value : null;
+  }
+  set lightEnable(value2) {
+    this.uniforms.u_light_enable = { value: value2 };
+  }
+  set useSpecularModeBlinn(value2) {
+    this._useSpecularModeBlinn = value2;
+    if (this._modulateType !== undefined) {
+      this.modulateType = this._modulateType;
+    }
+  }
+  get useSpecularModeBlinn() {
+    return this._useSpecularModeBlinn;
+  }
+  get modulateType() {
+    return this._modulateType;
+  }
+  set modulateType(value2) {
+    const matParam = FFLShaderMaterial.materialParams[value2];
+    if (!matParam) {
+      return;
+    }
+    this._modulateType = value2;
+    this.uniforms.u_material_ambient = { value: matParam.ambient };
+    this.uniforms.u_material_diffuse = { value: matParam.diffuse };
+    this.uniforms.u_material_specular = { value: matParam.specular };
+    this.uniforms.u_material_specular_mode = {
+      value: this._useSpecularModeBlinn ? 0 : matParam.specularMode
+    };
+    this.uniforms.u_material_specular_power = { value: matParam.specularPower };
+  }
+  get map() {
+    return this.uniforms.s_texture ? this.uniforms.s_texture.value : null;
+  }
+  set map(value2) {
+    this.uniforms.s_texture = { value: value2 };
+  }
+  get lightDirection() {
+    return this.uniforms.u_light_dir.value;
+  }
+  set lightDirection(value2) {
+    this.uniforms.u_light_dir = { value: value2 };
+  }
+}
+var FFLShaderMaterial_default = FFLShaderMaterial;
+
+// src/external/ffl.js/LUTShaderMaterial.js
+var THREE4 = _THREE();
+var _LUTShader_vert = `
+#define AGX_FEATURE_ALBEDO_TEXTURE
+/**
+ * @file    LUT.vsh
+ * @brief   LUT
+ * @since   2014/10/02
+ *
+ * Copyright (c)2014 Nintendo Co., Ltd. All rights reserved.
+ */
+
+// シェーダーの種類毎に設定されるマクロリスト
+// AGX_FEATURE_VERTEX_COLOR         頂点カラーが有効
+// AGX_FEATURE_ALBEDO_TEXTURE       アルベドテクスチャーが有効
+// AGX_FEATURE_BUMP_TEXTURE         バンプテクスチャーが有効
+// AGX_FEATURE_MASK_TEXTURE         マスクテクスチャーが有効
+// AGX_FEATURE_ALPHA_TEXTURE        アルファテクスチャーが有効
+// AGX_FEATURE_SPHERE_MAP_TEXTURE   スフィア環境マップが有効
+// AGX_FEATURE_SKIN_MASK            肌マスクが有効（uColor0）
+// AGX_FEATURE_HAIR_MASK            髪マスクが有効（uColor1）
+// AGX_FEATURE_ALPHA_TEST           アルファテストが有効
+// AGX_FEATURE_FADE_OUT_COLOR       フェードアウトカラーが有効（uColor2）
+// AGX_FEATURE_DISABLE_LIGHT        ライトが無効
+// AGX_FEATURE_ALPHA_COLOR_FILTER   アルベドアルファによる色替えが有効
+// AGX_FEATURE_ALBEDO_ALPHA         アルベドのアルファをカラーのアルファに適用
+// AGX_FEATURE_PREMULTIPLY_ALPHA    プレマルチプライアルファな描画
+// AGX_FEATURE_MII                  Miiを描画する
+// AGX_FEATURE_MII_CONSTANT         Miiを描画する：Constant
+// AGX_FEATURE_MII_TEXTURE_DIRECT   Miiを描画する：Texture Direct
+// AGX_FEATURE_MII_RGB_LAYERED      Miiを描画する：RGB Layered
+// AGX_FEATURE_MII_ALPHA            Miiを描画する：Alpha
+// AGX_FEATURE_MII_LUMINANCE_ALPHA  Miiを描画する：Luminance Alpha
+// AGX_FEATURE_MII_ALPHA_OPA        Miiを描画する：Alpha Opa
+//
+// AGX_BONE_MAX     ボーンの最大数
+
+#ifdef GL_ES
+precision highp float;
+#else
+#   define lowp
+#   define mediump
+#   define highp
+#endif
+
+//#ifndef AGX_BONE_MAX
+//#   define AGX_BONE_MAX 15
+//#endif
+#ifndef AGX_DIR_LIGHT_MAX
+#   define AGX_DIR_LIGHT_MAX 2
+#endif
+
+// ----------------------------------------
+// 頂点シェーダーに入力される attribute 変数
+//attribute highp   vec3 position;   //!< 入力:[ 1 : 1 ] 位置情報
+#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
+//attribute mediump vec2 uv;  //!< 入力:[ 1 : 5 ] テクスチャー座標
+#endif
+//attribute mediump vec3 normal;     //!< 入力:[ 1 : 2 ] 法線ベクトル
+//attribute mediump vec4 aBoneIndex;  //!< 入力:[ 1 : 3 ] ボーンのインデックス（最大4つ）
+//attribute mediump vec4 aBoneWeight; //!< 入力:[ 1 : 4 ] ボーンの影響度（最大4つ）
+#if defined(AGX_FEATURE_VERTEX_COLOR)
+//attribute lowp    vec4 _color;      //!< 入力:[ 1 : 6 ] 頂点カラー
+#endif
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+//attribute mediump vec3 tangent;    //!< 入力:[ 1 : 7 ] 接線ベクトル
+#endif
+
+// ^^ Commented attributes are provided by three.js.
+
+// ----------------------------------------
+// 頂点シェーダーに入力される uniform 変数
+//uniform highp   mat4 modelViewMatrix;                            //!< 入力:[ 4      /  4 :   4 ] モデルの合成行列
+//uniform mat4 projectionMatrix;
+//uniform highp   mat4 viewMatrix;                           //!< 入力:[ 4      /  4 :   8 ] モデルのビュー行列
+//uniform mediump mat3 normalMatrix;                         //!< 入力:[ 3      /  3 :  11 ] モデルの法線用行列
+//uniform highp   mat4 modelMatrix;                          //!< 入力:[ 4      /  4 :  15 ] モデルのワールド変換行列
+//uniform lowp    int  uBoneCount;                            //!< 入力:[ 1      /  1 :  16 ] ボーンの個数
+//uniform highp   mat4 uBoneMatrices[AGX_BONE_MAX];           //!< 入力:[ 4 x 15 / 60 :  76 ] ボーンの行列配列
+//uniform mediump mat3 uBoneNormalMatrices[AGX_BONE_MAX];     //!< 入力:[ 3 x 15 / 45 : 121 ] ボーンの法線行列配列
+// ^^ Unused in favor of three.js skinning.
+uniform lowp    int  uDirLightCount;                        //!< 入力:[ 1      /  1 : 122 ] 方向ライトの数
+uniform mediump vec4 uDirLightDirAndType0;//!< 入力:[ 1 x  2 /  2 : 124 ] 平行ライトの向く方向
+uniform mediump vec4 uDirLightDirAndType1;//!< 入力:[ 1 x  2 /  2 : 124 ] 平行ライトの向く方向
+uniform mediump vec3 uDirLightColor0;     //!< 入力:[ 1 x  2 /  2 : 126 ] 平行ライトのカラー
+uniform mediump vec3 uDirLightColor1;     //!< 入力:[ 1 x  2 /  2 : 126 ] 平行ライトのカラー
+uniform mediump vec3 uHSLightSkyColor;                      //!< 入力:[ 1      /  1 : 127 ] 半球ライトのスカイカラー
+uniform mediump vec3 uHSLightGroundColor;                   //!< 入力:[ 1      /  1 : 128 ] 半球ライトのグラウンドカラー
+//uniform mediump vec3 cameraPosition;                                //!< 入力:[ 1      /  1 : 129 ] カメラの位置
+// ^^ previously uEyePt
+uniform mediump float uAlpha;                               //!< 入力:[ 1      /  1 : 130 ] アルファ値
+
+// ^^ Commented uniforms are provided by three.js.
+
+// ----------------------------------------
+// フラグメントシェーダーに渡される varying 変数
+varying lowp    vec4    vModelColor;                            //!< 出力:[ 1 : 1 ] モデルの色
+#if !defined(AGX_FEATURE_BUMP_TEXTURE)
+varying mediump vec3    vNormal;                                //!< 出力:[ 1 : 2 ] モデルの法線
+#endif
+#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
+varying mediump vec2    vTexcoord0;                             //!< 出力:[ 1 : 3 ] テクスチャーUV
+#endif
+// camera
+varying mediump vec3    vEyeVecWorldOrTangent;                  //!< 出力:[ 1 : 4 ] 視線ベクトル
+#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+// punctual light
+varying mediump vec3    vPunctualLightDirWorldOrTangent;        //!< 出力:[ 1 : 5 ] ライトの方向
+varying mediump vec3    vPunctualLightHalfVecWorldOrTangent;    //!< 出力:[ 1 : 6 ] カメラとライトのハーフベクトル
+// GI
+varying mediump vec3    vGISpecularLightColor;                  //!< 出力:[ 1 : 7 ] GIフレネルで使用するカラー
+// Lighting Result
+varying mediump vec3    vDiffuseColor;                          //!< 出力:[ 1 : 8 ] ディフューズライティング結果
+#endif
+// Reflect
+#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
+varying lowp    vec3    vReflectDir;                            //!< 出力:[ 1 : 9 ] 環境マップの反射ベクトル
+#endif
+
+// skinning_pars_vertex.glsl.js
+#ifdef USE_SKINNING
+    uniform mat4 bindMatrix;
+    uniform mat4 bindMatrixInverse;
+    uniform highp sampler2D boneTexture;
+    mat4 getBoneMatrix( const in float i ) {
+        int size = textureSize( boneTexture, 0 ).x;
+        int j = int( i ) * 4;
+        int x = j % size;
+        int y = j / size;
+        vec4 v1 = texelFetch( boneTexture, ivec2( x, y ), 0 );
+        vec4 v2 = texelFetch( boneTexture, ivec2( x + 1, y ), 0 );
+        vec4 v3 = texelFetch( boneTexture, ivec2( x + 2, y ), 0 );
+        vec4 v4 = texelFetch( boneTexture, ivec2( x + 3, y ), 0 );
+        return mat4( v1, v2, v3, v4 );
+    }
+#endif
+
+// ------------------------------------------------------------
+// 頂点シェーダーのエントリーポイント
+// ------------------------------------------------------------
+void main()
+{
+    // ------------------------------------------------------------
+    // 頂点変換用の処理
+    // ------------------------------------------------------------
+    highp   vec4 position_;  //!< 最終的な頂点
+    mediump vec3 normal_;    //!< 最終的な法線
+    mediump vec3 tangent_;   //!< 最終的な接線
+    highp   vec4 positionWorld; //!< ワールド空間上での頂点
+
+
+    // begin_vertex.glsl.js
+    vec3 transformed = vec3( position );
+// skinbase_vertex.glsl.js
+#ifdef USE_SKINNING
+    mat4 boneMatX = getBoneMatrix( skinIndex.x );
+    mat4 boneMatY = getBoneMatrix( skinIndex.y );
+    mat4 boneMatZ = getBoneMatrix( skinIndex.z );
+    mat4 boneMatW = getBoneMatrix( skinIndex.w );
+    // skinning_vertex.glsl.js
+    vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );
+    vec4 skinned = vec4( 0.0 );
+    skinned += boneMatX * skinVertex * skinWeight.x;
+    skinned += boneMatY * skinVertex * skinWeight.y;
+    skinned += boneMatZ * skinVertex * skinWeight.z;
+    skinned += boneMatW * skinVertex * skinWeight.w;
+    transformed = ( bindMatrixInverse * skinned ).xyz;
+#endif
+
+    // ----------------------------------------
+    // ボーンが存在しない場合は位置と法線に手を加えない
+    position_ = vec4(transformed.xyz, 1.0);
+
+
+
+    normal_ = normal;
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+    tangent_ = tangent.xyz;
+#endif
+    // skinnormal_vertex.glsl.js
+#ifdef USE_SKINNING
+    mat4 skinMatrix = mat4( 0.0 );
+    skinMatrix += skinWeight.x * boneMatX;
+    skinMatrix += skinWeight.y * boneMatY;
+    skinMatrix += skinWeight.z * boneMatZ;
+    skinMatrix += skinWeight.w * boneMatW;
+    skinMatrix = bindMatrixInverse * skinMatrix * bindMatrix;
+
+    normal_ = vec4( skinMatrix * vec4( normal_, 0.0 ) ).xyz;
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+    tangent_ = vec4( skinMatrix * vec4( tangent_, 0.0 ) ).xyz;
+#endif // defined(AGX_FEATURE_BUMP_TEXTURE)
+#endif // USE_SKINNING
+
+    // ----------------------------------------
+    // ワールド上での位置を求める
+    positionWorld = modelMatrix * position_;
+    // 最終結果を行う
+    position_ = projectionMatrix * modelViewMatrix * position_;
+    normal_   = normalize(normalMatrix * normal_);
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+    tangent  = normalize(normalMatrix * tangent_);
+#endif
+
+    // ----------------------------------------
+    // 計算結果を保持させる
+    gl_Position = position_;
+#if !defined(AGX_FEATURE_BUMP_TEXTURE)
+    vNormal     = normal_;
+#endif
+#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
+    // テクスチャー座標を設定する
+    vTexcoord0 = uv;
+#endif
+    // モデルの色を指定する
+#if defined(AGX_FEATURE_VERTEX_COLOR)
+    lowp vec4 modelColor = aColor;
+
+#else
+    lowp vec4 modelColor = vec4(1.0, 1.0, 1.0, 1.0);
+#endif
+
+    // プリマルチプライドアルファ
+#if defined(AGX_FEATURE_PREMULTIPLY_ALPHA)
+    modelColor *= uAlpha;
+#else
+    modelColor.a *= uAlpha;
+#endif
+
+
+    // ------------------------------------------------------------
+    // ライト用の処理
+    // ------------------------------------------------------------
+    mediump vec3 eyeVecWorld;   //!< ワールド状態での視線ベクトル
+    mediump vec3 eyeVec;        //!< 最終的にフラグメントシェーダーに渡す視線ベクトル（バンプの有無によって、ワールド座標系になったり、タンジェント座標系になったりする）
+
+    vec4 eye = modelViewMatrix * position_;
+
+    // 視線ベクトルを取得する
+    //eyeVecWorld = normalize(cameraPosition - positionWorld.xyz);
+    eyeVecWorld = normalize(-(eye.xyz) - positionWorld.xyz);//normalize(cameraPosition - positionWorld.xyz);
+    eyeVec = eyeVecWorld;
+
+    lowp vec3 diffuseColor = vec3(0.0); // バーテックスシェーダーで計算できるディフューズの色をここに格納する
+
+#   if defined(AGX_FEATURE_BUMP_TEXTURE)
+    // Normal, Binormal, Tangent を取得する
+    mediump vec3 n = normal;
+    mediump vec3 t = tangent;
+    mediump vec3 b = cross(n, t);
+    // 接空間からローカルへ変換する行列を設定する（mat3(N, T, B)の逆行列）
+    mediump mat3 tangentMatrix = mat3(t.x, b.x, n.x, t.y, b.y, n.y, t.z, b.z, n.z);
+    // 視線ベクトルを接空間へ
+    vEyeVecWorldOrTangent.xyz = tangentMatrix * eyeVec;
+#else
+    vEyeVecWorldOrTangent.xyz = eyeVec;
+#endif
+
+#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+    // punctual lightの設定
+    if (uDirLightCount > 0)
+    {
+        mediump vec3 lightDir;
+
+        // 方向ライト
+        if (uDirLightDirAndType0.w < 0.0) { lightDir = uDirLightDirAndType0.xyz; }
+        // 点光源ライト
+        else                                { lightDir = uDirLightDirAndType0.xyz - positionWorld.xyz; }
+        lightDir = normalize(lightDir);
+
+#   if defined(AGX_FEATURE_BUMP_TEXTURE)
+        // ライトを接空間へ
+        vPunctualLightDirWorldOrTangent.xyz = tangentMatrix * lightDir;
+#   else
+        vPunctualLightDirWorldOrTangent.xyz = lightDir;
+#   endif
+
+        // Halfベクトルを求める
+        vPunctualLightHalfVecWorldOrTangent.xyz = normalize(vPunctualLightDirWorldOrTangent.xyz + vEyeVecWorldOrTangent.xyz);
+
+        // Diffuse計算
+        diffuseColor += (uDirLightColor0.rgb * clamp(dot(lightDir, normal_), 0.0, 1.0));
+    }
+    if (uDirLightCount > 1)
+    {
+        mediump vec3 lightDir;
+
+        // 方向ライト
+        if (uDirLightDirAndType1.w < 0.0) { lightDir = uDirLightDirAndType1.xyz; }
+        // 点光源ライト
+        else                                { lightDir = uDirLightDirAndType1.xyz - positionWorld.xyz; }
+        lightDir = normalize(lightDir);
+
+        diffuseColor += max(dot(lightDir, normal_), 0.0) * uDirLightColor1;
+    }
+    // ライトは1.0を超えないように
+    diffuseColor = min(diffuseColor, 1.0);
+#endif
+
+#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
+    {
+        // キューブ環境マップ用の反射ベクトルを求める
+//        vReflectDir = reflect(normalize(positionWorld.xyz - cameraPosition), normal_);
+
+        // スフィア環境マップ用の反射ベクトルを求める
+//        vReflectDir = normalize((uViewMatrix * vec4(normal_, 0.0)).xyz) * 0.5 + 0.5;
+
+        // ビュー座標系での位置と法線を取得
+        mediump vec3 viewNormal   = normalize(mat3(uViewMatrix) * normal_);
+        mediump vec4 viewPosition = uViewMatrix * positionWorld;
+        viewPosition = viewPosition / viewPosition.w;
+        // ビュー座標系での頂点ベクトルを取得
+        viewPosition.z = 1.0 - viewPosition.z;
+        mediump vec3 viewPositionVec = normalize(viewPosition.xyz);
+        // ビュー座標系での反射ベクトルを求める
+        mediump vec3 viewReflect  = viewPositionVec - 2.0 * dot(viewPositionVec, viewNormal) * viewNormal;
+        // 両面スフィア環境マップではないので、反射ベクトルを調整
+        viewReflect = normalize(viewReflect - vec3(0.0, 0.0, 1.5));
+        // 反射ベクトルをテクスチャー座標系へ
+        vReflectDir = viewReflect * 0.5 + 0.5;
+
+        // 公式
+//        mediump vec3  viewPositionVec = normalize(vec3(uViewMatrix * positionWorld));
+//        mediump vec3  viewReflectVec = viewPositionVec - 2.0 * dot(viewPositionVec, normal_) * normal;
+//        mediump float m = 2.0 * sqrt(viewReflectVec.x * viewReflectVec.x +
+//                                     viewReflectVec.y * viewReflectVec.y +
+//                                     (viewReflectVec.z + 1.0) * (viewReflectVec.z * 1.0));
+//        vReflectDir = viewReflectVec / m + 0.5;
+
+        // 別版
+//        mediump vec3 posW = positionWorld.xyz;
+//        mediump vec3 dir  = normalize(mat3(uViewMatrix) * normal);
+//
+//        mediump float radius     = 75.0;
+//        mediump vec3  posWDir    = dot(dir, posW) * dir;
+//        mediump vec3  posWDirV   = posW - posWDir;
+//        mediump float lengthDir  = sqrt(radius * radius - dot(posWDirV, posWDirV)) - length(posWDir);
+//        vReflectDir = normalize(posW + dir * lengthDir) * 0.5 + 0.5;
+    }
+#endif
+
+#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+    // GIの計算
+    {
+        mediump vec3 hemiColor;
+        mediump vec3 sky = uHSLightSkyColor;
+        mediump vec3 ground = uHSLightGroundColor;
+
+        {
+            mediump float skyRatio = (normal_.y + 1.0) * 0.5;
+            hemiColor =  (sky * skyRatio + ground * (1.0 - skyRatio));
+            diffuseColor += hemiColor;
+        }
+
+        {
+//            mediump vec3 reflectDir = -reflect(normal_, eyeVecWorld); // おそらくコレで良いはず
+            mediump vec3 reflectDir = 2.0 * dot(eyeVecWorld, normal_) * normal_ - eyeVecWorld; // 多少冗長でも、正しい計算で行なう
+
+            mediump float skyRatio = (reflectDir.y + 1.0) * 0.5;
+            hemiColor =  (sky * skyRatio + ground * (1.0 - skyRatio));
+            vGISpecularLightColor.rgb = hemiColor;
+        }
+    }
+#endif
+
+    // モデルの色を設定
+    vModelColor = modelColor;
+#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+    vDiffuseColor.rgb = diffuseColor;
+#endif
+}
+`;
+var _LUTShader_frag = `
+#define AGX_FEATURE_ALBEDO_TEXTURE
+#define AGX_FEATURE_MII
+/**
+ * @file    LUT.fsh
+ * @brief   LUT
+ * @since   2014/10/02
+ *
+ * Copyright (c)2014 Nintendo Co., Ltd. All rights reserved.
+ */
+
+// シェーダーの種類毎に設定されるマクロリスト
+// AGX_FEATURE_VERTEX_COLOR         頂点カラーが有効
+// AGX_FEATURE_ALBEDO_TEXTURE       アルベドテクスチャーが有効
+// AGX_FEATURE_BUMP_TEXTURE         バンプテクスチャーが有効
+// AGX_FEATURE_MASK_TEXTURE         マスクテクスチャーが有効
+// AGX_FEATURE_ALPHA_TEXTURE        アルファテクスチャーが有効
+// AGX_FEATURE_SPHERE_MAP_TEXTURE   スフィア環境マップが有効
+// AGX_FEATURE_SKIN_MASK            肌マスクが有効（uColor0）
+// AGX_FEATURE_HAIR_MASK            髪マスクが有効（uColor1）
+// AGX_FEATURE_ALPHA_TEST           アルファテストが有効
+// AGX_FEATURE_FADE_OUT_COLOR       フェードアウトカラーが有効（uColor2）
+// AGX_FEATURE_DISABLE_LIGHT        ライトが無効
+// AGX_FEATURE_ALPHA_COLOR_FILTER   アルベドアルファによる色替えが有効
+// AGX_FEATURE_ALBEDO_ALPHA         アルベドのアルファをカラーのアルファに適用
+// AGX_FEATURE_PREMULTIPLY_ALPHA    プレマルチプライアルファな描画
+// AGX_FEATURE_MII                  Miiを描画する
+// AGX_FEATURE_MII_CONSTANT         Miiを描画する：Constant
+// AGX_FEATURE_MII_TEXTURE_DIRECT   Miiを描画する：Texture Direct
+// AGX_FEATURE_MII_RGB_LAYERED      Miiを描画する：RGB Layered
+// AGX_FEATURE_MII_ALPHA            Miiを描画する：Alpha
+// AGX_FEATURE_MII_LUMINANCE_ALPHA  Miiを描画する：Luminance Alpha
+// AGX_FEATURE_MII_ALPHA_OPA        Miiを描画する：Alpha Opa
+
+#ifdef GL_ES
+precision mediump float;
+#else
+#   define lowp
+#   define mediump
+#   define highp
+#endif
+
+/// 変調処理のマクロ
+#define FFL_MODULATE_MODE_CONSTANT        0
+#define FFL_MODULATE_MODE_TEXTURE_DIRECT  1
+#define FFL_MODULATE_MODE_RGB_LAYERED     2
+#define FFL_MODULATE_MODE_ALPHA           3
+#define FFL_MODULATE_MODE_LUMINANCE_ALPHA 4
+#define FFL_MODULATE_MODE_ALPHA_OPA       5
+
+// ----------------------------------------
+// フラグメントシェーダーに入力される uniform 変数
+uniform int   uMode;   ///< 描画モード
+uniform bool uAlphaTest;
+uniform bool uLightEnable;
+uniform mediump vec4    uColor0;            //!< 入力:[ 1 : 1 ] カラー0 (OR 肌カラー)
+uniform mediump vec4    uColor1;            //!< 入力:[ 1 : 2 ] カラー1 (OR 髪カラー)
+uniform mediump vec4    uColor2;            //!< 入力:[ 1 : 3 ] カラー2 (OR フェードアウトカラー)
+//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+uniform mediump vec3    uLightColor;        //!< 入力:[ 1 : 4 ] ライトの色
+//#endif
+
+#if defined(AGX_FEATURE_ALBEDO_TEXTURE)
+uniform sampler2D       uAlbedoTexture;     //!< 入力: テクスチャー
+#endif
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+uniform sampler2D       uNormalTexture;     //!< 入力: ノーマルマップ
+#endif
+#if defined(AGX_FEATURE_MASK_TEXTURE)
+uniform sampler2D       uMaskTexture;       //!< 入力：マスクテクスチャー
+#endif
+#if defined(AGX_FEATURE_ALPHA_TEXTURE)
+uniform sampler2D       uAlphaTexture;      //!< 入力：アルファテクスチャー
+#endif
+uniform sampler2D       uLUTSpecTexture;    //!< 入力: スペキュラーLUT
+uniform sampler2D       uLUTFresTexture;    //!< 入力: フレネルLUT
+#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
+uniform sampler2D       uSphereMapTexture;  //!< 入力: スフィア環境マップ
+#endif
+
+// ----------------------------------------
+// フラグメントシェーダーに渡される varying 変数
+varying lowp    vec4    vModelColor;                            //!< 出力:[ 1 : 1 ] モデルの色
+#if !defined(AGX_FEATURE_BUMP_TEXTURE)
+varying mediump vec3    vNormal;                                //!< 出力:[ 1 : 2 ] モデルの法線
+#endif
+#if defined(AGX_FEATURE_ALBEDO_TEXTURE) || defined(AGX_FEATURE_BUMP_TEXTURE) || defined(AGX_FEATURE_MASK_TEXTURE) || defined(AGX_FEATURE_ALPHA_TEXTURE)
+varying mediump vec2    vTexcoord0;                             //!< 出力:[ 1 : 3 ] テクスチャーUV
+#endif
+// camera
+varying mediump vec3    vEyeVecWorldOrTangent;                  //!< 出力:[ 1 : 4 ] 視線ベクトル
+//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+// punctual light
+varying mediump vec3    vPunctualLightDirWorldOrTangent;        //!< 出力:[ 1 : 5 ] ライトの方向
+varying mediump vec3    vPunctualLightHalfVecWorldOrTangent;    //!< 出力:[ 1 : 6 ] カメラとライトのハーフベクトル
+// GI
+varying mediump vec3    vGISpecularLightColor;                  //!< 出力:[ 1 : 7 ] GIフレネルで使用するカラー
+// Lighting Result
+varying mediump vec3    vDiffuseColor;                          //!< 出力:[ 1 : 8 ] ディフューズライティング結果
+//#endif
+// Reflect
+#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
+varying lowp    vec3    vReflectDir;                            //!< 出力:[ 1 : 9 ] 環境マップの反射ベクトル
+#endif
+
+// ------------------------------------------------------------
+// フラグメントシェーダーのエントリーポイント
+// ------------------------------------------------------------
+void main()
+{
+
+    // ディフューズカラーを取得
+    lowp vec4 albedoColor = vec4(1.0, 1.0, 1.0, 1.0);
+
+    // ============================================================
+    //  Mii
+    // ============================================================
+#if defined(AGX_FEATURE_MII)
+
+   //#if defined(AGX_FEATURE_MII_CONSTANT)
+    if(uMode == FFL_MODULATE_MODE_CONSTANT)
+    {
+        albedoColor = uColor0;
+    }
+    //#elif defined(AGX_FEATURE_MII_TEXTURE_DIRECT)
+    else if(uMode == FFL_MODULATE_MODE_TEXTURE_DIRECT)
+    {
+        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+    }
+    //#elif defined(AGX_FEATURE_MII_RGB_LAYERED)
+    else if(uMode == FFL_MODULATE_MODE_RGB_LAYERED)
+    {
+        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+        albedoColor = vec4(albedoColor.r * uColor0.rgb + albedoColor.g * uColor1.rgb + albedoColor.b * uColor2.rgb,
+                           uColor0.a * albedoColor.a);
+    }
+    //#elif defined(AGX_FEATURE_MII_ALPHA)
+    else if(uMode == FFL_MODULATE_MODE_ALPHA)
+    {
+        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+        albedoColor = vec4(uColor0.rgb, uColor0.a * albedoColor.r);
+    }
+    //#elif defined(AGX_FEATURE_MII_LUMINANCE_ALPHA)
+    else if(uMode == FFL_MODULATE_MODE_LUMINANCE_ALPHA)
+    {
+        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+        albedoColor = vec4(albedoColor.g * uColor0.rgb, uColor0.a * albedoColor.r);
+    }
+    //#elif defined(AGX_FEATURE_MII_ALPHA_OPA)
+    else if(uMode == FFL_MODULATE_MODE_ALPHA_OPA)
+    {
+        albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+        albedoColor = vec4(albedoColor.r * uColor0.rgb, uColor0.a);
+    }
+//#endif
+
+    albedoColor = albedoColor * vModelColor;
+#endif
+
+    // ============================================================
+    //  Albedo Texture
+    // ============================================================
+#if !defined(AGX_FEATURE_MII) && defined(AGX_FEATURE_ALBEDO_TEXTURE)
+    albedoColor = texture2D(uAlbedoTexture, vTexcoord0);
+#endif
+#if defined(AGX_FEATURE_ALPHA_TEXTURE)
+    albedoColor.a   = texture2D(uAlphaTexture, vTexcoord0).r;
+#endif
+
+    // ============================================================
+    //  Color Mask
+    // ============================================================
+    // ----------------------------------------
+    // Deprecated
+#if defined(AGX_FEATURE_ALPHA_COLOR_FILTER)
+    // 一部の場所にColor0を反映する
+    albedoColor.rgb = (albedoColor.rgb * albedoColor.a + uColor0.rgb * (1.0 - albedoColor.a));
+    albedoColor.a = 1.0;
+#elif defined(AGX_FEATURE_MASK_TEXTURE)
+    lowp vec3  maskTextureColor = texture2D(uMaskTexture, vTexcoord0).rgb;
+
+#   if defined(AGX_FEATURE_SKIN_MASK) && defined(AGX_FEATURE_HAIR_MASK)
+    // 肌と髪両方マスクが存在する
+    lowp float maskColorValue = maskTextureColor.g + maskTextureColor.b;
+    lowp vec3  maskColor      = maskTextureColor.g * uColor0.rgb + maskTextureColor.b * uColor1.rgb;
+    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskColorValue) + maskColor);
+
+#   elif defined(AGX_FEATURE_SKIN_MASK)
+    // 肌しかマスクが存在しない
+    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskTextureColor.g) + maskTextureColor.g * uColor0.rgb);
+
+#   elif defined(AGX_FEATURE_HAIR_MASK)
+    // 髪しかマスクが存在しない
+    albedoColor.rgb = (albedoColor.rgb * (1.0 - maskTextureColor.b) + maskTextureColor.b * uColor1.rgb);
+
+#   endif
+#endif
+
+    // アルベドに頂点カラーを掛ける
+    albedoColor *= vModelColor;
+
+    // ============================================================
+    //  Alpha test
+    // ============================================================
+//#if defined(AGX_FEATURE_ALPHA_TEST)
+    if (uAlphaTest && albedoColor.a < 0.5) { discard; }
+//#endif
+
+    // ============================================================
+    //  Bumpmap
+    // ============================================================
+    // 頂点からの情報
+    lowp vec3 normalWorldOrTangent;
+#if defined(AGX_FEATURE_BUMP_TEXTURE)
+    // バンプマップから法線を取得する
+    mediump vec3 bumpNormal = texture2D(uNormalTexture, vTexcoord0).rgb;
+
+    // 法線の正規化は処理が重いのでいったん正規化しない様に...
+//    normalWorldOrTangent = normalize(bumpNormal * 2.0 - 1.0);
+    normalWorldOrTangent = bumpNormal * 2.0 - 1.0;
+
+#else
+    // 法線を正規化して取得する
+    normalWorldOrTangent = normalize(vNormal);
+#endif
+
+    // ============================================================
+    //  Lighting
+    // ============================================================
+    // 最終的なカラー情報
+    lowp vec4 colorOut = vec4(0.0, 0.0, 0.0, albedoColor.a);  // 最終的に出力される色
+    lowp vec3 fresnel  = vec3(0.0, 0.0, 0.0);   // フレネル
+    lowp vec3 specular = vec3(0.0, 0.0, 0.0);   // スペキュラー
+
+//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+if (uLightEnable) {
+
+    // BRDFの計算を行う（バンプマッピングの場合は接空間）
+    lowp vec3 N = normalWorldOrTangent;
+    lowp vec3 V = vEyeVecWorldOrTangent.xyz;//normalize(vEyeVecWorldOrTangent.xyz);
+    lowp vec3 I = vPunctualLightDirWorldOrTangent.xyz;//normalize(vPunctualLightDirWorldOrTangent.xyz);
+    lowp vec3 H = vPunctualLightHalfVecWorldOrTangent.xyz;//normalize(vPunctualLightHalfVecWorldOrTangent.xyz);
+
+
+    // ----------------------------------------
+    // punctual light
+    // 平行光源や点光源などの厳密なライティング計算を行なうもの
+    {
+        lowp float fSpecular = dot(N, H);
+
+        lowp float specularIntensity = texture2D(uLUTSpecTexture, vec2(fSpecular)).r;
+        specular = (specularIntensity * uLightColor.rgb);
+    }
+
+    // ----------------------------------------
+    // GI
+    // 半球ライトやIBL、SHのように法線方向に半球積分された結果でライティング計算を行なうもの
+    {
+        lowp float fFresnel = dot(N, V);
+        lowp float fresnelIntensity = texture2D(uLUTFresTexture, vec2(fFresnel)).r;
+
+        fresnel = (fresnelIntensity * vGISpecularLightColor.rgb);
+    }
+}
+//#endif
+
+#if defined(AGX_FEATURE_SPHERE_MAP_TEXTURE)
+    // スフィア環境マップ
+    specular += texture2D(uSphereMapTexture, vReflectDir.xy).rgb;
+#endif
+
+    // ============================================================
+    //  Specular Mask
+    // ============================================================
+#if !defined(AGX_FEATURE_ALPHA_COLOR_FILTER) && defined(AGX_FEATURE_MASK_TEXTURE)
+    // スペキュラーマスク
+    specular = specular * maskTextureColor.r + fresnel;
+#else
+    specular += fresnel;
+#endif
+
+    // ============================================================
+    //  Output
+    // ============================================================
+//#if !defined(AGX_FEATURE_DISABLE_LIGHT)
+if (uLightEnable)
+    colorOut.rgb = vDiffuseColor.rgb * albedoColor.rgb + specular;
+//#else
+else
+    colorOut.rgb = albedoColor.rgb;
+//#endif
+
+    // フェードアウトを実装する
+#if defined(AGX_FEATURE_FADE_OUT_COLOR)
+    colorOut.rgb = (colorOut.rgb * (1.0 - uColor2.a)) + (uColor2.rgb * uColor2.a);
+#endif
+
+    // 色を反映させる
+    gl_FragColor = colorOut;
+
+    //#include <tonemapping_fragment>
+    //#include <colorspace_fragment>
+}
+`;
+
+class HermitianCurve {
+  constructor(keys2) {
+    this.keys = keys2.sort((a, b) => a.x - b.x);
+  }
+  interpolate(t, p0, p1, m0, m1) {
+    const h00 = 2 * t * t * t - 3 * t * t + 1;
+    const h10 = t * t * t - 2 * t * t + t;
+    const h01 = -2 * t * t * t + 3 * t * t;
+    const h11 = t * t * t - t * t;
+    return h00 * p0 + h10 * m0 + h01 * p1 + h11 * m1;
+  }
+  clamp(value2, min, max) {
+    return Math.min(Math.max(value2, min), max);
+  }
+  generateLUT(lutSize = 512) {
+    const lut = new Uint8Array(lutSize);
+    let keyIdx = 0;
+    for (let i = 0;i < lutSize; i++) {
+      const pos = i / (lutSize - 1);
+      while (keyIdx < this.keys.length - 2 && pos > this.keys[keyIdx + 1].x) {
+        keyIdx++;
+      }
+      const p0 = this.keys[keyIdx];
+      const p1 = this.keys[keyIdx + 1];
+      let t = (pos - p0.x) / (p1.x - p0.x);
+      t = isNaN(t) ? 0 : t;
+      const y = this.interpolate(t, p0.y, p1.y, p0.dx * (p1.x - p0.x), p1.dx * (p1.x - p0.x));
+      lut[i] = Math.round(this.clamp(y, 0, 1) * 255);
+    }
+    return lut;
+  }
+}
+
+class LUTShaderMaterial extends THREE4.ShaderMaterial {
+  static LUTSpecularTextureType = {
+    NONE: 0,
+    DEFAULT_02: 1,
+    SKIN_01: 2,
+    MAX: 3
+  };
+  static LUTFresnelTextureType = {
+    NONE: 0,
+    DEFAULT_02: 1,
+    SKIN_01: 2,
+    MAX: 3
+  };
+  static lutDefinitions = {
+    specular: {
+      [LUTShaderMaterial.LUTSpecularTextureType.NONE]: new HermitianCurve([
+        { x: 0, y: 0, dx: 0, dy: 0 },
+        { x: 1, y: 0, dx: 0, dy: 0 }
+      ]),
+      [LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02]: new HermitianCurve([
+        { x: 0, y: 0, dx: 0, dy: 0 },
+        { x: 0.05, y: 0, dx: 0, dy: 0 },
+        {
+          x: 0.8,
+          y: 0.038,
+          dx: 0.157894736842105,
+          dy: 0.157894736842105
+        },
+        { x: 1, y: 0.11, dx: 0, dy: 0 }
+      ]),
+      [LUTShaderMaterial.LUTSpecularTextureType.SKIN_01]: new HermitianCurve([
+        {
+          x: 0,
+          y: 0.03,
+          dx: -0.105263157894737,
+          dy: -0.105263157894737
+        },
+        { x: 1, y: 0, dx: 0, dy: 0 }
+      ])
+    },
+    fresnel: {
+      [LUTShaderMaterial.LUTFresnelTextureType.NONE]: new HermitianCurve([
+        { x: 0, y: 0, dx: 0, dy: 0 },
+        { x: 1, y: 0, dx: 0, dy: 0 }
+      ]),
+      [LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02]: new HermitianCurve([
+        {
+          x: 0,
+          y: 0.3,
+          dx: -0.105263157894734,
+          dy: -0.105263157894734
+        },
+        {
+          x: 0.175,
+          y: 0.23,
+          dx: -0.626315789473681,
+          dy: -0.626315789473681
+        },
+        {
+          x: 0.6,
+          y: 0.05,
+          dx: -0.210526315789474,
+          dy: -0.210526315789474
+        },
+        {
+          x: 1,
+          y: 0,
+          dx: -0.105263157894737,
+          dy: -0.105263157894737
+        }
+      ]),
+      [LUTShaderMaterial.LUTFresnelTextureType.SKIN_01]: new HermitianCurve([
+        {
+          x: 0.005,
+          y: 0.35,
+          dx: -0.105263157894734,
+          dy: -0.105263157894734
+        },
+        {
+          x: 0.173,
+          y: 0.319,
+          dx: -0.205263157894734,
+          dy: -0.205263157894734
+        },
+        {
+          x: 0.552,
+          y: 0.051,
+          dx: -0.210526315789474,
+          dy: -0.210526315789474
+        },
+        { x: 1, y: 0.001, dx: 0, dy: 0 }
+      ])
+    }
+  };
+  static modulateTypeToLUTSpecular = [
+    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
+    LUTShaderMaterial.LUTSpecularTextureType.SKIN_01,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTSpecularTextureType.NONE,
+    LUTShaderMaterial.LUTSpecularTextureType.NONE,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTSpecularTextureType.DEFAULT_02
+  ];
+  static modulateTypeToLUTFresnel = [
+    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
+    LUTShaderMaterial.LUTFresnelTextureType.SKIN_01,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTFresnelTextureType.NONE,
+    LUTShaderMaterial.LUTFresnelTextureType.NONE,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02,
+    LUTShaderMaterial.LUTFresnelTextureType.DEFAULT_02
+  ];
+  static _lutTextures = null;
+  static getLUTTextures(lutSize = 512) {
+    if (LUTShaderMaterial._lutTextures) {
+      return LUTShaderMaterial._lutTextures;
+    }
+    const textures = { specular: {}, fresnel: {} };
+    const r8 = Number(THREE4.REVISION) <= 136 ? THREE4.LuminanceFormat : THREE4.RedFormat;
+    function generateLUTTextures(lutType, target) {
+      for (const key2 in lutType) {
+        const lutData = lutType[key2].generateLUT(lutSize);
+        target[Number(key2)] = Object.assign(new THREE4.DataTexture(lutData, lutSize, 1, r8, THREE4.UnsignedByteType), {
+          colorSpace: THREE4.LinearSRGBColorSpace,
+          needsUpdate: true
+        });
+      }
+    }
+    generateLUTTextures(LUTShaderMaterial.lutDefinitions.specular, textures.specular);
+    generateLUTTextures(LUTShaderMaterial.lutDefinitions.fresnel, textures.fresnel);
+    LUTShaderMaterial._lutTextures = textures;
+    return textures;
+  }
+  static defaultHSLightGroundColor = new THREE4.Color(0.87843, 0.72157, 0.5898);
+  static defaultHSLightSkyColor = new THREE4.Color(0.87843, 0.83451, 0.80314);
+  static defaultDirLightColor0 = new THREE4.Color(0.35137, 0.32392, 0.32392);
+  static defaultDirLightColor1 = new THREE4.Color(0.10039, 0.09255, 0.09255);
+  static defaultDirLightCount = 2;
+  static defaultDirLightDirAndType0 = new THREE4.Vector4(-0.2, 0.5, 0.8, -1);
+  static defaultDirLightDirAndType1 = new THREE4.Vector4(0, -0.19612, 0.98058, -1);
+  static defaultLightColor = new THREE4.Color(0.35137, 0.32392, 0.32392);
+  static defaultLightDirection = this.defaultDirLightDirAndType0;
+  static multiplyColorIfNeeded(color, modulateType, modulateMode) {
+    if (modulateType === 1 || modulateType === 4 || modulateMode === 0 && modulateType === 9) {
+      const mul2 = 0.9019608;
+      color.r *= mul2;
+      color.g *= mul2;
+      color.b *= mul2;
+    }
+    return color;
+  }
+  constructor(options = {}) {
+    const uniforms = {
+      uBoneCount: { value: 0 },
+      uAlpha: { value: 1 },
+      uHSLightGroundColor: {
+        value: LUTShaderMaterial.defaultHSLightGroundColor
+      },
+      uHSLightSkyColor: {
+        value: LUTShaderMaterial.defaultHSLightSkyColor
+      },
+      uDirLightColor0: {
+        value: LUTShaderMaterial.defaultDirLightColor0
+      },
+      uDirLightColor1: {
+        value: LUTShaderMaterial.defaultDirLightColor1
+      },
+      uDirLightCount: {
+        value: LUTShaderMaterial.defaultDirLightCount
+      },
+      uDirLightDirAndType0: {
+        value: LUTShaderMaterial.defaultDirLightDirAndType0.clone()
+      },
+      uDirLightDirAndType1: {
+        value: LUTShaderMaterial.defaultDirLightDirAndType1.clone()
+      },
+      uLightEnable: { value: true },
+      uLightColor: { value: LUTShaderMaterial.defaultLightColor }
+    };
+    super({
+      vertexShader: _LUTShader_vert,
+      fragmentShader: _LUTShader_frag,
+      uniforms
+    });
+    this._modulateType = 0;
+    this.setValues(options);
+  }
+  get color() {
+    if (!this.uniforms.uColor0) {
+      return null;
+    } else if (this._color3) {
+      return this._color3;
+    }
+    const color4 = this.uniforms.uColor0.value;
+    const color3 = new THREE4.Color(color4.x, color4.y, color4.z);
+    this._color3 = color3;
+    return color3;
+  }
+  set color(value2) {
+    function toColor4(color, opacity2 = 1) {
+      return new THREE4.Vector4(color.r, color.g, color.b, opacity2);
+    }
+    if (Array.isArray(value2)) {
+      this.uniforms.uColor0 = { value: toColor4(value2[0]) };
+      this.uniforms.uColor1 = { value: toColor4(value2[1]) };
+      this.uniforms.uColor2 = { value: toColor4(value2[2]) };
+      return;
+    }
+    const color3 = value2 ? value2 : new THREE4.Color(1, 1, 1);
+    this._color3 = color3.clone();
+    if (this.modulateType !== undefined && typeof this.modulateMode === "number") {
+      LUTShaderMaterial.multiplyColorIfNeeded(color3, this.modulateType, this.modulateMode);
+    }
+    const opacity = this.opacity;
+    if (this._opacity) {
+      delete this._opacity;
+    }
+    this.uniforms.uColor0 = { value: toColor4(color3, opacity) };
+  }
+  get opacity() {
+    if (!this.uniforms.uColor0) {
+      return this._opacity ? this._opacity : 1;
+    }
+    return this.uniforms.uColor0.value.w;
+  }
+  set opacity(value2) {
+    if (!this.uniforms || !this.uniforms.uColor0) {
+      this._opacity = 1;
+      return;
+    }
+    this.uniforms.uColor0.value.w = value2;
+  }
+  get modulateMode() {
+    return this.uniforms.uMode ? this.uniforms.uMode.value : null;
+  }
+  set modulateMode(value2) {
+    this.uniforms.uMode = { value: value2 };
+  }
+  get lightEnable() {
+    return this.uniforms.uLightEnable ? this.uniforms.uLightEnable.value : null;
+  }
+  set lightEnable(value2) {
+    this.uniforms.uLightEnable = { value: value2 };
+  }
+  get modulateType() {
+    return this._modulateType;
+  }
+  set modulateType(value2) {
+    const lutTextures = LUTShaderMaterial.getLUTTextures();
+    const specType = LUTShaderMaterial.modulateTypeToLUTSpecular[value2];
+    const fresType = LUTShaderMaterial.modulateTypeToLUTFresnel[value2];
+    if (specType === undefined || fresType === undefined) {
+      return;
+    }
+    this._modulateType = value2;
+    const lutSpecTexture = lutTextures.specular[specType];
+    const lutFresTexture = lutTextures.fresnel[fresType];
+    this.uniforms.uLUTSpecTexture = { value: lutSpecTexture };
+    this.uniforms.uLUTFresTexture = { value: lutFresTexture };
+    this.uniforms.uAlphaTest = {
+      value: value2 >= 6 && value2 <= 8
+    };
+    this._side = this.side;
+    this.side = value2 === 6 ? THREE4.DoubleSide : this.side;
+  }
+  get map() {
+    return this.uniforms.uAlbedoTexture ? this.uniforms.uAlbedoTexture.value : null;
+  }
+  set map(value2) {
+    this.uniforms.uAlbedoTexture = { value: value2 };
+  }
+  get lightDirection() {
+    return this.uniforms.uDirLightDirAndType0.value;
+  }
+  set lightDirection(value2) {
+    this.uniforms.uDirLightDirAndType0 = { value: value2 };
+    this.uniforms.uDirLightDirAndType0.value.w = -1;
+  }
+}
+var LUTShaderMaterial_default = LUTShaderMaterial;
+
+// src/class/3d/shader/ShaderUtils.ts
+var import_localforage = __toESM(require_localforage(), 1);
+
 // src/class/3d/shader/fflShaderConst.ts
-var THREE6 = _THREE();
+var THREE5 = _THREE();
 var FFLToonMaterial = {
-  ambient: new THREE6.Color(0.8, 0.8, 0.8),
-  diffuse: new THREE6.Color(0.8, 0.8, 0.8),
-  specular: new THREE6.Color(0.1, 0.1, 0.1),
+  ambient: new THREE5.Color(0.8, 0.8, 0.8),
+  diffuse: new THREE5.Color(0.8, 0.8, 0.8),
+  specular: new THREE5.Color(0.1, 0.1, 0.1),
   specularPower: 0.01,
   specularMode: 0
 };
-var cLightAmbientFFLIconWithBody = new THREE6.Color(0.5, 0.5, 0.5);
-var cLightDiffuseFFLIconWithBody = new THREE6.Color(0.9, 0.9, 0.9);
-var cLightSpecularFFLIconWithBody = new THREE6.Color(1, 1, 1);
-var cLightDirGlossy = new THREE6.Vector3(-0.35, 1, 0.8);
-var cLightDirFFLIconWithBody = new THREE6.Vector3(-0.5, 0.366, 0.785);
-var cRimColor = new THREE6.Vector4(0.3, 0.3, 0.3, 1);
+var cLightAmbientFFLIconWithBody = new THREE5.Color(0.5, 0.5, 0.5);
+var cLightDiffuseFFLIconWithBody = new THREE5.Color(0.9, 0.9, 0.9);
+var cLightSpecularFFLIconWithBody = new THREE5.Color(1, 1, 1);
+var cLightDirGlossy = new THREE5.Vector3(-0.35, 1, 0.8);
+var cLightDirFFLIconWithBody = new THREE5.Vector3(-0.5, 0.366, 0.785);
+var cRimColor = new THREE5.Vector4(0.3, 0.3, 0.3, 1);
 var cPantsColorGray = [0.25098, 0.27451, 0.30588];
 var cPantsColorRed = [0.43922, 0.12549, 0.06275];
 var cPantsColorBlue = [0.15686, 0.25098, 0.47059];
@@ -53323,7 +53205,7 @@ class CustomToonMaterial extends MeshToonMaterial {
 }
 
 // src/class/3d/shader/ShaderUtils.ts
-var THREE7 = _THREE();
+var THREE6 = _THREE();
 var getSettingSafe = async (key2) => {
   const value2 = await import_localforage.default.getItem("settings_" + key2);
   if (value2 == null && key2 === "shaderType") {
@@ -53356,28 +53238,28 @@ async function traverseMesh(node, shaderType) {
   let modulateColor;
   if (!userData.modulateColor) {
     console.warn(`Mesh "${node.name}" is missing "modulateColor" in userData.`);
-    modulateColor = new THREE7.Vector4(1, 0, 0, 1);
+    modulateColor = new THREE6.Vector4(1, 0, 0, 1);
   } else {
-    modulateColor = new THREE7.Vector4(...userData.modulateColor, 1);
+    modulateColor = new THREE6.Vector4(...userData.modulateColor, 1);
   }
-  THREE7.ColorManagement.enabled = false;
+  THREE6.ColorManagement.enabled = false;
   const defines = {};
   if (originalMaterial.map) {
     defines.USE_MAP = "";
-    originalMaterial.map.colorSpace = THREE7.LinearSRGBColorSpace;
+    originalMaterial.map.colorSpace = THREE6.LinearSRGBColorSpace;
     originalMaterial.needsUpdate = true;
   }
   let side = originalMaterial.side;
   if (userData.cullMode !== undefined) {
     switch (userData.cullMode) {
       case 0:
-        side = THREE7.DoubleSide;
+        side = THREE6.DoubleSide;
         break;
       case 1:
-        side = THREE7.FrontSide;
+        side = THREE6.FrontSide;
         break;
       case 2:
-        side = THREE7.BackSide;
+        side = THREE6.BackSide;
         break;
     }
   }
@@ -53389,7 +53271,7 @@ async function traverseMesh(node, shaderType) {
     lightEnable: shaderSetting === "lightDisabled" /* LightDisabled */ ? false : true
   } : {};
   const params = {
-    color: new THREE7.Color(...modulateColor),
+    color: new THREE6.Color(...modulateColor),
     ...modulate,
     map: originalMaterial.map || undefined,
     side
@@ -53421,7 +53303,7 @@ async function getShaderMaterialFromShaderType(type) {
     case "wiiu" /* WiiU */:
       return FFLShaderMaterial_default;
     case "lightDisabled" /* LightDisabled */:
-      return THREE7.MeshBasicMaterial;
+      return THREE6.MeshBasicMaterial;
     case "wiiu_blinn" /* WiiUBlinn */:
       return FFLShaderBlinnMaterial;
     case "wiiu_ffliconwithbody" /* WiiUFFLIconWithBody */:
@@ -53437,13 +53319,13 @@ async function getShaderMaterialFromShaderType(type) {
     case "three_toon" /* ThreeToon */:
       return CustomToonMaterial;
     case "three_phong" /* ThreePhong */:
-      return THREE7.MeshPhongMaterial;
+      return THREE6.MeshPhongMaterial;
   }
 }
 var ThreeMaterialStandardLights = (scene) => {
-  const intensity = Number(THREE7.REVISION) >= 155 ? Math.PI : 1;
-  const ambientLight = new THREE7.AmbientLight(new THREE7.Color(0.73, 0.73, 0.73), intensity);
-  const directionalLight = new THREE7.DirectionalLight(new THREE7.Color(0.6, 0.6, 0.6), intensity);
+  const intensity = Number(THREE6.REVISION) >= 155 ? Math.PI : 1;
+  const ambientLight = new THREE6.AmbientLight(new THREE6.Color(0.73, 0.73, 0.73), intensity);
+  const directionalLight = new THREE6.DirectionalLight(new THREE6.Color(0.6, 0.6, 0.6), intensity);
   directionalLight.position.set(-0.455, 0.348, 0.5);
   ambientLight.name = "ambientLight";
   directionalLight.name = "directionalLight";
@@ -53451,8 +53333,8 @@ var ThreeMaterialStandardLights = (scene) => {
 };
 var ThreeMaterialToonLights = (scene) => {
   const intensity = 2.5;
-  const ambientLight = new THREE7.AmbientLight(new THREE7.Color(0.73, 0.73, 0.73), intensity);
-  const directionalLight = new THREE7.DirectionalLight(new THREE7.Color(0.6, 0.6, 0.6), intensity);
+  const ambientLight = new THREE6.AmbientLight(new THREE6.Color(0.73, 0.73, 0.73), intensity);
+  const directionalLight = new THREE6.DirectionalLight(new THREE6.Color(0.6, 0.6, 0.6), intensity);
   directionalLight.position.set(-0.255, 0.348, 0.5);
   ambientLight.name = "ambientLight";
   directionalLight.name = "directionalLight";
@@ -75381,7 +75263,7 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
   var bidx = 0;
   var imageIndex = 0;
   var vpos = 0;
-  var byte2 = 0;
+  var byte = 0;
   var arr_a, arr_b;
   var bytes = RW2_Format == 6 ? new Uint32Array(18) : new Uint8Array(16);
   var i, j2, sh, pred = [0, 0], nonz = [0, 0], isOdd, idx = 0, pixel_base;
@@ -75403,8 +75285,8 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
       }
     } else {
       vpos = vpos - bits & 131071;
-      byte2 = vpos >> 3 ^ 16368;
-      return (buffer[byte2] | buffer[byte2 + 1] << 8) >> (vpos & 7) & ~(-1 << bits);
+      byte = vpos >> 3 ^ 16368;
+      return (buffer[byte] | buffer[byte + 1] << 8) >> (vpos & 7) & ~(-1 << bits);
     }
   }
   function getBufferDataRW6(i2) {
@@ -75426,7 +75308,7 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
     bytes[12] = (getBufferDataRW6(13) << 2 & 1020 | getBufferDataRW6(14) >> 6) & 1023;
     bytes[13] = (getBufferDataRW6(14) << 4 | getBufferDataRW6(15) >> 4) & 1023;
     vpos += 16;
-    byte2 = 0;
+    byte = 0;
   }
   function readPageRw6_bps12() {
     bytes[0] = getBufferDataRW6(0) << 4 | getBufferDataRW6(1) >> 4;
@@ -75448,7 +75330,7 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
     bytes[16] = getBufferDataRW6(14);
     bytes[17] = getBufferDataRW6(15);
     vpos += 16;
-    byte2 = 0;
+    byte = 0;
   }
   function resetPredNonzeros() {
     pred[0] = 0;
@@ -75476,13 +75358,13 @@ UTIF.decode._decodePanasonic = function(img, data2, off, len, tgt, toff) {
           for (i = 0;i < pixelsPerBlock; i++) {
             isOdd = i & 1;
             if (i % 3 == 2) {
-              var base = byte2 < bufferSize ? bytes[byte2++] : 0;
+              var base = byte < bufferSize ? bytes[byte++] : 0;
               if (base == 3)
                 base = 4;
               pixel_base = pixelbase0 << base;
               sh = 1 << base;
             }
-            var epixel = byte2 < bufferSize ? bytes[byte2++] : 0;
+            var epixel = byte < bufferSize ? bytes[byte++] : 0;
             if (pred[isOdd]) {
               epixel *= sh;
               if (pixel_base < pixelbase_compare && nonz[isOdd] > pixel_base)
@@ -79592,13 +79474,13 @@ Parser.prototype.parseStruct = function(description) {
     return description.call(this);
   } else {
     var fields = Object.keys(description);
-    var struct2 = {};
+    var struct = {};
     for (var j2 = 0;j2 < fields.length; j2++) {
       var fieldName = fields[j2];
       var fieldType = description[fieldName];
-      struct2[fieldName] = fieldType.call(this);
+      struct[fieldName] = fieldType.call(this);
     }
-    return struct2;
+    return struct;
   }
 };
 Parser.prototype.parseValueRecord = function(valueFormat) {
@@ -107494,7 +107376,7 @@ var ExtClothesMiitomoMeshAndTextureList = [
   },
   {
     Shirt: "StudioHoodieShirt",
-    Pants: "StudioPants",
+    Pants: "StudioHoodiePants",
     SkirtMedium: "StudioMediumSkirt",
     Hoodie: "StudioHood"
   }
@@ -107586,7 +107468,9 @@ var FFLiCreateID = import_struct_fu.default.struct([
   import_struct_fu.default.ubit("create_date2", 14),
   import_struct_fu.default.byte("base", 6)
 ]);
-var FFLiAuthorID = import_struct_fu.default.struct([import_struct_fu.default.byte("data", 8)]);
+var FFLiAuthorID = import_struct_fu.default.struct([
+  import_struct_fu.default.byte("data", 8)
+]);
 var Ver3StoreData = import_struct_fu.default.struct([
   import_struct_fu.default.ubitLE("mii_version", 8),
   import_struct_fu.default.ubitLE("copyable", 1),
@@ -107670,10 +107554,10 @@ function calculateCRC16(storeData) {
   const data2 = storeData.subarray(0, 94);
   console.log(data2);
   let crc = 0;
-  for (const byte2 of data2) {
+  for (const byte of data2) {
     for (let bit = 7;bit >= 0; bit--) {
       const flag = (crc & 32768) != 0;
-      crc = (crc << 1 | byte2 >> bit & 1) ^ (flag ? 4129 : 0);
+      crc = (crc << 1 | byte >> bit & 1) ^ (flag ? 4129 : 0);
     }
   }
   for (let i = 16;i > 0; i--) {
@@ -108501,7 +108385,18 @@ var Ver3HairColorTable = [8, 1, 2, 3, 4, 5, 6, 7];
 var Ver3EyeColorTable = [8, 9, 10, 11, 12, 13];
 var Ver3MouthColorTable = [19, 20, 21, 22, 23];
 var Ver3GlassColorTable = [8, 14, 15, 16, 17, 18, 0];
-var ForbiddenShirtPantColors = [, 7, 22, 78, 79, 84, 91, 92, 93, 94];
+var ForbiddenShirtPantColors = [
+  ,
+  7,
+  22,
+  78,
+  79,
+  84,
+  91,
+  92,
+  93,
+  94
+];
 
 // src/class/struct/RFLStoreData.ts
 var RFLCreateID = import_struct_fu2.default.struct([import_struct_fu2.default.uint8("data", 8)]);
@@ -109405,8 +109300,8 @@ function stripSpaces2(str) {
 }
 function hexToUint8Array2(hex) {
   const match = hex.match(/.{1,2}/g);
-  const arr = (match ? match : []).map(function(byte2) {
-    return parseInt(byte2, 16);
+  const arr = (match ? match : []).map(function(byte) {
+    return parseInt(byte, 16);
   });
   return new Uint8Array(arr);
 }
@@ -109846,8 +109741,8 @@ class Mii {
 }
 
 // src/util/camera.js
-var THREE8 = _THREE();
-window.THREE3 = THREE8;
+var THREE7 = _THREE();
+window.THREE3 = THREE7;
 var ViewType = {
   Face: 0,
   MakeIcon: 1,
@@ -109861,48 +109756,48 @@ function getCameraForViewType(viewType, width2 = 1, height2 = 1, miiHeight = 1) 
   switch (viewType) {
     case ViewType.Face: {
       const fovy = 15;
-      const camera = new THREE8.PerspectiveCamera(fovy, aspect2, 0.1, 1000);
+      const camera = new THREE7.PerspectiveCamera(fovy, aspect2, 0.1, 1000);
       camera.position.set(0, 34.5, 380);
       camera.lookAt(0, 34.3, 0);
       return camera;
     }
     case ViewType.MakeIcon: {
       const fovy = 9.8762;
-      const camera = new THREE8.PerspectiveCamera(fovy, aspect2, 500, 1000);
+      const camera = new THREE7.PerspectiveCamera(fovy, aspect2, 500, 1000);
       camera.position.set(0, 34.5, 600);
       camera.lookAt(0, 34.5, 0);
       return camera;
     }
     case ViewType.IconFovy45: {
-      const camera = new THREE8.PerspectiveCamera(45, aspect2, 50, 1000);
+      const camera = new THREE7.PerspectiveCamera(45, aspect2, 50, 1000);
       camera.position.set(0, 34, 110);
       camera.lookAt(0, 34, 0);
       return camera;
     }
     case ViewType.AllBody: {
       const fovy = 15;
-      const camera = new THREE8.PerspectiveCamera(fovy, aspect2, 50, 1500);
+      const camera = new THREE7.PerspectiveCamera(fovy, aspect2, 50, 1500);
       camera.position.set(0, 50, 900);
       camera.lookAt(0, 105, 0);
       return camera;
     }
     case ViewType.AllBodySugar: {
       const fovy = 15;
-      const camera = new THREE8.PerspectiveCamera(fovy, aspect2, 50, 15000);
-      const posStart = new THREE8.Vector3(0, 65, 550);
-      const atStart = new THREE8.Vector3(0, 65, 0);
-      const posEnd = new THREE8.Vector3(0, 75, 850);
-      const atEnd = new THREE8.Vector3(0, 88, 0);
+      const camera = new THREE7.PerspectiveCamera(fovy, aspect2, 50, 15000);
+      const posStart = new THREE7.Vector3(0, 65, 550);
+      const atStart = new THREE7.Vector3(0, 65, 0);
+      const posEnd = new THREE7.Vector3(0, 75, 850);
+      const atEnd = new THREE7.Vector3(0, 88, 0);
       const t3 = (miiHeight - 0.5) / (1.264 - 0.5);
-      const pos = new THREE8.Vector3(posStart.x + t3 * (posEnd.x - posStart.x), posStart.y + t3 * (posEnd.y - posStart.y), posStart.z + t3 * (posEnd.z - posStart.z));
-      const at = new THREE8.Vector3(atStart.x + t3 * (atEnd.x - atStart.x), atStart.y + t3 * (atEnd.y - atStart.y), atStart.z + t3 * (atEnd.z - atStart.z));
+      const pos = new THREE7.Vector3(posStart.x + t3 * (posEnd.x - posStart.x), posStart.y + t3 * (posEnd.y - posStart.y), posStart.z + t3 * (posEnd.z - posStart.z));
+      const at = new THREE7.Vector3(atStart.x + t3 * (atEnd.x - atStart.x), atStart.y + t3 * (atEnd.y - atStart.y), atStart.z + t3 * (atEnd.z - atStart.z));
       camera.position.copy(pos);
       camera.lookAt(at);
       return camera;
     }
     case ViewType.CreditIcon: {
       const fovy = 15;
-      const camera = new THREE8.PerspectiveCamera(fovy, aspect2, 0.1, 1000);
+      const camera = new THREE7.PerspectiveCamera(fovy, aspect2, 0.1, 1000);
       camera.position.set(-60, 34.5, 380);
       camera.lookAt(0, 34.3, 0);
       return camera;
@@ -109913,30 +109808,30 @@ function getCameraForViewType(viewType, width2 = 1, height2 = 1, miiHeight = 1) 
 }
 
 // src/util/rendertarget.js
-var THREE9 = _THREE();
+var THREE8 = _THREE();
 var isWorker = false;
 if (typeof window === "undefined") {
   isWorker = true;
 }
 function renderTargetToDataURL(renderTarget, renderer2, flipY = false, blob = true) {
   return new Promise((resolve) => {
-    const scene = new THREE9.Scene;
+    const scene = new THREE8.Scene;
     scene.background = null;
-    const material = new THREE9.MeshBasicMaterial({
-      side: THREE9.DoubleSide,
+    const material = new THREE8.MeshBasicMaterial({
+      side: THREE8.DoubleSide,
       map: renderTarget.texture,
       transparent: true
     });
-    const plane = new THREE9.PlaneGeometry(2, 2);
-    const mesh = new THREE9.Mesh(plane, material);
+    const plane = new THREE8.PlaneGeometry(2, 2);
+    const mesh = new THREE8.Mesh(plane, material);
     scene.add(mesh);
     const camera = getIdentCamera(flipY);
     const prevTarget = renderer2.getRenderTarget();
     const prevColorSpace = renderer2.outputColorSpace;
-    const size2 = new THREE9.Vector2;
+    const size2 = new THREE8.Vector2;
     renderer2.getSize(size2);
     renderer2.setRenderTarget(null);
-    renderer2.outputColorSpace = THREE9.ColorManagement ? THREE9.ColorManagement.workingColorSpace : null;
+    renderer2.outputColorSpace = THREE8.ColorManagement ? THREE8.ColorManagement.workingColorSpace : null;
     renderer2.setSize(renderTarget.width, renderTarget.height, false);
     renderer2.render(scene, camera);
     function cleanup() {
@@ -109968,22 +109863,22 @@ async function renderTargetToDataTexture(renderTarget, renderer2, flipY = false,
   const { width: width2, height: height2 } = renderTarget;
   let buf = new Uint8Array(width2 * height2 * 4);
   await renderer2.readRenderTargetPixelsAsync(renderTarget, 0, 0, width2, height2, buf);
-  const dataTexture = new THREE9.DataTexture(buf, width2, height2, THREE9.RGBAFormat, THREE9.UnsignedByteType);
+  const dataTexture = new THREE8.DataTexture(buf, width2, height2, THREE8.RGBAFormat, THREE8.UnsignedByteType);
   dataTexture.needsUpdate = true;
   if (flipY) {
     dataTexture.flipY = true;
   }
   if (filtering) {
-    dataTexture.minFilter = THREE9.LinearFilter;
-    dataTexture.magFilter = THREE9.LinearFilter;
+    dataTexture.minFilter = THREE8.LinearFilter;
+    dataTexture.magFilter = THREE8.LinearFilter;
   }
   return dataTexture;
 }
 
 // src/class/3d/shader/ColorMix.ts
-var THREE10 = _THREE();
+var THREE9 = _THREE();
 function ColorMixShaderMaterial(texture, r, g3, b2) {
-  return new THREE10.ShaderMaterial({
+  return new THREE9.ShaderMaterial({
     uniforms: {
       u_texture: { value: texture },
       u_const1: { value: r },
@@ -110027,9 +109922,9 @@ gl_FragColor = vec4(mixedColor * mixedAlpha, mixedAlpha);
 `
   });
 }
-function colorMixTexture(tex, constR = new THREE10.Vector4(0, 1, 1, 1), constG = new THREE10.Vector4(1, 1, 0, 1), constB = new THREE10.Vector4(1, 1, 0, 1), constA, rendererMain, textureResolution) {
+function colorMixTexture(tex, constR = new THREE9.Vector4(0, 1, 1, 1), constG = new THREE9.Vector4(1, 1, 0, 1), constB = new THREE9.Vector4(1, 1, 0, 1), constA, rendererMain, textureResolution) {
   return new Promise((resolve) => {
-    const scene = new THREE10.Scene;
+    const scene = new THREE9.Scene;
     scene.background = constA;
     let width2, height2;
     if (tex instanceof ImageBitmap) {
@@ -110045,18 +109940,18 @@ function colorMixTexture(tex, constR = new THREE10.Vector4(0, 1, 1, 1), constG =
       height2 = textureResolution / aspect2;
     }
     console.log("HI ITS ME CLOTHING TEX RENDERER, IDK WTF I DID", width2, height2);
-    const renderTarget = new THREE10.WebGLRenderTarget(width2, height2, {
-      minFilter: THREE10.LinearFilter,
-      magFilter: THREE10.LinearFilter,
-      format: THREE10.RGBAFormat
+    const renderTarget = new THREE9.WebGLRenderTarget(width2, height2, {
+      minFilter: THREE9.LinearFilter,
+      magFilter: THREE9.LinearFilter,
+      format: THREE9.RGBAFormat
     });
-    const camera = new THREE10.OrthographicCamera(width2 / -2, width2 / 2, height2 / 2, height2 / -2, 0.1, 1000);
+    const camera = new THREE9.OrthographicCamera(width2 / -2, width2 / 2, height2 / 2, height2 / -2, 0.1, 1000);
     camera.position.z = 1;
     const renderer2 = rendererMain;
     if (typeof window !== "undefined")
       window.camera = camera;
-    const geometry = new THREE10.PlaneGeometry(width2, height2);
-    const plane = new THREE10.Mesh(geometry, ColorMixShaderMaterial(tex, constR, constG, constB));
+    const geometry = new THREE9.PlaneGeometry(width2, height2);
+    const plane = new THREE9.Mesh(geometry, ColorMixShaderMaterial(tex, constR, constG, constB));
     scene.add(plane);
     function render() {
       async function finalize(result) {
@@ -110069,7 +109964,7 @@ function colorMixTexture(tex, constR = new THREE10.Vector4(0, 1, 1, 1), constG =
         renderTarget.dispose();
       }
       const oldRT = renderer2.getRenderTarget();
-      const oldColor = new THREE10.Color;
+      const oldColor = new THREE9.Color;
       renderer2.setRenderTarget(renderTarget);
       renderer2.render(scene, camera);
       renderer2.setRenderTarget(oldRT);
@@ -110098,7 +109993,7 @@ async function clothingUpdate({
   customTextureType,
   texResolution
 }) {
-  const THREE11 = _THREE();
+  const THREE10 = _THREE();
   const suffix = gender == 1 ? "F" : "";
   const clothingEntry = clothesType;
   let key2 = `${bodyModel}_${ExtClothesList[clothingEntry]}${suffix}`;
@@ -110107,7 +110002,7 @@ async function clothingUpdate({
     let texture;
     switch (ClothesTypeList[clothingEntry]) {
       case 0 /* COLOR_MIXED */: {
-        const colorMixR = new THREE11.Vector4(...shirtColor, 1), colorMixG = new THREE11.Vector4(...shoesColor, 1), colorMixB = new THREE11.Vector4(...pantsColor, 1), colorMixA = new THREE11.Color(facelineColor ? facelineColor : 16777215);
+        const colorMixR = new THREE10.Vector4(...shirtColor, 1), colorMixG = new THREE10.Vector4(...shoesColor, 1), colorMixB = new THREE10.Vector4(...pantsColor, 1), colorMixA = new THREE10.Color(facelineColor ? facelineColor : 16777215);
         console.log("Clothing Texture Key:", clothesKey);
         texture = await colorMixTexture(clothesTextures2[clothesKey], colorMixR, colorMixG, colorMixB, colorMixA, renderer2, texResolution);
         console.log("loaded shirt texture!");
@@ -110128,7 +110023,7 @@ async function clothingUpdate({
   let nBodyMat = nBody.material;
   let nLegsMat = nLegs.material;
   let isUsingShader = await isShaderMaterial();
-  let clothesModulate = isUsingShader ? { modulateType: 9, modulateMode: 1, color: new THREE11.Color(16777215) } : {};
+  let clothesModulate = isUsingShader ? { modulateType: 9, modulateMode: 1, color: new THREE10.Color(16777215) } : {};
   if (bodyModel !== "miitomo" /* Miitomo */) {
     if (clothesType === -1) {
       return;
@@ -110213,8 +110108,8 @@ var defaultParams = {
   modelFlag: FFLCharModelDescDefault,
   drawBody: true
 };
-var THREE11 = _THREE();
-var renderer2 = new THREE11.WebGLRenderer({
+var THREE10 = _THREE();
+var renderer2 = new THREE10.WebGLRenderer({
   alpha: true,
   powerPreference: "high-performance",
   antialias: false,
@@ -110229,7 +110124,7 @@ function createMiiRender(request) {
       dataInput = parseHexOrB64ToUint8Array(request.data);
     else
       dataInput = request.data;
-    let scene = new THREE11.Scene;
+    let scene = new THREE10.Scene;
     const isTemporary = request.isTemporary !== false;
     const mii = new Mii(dataInput);
     const localModule = request.module;
@@ -110289,8 +110184,8 @@ function createMiiRender(request) {
       miiGroup = scene;
       miiGroup.background = null;
     } else {
-      miiGroup = new THREE11.Group;
-      headModel = new THREE11.Group;
+      miiGroup = new THREE10.Group;
+      headModel = new THREE10.Group;
     }
     const gender = charModel._model.charInfo.personal.gender;
     const bodyScale = charModel.getBodyScale();
@@ -110318,7 +110213,7 @@ function createMiiRender(request) {
           } : {};
           m.material = new shaderMaterial({
             ...modulate,
-            color: new THREE11.Color(...hatColor),
+            color: new THREE10.Color(...hatColor),
             opacity: 1,
             map: oldMat
           });
@@ -110404,7 +110299,7 @@ function createMiiRender(request) {
       } : {};
       bodyModelBody.material = new charModel._materialClass({
         ...modulate,
-        color: new THREE11.Color(...shirtColor),
+        color: new THREE10.Color(...shirtColor),
         opacity: 1
       });
       if (bodyModelHands)
@@ -110432,12 +110327,12 @@ function createMiiRender(request) {
       } : {};
       bodyModelLegs.material = new charModel._materialClass({
         ...modulate,
-        color: new THREE11.Color(...pantsColor),
+        color: new THREE10.Color(...pantsColor),
         opacity: 1
       });
       const nBody = bodyModelBody;
       const nLegs = bodyModelLegs;
-      THREE11.ColorManagement.enabled = false;
+      THREE10.ColorManagement.enabled = false;
       if (request.additionalInfo.clothesType !== undefined && request.additionalInfo.clothesType !== -1 && request.bodyModelType !== "low" /* low */ && (getLoadedBodyModelName() === "wiiu" || getLoadedBodyModelName() === "miitomo") && request.additionalInfo.clothesType < ExtClothesList.length) {
         console.log("LOADED BODY IS", getLoadedBodyModelName());
         await clothingUpdate({
@@ -110483,7 +110378,7 @@ function createMiiRender(request) {
         bodyModelHands.visible = false;
       }
       if (isStreetPass()) {
-        var scaleVec = new THREE11.Vector3;
+        var scaleVec = new THREE10.Vector3;
         bodyModel.getWorldScale(scaleVec);
         const handScaleX = 1 / scaleVec.x * 5;
         const handScaleY = 1 / scaleVec.y * 5;
