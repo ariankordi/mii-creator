@@ -6,8 +6,7 @@ if (globalThis.THREE) {
   console.log("found three.js in global!");
 } else {
   console.log("oops, i didn't find three.js!", globalThis.THREE);
-  const three = (await import("./three.js")).default;
-
+  const three = (await import("../three.js")).default;
   THREE = three;
 }
 
