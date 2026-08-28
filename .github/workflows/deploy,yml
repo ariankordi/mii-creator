@@ -2,7 +2,8 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [05-18-server-optional-etc]
+  workflow_dispatch:
 
 permissions:
   contents: read
