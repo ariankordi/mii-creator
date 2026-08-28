@@ -51,8 +51,7 @@ async function build() {
       [
         "./src/main.ts",
         "./src/helper.ts",
-        "./src/popup.ts",
-        "./src/three.ts"
+        "./src/popup.ts"
       ],
       "./public/dist/"
     );
