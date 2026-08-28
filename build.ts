@@ -60,14 +60,18 @@ async function build() {
   }
 }
 
-const watcher = watch(
-  join(import.meta.dir, "./src"),
-  { recursive: true },
-  async (event, filename) => {
-    console.log(`Detected ${event} in ${filename}`);
-    build();
-  }
-);
+if (process.env.CI) {
+  await build();
+} else {
+  const watcher = watch(
+    join(import.meta.dir, "./src"),
+    { recursive: true },
+    async (event, filename) => {
+      console.log(`Detected ${event} in ${filename}`);
+      build();
+    }
+  );
 
-console.log("Watching!");
-build();
+  console.log("Watching!");
+  build();
+}
