@@ -1,4 +1,3 @@
-```ts
 import { join } from "path";
 import { watch } from "fs";
 import * as sass from "sass";
@@ -73,4 +72,3 @@ if (process.env.CI) {
   console.log("Watching!");
   await build();
 }
-```
