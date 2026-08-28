@@ -35,8 +35,11 @@ export async function prepareFFL() {
   FFLModule = (await import("../external/ffl.js/ffl-emscripten.js")).default;
 
   FFLModule = await FFLModule({
-    locateFile: (path: string) => {
-      return "/dist/" + path;
+    FFLModule = await FFLModule({
+  locateFile: (path: string) => {
+    return new URL("../../dist/" + path, import.meta.url).href;
+  }
+});
     }
   });
 

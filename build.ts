@@ -16,7 +16,9 @@ export async function compile(
     outdir: outputDir,
     splitting: false,
     emitDCEAnnotations: true,
-    sourcemap: "none"
+    sourcemap: "none",
+    // Keep the generated files compatible with GitHub Pages.
+    naming: "[name].[ext]"
     // Only apply when building for prod !!
     // minify: {
     //   identifiers: true,
@@ -27,11 +29,14 @@ export async function compile(
   }).catch((e) => {
     console.error("Failed to build:", e);
   })) as BuildOutput;
-  if (output.logs) {
+
+  if (output?.logs) {
     for (const log of output.logs) {
       console.error(log);
     }
   }
+
+  return output;
 }
 
 import { join } from "path";
@@ -43,7 +48,12 @@ import type { BuildOutput } from "bun";
 async function build() {
   try {
     await compile(
-      ["./src/main.ts", "./src/helper.ts", "./src/popup.ts", "./src/three.ts"],
+      [
+        "./src/main.ts",
+        "./src/helper.ts",
+        "./src/popup.ts",
+        "./src/three.ts"
+      ],
       "./public/dist/"
     );
   } catch (e) {
@@ -60,14 +70,18 @@ async function build() {
   }
 }
 
-const watcher = watch(
-  join(import.meta.dir, "./src"),
-  { recursive: true },
-  async (event, filename) => {
-    console.log(`Detected ${event} in ${filename}`);
-    build();
-  }
-);
+if (process.env.CI) {
+  await build();
+} else {
+  const watcher = watch(
+    join(import.meta.dir, "./src"),
+    { recursive: true },
+    async (event, filename) => {
+      console.log(`Detected ${event} in ${filename}`);
+      build();
+    }
+  );
 
-console.log("Watching!");
-build();
+  console.log("Watching!");
+  build();
+}
