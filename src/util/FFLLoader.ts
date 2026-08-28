@@ -1,4 +1,3 @@
-```ts
 import Modal, { buttonsOkCancel, closeModal } from "../ui/components/Modal";
 import Notify from "../ui/components/Notify";
 import {
@@ -61,4 +60,3 @@ export async function prepareFFL() {
 
   closeModal(currentLoadingModal);
 }
-```
