@@ -1,3 +1,4 @@
+```ts
 import Modal, { buttonsOkCancel, closeModal } from "../ui/components/Modal";
 import Notify from "../ui/components/Notify";
 import {
@@ -35,11 +36,8 @@ export async function prepareFFL() {
   FFLModule = (await import("../external/ffl.js/ffl-emscripten.js")).default;
 
   FFLModule = await FFLModule({
-    FFLModule = await FFLModule({
-  locateFile: (path: string) => {
-    return new URL("../../dist/" + path, import.meta.url).href;
-  }
-});
+    locateFile: (path: string) => {
+      return new URL("../../dist/" + path, import.meta.url).href;
     }
   });
 
@@ -63,3 +61,4 @@ export async function prepareFFL() {
 
   closeModal(currentLoadingModal);
 }
+```
