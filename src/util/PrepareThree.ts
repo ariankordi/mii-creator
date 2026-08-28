@@ -7,8 +7,9 @@ if (globalThis.THREE) {
 } else {
   console.log("oops, i didn't find three.js!", globalThis.THREE);
   const three = (
-   await import(new URL("../dist/three.js", import.meta.url).href)
-).default;
+    await import(new URL("../../dist/three.js", import.meta.url).href)
+  ).default;
+
   THREE = three;
 }
 
