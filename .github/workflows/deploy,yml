@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [05-18-server-optional-etc]
+    branches: [renderer-ffl.js-prototype]
   workflow_dispatch:
 
 permissions:
